@@ -59,8 +59,14 @@ fun LocalDate.daysUntilInclusive(other: LocalDate): Int =
 
 /**
  * [start] 부터 [endInclusive] 까지의 모든 날짜를 순서대로 생성.
+ *
+ * 전제: `start <= endInclusive`. 역순 구간은 [IllegalArgumentException].
  */
-fun dateRangeInclusive(start: LocalDate, endInclusive: LocalDate): Sequence<LocalDate> =
-    generateSequence(start) { current ->
+fun dateRangeInclusive(start: LocalDate, endInclusive: LocalDate): Sequence<LocalDate> {
+    require(start <= endInclusive) {
+        "dateRangeInclusive requires start <= endInclusive, was start=$start endInclusive=$endInclusive"
+    }
+    return generateSequence(start) { current ->
         if (current >= endInclusive) null else current.plus(DatePeriod(days = 1))
     }
+}

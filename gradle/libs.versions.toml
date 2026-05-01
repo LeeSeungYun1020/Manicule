@@ -13,16 +13,16 @@ androidxLifecycle = "2.8.7"
 androidxActivity = "1.10.0"
 androidxNavigation = "2.8.8"
 androidxDataStore = "1.1.2"
-androidxRoom = "2.7.0-alpha01"
+androidxRoom = "2.8.4"
 androidxWork = "2.10.0"
-androidxCamerax = "1.5.0-alpha01"
+androidxCamerax = "1.6.0"
 androidxWindow = "1.4.0"
 androidxSplashscreen = "1.0.1"
 androidxStartup = "1.2.0"
 
 # Compose
 composeBom = "2025.02.00"
-composeMaterial3 = "1.4.0-alpha01"
+composeMaterial3 = "1.4.0"
 
 # Coroutines
 kotlinxCoroutines = "1.10.1"
@@ -62,11 +62,11 @@ espressoCore = "3.6.1"
 truth = "1.4.4"
 turbine = "1.1.0"
 mockwebserver = "4.12.0"
-roboelectric = "4.13"
+robolectric = "4.13"
 androidxTestRunner = "1.6.2"
 androidxTestRules = "1.6.1"
 androidxArchCoreTesting = "2.2.0"
-hiltAndroidTesting = "2.52"
+hiltAndroidTesting = "2.59.2"
 
 # Lint / Static analysis
 ktlint = "12.1.1"
@@ -183,7 +183,7 @@ androidx-test-espresso-core = { group = "androidx.test.espresso", name = "espres
 androidx-arch-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "androidxArchCoreTesting" }
 truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
-roboelectric = { group = "org.robolectric", name = "robolectric", version.ref = "roboelectric" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

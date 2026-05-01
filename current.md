@@ -27,8 +27,8 @@
   현재는 `:app`, `:core:common`, `:core:designsystem`, `:core:model` 만 활성. 후속 단계에서 주석 해제
 - `build.gradle.kts` — plugin alias 만 선언 (apply false)
 - `gradle.properties` — JVM args, AndroidX, parallel/caching/configuration-cache 활성화
-- `gradle/libs.versions.toml` — Kotlin 2.0.20, AGP 8.5.2, Compose BoM 2024.09.02, Room 2.6.1, Retrofit 2.11.0,
-  Coil 3.0.0-rc01, ML Kit Barcode, CameraX, kotlinx.datetime, Hilt 2.52, KSP, Paging 3, Desugar 등
+- `gradle/libs.versions.toml` — Kotlin 2.3.21, AGP 9.0.0, Compose BoM 2025.02.00, Room 2.8.4, Retrofit 2.11.0,
+  Coil 3.0.0-rc01, ML Kit Barcode, CameraX 1.6.0, Material3 1.4.0, kotlinx.datetime, Hilt 2.59.2, KSP, Paging 3, Desugar 등
   (NowInAndroid 패턴 참고). Convention plugin alias 도 함께 선언
 - `.gitignore` — Gradle/IDE/Keystore/Native 빌드 산출물 제외 (build-logic stub 만 예외 처리)
 

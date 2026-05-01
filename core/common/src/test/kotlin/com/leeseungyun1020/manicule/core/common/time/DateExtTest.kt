@@ -36,4 +36,9 @@ class DateExtTest {
             LocalDate(2026, 5, 3),
         ).inOrder()
     }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `dateRangeInclusive throws when start is after endInclusive`() {
+        dateRangeInclusive(LocalDate(2026, 5, 10), LocalDate(2026, 5, 1))
+    }
 }
