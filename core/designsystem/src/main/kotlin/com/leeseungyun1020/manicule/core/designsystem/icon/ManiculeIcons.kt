@@ -2,6 +2,7 @@ package com.leeseungyun1020.manicule.core.designsystem.icon
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CameraAlt
@@ -15,7 +16,6 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -39,7 +39,7 @@ object ManiculeIcons {
         val HomeFilled: ImageVector = Icons.Filled.Home
         val HomeOutlined: ImageVector = Icons.Outlined.Home
         val LibraryFilled: ImageVector = Icons.AutoMirrored.Filled.MenuBook
-        val LibraryOutlined: ImageVector = Icons.Outlined.MenuBook
+        val LibraryOutlined: ImageVector = Icons.AutoMirrored.Outlined.MenuBook
         val StatsFilled: ImageVector = Icons.Filled.BarChart
         val StatsOutlined: ImageVector = Icons.Outlined.BarChart
         val SettingsFilled: ImageVector = Icons.Filled.Settings

@@ -5,5 +5,5 @@
         <item name="postSplashScreenTheme">@style/Theme.Manicule</item>
     </style>
 
-    <style name="Theme.Manicule" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Manicule" parent="Theme.Material3.DayNight.NoActionBar" />
 </resources>

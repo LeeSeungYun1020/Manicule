@@ -1,6 +1,8 @@
 package com.leeseungyun1020.manicule.buildlogic
 
+import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
 
@@ -9,11 +11,20 @@ import org.gradle.kotlin.dsl.dependencies
  * Caller must already have applied the Compose Compiler Gradle plugin.
  */
 internal fun Project.configureAndroidCompose(
-    commonExtension: CommonExtension<*, *, *, *, *, *>,
+    commonExtension: CommonExtension,
 ) {
     commonExtension.apply {
-        buildFeatures {
-            compose = true
+        when (this) {
+            is ApplicationExtension -> {
+                buildFeatures {
+                    compose = true
+                }
+            }
+            is LibraryExtension -> {
+                buildFeatures {
+                    compose = true
+                }
+            }
         }
 
         dependencies {

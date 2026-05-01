@@ -10,6 +10,7 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.compose.material.iconsExtended)
+    implementation(libs.androidx.compose.ui.googlefonts)
 
     testImplementation(libs.junit4)
     androidTestImplementation(libs.androidx.test.ext.junit)
