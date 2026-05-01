@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Manicule.SplashScreen" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">?attr/colorSurface</item>
+        <item name="postSplashScreenTheme">@style/Theme.Manicule</item>
+    </style>
+
+    <style name="Theme.Manicule" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

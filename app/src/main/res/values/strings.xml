@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">읽음표</string>
+
+    <!-- 하단 탭 -->
+    <string name="tab_home">홈</string>
+    <string name="tab_library">서재</string>
+    <string name="tab_stats">통계</string>
+    <string name="tab_settings">설정</string>
+</resources>

@@ -1,0 +1,32 @@
+# Gradle
+.gradle/
+build/
+**/build/
+!build-logic/build-logic-stub/
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.kotlin/
+
+# Local config
+local.properties
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Captures
+captures/
+
+# Keystores
+*.keystore
+*.jks
+release/
+
+# External native build folder
+.externalNativeBuild
+.cxx/
