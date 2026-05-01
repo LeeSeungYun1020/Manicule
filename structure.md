@@ -35,13 +35,15 @@ Android 공식 권장 아키텍처(3-layer)를 따른다.
 - **Repository는 SSOT(Single Source of Truth)**: 외부에는 도메인 모델만 노출, DTO/Entity는 Data Layer 내부에 격리.
 - **단방향 데이터 흐름(UDF)**: ViewModel은 `StateFlow<UiState>` 노출, UI는 이벤트만 송신.
 - **Offline-first**: Room을 SSOT로, 네트워크는 도서 검색 시에만 호출.
+- **반응형 레이아웃**: 폰·태블릿·폴더블 + 회전 모두 대응. WindowSizeClass 기반 분기, ViewModel은 `SavedStateHandle`로 회전 시 상태 보존.
+- **빌드 베이스라인**: minSdk 24 + `coreLibraryDesugaring` 활성화(java.time 등), Android Auto Backup(`allowBackup=true`)으로 로컬 데이터 자동 백업.
 
 ---
 
 ## 2. 모듈 구성 개요
 
 ```
-note/
+manicule/
 ├── app/                            # 진입점, NavHost, DI 그래프 조립
 │
 ├── feature/                        # 화면 단위 모듈
@@ -79,7 +81,7 @@ note/
 | `feature:library`    | UI     | 내 서재(상태 탭, 정렬)                                   |
 | `feature:stats`      | UI     | 통계(이번 달/올해, 52주 잔디)                              |
 | `feature:settings`   | UI     | 테마, 알림 설정                                        |
-| `core:designsystem`  | UI     | NoteTheme, Color, Typography, 공통 Button/Dialog   |
+| `core:designsystem`  | UI     | ManiculeTheme, Color, Typography, 공통 Button/Dialog   |
 | `core:ui`            | UI     | BookCard, ContributionGrid 등 feature 간 공유 컴포넌트   |
 | `core:common`        | -      | Dispatcher 정의, Result 래퍼, 날짜 유틸                  |
 | `core:model`         | Domain | Book, ReadingStatus, ReadingRecord 등             |
@@ -117,7 +119,7 @@ network database datastore             core:common
 
 ## 3. 모듈별 파일 구조
 
-> 패키지 루트는 `com.example.note` 로 가정. 실제 패키지는 프로젝트 정책에 맞춰 변경.
+> 패키지 루트는 `com.leeseungyun1020.manicule`. 실제 패키지는 프로젝트 정책에 맞춰 변경.
 
 ### 3.1 `app`
 
@@ -127,12 +129,12 @@ app/
 └── src/main/
     ├── AndroidManifest.xml
     └── java/com/example/note/
-        ├── NoteApplication.kt              # @HiltAndroidApp
+        ├── ManiculeApplication.kt              # @HiltAndroidApp
         ├── MainActivity.kt                  # 단일 Activity + Compose
         └── navigation/
-            ├── NoteNavHost.kt               # 최상위 NavHost
+            ├── ManiculeNavHost.kt               # 최상위 NavHost
             ├── TopLevelDestination.kt       # 홈/서재/통계/설정 4개 탭
-            └── NoteAppState.kt              # rememberNoteAppState
+            └── ManiculeAppState.kt              # rememberManiculeAppState
 ```
 
 ### 3.2 Feature 모듈 공통 구조
@@ -203,7 +205,7 @@ feature/scanner/
     ├── navigation/
     │   └── ScannerNavigation.kt
     └── components/
-        ├── CameraPreview.kt                # Preview UseCase 직접 생성 및 bindToLifecycle 담당
+        ├── CameraPreview.kt                # Preview UseCase 직접 생성, bindToLifecycle, 회전 시 targetRotation 갱신
         ├── ViewfinderOverlay.kt
         └── PermissionDeniedView.kt
 ```
@@ -295,19 +297,19 @@ feature/settings/
 core/designsystem/
 └── src/main/java/com/example/note/core/designsystem/
     ├── theme/
-    │   ├── Color.kt
-    │   ├── Type.kt
+    │   ├── Color.kt                        # Material 3 고정 브랜드 컬러 (라이트/다크)
+    │   ├── Type.kt                         # Noto Sans KR (Downloadable Fonts) + 시스템 폰트 fallback
     │   ├── Shape.kt
-    │   └── NoteTheme.kt                    # MaterialTheme 래퍼, 다크/라이트
+    │   └── ManiculeTheme.kt                # MaterialTheme 래퍼, 다크/라이트
     ├── component/
-    │   ├── NoteButton.kt
-    │   ├── NoteTextField.kt
-    │   ├── NoteDialog.kt                   # 공통 다이얼로그 (이름·메시지·확인/취소)
-    │   ├── NoteTopAppBar.kt
-    │   ├── NoteEmptyState.kt
-    │   └── NoteLoading.kt
+    │   ├── ManiculeButton.kt
+    │   ├── ManiculeTextField.kt
+    │   ├── ManiculeDialog.kt                   # 공통 다이얼로그 (이름·메시지·확인/취소)
+    │   ├── ManiculeTopAppBar.kt
+    │   ├── ManiculeEmptyState.kt
+    │   └── ManiculeLoading.kt
     ├── icon/
-    │   └── NoteIcons.kt
+    │   └── ManiculeIcons.kt
     └── res/                                # 색상·문자열 등 디자인 토큰
 ```
 
@@ -319,7 +321,7 @@ core/designsystem/
 core/ui/
 └── src/main/java/com/example/note/core/ui/
     ├── book/
-    │   ├── BookCover.kt
+    │   ├── BookCover.kt                    # Coil 3.x AsyncImage 래퍼, 표지 fallback 처리
     │   ├── BookListItem.kt
     │   └── BookProgressBar.kt              # 132 / 320쪽 표시
     ├── contribution/
@@ -372,7 +374,7 @@ core/domain/
     ├── book/
     │   └── GetBookDetailUseCase.kt          # ISBN → Book 조회 (DB 우선, 없으면 네트워크 fetch)
     ├── search/
-    │   ├── SearchBooksUseCase.kt
+    │   ├── SearchBooksUseCase.kt           # Flow<PagingData<Book>> 반환 (Paging 3 통합)
     │   ├── GetRecentQueriesUseCase.kt
     │   └── SaveRecentQueryUseCase.kt
     ├── scanner/
@@ -432,7 +434,7 @@ core/database/
 └── src/main/java/com/example/note/core/database/
     ├── di/
     │   └── DatabaseModule.kt
-    ├── NoteDatabase.kt                     # @Database, version, migrations
+    ├── ManiculeDatabase.kt                     # @Database, version, migrations
     ├── entity/
     │   ├── BookEntity.kt                   # @Entity (PK = isbn)
     │   ├── BookEntryEntity.kt              # status, rating, memo, addedAt, updatedAt, finishedAt
@@ -532,6 +534,8 @@ build-logic/
         ├── AndroidLibraryComposeConventionPlugin.kt
         ├── AndroidHiltConventionPlugin.kt
         ├── AndroidRoomConventionPlugin.kt
+        ├── AndroidLintConventionPlugin.kt           # ktlint + detekt 적용 (모든 모듈 공통)
+        ├── AndroidApplicationFirebaseConventionPlugin.kt # google-services + Crashlytics gradle plugin
         └── JvmLibraryConventionPlugin.kt            # core:model (안드로이드 비의존 순수 Kotlin)
 ```
 
@@ -540,8 +544,8 @@ build-logic/
 ```kotlin
 // feature/home/build.gradle.kts
 plugins {
-	alias(libs.plugins.note.android.feature)
-	alias(libs.plugins.note.android.library.compose)
+	alias(libs.plugins.manicule.android.feature)
+	alias(libs.plugins.manicule.android.library.compose)
 }
 
 dependencies {
@@ -556,8 +560,8 @@ dependencies {
 ```kotlin
 // core/domain/build.gradle.kts
 plugins {
-	alias(libs.plugins.note.android.library)
-	alias(libs.plugins.note.android.hilt)
+	alias(libs.plugins.manicule.android.library)
+	alias(libs.plugins.manicule.android.hilt)
 }
 
 dependencies {
@@ -582,8 +586,8 @@ dependencies {
 | `core:network`       | MockWebServer 기반 NlkApi 테스트                                        |
 | `core:scanner`       | ISBN 유효성 검증 알고리즘 및 스캔 결과 가공 테스트                                    |
 | `core:notifications` | WorkManager 기반 알림 예약 및 스케줄링 검증                                     |
-| `core:designsystem`  | 공통 컴포넌트(Button, Dialog 등) Compose 스냅샷 테스트                          |
-| `core:ui`            | BookCard, ContributionGrid Compose 스냅샷 테스트                         |
+| `core:designsystem`  | 공통 컴포넌트(Button, Dialog 등) Compose UI 테스트(`createComposeRule`) |
+| `core:ui`            | BookCard, ContributionGrid Compose UI 테스트                         |
 | `feature:*`          | ViewModel StateFlow 검증, Compose UI 테스트(`createAndroidComposeRule`) |
 | `app`                | Navigation 통합 테스트                                                  |
 

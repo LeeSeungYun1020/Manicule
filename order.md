@@ -27,8 +27,8 @@
 | 1 | `build-logic` | Convention Plugin (AndroidApplication, AndroidLibrary, AndroidFeature, Hilt, Room, JvmLibrary 등) |
 | 2 | `core:model` | 도메인 모델 전체 (Book, BookEntry, ReadingRecord, ContributionDay 등) |
 | 3 | `core:common` | Dispatcher, Result 래퍼, DateExt, FlowExt |
-| 4 | `core:designsystem` | NoteTheme(Color/Type/Shape) + 공통 컴포넌트(NoteButton, NoteDialog 등) 전체 |
-| 5 | `app` 스켈레톤 | MainActivity, NoteNavHost stub, TopLevelDestination 4개 하단 탭 |
+| 4 | `core:designsystem` | ManiculeTheme(Color/Type/Shape) + 공통 컴포넌트(ManiculeButton, ManiculeDialog 등) 전체 |
+| 5 | `app` 스켈레톤 | MainActivity, ManiculeNavHost stub, TopLevelDestination 4개 하단 탭 |
 
 표준 모듈은 변경 빈도가 높으면 전체에 파급되므로 후속 단계 전에 안정화한다.
 `app` 스켈레톤은 이후 단계에서 동작 확인용 실행 컨텍스트로 사용한다.
@@ -41,7 +41,7 @@
 
 | 순서 | 대상 | 내용 |
 |---|---|---|
-| 1 | `core:database` | Room Entity, DAO, NoteDatabase, Migration |
+| 1 | `core:database` | Room Entity, DAO, ManiculeDatabase, Migration |
 | 2 | `core:network` | NLK ISBN API (Retrofit), DTO, NlkAuthInterceptor |
 | 3 | `core:datastore` | UserPreferences DataStore (테마, 알림 설정) |
 | 4 | `core:data` | Repository 인터페이스 + 구현체, Entity/DTO ↔ Model 매퍼 |
@@ -62,10 +62,10 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 #### Slice 1 — `feature:search`
 도서 검색, 최근 검색어. 모든 흐름의 진입점.
 
-- DAO·Repository에 검색 쿼리/최근 검색어 메서드 추가
-- `SearchBooksUseCase`, `GetRecentQueriesUseCase`, `SaveRecentQueryUseCase`
-- SearchScreen, ViewModel, UiState
-- **검증 기준**: 키워드 검색 시 결과 목록 표시, 최근 검색어 저장·재실행
+- DAO·Repository에 검색 쿼리/최근 검색어 메서드 추가, NLK API `PagingSource` 구현
+- `SearchBooksUseCase`(`Flow<PagingData<Book>>` 반환, Paging 3 통합), `GetRecentQueriesUseCase`, `SaveRecentQueryUseCase`
+- SearchScreen, ViewModel, UiState (입력 디바운스 350ms, `LazyColumn` + `collectAsLazyPagingItems()`로 무한 스크롤)
+- **검증 기준**: 키워드 검색 시 결과 목록 표시, 무한 스크롤 동작, 최근 검색어 저장·재실행
 
 #### Slice 2 — `feature:bookdetail`
 책 상세, 상태/별점/메모, 독서 기록. 가장 복잡한 핵심 비즈니스 로직.
@@ -107,16 +107,16 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 #### Slice 6 — 알림 + 설정
 - `core:notifications` (ReminderScheduler, WorkManagerReminderScheduler, ReminderWorker)
 - `feature:settings` (ThemeRadioGroup, ReminderToggle, ReminderTimePicker)
-- `GetUserPreferencesUseCase`, `SetThemeUseCase`, `SetReminderUseCase`
-- **검증 기준**: 테마 즉시 적용, 알림 on/off 및 시간 설정 → 매일 알림 발송
+- `GetUserPreferencesUseCase`, `SetThemeUseCase`, `SetReminderUseCase`, `GetLatestReadingBookUseCase` (ReminderWorker가 가장 최근 '읽는 중' 책 제목을 메시지에 주입, 없으면 일반 메시지 fallback)
+- **검증 기준**: 테마 즉시 적용, 알림 on/off 및 시간 설정 → 매일 알림 발송, 읽는 중 책 제목이 알림 메시지에 반영
 
 ---
 
 ### 5단계 — App 조립 (App Assembly)
 
-> 분리된 App 단계. 모든 feature를 NoteNavHost로 최종 연결.
+> 분리된 App 단계. 모든 feature를 ManiculeNavHost로 최종 연결.
 
-- 모든 destination을 NoteNavHost에 등록 (`homeScreen`, `searchScreen`, `scannerScreen`, `bookDetailScreen`, `libraryScreen`, `statsScreen`, `settingsScreen`)
+- 모든 destination을 ManiculeNavHost에 등록 (`homeScreen`, `searchScreen`, `scannerScreen`, `bookDetailScreen`, `libraryScreen`, `statsScreen`, `settingsScreen`)
 - TopLevelDestination 4개 하단 탭 ↔ 시작 destination 매핑
 - 화면 간 navigation 인자 전달 검증 (예: bookdetail의 `isbn:String`)
 - Hilt 의존 그래프 전체 빌드 확인
@@ -138,8 +138,9 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 | 시각 검증 | 다크/라이트/시스템 테마 동작, `core:designsystem` 준수, 컴포넌트 스냅샷 테스트 |
 | Offline-first 검증 | 네트워크 단절 시 캐시된 책·서재·기록 정상 표시, 검색만 네트워크 의존 |
 | Navigation 통합 테스트 | `app` 모듈에서 모든 화면 진입·이탈 흐름 자동화 검증 |
-| 알림 검증 | 설정한 시간에 리마인더 알림 발송, on/off 토글 동작 |
+| 알림 검증 | 설정한 시간에 리마인더 알림 발송, on/off 토글 동작, 컨텍스트 메시지(읽는 중 책 제목) 반영 |
 | 바코드 스캔 검증 | ISBN 인식 성공/실패 흐름, 카메라 권한 거부 흐름 |
+| 폼팩터·회전 검증 | 폰·태블릿·폴더블 WindowSizeClass 분기 동작, 회전 시 ViewModel 상태 보존 및 카메라 `targetRotation` 갱신 |
 
 ---
 
