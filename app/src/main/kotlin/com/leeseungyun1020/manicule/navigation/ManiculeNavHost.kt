@@ -27,15 +27,15 @@ fun ManiculeNavHost(
 ) {
     NavHost(
         navController = appState.navController,
-        startDestination = TopLevelDestination.HOME.route,
+        startDestination = HomeRoute,
         modifier = modifier
             .fillMaxSize()
             .padding(paddingValues),
     ) {
-        composable(TopLevelDestination.HOME.route) { StubScreen("홈") }
-        composable(TopLevelDestination.LIBRARY.route) { StubScreen("서재") }
-        composable(TopLevelDestination.STATS.route) { StubScreen("통계") }
-        composable(TopLevelDestination.SETTINGS.route) { StubScreen("설정") }
+        composable<HomeRoute> { StubScreen("홈") }
+        composable<LibraryRoute> { StubScreen("서재") }
+        composable<StatsRoute> { StubScreen("통계") }
+        composable<SettingsRoute> { StubScreen("설정") }
     }
 }
 

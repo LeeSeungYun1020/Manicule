@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.manicule.android.application)
     alias(libs.plugins.manicule.android.application.compose)
     alias(libs.plugins.manicule.android.hilt)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {

@@ -4,7 +4,7 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
-import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptions
@@ -30,8 +30,12 @@ class ManiculeAppState(
     val currentTopLevelDestination: TopLevelDestination?
         @Composable get() {
             val current = navController.currentBackStackEntryAsState().value?.destination
-            return topLevelDestinations.firstOrNull { destination ->
-                current.isInHierarchy(destination.route)
+            return when {
+                current?.hasRoute<HomeRoute>() == true -> TopLevelDestination.HOME
+                current?.hasRoute<LibraryRoute>() == true -> TopLevelDestination.LIBRARY
+                current?.hasRoute<StatsRoute>() == true -> TopLevelDestination.STATS
+                current?.hasRoute<SettingsRoute>() == true -> TopLevelDestination.SETTINGS
+                else -> null
             }
         }
 
@@ -39,7 +43,11 @@ class ManiculeAppState(
         val options = NavOptions.Builder()
             .setLaunchSingleTop(true)
             .setRestoreState(true)
-            .setPopUpTo(navController.graph.findStartDestination().id, inclusive = false, saveState = true)
+            .setPopUpTo(
+                navController.graph.findStartDestination().id,
+                inclusive = false,
+                saveState = true
+            )
             .build()
         navController.navigate(destination.route, options)
     }
@@ -53,8 +61,3 @@ fun rememberManiculeAppState(
     ManiculeAppState(navController = navController, windowSizeClass = windowSizeClass)
 }
 
-private fun NavDestination?.isInHierarchy(route: String): Boolean =
-    this?.hierarchy?.any { it.route?.startsWith(route) == true } == true
-
-private val NavDestination.hierarchy: Sequence<NavDestination>
-    get() = generateSequence(this) { it.parent }
