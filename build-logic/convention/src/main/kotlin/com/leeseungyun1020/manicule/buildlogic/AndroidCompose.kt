@@ -13,6 +13,8 @@ import org.gradle.kotlin.dsl.dependencies
 internal fun Project.configureAndroidCompose(
     commonExtension: CommonExtension,
 ) {
+    addComposeOptIns()
+
     commonExtension.apply {
         when (this) {
             is ApplicationExtension -> {

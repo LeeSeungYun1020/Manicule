@@ -61,9 +61,6 @@ internal fun Project.configureKotlin() {
                     "-Xcontext-parameters",
                     "-opt-in=kotlin.RequiresOptIn",
                     "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-                    "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-                    "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
-                    "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
                 )
             }
         }
@@ -74,11 +71,17 @@ internal fun Project.configureKotlin() {
                     "-Xcontext-parameters",
                     "-opt-in=kotlin.RequiresOptIn",
                     "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
-                    "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-                    "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
-                    "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
                 )
             }
         }
     }
+}
+
+internal fun Project.addComposeOptIns() {
+    val kotlinExtension = extensions.getByName("kotlin") as? org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension ?: return
+    kotlinExtension.compilerOptions.freeCompilerArgs.addAll(
+        "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+        "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
+        "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
+    )
 }
