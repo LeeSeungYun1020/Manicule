@@ -31,6 +31,7 @@ internal fun Project.configureKotlinAndroid(
                     isCoreLibraryDesugaringEnabled = true
                 }
             }
+
             is LibraryExtension -> {
                 defaultConfig {
                     minSdk = libs.findVersion("minSdk").get().requiredVersion.toInt()
@@ -45,9 +46,32 @@ internal fun Project.configureKotlinAndroid(
     }
 
     configureKotlin()
+    configureKotlinxBoms()
+    configureAndroidNetworkingBoms()
+    configureAndroidImageBoms()
 
     dependencies {
         add("coreLibraryDesugaring", libs.findLibrary("android.desugarJdkLibs").get())
+    }
+}
+
+internal fun Project.configureKotlinxBoms() {
+    dependencies {
+        add("implementation", platform(libs.findLibrary("kotlinx.coroutines.bom").get()))
+        add("implementation", platform(libs.findLibrary("kotlinx.serialization.bom").get()))
+    }
+}
+
+internal fun Project.configureAndroidNetworkingBoms() {
+    dependencies {
+        add("implementation", platform(libs.findLibrary("okhttp.bom").get()))
+        add("implementation", platform(libs.findLibrary("retrofit.bom").get()))
+    }
+}
+
+internal fun Project.configureAndroidImageBoms() {
+    dependencies {
+        add("implementation", platform(libs.findLibrary("coil.bom").get()))
     }
 }
 
@@ -64,6 +88,7 @@ internal fun Project.configureKotlin() {
                 )
             }
         }
+
         is org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension -> {
             kotlinExtension.compilerOptions.apply {
                 jvmTarget.set(JvmTarget.JVM_17)

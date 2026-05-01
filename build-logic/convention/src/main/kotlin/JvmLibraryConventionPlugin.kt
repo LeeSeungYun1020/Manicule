@@ -1,4 +1,5 @@
 import com.leeseungyun1020.manicule.buildlogic.configureKotlin
+import com.leeseungyun1020.manicule.buildlogic.configureKotlinxBoms
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -18,6 +19,7 @@ class JvmLibraryConventionPlugin : Plugin<Project> {
             }
 
             configureKotlin()
+            configureKotlinxBoms()
         }
     }
 }
