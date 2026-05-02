@@ -10,6 +10,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
         with(target) {
             with(pluginManager) {
                 apply("com.android.application")
+                apply("manicule.android.lint")
             }
 
             extensions.configure<ApplicationExtension> {

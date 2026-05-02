@@ -9,6 +9,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
         with(target) {
             with(pluginManager) {
                 apply("com.android.library")
+                apply("manicule.android.lint")
             }
 
             extensions.configure<LibraryExtension> {

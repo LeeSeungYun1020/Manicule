@@ -21,6 +21,10 @@ dependencies {
     compileOnly(libs.ksp.gradlePlugin)
     compileOnly(libs.compose.gradlePlugin)
     compileOnly(libs.room.gradlePlugin)
+
+    // root에 없는 플러그인 implementation으로 전파
+    implementation(libs.ktlint.gradlePlugin)
+    implementation(libs.detekt.gradlePlugin)
 }
 
 tasks {
@@ -59,6 +63,10 @@ gradlePlugin {
         register("androidRoom") {
             id = "manicule.android.room"
             implementationClass = "AndroidRoomConventionPlugin"
+        }
+        register("androidLint") {
+            id = "manicule.android.lint"
+            implementationClass = "AndroidLintConventionPlugin"
         }
         register("jvmLibrary") {
             id = "manicule.jvm.library"

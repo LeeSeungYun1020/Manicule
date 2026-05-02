@@ -534,7 +534,7 @@ build-logic/
         ├── AndroidLibraryComposeConventionPlugin.kt
         ├── AndroidHiltConventionPlugin.kt
         ├── AndroidRoomConventionPlugin.kt
-        ├── AndroidLintConventionPlugin.kt           # ktlint + detekt 적용 (모든 모듈 공통)
+        ├── AndroidLintConventionPlugin.kt           # ktlint(컨벤션) + detekt(비스타일 정적 분석) + Android Lint
         ├── AndroidApplicationFirebaseConventionPlugin.kt # google-services + Crashlytics gradle plugin
         └── JvmLibraryConventionPlugin.kt            # core:model (안드로이드 비의존 순수 Kotlin)
 ```

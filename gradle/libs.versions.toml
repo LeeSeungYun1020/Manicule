@@ -68,8 +68,8 @@ androidxArchCoreTesting = "2.2.0"
 hiltAndroidTesting = "2.59.2"
 
 # Lint / Static analysis
-ktlint = "12.1.1"
-detekt = "1.23.7"
+ktlint = "14.2.0"
+detekt = "1.23.8"
 
 [libraries]
 # Plugin classpaths (used by build-logic convention plugins)
@@ -78,6 +78,8 @@ kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-pl
 ksp-gradlePlugin = { group = "com.google.devtools.ksp", name = "com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
 compose-gradlePlugin = { group = "org.jetbrains.kotlin", name = "compose-compiler-gradle-plugin", version.ref = "kotlin" }
 room-gradlePlugin = { group = "androidx.room", name = "room-gradle-plugin", version.ref = "androidxRoom" }
+ktlint-gradlePlugin = { group = "org.jlleitschuh.gradle", name = "ktlint-gradle", version.ref = "ktlint" }
+detekt-gradlePlugin = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detekt" }
 
 # AndroidX Core
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidxCore" }
@@ -199,6 +201,8 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "androidxRoom" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 
 # Convention plugins
 manicule-android-application = { id = "manicule.android.application", version = "unspecified" }
@@ -208,4 +212,5 @@ manicule-android-library-compose = { id = "manicule.android.library.compose", ve
 manicule-android-feature = { id = "manicule.android.feature", version = "unspecified" }
 manicule-android-hilt = { id = "manicule.android.hilt", version = "unspecified" }
 manicule-android-room = { id = "manicule.android.room", version = "unspecified" }
+manicule-android-lint = { id = "manicule.android.lint", version = "unspecified" }
 manicule-jvm-library = { id = "manicule.jvm.library", version = "unspecified" }
