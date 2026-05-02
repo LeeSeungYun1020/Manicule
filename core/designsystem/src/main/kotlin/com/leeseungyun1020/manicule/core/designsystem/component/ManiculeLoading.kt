@@ -12,9 +12,10 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ManiculeLoading(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(24.dp),
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator()

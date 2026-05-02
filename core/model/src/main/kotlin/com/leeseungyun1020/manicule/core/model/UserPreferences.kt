@@ -23,10 +23,11 @@ data class ReminderConfig(
 ) {
     companion object {
         /** 기본값: off, 21:00. */
-        val Default: ReminderConfig = ReminderConfig(
-            enabled = false,
-            time = LocalTime(21, 0),
-        )
+        val Default: ReminderConfig =
+            ReminderConfig(
+                enabled = false,
+                time = LocalTime(21, 0),
+            )
     }
 }
 
@@ -38,9 +39,10 @@ data class UserPreferences(
     val reminder: ReminderConfig,
 ) {
     companion object {
-        val Default: UserPreferences = UserPreferences(
-            themeMode = ThemeMode.SYSTEM,
-            reminder = ReminderConfig.Default,
-        )
+        val Default: UserPreferences =
+            UserPreferences(
+                themeMode = ThemeMode.SYSTEM,
+                reminder = ReminderConfig.Default,
+            )
     }
 }

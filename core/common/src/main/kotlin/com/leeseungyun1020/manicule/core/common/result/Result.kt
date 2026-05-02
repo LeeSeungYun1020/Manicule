@@ -12,8 +12,14 @@ import kotlinx.coroutines.flow.onStart
  */
 sealed interface Result<out T> {
     data object Loading : Result<Nothing>
-    data class Success<T>(val data: T) : Result<T>
-    data class Error(val exception: Throwable? = null) : Result<Nothing>
+
+    data class Success<T>(
+        val data: T,
+    ) : Result<T>
+
+    data class Error(
+        val exception: Throwable? = null,
+    ) : Result<Nothing>
 }
 
 /**
@@ -23,7 +29,8 @@ sealed interface Result<out T> {
  * - 값은 [Result.Success] 로 감싼다.
  * - 예외 발생 시 [Result.Error] 로 변환한다.
  */
-fun <T> Flow<T>.asResult(): Flow<Result<T>> = this
-    .map<T, Result<T>> { Result.Success(it) }
-    .onStart { emit(Result.Loading) }
-    .catch { emit(Result.Error(it)) }
+fun <T> Flow<T>.asResult(): Flow<Result<T>> =
+    this
+        .map<T, Result<T>> { Result.Success(it) }
+        .onStart { emit(Result.Loading) }
+        .catch { emit(Result.Error(it)) }

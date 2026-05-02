@@ -54,15 +54,17 @@ fun LocalDate.endOfYear(): LocalDate = LocalDate(year, 12, 31)
 /**
  * 두 날짜 사이의 일 수 (포함).
  */
-fun LocalDate.daysUntilInclusive(other: LocalDate): Int =
-    until(other, DateTimeUnit.DAY) + 1
+fun LocalDate.daysUntilInclusive(other: LocalDate): Int = until(other, DateTimeUnit.DAY) + 1
 
 /**
  * [start] 부터 [endInclusive] 까지의 모든 날짜를 순서대로 생성.
  *
  * 전제: `start <= endInclusive`. 역순 구간은 [IllegalArgumentException].
  */
-fun dateRangeInclusive(start: LocalDate, endInclusive: LocalDate): Sequence<LocalDate> {
+fun dateRangeInclusive(
+    start: LocalDate,
+    endInclusive: LocalDate,
+): Sequence<LocalDate> {
     require(start <= endInclusive) {
         "dateRangeInclusive requires start <= endInclusive, was start=$start endInclusive=$endInclusive"
     }

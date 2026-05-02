@@ -14,7 +14,6 @@ enum class ReadingStatus {
     ;
 
     companion object {
-        fun fromOrNull(name: String?): ReadingStatus? =
-            entries.firstOrNull { it.name == name }
+        fun fromOrNull(name: String?): ReadingStatus? = entries.firstOrNull { it.name == name }
     }
 }

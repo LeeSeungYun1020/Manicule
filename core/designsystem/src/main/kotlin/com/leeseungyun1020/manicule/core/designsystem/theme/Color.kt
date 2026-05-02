@@ -39,69 +39,73 @@ internal object ManiculeBrand {
     val Error80 = Color(0xFFF2B8B5)
 }
 
-internal val LightColorScheme = lightColorScheme(
-    primary = ManiculeBrand.Brown40,
-    onPrimary = Color.White,
-    primaryContainer = ManiculeBrand.Brown90,
-    onPrimaryContainer = ManiculeBrand.Brown20,
-    secondary = ManiculeBrand.Beige40,
-    onSecondary = Color.White,
-    secondaryContainer = ManiculeBrand.Beige90,
-    onSecondaryContainer = ManiculeBrand.Beige20,
-    tertiary = ManiculeBrand.Ink40,
-    onTertiary = Color.White,
-    tertiaryContainer = ManiculeBrand.Ink90,
-    onTertiaryContainer = ManiculeBrand.Ink20,
-    background = ManiculeBrand.Paper99,
-    onBackground = ManiculeBrand.Paper10,
-    surface = ManiculeBrand.Paper99,
-    onSurface = ManiculeBrand.Paper10,
-    surfaceVariant = ManiculeBrand.Paper95,
-    onSurfaceVariant = ManiculeBrand.Paper20,
-    error = ManiculeBrand.Error40,
-    onError = Color.White,
-)
+internal val LightColorScheme =
+    lightColorScheme(
+        primary = ManiculeBrand.Brown40,
+        onPrimary = Color.White,
+        primaryContainer = ManiculeBrand.Brown90,
+        onPrimaryContainer = ManiculeBrand.Brown20,
+        secondary = ManiculeBrand.Beige40,
+        onSecondary = Color.White,
+        secondaryContainer = ManiculeBrand.Beige90,
+        onSecondaryContainer = ManiculeBrand.Beige20,
+        tertiary = ManiculeBrand.Ink40,
+        onTertiary = Color.White,
+        tertiaryContainer = ManiculeBrand.Ink90,
+        onTertiaryContainer = ManiculeBrand.Ink20,
+        background = ManiculeBrand.Paper99,
+        onBackground = ManiculeBrand.Paper10,
+        surface = ManiculeBrand.Paper99,
+        onSurface = ManiculeBrand.Paper10,
+        surfaceVariant = ManiculeBrand.Paper95,
+        onSurfaceVariant = ManiculeBrand.Paper20,
+        error = ManiculeBrand.Error40,
+        onError = Color.White,
+    )
 
-internal val DarkColorScheme = darkColorScheme(
-    primary = ManiculeBrand.Brown80,
-    onPrimary = ManiculeBrand.Brown20,
-    primaryContainer = ManiculeBrand.Brown40,
-    onPrimaryContainer = ManiculeBrand.Brown90,
-    secondary = ManiculeBrand.Beige80,
-    onSecondary = ManiculeBrand.Beige20,
-    secondaryContainer = ManiculeBrand.Beige40,
-    onSecondaryContainer = ManiculeBrand.Beige90,
-    tertiary = ManiculeBrand.Ink80,
-    onTertiary = ManiculeBrand.Ink20,
-    tertiaryContainer = ManiculeBrand.Ink40,
-    onTertiaryContainer = ManiculeBrand.Ink90,
-    background = ManiculeBrand.Paper10,
-    onBackground = ManiculeBrand.Paper95,
-    surface = ManiculeBrand.Paper10,
-    onSurface = ManiculeBrand.Paper95,
-    surfaceVariant = ManiculeBrand.Paper20,
-    onSurfaceVariant = ManiculeBrand.Paper95,
-    error = ManiculeBrand.Error80,
-    onError = ManiculeBrand.Paper10,
-)
+internal val DarkColorScheme =
+    darkColorScheme(
+        primary = ManiculeBrand.Brown80,
+        onPrimary = ManiculeBrand.Brown20,
+        primaryContainer = ManiculeBrand.Brown40,
+        onPrimaryContainer = ManiculeBrand.Brown90,
+        secondary = ManiculeBrand.Beige80,
+        onSecondary = ManiculeBrand.Beige20,
+        secondaryContainer = ManiculeBrand.Beige40,
+        onSecondaryContainer = ManiculeBrand.Beige90,
+        tertiary = ManiculeBrand.Ink80,
+        onTertiary = ManiculeBrand.Ink20,
+        tertiaryContainer = ManiculeBrand.Ink40,
+        onTertiaryContainer = ManiculeBrand.Ink90,
+        background = ManiculeBrand.Paper10,
+        onBackground = ManiculeBrand.Paper95,
+        surface = ManiculeBrand.Paper10,
+        onSurface = ManiculeBrand.Paper95,
+        surfaceVariant = ManiculeBrand.Paper20,
+        onSurfaceVariant = ManiculeBrand.Paper95,
+        error = ManiculeBrand.Error80,
+        onError = ManiculeBrand.Paper10,
+    )
 
 /**
  * 잔디 5단계 색상.
  *
  * Index 0..4 — [com.leeseungyun1020.manicule.core.model.ContributionDay.intensity] 와 1:1 대응.
  */
-val GrassLight: List<Color> = listOf(
-    Color(0xFFEBE3D6),
-    Color(0xFFE5C7A6),
-    Color(0xFFCD9F6F),
-    Color(0xFFA9763F),
-    Color(0xFF6E4521),
-)
+val GrassLight: List<Color> =
+    listOf(
+        Color(0xFFEBE3D6),
+        Color(0xFFE5C7A6),
+        Color(0xFFCD9F6F),
+        Color(0xFFA9763F),
+        Color(0xFF6E4521),
+    )
 
-val GrassDark: List<Color> = listOf(
-    Color(0xFF2A231C),
-    Color(0xFF513923),
-    Color(0xFF7A5A41),
-    Color(0xFFAE8662),
-    Color(0xFFE9C9AC),
-)
+val GrassDark: List<Color> =
+    listOf(
+        Color(0xFF2A231C),
+        Color(0xFF513923),
+        Color(0xFF7A5A41),
+        Color(0xFFAE8662),
+        Color(0xFFE9C9AC),
+    )

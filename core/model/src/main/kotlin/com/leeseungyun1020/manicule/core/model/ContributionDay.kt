@@ -24,15 +24,18 @@ data class ContributionDay(
     }
 
     companion object {
-        fun intensityOf(pages: Int): Int = when {
-            pages <= 0 -> 0
-            pages < 20 -> 1
-            pages < 50 -> 2
-            pages < 100 -> 3
-            else -> 4
-        }
+        fun intensityOf(pages: Int): Int =
+            when {
+                pages <= 0 -> 0
+                pages < 20 -> 1
+                pages < 50 -> 2
+                pages < 100 -> 3
+                else -> 4
+            }
 
-        fun of(date: LocalDate, pages: Int): ContributionDay =
-            ContributionDay(date = date, pages = pages, intensity = intensityOf(pages))
+        fun of(
+            date: LocalDate,
+            pages: Int,
+        ): ContributionDay = ContributionDay(date = date, pages = pages, intensity = intensityOf(pages))
     }
 }

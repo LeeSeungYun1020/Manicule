@@ -15,3 +15,4 @@ max_line_length = 140
 [*.{kt,kts}]
 ktlint_code_style = ktlint_official
 ktlint_standard_function-naming = disabled # @Composable 함수는 PascalCase 사용
+ktlint_standard_no-empty-first-line-in-class-body = disabled

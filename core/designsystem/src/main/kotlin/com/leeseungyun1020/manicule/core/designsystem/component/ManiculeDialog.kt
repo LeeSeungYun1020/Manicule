@@ -34,12 +34,15 @@ fun ManiculeDialog(
         confirmButton = {
             TextButton(onClick = onConfirm) { Text(text = confirmText) }
         },
-        dismissButton = if (dismissText != null) {
-            {
-                TextButton(onClick = { (onDismiss ?: onDismissRequest).invoke() }) {
-                    Text(text = dismissText)
+        dismissButton =
+            if (dismissText != null) {
+                {
+                    TextButton(onClick = { (onDismiss ?: onDismissRequest).invoke() }) {
+                        Text(text = dismissText)
+                    }
                 }
-            }
-        } else null,
+            } else {
+                null
+            },
     )
 }

@@ -28,9 +28,10 @@ fun ManiculeNavHost(
     NavHost(
         navController = appState.navController,
         startDestination = HomeRoute,
-        modifier = modifier
-            .fillMaxSize()
-            .padding(paddingValues),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(paddingValues),
     ) {
         composable<HomeRoute> { StubScreen("홈") }
         composable<LibraryRoute> { StubScreen("서재") }

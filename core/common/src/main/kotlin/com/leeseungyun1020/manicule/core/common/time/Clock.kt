@@ -23,7 +23,12 @@ interface Clock {
 /**
  * 시스템 시계 / 시스템 기본 타임존을 사용하는 기본 구현.
  */
-class SystemClock @javax.inject.Inject constructor() : Clock {
-    override fun now(): Instant = kotlinx.datetime.Clock.System.now()
-    override fun timeZone(): TimeZone = TimeZone.currentSystemDefault()
-}
+class SystemClock
+    @javax.inject.Inject
+    constructor() : Clock {
+        override fun now(): Instant =
+            kotlinx.datetime.Clock.System
+                .now()
+
+        override fun timeZone(): TimeZone = TimeZone.currentSystemDefault()
+    }

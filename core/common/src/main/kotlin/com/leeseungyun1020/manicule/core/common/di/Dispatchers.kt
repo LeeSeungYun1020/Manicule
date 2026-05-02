@@ -9,7 +9,9 @@ import javax.inject.Qualifier
  */
 @Qualifier
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Dispatcher(val maniculeDispatcher: ManiculeDispatcher)
+annotation class Dispatcher(
+    val maniculeDispatcher: ManiculeDispatcher,
+)
 
 enum class ManiculeDispatcher {
     /** IO 작업 (네트워크, DB, 파일). */

@@ -40,15 +40,16 @@ class ManiculeAppState(
         }
 
     fun navigateToTopLevelDestination(destination: TopLevelDestination) {
-        val options = NavOptions.Builder()
-            .setLaunchSingleTop(true)
-            .setRestoreState(true)
-            .setPopUpTo(
-                navController.graph.findStartDestination().id,
-                inclusive = false,
-                saveState = true
-            )
-            .build()
+        val options =
+            NavOptions
+                .Builder()
+                .setLaunchSingleTop(true)
+                .setRestoreState(true)
+                .setPopUpTo(
+                    navController.graph.findStartDestination().id,
+                    inclusive = false,
+                    saveState = true,
+                ).build()
         navController.navigate(destination.route, options)
     }
 }
@@ -57,7 +58,7 @@ class ManiculeAppState(
 fun rememberManiculeAppState(
     windowSizeClass: WindowSizeClass,
     navController: NavHostController = rememberNavController(),
-): ManiculeAppState = remember(navController, windowSizeClass) {
-    ManiculeAppState(navController = navController, windowSizeClass = windowSizeClass)
-}
-
+): ManiculeAppState =
+    remember(navController, windowSizeClass) {
+        ManiculeAppState(navController = navController, windowSizeClass = windowSizeClass)
+    }

@@ -8,8 +8,11 @@ import kotlinx.serialization.Serializable
 sealed interface TopLevelRoute
 
 @Serializable object HomeRoute : TopLevelRoute
+
 @Serializable object LibraryRoute : TopLevelRoute
+
 @Serializable object StatsRoute : TopLevelRoute
+
 @Serializable object SettingsRoute : TopLevelRoute
 
 /**

@@ -30,11 +30,12 @@ class DateExtTest {
     fun `dateRangeInclusive iterates all days inclusive`() {
         val start = LocalDate(2026, 5, 1)
         val end = LocalDate(2026, 5, 3)
-        assertThat(dateRangeInclusive(start, end).toList()).containsExactly(
-            LocalDate(2026, 5, 1),
-            LocalDate(2026, 5, 2),
-            LocalDate(2026, 5, 3),
-        ).inOrder()
+        assertThat(dateRangeInclusive(start, end).toList())
+            .containsExactly(
+                LocalDate(2026, 5, 1),
+                LocalDate(2026, 5, 2),
+                LocalDate(2026, 5, 3),
+            ).inOrder()
     }
 
     @Test(expected = IllegalArgumentException::class)
