@@ -20,6 +20,8 @@ dependencies {
     compileOnly(libs.kotlin.gradlePlugin)
     compileOnly(libs.ksp.gradlePlugin)
     compileOnly(libs.compose.gradlePlugin)
+    compileOnly(libs.firebase.crashlytics.gradlePlugin)
+    compileOnly(libs.google.services.gradlePlugin)
     compileOnly(libs.room.gradlePlugin)
 
     // root에 없는 플러그인 implementation으로 전파
@@ -67,6 +69,10 @@ gradlePlugin {
         register("androidLint") {
             id = "manicule.android.lint"
             implementationClass = "AndroidLintConventionPlugin"
+        }
+        register("androidApplicationFirebase") {
+            id = "manicule.android.application.firebase"
+            implementationClass = "AndroidApplicationFirebaseConventionPlugin"
         }
         register("jvmLibrary") {
             id = "manicule.jvm.library"

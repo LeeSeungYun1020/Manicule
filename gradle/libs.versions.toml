@@ -71,6 +71,11 @@ hiltAndroidTesting = "2.59.2"
 ktlint = "14.2.0"
 detekt = "1.23.8"
 
+# Firebase (google-services.json 연결 시 적용)
+googleServices = "4.4.4"
+firebaseCrashlyticsPlugin = "3.0.7"
+firebaseBom = "34.13.0"
+
 [libraries]
 # Plugin classpaths (used by build-logic convention plugins)
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
@@ -80,6 +85,8 @@ compose-gradlePlugin = { group = "org.jetbrains.kotlin", name = "compose-compile
 room-gradlePlugin = { group = "androidx.room", name = "room-gradle-plugin", version.ref = "androidxRoom" }
 ktlint-gradlePlugin = { group = "org.jlleitschuh.gradle", name = "ktlint-gradle", version.ref = "ktlint" }
 detekt-gradlePlugin = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detekt" }
+firebase-crashlytics-gradlePlugin = { group = "com.google.firebase", name = "firebase-crashlytics-gradle", version.ref = "firebaseCrashlyticsPlugin" }
+google-services-gradlePlugin = { group = "com.google.gms", name = "google-services", version.ref = "googleServices" }
 
 # AndroidX Core
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidxCore" }
@@ -180,6 +187,11 @@ mlkit-barcode-scanning = { group = "com.google.mlkit", name = "barcode-scanning"
 # Desugaring
 android-desugarJdkLibs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugarJdkLibs" }
 
+# Firebase (BoM 으로 버전 통일 관리. google-services.json 연결 후 활성)
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
+
 # Testing
 junit4 = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitExt" }
@@ -203,6 +215,8 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "androidxRoom" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }
 
 # Convention plugins
 manicule-android-application = { id = "manicule.android.application", version = "unspecified" }
@@ -213,4 +227,5 @@ manicule-android-feature = { id = "manicule.android.feature", version = "unspeci
 manicule-android-hilt = { id = "manicule.android.hilt", version = "unspecified" }
 manicule-android-room = { id = "manicule.android.room", version = "unspecified" }
 manicule-android-lint = { id = "manicule.android.lint", version = "unspecified" }
+manicule-android-application-firebase = { id = "manicule.android.application.firebase", version = "unspecified" }
 manicule-jvm-library = { id = "manicule.jvm.library", version = "unspecified" }

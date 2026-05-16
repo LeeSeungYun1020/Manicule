@@ -28,25 +28,34 @@
 - `build.gradle.kts` — plugin alias 만 선언 (apply false)
 - `gradle.properties` — JVM args, AndroidX, parallel/caching/configuration-cache 활성화
 - `gradle/libs.versions.toml` — Kotlin 2.3.21, AGP 9.0.0, Compose BoM 2025.02.00, Room 2.8.4, Retrofit 2.11.0,
-  Coil 3.0.0-rc01, ML Kit Barcode, CameraX 1.6.0, Material3 1.4.0, kotlinx.datetime, Hilt 2.59.2, KSP, Paging 3, Desugar 등
+  Coil 3.0.0-rc01, ML Kit Barcode, CameraX 1.6.0, Material3 1.4.0, kotlinx.datetime, Hilt 2.59.2, KSP, Paging 3, Desugar,
+  Firebase BoM 34.13.0 (firebase-analytics / firebase-crashlytics 라이브러리 버전 통일) 등
   (NowInAndroid 패턴 참고). Convention plugin alias 도 함께 선언
 - `.gitignore` — Gradle/IDE/Keystore/Native 빌드 산출물 제외 (build-logic stub 만 예외 처리)
 
 #### 1-2. build-logic Convention Plugin
 - `build-logic/settings.gradle.kts` — 별도 빌드, 루트의 libs catalog 공유
-- `build-logic/convention/build.gradle.kts` — kotlin-dsl, plugin 등록
-- 등록된 플러그인 (8개):
-  - `manicule.android.application` (`AndroidApplicationConventionPlugin`)
+- `build-logic/convention/build.gradle.kts` — kotlin-dsl, plugin 등록 (ktlint/detekt/Firebase classpath 포함)
+- 등록된 플러그인 (10개) — structure.md 6장의 9종 + Application Compose 분리:
+  - `manicule.android.application` (`AndroidApplicationConventionPlugin`) — `manicule.android.lint` 자동 적용
   - `manicule.android.application.compose` (`AndroidApplicationComposeConventionPlugin`)
-  - `manicule.android.library` (`AndroidLibraryConventionPlugin`)
+  - `manicule.android.library` (`AndroidLibraryConventionPlugin`) — `manicule.android.lint` 자동 적용
   - `manicule.android.library.compose` (`AndroidLibraryComposeConventionPlugin`)
   - `manicule.android.feature` (`AndroidFeatureConventionPlugin`) — 후속 feature 모듈에서 사용
   - `manicule.android.hilt` (`AndroidHiltConventionPlugin`)
   - `manicule.android.room` (`AndroidRoomConventionPlugin`) — 후속 단계 `core:database` 에서 사용
-  - `manicule.jvm.library` (`JvmLibraryConventionPlugin`) — `core:model` 전용
+  - `manicule.android.lint` (`AndroidLintConventionPlugin`) — ktlint + detekt + Android Lint, 모든 모듈 공통 적용
+  - `manicule.android.application.firebase` (`AndroidApplicationFirebaseConventionPlugin`) — google-services + Crashlytics
+    플러그인 + Firebase BoM(34.13.0) 기반 `firebase-analytics` / `firebase-crashlytics` 의존성 자동 추가.
+    Firebase 콘솔 연결 후 `app` 에서 명시적 적용 (현재는 미적용 상태로 유지)
+  - `manicule.jvm.library` (`JvmLibraryConventionPlugin`) — `core:model` 전용, `manicule.android.lint` 자동 적용
 - 공통 헬퍼:
   - `AndroidCommon.kt` — JDK 17, coreLibraryDesugaring, opt-in 모음
   - `AndroidCompose.kt` — Compose BoM, ui/foundation/material3 등 implementation 일괄 추가
+- 정적 분석 설정 파일:
+  - `.editorconfig` (루트) — ktlint 의 코드 스타일 정의 (max line 140, trailing comma, `@Composable` 함수명 예외)
+  - `config/detekt/detekt.yml` (루트) — detekt: `style` / `naming` 비활성화(컨벤션은 ktlint), `complexity`·`empty-blocks`·`potential-bugs` 등만 오버라이드
+  - `gradle/libs.versions.toml` — `ktlint`(ktlint-gradle 플러그인)와 `ktlintCli`(실행 CLI, 예: 1.8.0) 버전 분리; `detekt-formatting` 미사용
 
 #### 1-3. core:model (JVM 모듈)
 패키지: `com.leeseungyun1020.manicule.core.model`
@@ -199,18 +208,23 @@ Manicule/
 ├── settings.gradle.kts
 ├── build.gradle.kts
 ├── gradle.properties
+├── .editorconfig                # ktlint 코드 스타일
 ├── gradle/libs.versions.toml
+├── config/
+│   └── detekt/detekt.yml        # detekt 규칙 오버라이드
 ├── build-logic/
 │   └── convention/
 │       ├── build.gradle.kts
 │       └── src/main/kotlin/
 │           ├── AndroidApplicationConventionPlugin.kt
 │           ├── AndroidApplicationComposeConventionPlugin.kt
+│           ├── AndroidApplicationFirebaseConventionPlugin.kt
 │           ├── AndroidLibraryConventionPlugin.kt
 │           ├── AndroidLibraryComposeConventionPlugin.kt
 │           ├── AndroidFeatureConventionPlugin.kt
 │           ├── AndroidHiltConventionPlugin.kt
 │           ├── AndroidRoomConventionPlugin.kt
+│           ├── AndroidLintConventionPlugin.kt
 │           ├── JvmLibraryConventionPlugin.kt
 │           └── com/leeseungyun1020/manicule/buildlogic/
 │               ├── AndroidCommon.kt
@@ -223,3 +237,21 @@ Manicule/
     ├── designsystem/           # ✅ 1단계
     └── model/                  # ✅ 1단계
 ```
+
+## Lint / 정적 분석 사용법
+
+Foundation 단계에서 ktlint + detekt + Android Lint 를 모든 모듈에 자동 적용했다.
+**역할 분리**: 컨벤션·포맷은 ktlint(`.editorconfig`), detekt는 기본 규칙 중 스타일·네이밍 세트를 끄고 복잡도·잠재 버그 등에 집중한다.
+모듈별 별도 설정 없이 다음 태스크를 사용할 수 있다.
+
+| 태스크 | 설명 |
+|---|---|
+| `./gradlew ktlintCheck` | ktlint 검사 (전체 모듈) |
+| `./gradlew ktlintFormat` | ktlint 자동 수정 |
+| `./gradlew detekt` | detekt 정적 분석 (전체 모듈) |
+| `./gradlew lint` | Android Lint (Android 모듈만) |
+| `./gradlew check` | 위의 모든 검사 + 단위 테스트 통합 실행 |
+
+규칙은 `.editorconfig` 와 `config/detekt/detekt.yml` 에서 조정한다.
+ktlint 위반 발견 시 우선 `ktlintFormat` 으로 자동 수정 가능한 항목을 처리하고,
+detekt 위반은 코드를 직접 고치거나 부득이한 경우 `@Suppress("DetektRule")` 로 억제한다.
