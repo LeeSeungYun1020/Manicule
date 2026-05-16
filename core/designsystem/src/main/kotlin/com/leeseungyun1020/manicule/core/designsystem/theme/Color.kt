@@ -103,7 +103,7 @@ val GrassLight: List<Color> =
 
 val GrassDark: List<Color> =
     listOf(
-        Color(0xFF2A231C),
+        Color(0xFF3D2F23),
         Color(0xFF513923),
         Color(0xFF7A5A41),
         Color(0xFFAE8662),
