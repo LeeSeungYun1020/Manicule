@@ -137,6 +137,8 @@
    - `nlk/NlkApi.kt` (Retrofit interface), `NlkAuthInterceptor`,
      `dto/NlkSearchResponseDto.kt`, `dto/NlkBookDto.kt`
    - `BuildConfigKeys.kt`, `di/NetworkModule.kt`
+   - 모듈 `build.gradle.kts` 에서 OkHttp / Retrofit BoM 을 직접 선언:
+     `implementation(platform(libs.okhttp.bom))`, `implementation(platform(libs.retrofit.bom))`
    - **테스트**: MockWebServer 기반 NlkApi 테스트
 
 3. **`core:datastore`** (Preferences DataStore) — 병렬 가능
@@ -159,6 +161,8 @@
    - `book/BookListItem.kt`, `book/BookProgressBar.kt` (132/320쪽)
    - `contribution/ContributionCell.kt`, `contribution/ContributionGrid.kt` (홈 8주·통계 52주 공유)
    - `preview/BookPreviewParameterProvider.kt`
+   - 모듈 `build.gradle.kts` 에서 Coil BoM 을 직접 선언:
+     `implementation(platform(libs.coil.bom))`
 
 ### 2단계 완료 후 — 3단계 Slice 1 (`feature:search`)
 
