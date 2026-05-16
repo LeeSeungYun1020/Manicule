@@ -1,0 +1,23 @@
+# detekt 설정
+
+coroutines:
+  active: true
+  GlobalCoroutineUsage:
+    active: true
+  InjectDispatcher:
+    active: true
+  RedundantSuspendModifier:
+    active: true
+  SleepInsteadOfDelay:
+    active: true
+
+complexity:
+  LongParameterList:
+    ignoreDefaultParameters: true
+    ignoreAnnotatedParameter: [ 'androidx.compose.runtime.Composable' ]
+
+# style, naming은 ktlint가 확인
+style:
+  active: false
+naming:
+  active: false
