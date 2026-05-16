@@ -82,7 +82,6 @@ internal fun Project.configureKotlin() {
             kotlinExtension.compilerOptions.apply {
                 jvmTarget.set(JvmTarget.JVM_17)
                 freeCompilerArgs.addAll(
-                    "-Xcontext-parameters",
                     "-opt-in=kotlin.RequiresOptIn",
                     "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
                 )
@@ -93,7 +92,6 @@ internal fun Project.configureKotlin() {
             kotlinExtension.compilerOptions.apply {
                 jvmTarget.set(JvmTarget.JVM_17)
                 freeCompilerArgs.addAll(
-                    "-Xcontext-parameters",
                     "-opt-in=kotlin.RequiresOptIn",
                     "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
                 )
