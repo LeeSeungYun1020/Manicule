@@ -1,5 +1,11 @@
-current.md 파일에 작업한 내용과 다음 작업 내용이 포함되어 있음. 작업 완료 후, current.md에 작업한 내용과 다음 작업 내용을 새로 정리하여 다음 세션에서 계속 활용.
+참고 파일
+- plan.md 기획
+- structure.md 모듈과 파일 구조
+- order.md 작업 순서, PR로 리뷰 가능한 수준으로 단계를 더 쪼개어서 구현 필요
+- current.md 작업한 내용, 다음 작업 내용. 작업 시 current.md 파일 업데이트하여 다음 세션에서 활용
+- history/ 커밋별 의사결정 기록 (작성 규칙: history/README.md)
 
-작업 순서는 order.md 파일에, 기획 내용은 plan.md에, 모듈과 파일 구조는 structure.md 파일에 작성되어 있음.
-
-PR로 코드 리뷰 가능하도록 단계를 쪼개어 구현.
+규칙
+- 응답은 한국어.
+- 코드, 주석, git commit message를 포함한 모든 파일은 간결하고 이해하기 쉽게 작성
+- 작업 후: `./gradlew ktlintFormat` → `check` 통과 → commit → 의사결정 있었다면 history 추가 → current.md 업데이트
