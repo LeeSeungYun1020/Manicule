@@ -1,6 +1,6 @@
 # Manicule — 진행 현황
 
-> 참고: [plan.md](plan.md) 기획 · [structure.md](structure.md) 모듈/파일 구조 · [order.md](order.md) 단계 · [history/](history/README.md) 커밋별 의사결정
+> 참고: [plan.md](plan.md) 기획 · [structure.md](structure.md) 모듈/파일 구조 · [order.md](order.md) 단계 · [history/](../history/README.md) 커밋별 의사결정
 > 새 세션은 **"다음 작업"** 부터 진행.
 
 ## 단계
@@ -42,4 +42,4 @@
 - 2단계 완료 시 `app:run` 으로 Hilt 그래프 누락 검증.
 
 ### 커밋 / history
-의사결정 있는 커밋은 [history/](history/README.md) 에 `<short-hash>.md` 추가 (WHY 만). 순수 tooling/format 커밋은 만들지 않음.
+의사결정 있는 커밋은 [history/](../history/README.md) 에 `<short-hash>.md` 추가 (WHY 만). 순수 tooling/format 커밋은 만들지 않음.

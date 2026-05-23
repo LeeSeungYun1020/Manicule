@@ -56,7 +56,7 @@ UseCase·Repository 는 본 PR 범위 밖이다.
   ```
 
 - `core/database/src/main/AndroidManifest.xml` — 빈 manifest (Android library 규약)
-- `app/build.gradle.kts` — `implementation(projects.core.database)` 는 본 PR 에서 **추가하지 않는다**. Hilt 그래프 누락 검증은 `core:data` PR 이후 한꺼번에 진행 ([current.md](../current.md) 의 "출시 전 점검" 그대로).
+- `app/build.gradle.kts` — `implementation(projects.core.database)` 는 본 PR 에서 **추가하지 않는다**. Hilt 그래프 누락 검증은 `core:data` PR 이후 한꺼번에 진행 ([current.md](current.md) 의 "출시 전 점검" 그대로).
 
 ### 2. Entity (`core/database/.../entity/`)
 
@@ -145,6 +145,6 @@ UseCase·Repository 는 본 PR 범위 밖이다.
 이후:
 - **commit** ([CLAUDE.md](../CLAUDE.md) 규칙).
 - 의사결정이 있었으므로 **[`history/<short-hash>.md`](../history/README.md)** 작성 — 주제: "Room 도입과 SSOT 스키마 결정" (BookEntry PK=isbn, currentPage 파생 컬럼화 거부, ReadingStatus String 직렬화, schemas 커밋 정책).
-- **[current.md](../current.md)** 의 "2 단계 다음 작업" 1 번 항목에 ✅ 표기, 다음 PR(`core:network` 또는 `core:datastore`) 을 강조하도록 갱신.
+- **[current.md](current.md)** 의 "2 단계 다음 작업" 1 번 항목에 ✅ 표기, 다음 PR(`core:network` 또는 `core:datastore`) 을 강조하도록 갱신.
 
-후속 PR (`core:data`) 에서 `app` 의 `implementation(projects.core.database)` 추가 + Hilt 그래프 빌드 검증을 함께 수행한다 ([current.md](../current.md) 의 "출시 전 점검" 정책 그대로).
+후속 PR (`core:data`) 에서 `app` 의 `implementation(projects.core.database)` 추가 + Hilt 그래프 빌드 검증을 함께 수행한다 ([current.md](current.md) 의 "출시 전 점검" 정책 그대로).
