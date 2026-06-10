@@ -1,0 +1,8 @@
+- **2026-06-10**: Phase 2 Step 1 `core:database` 모듈 구현 완료
+  - Room 컨벤션 플러그인을 활용한 모듈 설정
+  - Entity 정의 (Book, BookEntry, ReadingRecord, RecentQuery)
+  - TypeConverters (LocalDate, Instant, ReadingStatus) 작성
+  - Database 및 Migration 골격 구현
+  - DAO (BookDao, BookEntryDao, ReadingRecordDao, RecentQueryDao) 및 SQL 프로젝션 구현 (currentPage 집계)
+  - DI (DatabaseModule) Hilt 설정
+  - Instrumented 테스트 작성 (BookEntryDaoTest, ReadingRecordDaoTest 등)

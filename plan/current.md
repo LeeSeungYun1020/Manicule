@@ -18,7 +18,7 @@
 
 작업 순서 (1~3 은 병렬 가능). 각 모듈의 파일 구조 / 클래스 명세는 **structure.md 4장** 참고, 테스트 범위는 **structure.md 7장** 참고.
 
-1. **`core:database`** — Room. `manicule.android.library` + `.hilt` + `.room` 적용.
+1. **`core:database`** — Room. ✅
 2. **`core:network`** — Retrofit + NLK API. `build.gradle.kts` 에 `platform(libs.okhttp.bom)`, `platform(libs.retrofit.bom)` 직접 선언. `NLK_AUTH_KEY` 는 `local.properties` 로드 방식 결정 필요.
 3. **`core:datastore`** — Preferences DataStore.
 4. **`core:data`** — Repository 6종 + 매퍼.
