@@ -77,7 +77,7 @@ UseCase·Repository 는 본 PR 범위 밖이다.
 | `RecentQueryDao.kt`   | `upsert(query)`, `observeRecent(limit: Int = 10): Flow<List<RecentQueryEntity>>`, `clear()`                                                                            | Flow / suspend                |
 
 - **정책**: 관찰형은 `Flow`, 단발성 mutation 은 `suspend`. 정렬·필터·페이징 정책 결정(서재 정렬 3 종 등)은 `core:data` PR 에서 보강 — 본 PR 은 *최소 쿼리*만.
-- `BookEntryWithCurrentPage` 는 `@Embedded entry` + `@ColumnInfo currentPage: Int?` 형태의 결과 클래스(`dao/projection/` 에 배치). 쿼리는 `ReadingRecordEntity` 와 LEFT JOIN 후 `MAX(cumulativePage)` 로 도출.
+- `BookEntryWithCurrentPage` 는 `@Embedded entry` + `@ColumnInfo currentPage: Int?` 형태의 결과 클래스(`dao/projection/` 에 배치). `currentPage` 는 **가장 최근 날짜(`date` 기준)** 의 `ReadingRecordEntity.cumulativePage` — `ReadingRecordEntity` 의 `(isbn) 별 ORDER BY date DESC LIMIT 1` 상관 서브쿼리로 도출(LEFT JOIN 이므로 기록 없으면 `null`). 단조 증가가 깨진 경우(기록 수정·재독)에도 `core:model` 의 정의("가장 최근 `ReadingRecord.cumulativePage`")와 일치하며 `latestCumulativeFor` 와 같은 의미.
 
 ### 4. Database / Converters / Migration
 
@@ -93,7 +93,7 @@ UseCase·Repository 는 본 PR 범위 밖이다.
 ### 6. 테스트 (`core/database/src/androidTest/`)
 
 - `BookDaoTest`, `BookEntryDaoTest`, `ReadingRecordDaoTest`, `RecentQueryDaoTest` — `Room.inMemoryDatabaseBuilder` + `runTest` + Turbine.
-- 각 DAO 최소 2~3 케이스: upsert/observe, FK CASCADE (Book 삭제 시 Entry/Record 동반 삭제), `(isbn, date)` 유니크 충돌, `BookEntryWithCurrentPage` 가 가장 최근 누적 페이지를 반환.
+- 각 DAO 최소 2~3 케이스: upsert/observe, FK CASCADE (Book 삭제 시 Entry/Record 동반 삭제), `(isbn, date)` 유니크 충돌, `BookEntryWithCurrentPage` 가 **가장 최근 날짜** 의 누적 페이지를 반환(누적치가 하향된 케이스 포함하여 `MAX` 가 아님을 검증).
 - `MigrationsSmokeTest` (선택, 가벼움) — v1 빌드만 검증.
 
 ---
@@ -101,10 +101,10 @@ UseCase·Repository 는 본 PR 범위 밖이다.
 ## 결정 사항 (본 PR 내 확정)
 
 - **`BookEntryEntity.PK = isbn`** — Book 과 1:1. 별도 surrogate id 불필요. 미등록 검색 결과는 `BookEntity` 만 캐싱되고 `BookEntry` 는 존재하지 않음으로 표현.
-- **`currentPage` 는 컬럼이 아닌 파생값** — `ReadingRecord` 가 SSOT 이므로 `MAX(cumulativePage)` 조인으로 도출. 정합성 버그 회피.
+- **`currentPage` 는 컬럼이 아닌 파생값** — `ReadingRecord` 가 SSOT 이므로 **가장 최근 날짜(`date` 기준)** 의 `cumulativePage` 를 상관 서브쿼리로 도출. `MAX` 가 아닌 "최신 날짜" 기준이라 기록 수정·재독으로 누적치가 하향돼도 `core:model` 정의와 일치. 중복 캐시 컬럼을 두지 않아 정합성 버그 회피.
 - **`ReadingStatus` 직렬화 = `String(enum.name)`** — 가독성·정렬·디버깅 이점이 Int 대비 압도적. 카디널리티 3.
 - **`Instant ↔ Long` (epoch ms)** — `updatedAt` 등 정렬 키로 사용되므로 비교 비용이 낮은 정수 저장.
-- **schemas/ 디렉터리 VCS 커밋** — Migration 회귀 방지의 근거. `.gitignore` 보강 필요 시 함께.
+- **schemas/ 디렉터리 VCS 커밋** — Migration 회귀 방지의 근거. `$projectDir/schemas` 는 `build/` 밖이라 현재 `.gitignore`(`build/`, `**/build/`)로 이미 추적 대상 — `.gitignore` 수정 불필요.
 - **`core:database` 는 `core:model` 에 의존하지만 Entity 가 도메인 모델을 *상속/포함하지 않는다*** — 매핑은 `core:data` 의 책임. 이번 PR 의 Entity 는 도메인과 독립적인 단순 평면 record.
 
 ---
@@ -113,7 +113,6 @@ UseCase·Repository 는 본 PR 범위 밖이다.
 
 수정:
 - `settings.gradle.kts`
-- `.gitignore` (필요 시 schemas 제외 해제)
 
 신규:
 - `core/database/build.gradle.kts`
@@ -148,3 +147,41 @@ UseCase·Repository 는 본 PR 범위 밖이다.
 - **[current.md](current.md)** 의 "2 단계 다음 작업" 1 번 항목에 ✅ 표기, 다음 PR(`core:network` 또는 `core:datastore`) 을 강조하도록 갱신.
 
 후속 PR (`core:data`) 에서 `app` 의 `implementation(projects.core.database)` 추가 + Hilt 그래프 빌드 검증을 함께 수행한다 ([current.md](current.md) 의 "출시 전 점검" 정책 그대로).
+
+---
+
+## 구현 분할 (PR · commit)
+
+전체를 한 번에 구현·리뷰하면 부담이 크다. 다음 제약으로 쪼갠다 — commit 당 **수정 파일 < 10**, **파일당 변경 ≤ 100 줄**, **commit 리뷰 ≤ 1 시간**, 가능하면 각 commit 이 **빌드 통과**. 라인수는 `core:model` 필드 수 + 표준 Room 보일러플레이트 기반 **추정치**.
+
+산출물을 **스키마 계층(PR1)** 과 **쿼리·테스트 계층(PR2)** 으로 가른다. DAO accessor 추가는 `1.json`(schema) 을 바꾸지 않으므로 PR 을 나눠도 스키마 churn 이 없다.
+
+### PR 1 — 스키마 계층
+
+모듈이 빌드되고 `schemas/.../1.json` 이 export·커밋된 상태까지.
+
+| commit | 파일 | 추정 | 빌드/검증 | 리뷰 |
+|--------|------|------|-----------|------|
+| **1. 모듈 등록** | `settings.gradle.kts`(주석 해제), `core/database/build.gradle.kts`, `src/main/AndroidManifest.xml` | 3파일·~21줄 | `:core:database:assembleDebug` (빈 모듈) | ~10분 |
+| **2. Entity 4개** | `entity/{Book,BookEntry,ReadingRecord,RecentQuery}Entity.kt` | 4파일·각 ≤35줄 | 컴파일(@Database 없이 @Entity 컴파일 가능) | ~30분 (스키마 결정 핵심) |
+| **3. Converters+Database+Migration+DB DI** | `converter/Converters.kt`, `ManiculeDatabase.kt`(DAO accessor 없이), `migration/Migrations.kt`, `di/DatabaseModule.kt`(provideDatabase 만), `schemas/.../1.json`(생성·커밋) | 5파일·손수 ~75줄 | `assembleDebug` → `1.json` 생성 후 커밋 | ~25분 |
+
+> 3 commit · 12 파일 · 각 commit 빌드 통과. DAO accessor 없는 `@Database` 는 1 commit 과도기(Room 허용).
+
+### PR 2 — DAO & 테스트
+
+| commit | 파일 | 추정 | 빌드/검증 | 리뷰 |
+|--------|------|------|-----------|------|
+| **4. DAO+projection+연결** | `dao/{Book,BookEntry,ReadingRecord,RecentQuery}Dao.kt`, `dao/projection/BookEntryWithCurrentPage.kt`, `ManiculeDatabase.kt`(DAO accessor +4), `di/DatabaseModule.kt`(DAO @Provides +4) | 7파일·각 변경 ≤28줄 | `:core:database:assembleDebug` (KSP DAO impl), schema 불변 | ~40분 (쿼리 정확성) |
+| **5. instrumented 테스트** | `{Book,BookEntry,ReadingRecord,RecentQuery}DaoTest.kt`, `MigrationsSmokeTest.kt` | 5파일·각 ≤70줄 | `:core:database:connectedDebugAndroidTest` | ~35분 |
+
+> 2 commit · 12 파일. `BookEntryDaoTest` 는 currentPage 가 **최신 날짜** 기준임을 누적치 하향 케이스로 검증.
+
+### 공통 워크플로 (CLAUDE.md)
+각 commit 직전: `ktlintFormat` → 범위 `check` 통과 → commit. PR2 머지 전 `./gradlew check` 전 모듈 회귀.
+
+- **PR1 머지 후**: `history/` 에 "Room 도입+SSOT 스키마 결정", `current.md` 진행 갱신.
+- **PR2 머지 후**: history 에 "currentPage 최신 날짜 파생(상관 서브쿼리)" 추가, `current.md` 2단계 1번 ✅.
+
+### 단일 PR 대안
+PR 분리가 과하면 commit 1~5 를 **한 PR 의 5 commit** 으로 그대로 적용 가능(제약은 commit 단위라 동일 충족). 본 계획은 스키마(계약) vs 쿼리(구현) 리뷰 관점 분리를 위해 2 PR 권장.
