@@ -16,14 +16,19 @@
 
 ## ⏳ 다음 작업 — 2단계 Core Engine
 
-작업 순서 (1~3 은 병렬 가능). 각 모듈의 파일 구조 / 클래스 명세는 **structure.md 4장** 참고, 테스트 범위는 **structure.md 7장** 참고.
+### 다음 세션에서 진행할 내용
+- **core:datastore** 모듈 구현:
+    - Preferences DataStore를 사용하여 사용자 설정(예: 최근 검색어 저장) 구현.
+- **core:data** 모듈 구현:
+    - Repository 인터페이스 및 구현체 작성.
+    - 네트워크/데이터베이스 모델과 도메인 모델 간 매핑.
+    - `core:network`에서 작성한 NLK API와 `core:database` 연동.
 
-1. **`core:database`** — Room. ✅
-2. **`core:network`** — Retrofit + NLK API. `build.gradle.kts` 에 `platform(libs.okhttp.bom)`, `platform(libs.retrofit.bom)` 직접 선언. `NLK_AUTH_KEY` 는 `local.properties` 로드 방식 결정 필요.
-3. **`core:datastore`** — Preferences DataStore.
-4. **`core:data`** — Repository 6종 + 매퍼.
-5. **`core:domain`** — UseCase 는 슬라이스에서 채움. 골격만.
-6. **`core:ui`** — `build.gradle.kts` 에 `platform(libs.coil.bom)` 직접 선언. 잔디 셀 디자인 토큰(크기/간격) 결정 필요.
+### 참고 사항
+- 이번 세션에서 `core:network` 모듈 생성을 마치고, 국립중앙도서관 ISBN 서지정보 API(JSON) 클라이언트 연동을 완료했습니다.
+- `local.properties`를 활용하여 API 키를 안전하게 주입하는 구조를 구축했습니다. 
+- **core:domain** — UseCase 는 슬라이스에서 채움. 골격만.
+- **core:ui** — `build.gradle.kts` 에 `platform(libs.coil.bom)` 직접 선언. 잔디 셀 디자인 토큰(크기/간격) 결정 필요.
 
 2단계 완료 후: **3단계 Slice 1 = `feature:search`** (디바운스 350 ms + Paging 3).
 
