@@ -10,7 +10,23 @@ import kotlinx.datetime.LocalDate
 @Dao
 interface ReadingRecordDao {
     @Upsert
-    suspend fun upsert(record: ReadingRecordEntity): Long
+    suspend fun upsertInternal(record: ReadingRecordEntity): Long
+
+    @Query("SELECT id FROM reading_records WHERE isbn = :isbn AND date = :date")
+    suspend fun getId(
+        isbn: String,
+        date: LocalDate,
+    ): Long?
+
+    @androidx.room.Transaction
+    suspend fun upsert(record: ReadingRecordEntity): Long {
+        val existingId = getId(record.isbn, record.date)
+        return if (existingId != null) {
+            upsertInternal(record.copy(id = existingId))
+        } else {
+            upsertInternal(record)
+        }
+    }
 
     @Query("DELETE FROM reading_records WHERE id = :id")
     suspend fun delete(id: Long)
