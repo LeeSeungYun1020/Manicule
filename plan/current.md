@@ -20,7 +20,7 @@
 
 1. **`core:database`** — Room. ✅
 2. **`core:network`** — Retrofit + NLK API. `build.gradle.kts` 에 `platform(libs.okhttp.bom)`, `platform(libs.retrofit.bom)` 직접 선언. `NLK_AUTH_KEY` 는 `local.properties` 로드 방식 결정 필요.
-3. **`core:datastore`** — Preferences DataStore.
+3. **`core:datastore`** — Preferences DataStore. ✅
 4. **`core:data`** — Repository 6종 + 매퍼.
 5. **`core:domain`** — UseCase 는 슬라이스에서 채움. 골격만.
 6. **`core:ui`** — `build.gradle.kts` 에 `platform(libs.coil.bom)` 직접 선언. 잔디 셀 디자인 토큰(크기/간격) 결정 필요.
