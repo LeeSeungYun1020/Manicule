@@ -53,7 +53,6 @@ class NlkApiTest {
 
             val result =
                 api.searchBooks(
-                    certKey = "test-key",
                     pageNo = 1,
                     pageSize = 10,
                     title = "코틀린",
@@ -77,7 +76,6 @@ class NlkApiTest {
             server.enqueue(MockResponse().setResponseCode(200).setBody(EMPTY_RESPONSE))
 
             api.searchBooks(
-                certKey = "test-key",
                 pageNo = 2,
                 pageSize = 20,
                 title = "검색어",
@@ -85,7 +83,6 @@ class NlkApiTest {
 
             val request = server.takeRequest()
             val url = request.requestUrl!!
-            assertThat(url.queryParameter("cert_key")).isEqualTo("test-key")
             assertThat(url.queryParameter("result_style")).isEqualTo("json")
             assertThat(url.queryParameter("page_no")).isEqualTo("2")
             assertThat(url.queryParameter("page_size")).isEqualTo("20")
@@ -98,7 +95,6 @@ class NlkApiTest {
             server.enqueue(MockResponse().setResponseCode(200).setBody(EMPTY_RESPONSE))
 
             api.searchBooks(
-                certKey = "test-key",
                 pageNo = 1,
                 pageSize = 10,
                 isbn = "9788966263370",
@@ -117,7 +113,6 @@ class NlkApiTest {
 
             val result =
                 api.searchBooks(
-                    certKey = "test-key",
                     pageNo = 1,
                     pageSize = 10,
                     title = "존재하지않는책",

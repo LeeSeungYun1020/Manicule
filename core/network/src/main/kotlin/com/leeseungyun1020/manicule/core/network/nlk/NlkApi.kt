@@ -9,7 +9,6 @@ interface NlkApi {
 
     @GET("seoji/SearchApi.do")
     suspend fun searchBooks(
-        @Query("cert_key") certKey: String,
         @Query("result_style") resultStyle: String = "json",
         @Query("page_no") pageNo: Int,
         @Query("page_size") pageSize: Int,
