@@ -27,6 +27,7 @@
 ### 참고 사항
 - 이번 세션에서 `core:network` 모듈 생성을 마치고, 국립중앙도서관 ISBN 서지정보 API(JSON) 클라이언트 연동을 완료했습니다.
 - `local.properties`를 활용하여 API 키를 안전하게 주입하는 구조를 구축했습니다. 
+- **네트워크 모듈 리뷰 완료**: `core:network` 모듈의 응답 DTO와 파라미터가 API 가이드에 맞게 잘 구현되어 정상 동작함을 검증. 단, `NlkAuthInterceptor` 기능 중복 문제를 방지하고자 `NlkApi.kt`에서 불필요한 `cert_key` 필수 파라미터를 제거함.
 - **core:domain** — UseCase 는 슬라이스에서 채움. 골격만.
 - **core:ui** — `build.gradle.kts` 에 `platform(libs.coil.bom)` 직접 선언. 잔디 셀 디자인 토큰(크기/간격) 결정 필요.
 
