@@ -1,7 +1,6 @@
 package com.leeseungyun1020.manicule.core.database.dao
 
 import android.content.Context
-import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import app.cash.turbine.test
@@ -12,7 +11,6 @@ import com.leeseungyun1020.manicule.core.database.entity.ReadingRecordEntity
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import org.junit.After
-import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Test
 
@@ -35,17 +33,19 @@ class ReadingRecordDaoTest {
     }
 
     @Test
-    fun upsert_and_unique_constraint() =
+    fun upsert_updates_existing_record() =
         runTest {
             val isbn = "123"
             bookDao.upsert(BookEntity(isbn, "T", "A", "P", null, null, null, null, null, null, null, null))
 
             dao.upsert(ReadingRecordEntity(isbn = isbn, date = LocalDate(2024, 1, 1), cumulativePage = 10))
+            dao.upsert(ReadingRecordEntity(isbn = isbn, date = LocalDate(2024, 1, 1), cumulativePage = 20))
 
-            assertThrows(SQLiteConstraintException::class.java) {
-                runTest {
-                    dao.upsert(ReadingRecordEntity(isbn = isbn, date = LocalDate(2024, 1, 1), cumulativePage = 20))
-                }
+            dao.observeByIsbn(isbn).test {
+                val records = awaitItem()
+                assertThat(records).hasSize(1)
+                assertThat(records.first().cumulativePage).isEqualTo(20)
+                cancelAndIgnoreRemainingEvents()
             }
         }
 
