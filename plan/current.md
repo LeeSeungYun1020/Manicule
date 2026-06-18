@@ -1,6 +1,6 @@
 # Manicule — 진행 현황
 
-> 참고: [plan.md](plan.md) 기획 · [structure.md](structure.md) 모듈/파일 구조 · [order.md](order.md) 단계 · [history/](history/README.md) 커밋별 의사결정
+> 참고: [plan.md](plan.md) 기획 · [structure.md](structure.md) 모듈/파일 구조 · [order.md](order.md) 단계 · [history/](../history/README.md) 커밋별 의사결정
 > 새 세션은 **"다음 작업"** 부터 진행.
 
 ## 단계
@@ -18,7 +18,7 @@
 
 작업 순서 (1~3 은 병렬 가능). 각 모듈의 파일 구조 / 클래스 명세는 **structure.md 4장** 참고, 테스트 범위는 **structure.md 7장** 참고.
 
-1. **`core:database`** — Room. `manicule.android.library` + `.hilt` + `.room` 적용.
+1. **`core:database`** — Room. ✅
 2. **`core:network`** — Retrofit + NLK API. `build.gradle.kts` 에 `platform(libs.okhttp.bom)`, `platform(libs.retrofit.bom)` 직접 선언. `NLK_AUTH_KEY` 는 `local.properties` 로드 방식 결정 필요.
 3. **`core:datastore`** — Preferences DataStore.
 4. **`core:data`** — Repository 6종 + 매퍼.
@@ -42,4 +42,4 @@
 - 2단계 완료 시 `app:run` 으로 Hilt 그래프 누락 검증.
 
 ### 커밋 / history
-의사결정 있는 커밋은 [history/](history/README.md) 에 `<short-hash>.md` 추가 (WHY 만). 순수 tooling/format 커밋은 만들지 않음.
+의사결정 있는 커밋은 [history/](../history/README.md) 에 `<short-hash>.md` 추가 (WHY 만). 순수 tooling/format 커밋은 만들지 않음.

@@ -31,3 +31,5 @@
 - [cf63cf8](cf63cf8.md) — Firebase 컨벤션 플러그인 + BoM
 - [ee4c7b1](ee4c7b1.md) — `-Xcontext-parameters` 플래그 제거
 - [5942347](5942347.md) — Network/Image BoM 전역 자동 적용 제거
+- [4c28b94](4c28b94.md) — ReadingRecordDao에 @Upsert 적용하여 갱신 시 PK 유지
+- [29c8161](29c8161.md) — UNIQUE 인덱스 제약조건에서 @Upsert 동작 한계 해결
