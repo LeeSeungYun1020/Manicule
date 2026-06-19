@@ -28,7 +28,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(authInterceptor: NlkAuthInterceptor): OkHttpClient =
+    @NLKOkHttpClient
+    fun provideNLKOkHttpClient(authInterceptor: NlkAuthInterceptor): OkHttpClient =
         OkHttpClient
             .Builder()
             .addInterceptor(authInterceptor)
@@ -41,7 +42,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideNlkApi(
-        client: OkHttpClient,
+        @NLKOkHttpClient client: OkHttpClient,
         json: Json,
     ): NlkApi =
         Retrofit
