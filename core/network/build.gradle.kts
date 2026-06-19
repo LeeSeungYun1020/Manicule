@@ -35,7 +35,7 @@ dependencies {
 
     implementation(platform(libs.retrofit.bom))
     implementation(libs.retrofit.core)
-    implementation(libs.retrofit.kotlin.serialization)
+    implementation(libs.retrofit.kotlinx.serialization)
 
     implementation(libs.kotlinx.serialization.json)
 
