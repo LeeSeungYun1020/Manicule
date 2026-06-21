@@ -22,7 +22,10 @@ android {
     }
 
     defaultConfig {
-        val nlkKey = localProps.getProperty("NLK_AUTH_KEY", "")
+        val nlkKey = localProps.getProperty("NLK_AUTH_KEY")
+        if (nlkKey.isNullOrBlank()) {
+            throw GradleException("NLK_AUTH_KEY is not set in local.properties")
+        }
         buildConfigField("String", "NLK_AUTH_KEY", "\"$nlkKey\"")
     }
 }
