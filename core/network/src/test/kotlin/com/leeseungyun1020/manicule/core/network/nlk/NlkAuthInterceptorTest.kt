@@ -1,6 +1,7 @@
 package com.leeseungyun1020.manicule.core.network.nlk
 
 import com.google.common.truth.Truth.assertThat
+import com.leeseungyun1020.manicule.core.network.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.mockwebserver.MockResponse
@@ -44,7 +45,7 @@ class NlkAuthInterceptorTest {
         client.newCall(request).execute()
 
         val recorded = server.takeRequest()
-        assertThat(recorded.requestUrl!!.queryParameter("cert_key")).isNotNull()
+        assertThat(recorded.requestUrl?.queryParameter("cert_key")).isEqualTo(BuildConfig.NLK_AUTH_KEY)
     }
 
     @Test
