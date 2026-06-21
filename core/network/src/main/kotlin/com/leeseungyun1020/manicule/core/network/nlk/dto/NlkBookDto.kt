@@ -5,30 +5,46 @@ import kotlinx.serialization.Serializable
 
 /**
  * 국립중앙도서관 ISBN 서지정보 API의 개별 도서 DTO.
- *
- * API 응답 필드 중 앱에서 활용하는 항목만 매핑한다.
- * 사용하지 않는 필드(VOL, SERIES_TITLE 등)는 생략한다.
  */
 @Serializable
 data class NlkBookDto(
-    @SerialName("EA_ISBN") val isbn: String = "",
-    @SerialName("TITLE") val title: String = "",
-    @SerialName("AUTHOR") val author: String = "",
     @SerialName("PUBLISHER") val publisher: String = "",
-    /** yyyyMMdd 형식의 발행예정일. 빈 문자열일 수 있다. */
-    @SerialName("PUBLISH_PREDATE") val publishPredate: String = "",
-    /** 표지 이미지 URL. 빈 문자열일 수 있다. */
-    @SerialName("TITLE_URL") val titleUrl: String = "",
-    /** 예정가격 (원). 빈 문자열이면 가격 정보 없음. */
-    @SerialName("PRE_PRICE") val prePrice: String = "",
-    /** 한국십진분류 주제어. */
-    @SerialName("SUBJECT") val subject: String = "",
-    /** 목차 URL. 빈 문자열이면 목차 없음. */
+    @SerialName("DDC") val ddc: String = "",
+    @SerialName("UPDATE_DATE") val updateDate: String = "",
+    @SerialName("BOOK_TB_CNT") val bookTbCnt: String = "",
+    @SerialName("BOOK_SUMMARY") val bookSummary: String = "",
+    @SerialName("EA_ADD_CODE") val eaAddCode: String = "",
+    @SerialName("PUBLISHER_URL") val publisherUrl: String = "",
+    @SerialName("AUTHOR") val author: String = "",
+    @SerialName("SERIES_TITLE") val seriesTitle: String = "",
+    @SerialName("KDC") val kdc: String = "",
+    @SerialName("EDITION_STMT") val editionStmt: String = "",
     @SerialName("BOOK_TB_CNT_URL") val bookTbCntUrl: String = "",
-    /** 책 소개 URL. 빈 문자열이면 소개 없음. */
+    @SerialName("SET_ISBN") val setIsbn: String = "",
+    @SerialName("REAL_PUBLISH_DATE") val realPublishDate: String = "",
+    @SerialName("TITLE_URL") val titleUrl: String = "",
+    @SerialName("PRE_PRICE") val prePrice: String = "",
     @SerialName("BOOK_INTRODUCTION_URL") val bookIntroductionUrl: String = "",
-    /** 요약 URL. 빈 문자열이면 요약 없음. */
+    @SerialName("DEPOSIT_YN") val depositYn: String = "",
+    @SerialName("BOOK_SIZE") val bookSize: String = "",
     @SerialName("BOOK_SUMMARY_URL") val bookSummaryUrl: String = "",
-    /** 페이지 수. 빈 문자열이면 정보 없음. */
+    @SerialName("EBOOK_YN") val ebookYn: String = "",
+    @SerialName("REAL_PRICE") val realPrice: String = "",
+    @SerialName("FORM") val form: String = "",
+    @SerialName("FORM_DETAIL") val formDetail: String = "",
     @SerialName("PAGE") val page: String = "",
+    @SerialName("CONTROL_NO") val controlNo: String = "",
+    @SerialName("SERIES_NO") val seriesNo: String = "",
+    @SerialName("EA_ISBN") val isbn: String = "",
+    @SerialName("INPUT_DATE") val inputDate: String = "",
+    @SerialName("BOOK_INTRODUCTION") val bookIntroduction: String = "",
+    @SerialName("SET_EXPRESSION") val setExpression: String = "",
+    @SerialName("VOL") val vol: String = "",
+    @SerialName("CIP_YN") val cipYn: String = "",
+    @SerialName("SUBJECT") val subject: String = "",
+    @SerialName("BIB_YN") val bibYn: String = "",
+    @SerialName("TITLE") val title: String = "",
+    @SerialName("PUBLISH_PREDATE") val publishPredate: String = "",
+    @SerialName("RELATED_ISBN") val relatedIsbn: String = "",
+    @SerialName("SET_ADD_CODE") val setAddCode: String = "",
 )
