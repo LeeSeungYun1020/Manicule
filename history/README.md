@@ -33,3 +33,7 @@
 - [5942347](5942347.md) — Network/Image BoM 전역 자동 적용 제거
 - [4c28b94](4c28b94.md) — ReadingRecordDao에 @Upsert 적용하여 갱신 시 PK 유지
 - [29c8161](29c8161.md) — UNIQUE 인덱스 제약조건에서 @Upsert 동작 한계 해결
+- [1e414ac](1e414ac.md) — core:network 모듈 및 국립중앙도서관 ISBN 서지정보 API 클라이언트 구현
+- [80e7610](80e7610.md) — NlkApi에서 중복되는 cert_key 파라미터 제거
+- [691d24b](691d24b.md) — Network Qualifier 파일 분리 및 명시화
+- [f830ee6](f830ee6.md) — local.properties에서 NLK_AUTH_KEY 미설정 시 빌드 오류 발생
