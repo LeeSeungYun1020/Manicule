@@ -28,32 +28,7 @@ class UserPreferencesDataStore
                         throw exception
                     }
                 }.map { preferences ->
-                    val themeModeName = preferences[PreferencesKeys.THEME_MODE] ?: ThemeMode.SYSTEM.name
-                    val themeMode =
-                        try {
-                            ThemeMode.valueOf(themeModeName)
-                        } catch (ignored: IllegalArgumentException) {
-                            ThemeMode.SYSTEM
-                        }
-
-                    val reminderEnabled = preferences[PreferencesKeys.REMINDER_ENABLED] ?: ReminderConfig.Default.enabled
-
-                    val reminderTimeStr = preferences[PreferencesKeys.REMINDER_TIME] ?: ReminderConfig.Default.time.toString()
-                    val reminderTime =
-                        try {
-                            LocalTime.parse(reminderTimeStr)
-                        } catch (ignored: IllegalArgumentException) {
-                            ReminderConfig.Default.time
-                        }
-
-                    UserPreferences(
-                        themeMode = themeMode,
-                        reminder =
-                            ReminderConfig(
-                                enabled = reminderEnabled,
-                                time = reminderTime,
-                            ),
-                    )
+                    preferences.toUserPreferences()
                 }
 
         suspend fun setThemeMode(themeMode: ThemeMode) {
@@ -69,3 +44,26 @@ class UserPreferencesDataStore
             }
         }
     }
+
+private fun Preferences.toUserPreferences(): UserPreferences {
+    val themeModeName = this[PreferencesKeys.THEME_MODE] ?: ThemeMode.SYSTEM.name
+    val themeMode =
+        runCatching { ThemeMode.valueOf(themeModeName) }
+            .getOrDefault(ThemeMode.SYSTEM)
+
+    val reminderEnabled = this[PreferencesKeys.REMINDER_ENABLED] ?: ReminderConfig.Default.enabled
+
+    val reminderTimeStr = this[PreferencesKeys.REMINDER_TIME] ?: ReminderConfig.Default.time.toString()
+    val reminderTime =
+        runCatching { LocalTime.parse(reminderTimeStr) }
+            .getOrDefault(ReminderConfig.Default.time)
+
+    return UserPreferences(
+        themeMode = themeMode,
+        reminder =
+            ReminderConfig(
+                enabled = reminderEnabled,
+                time = reminderTime,
+            ),
+    )
+}
