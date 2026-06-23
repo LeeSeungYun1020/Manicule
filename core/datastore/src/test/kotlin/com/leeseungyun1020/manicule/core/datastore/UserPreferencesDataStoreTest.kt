@@ -1,6 +1,7 @@
 package com.leeseungyun1020.manicule.core.datastore
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.edit
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.model.ReminderConfig
 import com.leeseungyun1020.manicule.core.model.ThemeMode
@@ -28,7 +29,10 @@ class UserPreferencesDataStoreTest {
         val testDataStore =
             PreferenceDataStoreFactory.create(
                 scope = testScope,
-                produceFile = { tmpFolder.newFile("user_preferences_test.preferences_pb") },
+                produceFile = {
+                    tmpFolder.root.listFiles()?.firstOrNull()
+                        ?: tmpFolder.newFile("user_preferences_test.preferences_pb")
+                },
             )
         userPreferencesDataStore = UserPreferencesDataStore(testDataStore)
     }
@@ -64,5 +68,30 @@ class UserPreferencesDataStoreTest {
             assertThat(preferences.themeMode).isEqualTo(ThemeMode.SYSTEM)
             assertThat(preferences.reminder.enabled).isTrue()
             assertThat(preferences.reminder.time).isEqualTo(LocalTime(8, 30))
+        }
+
+    @Test
+    fun shouldReturnDefaultPreferencesWhenInvalidDataIsStored() =
+        testScope.runTest {
+            val testDataStore =
+                PreferenceDataStoreFactory.create(
+                    scope = testScope,
+                    produceFile = {
+                        tmpFolder.root.listFiles()?.firstOrNull() ?: tmpFolder.newFile(
+                            "user_preferences_test.preferences_pb",
+                        )
+                    },
+                )
+
+            testDataStore.edit { preferences ->
+                preferences[PreferencesKeys.THEME_MODE] = "AUTO"
+                preferences[PreferencesKeys.REMINDER_TIME] = "20260623"
+            }
+
+            val sut = UserPreferencesDataStore(testDataStore)
+            val preferences = sut.userPreferencesFlow.first()
+
+            assertThat(preferences.themeMode).isEqualTo(ThemeMode.SYSTEM)
+            assertThat(preferences.reminder.time).isEqualTo(ReminderConfig.Default.time)
         }
 }
