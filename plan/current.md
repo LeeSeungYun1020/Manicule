@@ -29,8 +29,8 @@
 2. `core:network` — Retrofit + NLK API. ✅
 3. `core:datastore` — Preferences DataStore. ✅
 - Track A (Data)
-  - 4-1. `core:data` (Mapper) — 매퍼 구현. ⏳ 다음
-  - 4-2. `core:data` (Repo 1) — 일부 Repository 구현.
+  - 4-1. `core:data` (Mapper) — 매퍼 구현. ✅
+  - 4-2. `core:data` (Repo 1) — 일부 Repository 구현. ⏳ 다음
   - 4-3. `core:data` (Repo 2) — 나머지 Repository 및 DI.
   - 5. `core:domain` — UseCase skeleton.
 - Track B (UI)
