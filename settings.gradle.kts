@@ -37,7 +37,7 @@ include(":core:model")
 // 후속 단계에서 활성화
 //include(":core:data")
 include(":core:database")
-//include(":core:datastore")
+include(":core:datastore")
 //include(":core:domain")
 include(":core:network")
 //include(":core:notifications")

@@ -24,8 +24,12 @@
     - 네트워크/데이터베이스 모델과 도메인 모델 간 매핑.
     - `core:network`에서 작성한 NLK API와 `core:database` 연동.
 
-### 진행 참고 사항
-- **core:domain**: UseCase는 3단계 슬라이스에서 구현 예정
+1. `core:database` — Room. ✅
+2. `core:network` — Retrofit + NLK API. ✅
+3. `core:datastore` — Preferences DataStore. ✅
+4. `core:data` — Repository.
+5. `core:domain` — UseCase skeleton.
+6. `core:ui` — UI components
 
 ## 운영
 
