@@ -16,16 +16,20 @@
 
 ## ⏳ 다음 작업 — 2단계 Core Engine
 
-작업 순서 (1~3 은 병렬 가능). 각 모듈의 파일 구조 / 클래스 명세는 **structure.md 4장** 참고, 테스트 범위는 **structure.md 7장** 참고.
+### 다음 세션에서 진행할 내용
+- **core:datastore** 모듈 구현:
+    - Preferences DataStore를 사용하여 사용자 설정(예: 최근 검색어 저장) 구현.
+- **core:data** 모듈 구현:
+    - Repository 인터페이스 및 구현체 작성.
+    - 네트워크/데이터베이스 모델과 도메인 모델 간 매핑.
+    - `core:network`에서 작성한 NLK API와 `core:database` 연동.
 
-1. **`core:database`** — Room. ✅
-2. **`core:network`** — Retrofit + NLK API. `build.gradle.kts` 에 `platform(libs.okhttp.bom)`, `platform(libs.retrofit.bom)` 직접 선언. `NLK_AUTH_KEY` 는 `local.properties` 로드 방식 결정 필요.
-3. **`core:datastore`** — Preferences DataStore. ✅
-4. **`core:data`** — Repository 6종 + 매퍼.
-5. **`core:domain`** — UseCase 는 슬라이스에서 채움. 골격만.
-6. **`core:ui`** — `build.gradle.kts` 에 `platform(libs.coil.bom)` 직접 선언. 잔디 셀 디자인 토큰(크기/간격) 결정 필요.
-
-2단계 완료 후: **3단계 Slice 1 = `feature:search`** (디바운스 350 ms + Paging 3).
+1. `core:database` — Room. ✅
+2. `core:network` — Retrofit + NLK API. ✅
+3. `core:datastore` — Preferences DataStore. ✅
+4. `core:data` — Repository.
+5. `core:domain` — UseCase skeleton.
+6. `core:ui` — UI components
 
 ## 운영
 
@@ -37,8 +41,6 @@
 5. `app/build.gradle.kts` 의 `implementation(projects.…)` 주석 해제.
 
 ### 출시 전 점검 (1단계에서 미뤄둔 항목)
-- `allowBackup=true` 데이터 정밀화 (`dataExtractionRules`) — PR #1 리뷰 지적.
-- 다크 모드 Grass 0단계 가시성 — surface 와 색 차이 부족.
 - 2단계 완료 시 `app:run` 으로 Hilt 그래프 누락 검증.
 
 ### 커밋 / history
