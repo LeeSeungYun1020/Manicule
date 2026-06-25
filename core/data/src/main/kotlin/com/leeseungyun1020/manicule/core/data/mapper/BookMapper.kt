@@ -37,16 +37,12 @@ fun NlkBookDto.asExternalModel(): Book =
         summaryUrl = bookSummaryUrl.ifBlank { null },
     )
 
-internal fun parseNlkDate(dateString: String?): LocalDate? {
-    if (dateString == null || dateString.length != 8) return null
+internal fun parseNlkDate(dateString: String): LocalDate? {
+    if (dateString.length != 8) return null
     return runCatching {
         val year = dateString.substring(0, 4).toInt()
         val month = dateString.substring(4, 6).toInt()
         val day = dateString.substring(6, 8).toInt()
-        if (year in 1000..9999 && month in 1..12 && day in 1..31) {
-            LocalDate(year, month, day)
-        } else {
-            null
-        }
+        LocalDate(year, month, day)
     }.getOrNull()
 }
