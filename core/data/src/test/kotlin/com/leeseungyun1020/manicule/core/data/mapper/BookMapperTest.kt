@@ -13,18 +13,18 @@ class BookMapperTest {
         // given
         val entity =
             BookEntity(
-                isbn = "9788966263158",
-                title = "소프트웨어 아키텍처 101",
-                author = "마크 리처즈, 닐 포드",
-                publisher = "한빛미디어",
-                publishedDate = LocalDate(2021, 11, 1),
-                coverUrl = "http://example.com/cover.jpg",
-                totalPages = 440,
-                price = 32000,
-                category = "컴퓨터",
-                tableOfContentsUrl = "http://example.com/toc",
-                introductionUrl = "http://example.com/intro",
-                summaryUrl = "http://example.com/summary",
+                isbn = "9791170613114",
+                title = "시대예보",
+                author = "저자: 송길영",
+                publisher = "교보문고",
+                publishedDate = LocalDate(2025, 9, 11),
+                coverUrl = null,
+                totalPages = 358,
+                price = 22000,
+                category = "3",
+                tableOfContentsUrl = null,
+                introductionUrl = null,
+                summaryUrl = null,
             )
 
         // when
@@ -33,8 +33,13 @@ class BookMapperTest {
         // then
         assertThat(book.isbn).isEqualTo(entity.isbn)
         assertThat(book.title).isEqualTo(entity.title)
+        assertThat(book.author).isEqualTo(entity.author)
+        assertThat(book.publisher).isEqualTo(entity.publisher)
         assertThat(book.publishedDate).isEqualTo(entity.publishedDate)
         assertThat(book.totalPages).isEqualTo(entity.totalPages)
+        assertThat(book.price).isEqualTo(entity.price)
+        assertThat(book.category).isEqualTo(entity.category)
+        assertThat(book.coverUrl).isNull()
     }
 
     @Test
@@ -42,29 +47,33 @@ class BookMapperTest {
         // given
         val dto =
             NlkBookDto(
-                isbn = "9788966263158",
-                title = "소프트웨어 아키텍처 101",
-                author = "마크 리처즈, 닐 포드",
-                publisher = "한빛미디어",
-                publishPredate = "20211101",
-                titleUrl = "http://example.com/cover.jpg",
-                page = "440",
-                prePrice = "32000",
-                subject = "컴퓨터",
-                bookTbCntUrl = "http://example.com/toc",
-                bookIntroductionUrl = "http://example.com/intro",
-                bookSummaryUrl = "http://example.com/summary",
+                isbn = "9791170613114",
+                title = "시대예보",
+                author = "저자: 송길영",
+                publisher = "교보문고",
+                publishPredate = "20250911",
+                titleUrl = "",
+                page = "358 p.",
+                prePrice = "22000",
+                subject = "3",
+                bookTbCntUrl = "",
+                bookIntroductionUrl = "",
+                bookSummaryUrl = "",
             )
 
         // when
         val book = dto.asExternalModel()
 
         // then
-        assertThat(book.isbn).isEqualTo("9788966263158")
-        assertThat(book.publishedDate).isEqualTo(LocalDate(2021, 11, 1))
-        assertThat(book.totalPages).isEqualTo(440)
-        assertThat(book.price).isEqualTo(32000)
-        assertThat(book.coverUrl).isEqualTo("http://example.com/cover.jpg")
+        assertThat(book.isbn).isEqualTo("9791170613114")
+        assertThat(book.title).isEqualTo("시대예보")
+        assertThat(book.author).isEqualTo("저자: 송길영")
+        assertThat(book.publisher).isEqualTo("교보문고")
+        assertThat(book.publishedDate).isEqualTo(LocalDate(2025, 9, 11))
+        assertThat(book.totalPages).isEqualTo(358)
+        assertThat(book.price).isEqualTo(22000)
+        assertThat(book.category).isEqualTo("3")
+        assertThat(book.coverUrl).isNull()
     }
 
     @Test
