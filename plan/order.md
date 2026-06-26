@@ -44,9 +44,12 @@
 | 1 | `core:database` | Room Entity, DAO, ManiculeDatabase, Migration |
 | 2 | `core:network` | NLK ISBN API (Retrofit), DTO, NlkAuthInterceptor |
 | 3 | `core:datastore` | UserPreferences DataStore (테마, 알림 설정) |
-| 4 | `core:data` | Repository 인터페이스 + 구현체, Entity/DTO ↔ Model 매퍼 |
-| 5 | `core:domain` | UseCase 베이스 구조 (이후 슬라이스에서 UseCase 추가) |
-| 6 | `core:ui` | BookCover, BookListItem, BookProgressBar, ContributionGrid 공유 컴포넌트 |
+| Track A (Data) | `core:data` (Mapper) | `core:data` 모듈 셋업 및 Entity/DTO ↔ Model 매퍼 구현 |
+| Track A (Data) | `core:data` (Repo 1) | BookRepository, ReadingRecordRepository, SearchHistoryRepository 구현 |
+| Track A (Data) | `core:data` (Repo 2) | LibraryRepository, StatsRepository, UserPreferencesRepository 및 DI 모듈 구현 |
+| Track A (Data) | `core:domain` | `core:domain` 모듈 셋업 및 UseCase DI 베이스 구조 구성 |
+| Track B (UI) | `core:ui` (도서) | `core:ui` 모듈 셋업, BookCover, BookListItem 공유 컴포넌트 구현 |
+| Track B (UI) | `core:ui` (기타) | BookProgressBar, ContributionGrid 공유 컴포넌트 구현 |
 
 `core:database`·`core:network`·`core:datastore`는 상호 의존이 없어 병렬 구현 가능.
 Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동반 작성한다.

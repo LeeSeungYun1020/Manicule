@@ -16,20 +16,26 @@
 
 ## ⏳ 다음 작업 — 2단계 Core Engine
 
-### 다음 세션에서 진행할 내용
-- **core:datastore** 모듈 구현:
-    - Preferences DataStore를 사용하여 사용자 설정(예: 최근 검색어 저장) 구현.
-- **core:data** 모듈 구현:
-    - Repository 인터페이스 및 구현체 작성.
-    - 네트워크/데이터베이스 모델과 도메인 모델 간 매핑.
-    - `core:network`에서 작성한 NLK API와 `core:database` 연동.
+### 다음 세션에서 진행할 내용 (트랙 병행 가능)
+- **[Track A] core:data** 모듈 생성 및 매퍼 구현 (PR 1):
+    - `core:data` 모듈 셋업 (`build.gradle.kts` 등)
+    - 데이터 소스(Entity, DTO)와 도메인 모델 간 변환을 수행하는 Mapper 작성
+    - 단위 테스트(Mapper 동작 검증) 작성
+- **[Track B] core:ui** 모듈 생성 및 도서 UI 컴포넌트 구현 (PR 1):
+    - `core:ui` 모듈 셋업 (`build.gradle.kts` 등)
+    - BookCover, BookListItem 컴포넌트 작성
 
 1. `core:database` — Room. ✅
 2. `core:network` — Retrofit + NLK API. ✅
 3. `core:datastore` — Preferences DataStore. ✅
-4. `core:data` — Repository.
-5. `core:domain` — UseCase skeleton.
-6. `core:ui` — UI components
+- Track A (Data)
+  - 4-1. `core:data` (Mapper) — 매퍼 구현. ✅
+  - 4-2. `core:data` (Repo 1) — 일부 Repository 구현. ⏳ 다음
+  - 4-3. `core:data` (Repo 2) — 나머지 Repository 및 DI.
+  - 5. `core:domain` — UseCase skeleton.
+- Track B (UI)
+  - 6-1. `core:ui` (도서) — Book Cover, Item UI 컴포넌트. ⏳ 다음
+  - 6-2. `core:ui` (기타) — ProgressBar, ContributionGrid.
 
 ## 운영
 

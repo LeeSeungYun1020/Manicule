@@ -35,7 +35,7 @@ include(":core:designsystem")
 include(":core:model")
 
 // 후속 단계에서 활성화
-//include(":core:data")
+include(":core:data")
 include(":core:database")
 include(":core:datastore")
 //include(":core:domain")
