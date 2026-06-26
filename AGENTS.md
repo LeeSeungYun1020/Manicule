@@ -10,7 +10,10 @@
 - 코드, 주석, git commit message를 포함한 모든 파일은 간결하고 이해하기 쉽게 작성. 필요하지 않은, 부차적인 내용과 미사여구 삽입하지 않음.
 - 작업 후: `./gradlew ktlintFormat` → `check` 통과 → commit → 의사결정 있었다면 history 추가 → current.md 업데이트
 - commit message 작성 시: 이전 포맷 확인.
-- PR 코드 리뷰 작성 시: 불필요한 전체 요약 코멘트 작성 금지. 반드시 분리된 개별 코멘트로 작성.
+- PR 생성 시: 이전 PR 포맷 확인. LeeSeungYun1020 계정으로 생성(gh auth status 확인). Assignees는 LeeSeungYun1020. Reviewers는 lsy-auto.
+- PR 코드 리뷰 작성 시: 불필요한 전체 요약 코멘트 작성 금지. 반드시 분리된 개별 코멘트로 작성. lsy-auto 계정으로 업로드.
+- PR 리뷰 반영 시: 해당 코멘트에 수정 내용 또는 수정하지 않는 이유 간결히 추가. LeeSeungYun1020 계정으로 답글.
+- PR 승인: 리뷰 해결된 경우 resolve 처리, 모든 리뷰 resolve 시 approve. lsy-auto 계정으로 승인.
 
 Gemini 모델 필수 지침
 
