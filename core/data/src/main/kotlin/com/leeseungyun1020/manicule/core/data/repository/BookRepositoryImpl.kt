@@ -14,14 +14,19 @@ class BookRepositoryImpl
         private val nlkApi: NlkApi,
     ) : BookRepository {
 
-        override suspend fun getBook(isbn: String): Book? = bookDao.getByIsbn(isbn)?.asExternalModel()
+        override suspend fun getBook(isbn: String): Result<Book> =
+            runCatching {
+                bookDao.getByIsbn(isbn)?.asExternalModel()
+                    ?: throw NoSuchElementException("해당 책 정보를 로컬에서 찾을 수 없습니다.")
+            }
 
-        override suspend fun fetchAndCacheBook(isbn: String): Book? {
-            val response = runCatching { nlkApi.searchBooks(pageNo = 1, pageSize = 1, isbn = isbn) }.getOrNull()
-            val dto = response?.docs?.firstOrNull() ?: return null
+        override suspend fun fetchAndCacheBook(isbn: String): Result<Book> =
+            runCatching {
+                val response = nlkApi.searchBooks(pageNo = 1, pageSize = 1, isbn = isbn)
+                val dto = response.docs.firstOrNull() ?: throw NoSuchElementException("API에서 해당 ISBN의 책을 찾을 수 없습니다.")
 
-            val book = dto.asExternalModel()
-            bookDao.upsert(book.asEntity())
-            return book
-        }
+                val book = dto.asExternalModel()
+                bookDao.upsert(book.asEntity())
+                book
+            }
     }

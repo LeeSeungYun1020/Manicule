@@ -45,17 +45,20 @@ class BookRepositoryImplTest {
                 )
             fakeBookDao.upsert(entity)
 
-            val book = bookRepository.getBook("123")
+            val result = bookRepository.getBook("123")
+            assertThat(result.isSuccess).isTrue()
+            val book = result.getOrNull()
             assertThat(book).isNotNull()
             assertThat(book?.isbn).isEqualTo("123")
             assertThat(book?.title).isEqualTo("Test Book")
         }
 
     @Test
-    fun getBook_returns_null_if_not_exists() =
+    fun getBook_returns_failure_if_not_exists() =
         runTest {
-            val book = bookRepository.getBook("999")
-            assertThat(book).isNull()
+            val result = bookRepository.getBook("999")
+            assertThat(result.isFailure).isTrue()
+            assertThat(result.exceptionOrNull()).isInstanceOf(NoSuchElementException::class.java)
         }
 
     @Test
@@ -83,9 +86,11 @@ class BookRepositoryImplTest {
                     docs = listOf(dto),
                 )
 
-            val book = bookRepository.fetchAndCacheBook("456")
+            val result = bookRepository.fetchAndCacheBook("456")
 
             // Assert returned book
+            assertThat(result.isSuccess).isTrue()
+            val book = result.getOrNull()
             assertThat(book).isNotNull()
             assertThat(book?.isbn).isEqualTo("456")
             assertThat(book?.title).isEqualTo("API Book")
@@ -98,11 +103,12 @@ class BookRepositoryImplTest {
         }
 
     @Test
-    fun fetchAndCacheBook_returns_null_if_api_returns_empty() =
+    fun fetchAndCacheBook_returns_failure_if_api_returns_empty() =
         runTest {
             fakeNlkApi.mockResponse = NlkSearchResponseDto(docs = emptyList())
-            val book = bookRepository.fetchAndCacheBook("789")
-            assertThat(book).isNull()
+            val result = bookRepository.fetchAndCacheBook("789")
+            assertThat(result.isFailure).isTrue()
+            assertThat(result.exceptionOrNull()).isInstanceOf(NoSuchElementException::class.java)
 
             val cached = fakeBookDao.getByIsbn("789")
             assertThat(cached).isNull()
