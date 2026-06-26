@@ -1,6 +1,7 @@
 package com.leeseungyun1020.manicule.core.data.repository
 
 import com.google.common.truth.Truth.assertThat
+import com.leeseungyun1020.manicule.core.data.datasource.ReadingRecordLocalDataSourceImpl
 import com.leeseungyun1020.manicule.core.database.dao.ReadingRecordDao
 import com.leeseungyun1020.manicule.core.database.entity.ReadingRecordEntity
 import com.leeseungyun1020.manicule.core.model.ReadingRecord
@@ -20,7 +21,7 @@ class ReadingRecordRepositoryImplTest {
     @Before
     fun setup() {
         fakeDao = FakeReadingRecordDao()
-        repository = ReadingRecordRepositoryImpl(fakeDao)
+        repository = ReadingRecordRepositoryImpl(ReadingRecordLocalDataSourceImpl(fakeDao))
     }
 
     @Test

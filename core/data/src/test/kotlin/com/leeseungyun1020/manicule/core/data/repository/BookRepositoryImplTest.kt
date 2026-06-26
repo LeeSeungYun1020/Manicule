@@ -1,6 +1,8 @@
 package com.leeseungyun1020.manicule.core.data.repository
 
 import com.google.common.truth.Truth.assertThat
+import com.leeseungyun1020.manicule.core.data.datasource.BookLocalDataSourceImpl
+import com.leeseungyun1020.manicule.core.data.datasource.BookRemoteDataSourceImpl
 import com.leeseungyun1020.manicule.core.database.dao.BookDao
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.network.nlk.NlkApi
@@ -22,7 +24,11 @@ class BookRepositoryImplTest {
     fun setup() {
         fakeBookDao = FakeBookDao()
         fakeNlkApi = FakeNlkApi()
-        bookRepository = BookRepositoryImpl(fakeBookDao, fakeNlkApi)
+        bookRepository =
+            BookRepositoryImpl(
+                BookLocalDataSourceImpl(fakeBookDao),
+                BookRemoteDataSourceImpl(fakeNlkApi),
+            )
     }
 
     @Test
