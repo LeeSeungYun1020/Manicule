@@ -21,9 +21,9 @@
     - `core:data` 모듈 셋업 (`build.gradle.kts` 등)
     - 데이터 소스(Entity, DTO)와 도메인 모델 간 변환을 수행하는 Mapper 작성
     - 단위 테스트(Mapper 동작 검증) 작성
-- **[Track B] core:ui** 모듈 생성 및 도서 UI 컴포넌트 구현 (PR 1):
-    - `core:ui` 모듈 셋업 (`build.gradle.kts` 등)
-    - BookCover, BookListItem 컴포넌트 작성
+- **[Track B] core:ui** 모듈 생성 및 도서 UI 컴포넌트 구현 (PR 1): ✅
+    - `core:ui` 모듈 셋업 (`build.gradle.kts` 등) ✅
+    - BookCover, BookListItem 컴포넌트 작성 ✅
 
 1. `core:database` — Room. ✅
 2. `core:network` — Retrofit + NLK API. ✅
@@ -34,8 +34,8 @@
   - 4-3. `core:data` (Repo 2) — 나머지 Repository 및 DI.
   - 5. `core:domain` — UseCase skeleton.
 - Track B (UI)
-  - 6-1. `core:ui` (도서) — Book Cover, Item UI 컴포넌트. ⏳ 다음
-  - 6-2. `core:ui` (기타) — ProgressBar, ContributionGrid.
+  - 6-1. `core:ui` (도서) — Book Cover, Item UI 컴포넌트. ✅
+  - 6-2. `core:ui` (기타) — ProgressBar, ContributionGrid. ⏳ 다음
 
 ## 운영
 
