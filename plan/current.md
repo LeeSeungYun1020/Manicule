@@ -23,6 +23,7 @@
 - **[Track B] core:ui** 모듈 생성 및 도서 UI 컴포넌트 구현 (PR 1): ✅
     - `core:ui` 모듈 셋업 (`build.gradle.kts` 등) ✅
     - BookCover, BookListItem 컴포넌트 작성 ✅
+    - BookProgressBar, ContributionGrid 컴포넌트 작성 ✅
 
 1. `core:database` — Room. ✅
 2. `core:network` — Retrofit + NLK API. ✅
@@ -34,7 +35,7 @@
   - 5. `core:domain` — UseCase skeleton.
 - Track B (UI)
   - 6-1. `core:ui` (도서) — Book Cover, Item UI 컴포넌트. ✅
-  - 6-2. `core:ui` (기타) — ProgressBar, ContributionGrid. ⏳ 다음
+  - 6-2. `core:ui` (기타) — ProgressBar, ContributionGrid. ✅
 
 ## 운영
 
