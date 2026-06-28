@@ -19,7 +19,9 @@
 - PR 생성 시: 이전 PR 포맷 확인. 문서화 관련 내용은 포함하지 않음. LeeSeungYun1020 계정으로 생성(gh auth status 확인). Assignees는 LeeSeungYun1020. Reviewers는 lsy-auto.
 - PR 코드 리뷰 작성 시: 불필요한 전체 요약 코멘트 작성 금지. 반드시 분리된 개별 코멘트로 작성. lsy-auto 계정으로 업로드.
 - PR 리뷰 반영 시: 해당 코멘트에 수정 내용 또는 수정하지 않는 이유 간결히 추가. LeeSeungYun1020 계정으로 답글.
-- PR 승인: 리뷰 해결된 경우 lsy-auto 계정으로 resolve 처리, 모든 리뷰 resolve 시 approve. lsy-auto 계정으로 승인.
+- PR 리뷰 완료 시: 리뷰한 내용에 작성된 답글이 적합한지 결정 방향과 수정 내용을 확인 후 해결 완료되었으면 resolve 처리. lsy-auto 계정으로 resolve.
+- PR 승인: 모든 리뷰 resolve 완료 시 전체 PR 코드 변경 사항과 plan 반영 여부 점검 후 approve. lsy-auto 계정으로 승인.
+- PR 관련 작업 시 에러 방지를 위해 명령어를 &&로 묶어 실행하지 말고, 단계별로 분리하여 안전하게 순차 실행.
 
 # Gemini 모델 필수 지침
 
