@@ -1,5 +1,6 @@
 package com.leeseungyun1020.manicule.core.ui.book
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,6 +31,7 @@ fun BookListItem(
         modifier =
             modifier
                 .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
                 .padding(16.dp),
     ) {
         BookCover(

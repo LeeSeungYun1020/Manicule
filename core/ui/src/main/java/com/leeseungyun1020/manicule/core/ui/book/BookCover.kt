@@ -20,7 +20,7 @@ fun BookCover(
     imageUrl: String?,
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
-    placeholder: Painter = ColorPainter(MaterialTheme.colorScheme.surfaceVariant),
+    placeholder: Painter = ColorPainter(MaterialTheme.colorScheme.primaryContainer),
 ) {
     AsyncImage(
         model = imageUrl,
