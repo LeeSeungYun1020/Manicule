@@ -58,10 +58,16 @@ class SearchHistoryRepositoryImplTest {
         }
 }
 
-class FakeClock : Clock {
-    override fun now(): Instant = Instant.fromEpochMilliseconds(System.currentTimeMillis())
+class FakeClock(
+    var currentTime: Instant = Instant.parse("2026-06-28T00:00:00Z"),
+) : Clock {
+    override fun now(): Instant = currentTime
 
     override fun timeZone(): kotlinx.datetime.TimeZone = kotlinx.datetime.TimeZone.UTC
+
+    fun advanceBy(duration: kotlin.time.Duration) {
+        currentTime += duration
+    }
 }
 
 class FakeRecentQueryDao : RecentQueryDao {
