@@ -1,5 +1,6 @@
 package com.leeseungyun1020.manicule.core.data.repository
 
+import android.util.Log
 import com.leeseungyun1020.manicule.core.data.datasource.BookLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.BookRemoteDataSource
 import com.leeseungyun1020.manicule.core.data.mapper.asEntity
@@ -26,6 +27,6 @@ class BookRepositoryImpl
                 val book = dto.asExternalModel()
                 bookLocalDataSource.upsert(book.asEntity())
             }.onFailure {
-                android.util.Log.e("BookRepository", "Failed to sync book with ISBN $isbn", it)
+                Log.e("BookRepository", "Failed to sync book with ISBN $isbn", it)
             }
     }

@@ -10,8 +10,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
 import org.junit.Before
 import org.junit.Test
+import kotlin.time.Duration
 
 class SearchHistoryRepositoryImplTest {
 
@@ -63,9 +65,9 @@ class FakeClock(
 ) : Clock {
     override fun now(): Instant = currentTime
 
-    override fun timeZone(): kotlinx.datetime.TimeZone = kotlinx.datetime.TimeZone.UTC
+    override fun timeZone(): TimeZone = TimeZone.UTC
 
-    fun advanceBy(duration: kotlin.time.Duration) {
+    fun advanceBy(duration: Duration) {
         currentTime += duration
     }
 }
