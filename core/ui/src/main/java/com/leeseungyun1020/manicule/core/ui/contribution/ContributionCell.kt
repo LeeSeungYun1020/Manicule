@@ -2,7 +2,6 @@ package com.leeseungyun1020.manicule.core.ui.contribution
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -14,8 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.leeseungyun1020.manicule.core.designsystem.theme.GrassDark
-import com.leeseungyun1020.manicule.core.designsystem.theme.GrassLight
+import com.leeseungyun1020.manicule.core.designsystem.theme.LocalGrassColors
 
 @Composable
 fun ContributionCell(
@@ -23,14 +21,13 @@ fun ContributionCell(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
 ) {
-    val isDarkTheme = isSystemInDarkTheme()
+    val grassColors = LocalGrassColors.current
     val backgroundColor =
         if (intensity == null) {
             Color.Transparent
         } else {
             val safeIntensity = intensity.coerceIn(0, 4)
-            val colorList = if (isDarkTheme) GrassDark else GrassLight
-            colorList[safeIntensity]
+            grassColors[safeIntensity]
         }
 
     val clickableModifier =
