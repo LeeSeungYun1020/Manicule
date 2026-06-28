@@ -5,11 +5,17 @@ import com.leeseungyun1020.manicule.core.data.datasource.BookLocalDataSourceImpl
 import com.leeseungyun1020.manicule.core.data.datasource.BookRemoteDataSourceImpl
 import com.leeseungyun1020.manicule.core.database.dao.BookDao
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
+import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.network.nlk.NlkApi
 import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkBookDto
 import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkSearchResponseDto
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -32,14 +38,14 @@ class BookRepositoryImplTest {
     }
 
     @Test
-    fun getBook_returns_book_if_exists_in_dao() =
+    fun scenario1_local_exists_remote_success() =
         runTest {
-            val entity =
+            val localEntity =
                 BookEntity(
                     isbn = "123",
-                    title = "Test Book",
-                    author = "Test Author",
-                    publisher = "Test Publisher",
+                    title = "Local Book",
+                    author = "Author",
+                    publisher = "Publisher",
                     publishedDate = null,
                     coverUrl = null,
                     totalPages = null,
@@ -49,87 +55,160 @@ class BookRepositoryImplTest {
                     introductionUrl = null,
                     summaryUrl = null,
                 )
-            fakeBookDao.upsert(entity)
+            fakeBookDao.upsert(localEntity)
 
-            val result = bookRepository.getBook("123")
-            assertThat(result.isSuccess).isTrue()
-            val book = result.getOrNull()
-            assertThat(book).isNotNull()
-            assertThat(book?.isbn).isEqualTo("123")
-            assertThat(book?.title).isEqualTo("Test Book")
-        }
-
-    @Test
-    fun getBook_returns_failure_if_not_exists() =
-        runTest {
-            val result = bookRepository.getBook("999")
-            assertThat(result.isFailure).isTrue()
-            assertThat(result.exceptionOrNull()).isInstanceOf(NoSuchElementException::class.java)
-        }
-
-    @Test
-    fun fetchAndCacheBook_fetches_from_api_and_saves_to_dao() =
-        runTest {
-            val dto =
+            val remoteDto =
                 NlkBookDto(
-                    isbn = "456",
-                    title = "API Book",
-                    author = "API Author",
-                    publisher = "API Publisher",
-                    publishPredate = "20240101",
+                    isbn = "123",
+                    title = "Remote Book",
+                    author = "Author",
+                    publisher = "Publisher",
+                    publishPredate = "",
                     titleUrl = "",
-                    page = "200",
-                    prePrice = "10000",
+                    page = "",
+                    prePrice = "",
                     subject = "",
                     bookTbCntUrl = "",
                     bookIntroductionUrl = "",
                     bookSummaryUrl = "",
                 )
-            fakeNlkApi.mockResponse =
-                NlkSearchResponseDto(
-                    totalCount = "1",
-                    pageNo = "1",
-                    docs = listOf(dto),
-                )
+            fakeNlkApi.mockResponse = NlkSearchResponseDto(totalCount = "1", pageNo = "1", docs = listOf(remoteDto))
 
-            val result = bookRepository.fetchAndCacheBook("456")
+            val results = mutableListOf<Book?>()
+            val job =
+                backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                    bookRepository.observeBook("123").toList(results)
+                }
 
-            // Assert returned book
-            assertThat(result.isSuccess).isTrue()
-            val book = result.getOrNull()
-            assertThat(book).isNotNull()
-            assertThat(book?.isbn).isEqualTo("456")
-            assertThat(book?.title).isEqualTo("API Book")
+            // 처음에 로컬 데이터가 방출됨
+            assertThat(results.last()?.title).isEqualTo("Local Book")
 
-            // Assert cached in dao
-            val cached = fakeBookDao.getByIsbn("456")
-            assertThat(cached).isNotNull()
-            assertThat(cached?.isbn).isEqualTo("456")
-            assertThat(cached?.title).isEqualTo("API Book")
+            // 원격 동기화 수행
+            val syncResult = bookRepository.syncBook("123")
+            assertThat(syncResult.isSuccess).isTrue()
+
+            // 로컬 데이터 업데이트 후 새로운 원격 데이터가 방출됨
+            assertThat(results.last()?.title).isEqualTo("Remote Book")
+
+            job.cancel()
         }
 
     @Test
-    fun fetchAndCacheBook_returns_failure_if_api_returns_empty() =
+    fun scenario2_local_exists_remote_fail() =
         runTest {
-            fakeNlkApi.mockResponse = NlkSearchResponseDto(docs = emptyList())
-            val result = bookRepository.fetchAndCacheBook("789")
-            assertThat(result.isFailure).isTrue()
-            assertThat(result.exceptionOrNull()).isInstanceOf(NoSuchElementException::class.java)
+            val localEntity =
+                BookEntity(
+                    isbn = "123",
+                    title = "Local Book",
+                    author = "Author",
+                    publisher = "Publisher",
+                    publishedDate = null,
+                    coverUrl = null,
+                    totalPages = null,
+                    price = null,
+                    category = null,
+                    tableOfContentsUrl = null,
+                    introductionUrl = null,
+                    summaryUrl = null,
+                )
+            fakeBookDao.upsert(localEntity)
 
-            val cached = fakeBookDao.getByIsbn("789")
-            assertThat(cached).isNull()
+            fakeNlkApi.mockResponse = NlkSearchResponseDto(docs = emptyList()) // 원격 데이터 없음(또는 실패)
+
+            val results = mutableListOf<Book?>()
+            val job =
+                backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                    bookRepository.observeBook("123").toList(results)
+                }
+
+            // 처음에 로컬 데이터 방출됨
+            assertThat(results.last()?.title).isEqualTo("Local Book")
+
+            // 원격 동기화 실패
+            val syncResult = bookRepository.syncBook("123")
+            assertThat(syncResult.isFailure).isTrue()
+
+            // 여전히 로컬 데이터가 유지됨
+            assertThat(results.last()?.title).isEqualTo("Local Book")
+
+            job.cancel()
+        }
+
+    @Test
+    fun scenario3_local_empty_remote_success() =
+        runTest {
+            // 로컬 데이터 없음
+            val remoteDto =
+                NlkBookDto(
+                    isbn = "123",
+                    title = "Remote Book",
+                    author = "Author",
+                    publisher = "Publisher",
+                    publishPredate = "",
+                    titleUrl = "",
+                    page = "",
+                    prePrice = "",
+                    subject = "",
+                    bookTbCntUrl = "",
+                    bookIntroductionUrl = "",
+                    bookSummaryUrl = "",
+                )
+            fakeNlkApi.mockResponse = NlkSearchResponseDto(totalCount = "1", pageNo = "1", docs = listOf(remoteDto))
+
+            val results = mutableListOf<Book?>()
+            val job =
+                backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                    bookRepository.observeBook("123").toList(results)
+                }
+
+            // 처음에 로컬 데이터가 없으므로 null 방출 (UI는 로딩 등 대기 상태)
+            assertThat(results.last()).isNull()
+
+            // 원격 동기화 수행
+            val syncResult = bookRepository.syncBook("123")
+            assertThat(syncResult.isSuccess).isTrue()
+
+            // 원격 데이터가 로컬에 반영된 후 방출됨
+            assertThat(results.last()?.title).isEqualTo("Remote Book")
+
+            job.cancel()
+        }
+
+    @Test
+    fun scenario4_local_empty_remote_fail() =
+        runTest {
+            // 로컬 데이터 없음
+            fakeNlkApi.mockResponse = NlkSearchResponseDto(docs = emptyList()) // 원격 데이터 없음
+
+            val results = mutableListOf<Book?>()
+            val job =
+                backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+                    bookRepository.observeBook("123").toList(results)
+                }
+
+            // 처음에 로컬 데이터가 없으므로 null 방출 (대기 상태)
+            assertThat(results.last()).isNull()
+
+            // 원격 동기화 실패
+            val syncResult = bookRepository.syncBook("123")
+            assertThat(syncResult.isFailure).isTrue()
+
+            // 여전히 null 유지 (이후 ViewModel에서 null & syncResult.isFailure 확인 후 에러 UI 표시)
+            assertThat(results.last()).isNull()
+
+            job.cancel()
         }
 }
 
 class FakeBookDao : BookDao {
-    private val books = mutableMapOf<String, BookEntity>()
+    private val booksFlow = MutableStateFlow<Map<String, BookEntity>>(emptyMap())
 
-    override suspend fun getByIsbn(isbn: String): BookEntity? = books[isbn]
+    override suspend fun getByIsbn(isbn: String): BookEntity? = booksFlow.value[isbn]
 
-    override fun observeByIsbn(isbn: String): Flow<BookEntity?> = flowOf(books[isbn])
+    override fun observeByIsbn(isbn: String): Flow<BookEntity?> = booksFlow.map { it[isbn] }
 
     override suspend fun upsert(book: BookEntity) {
-        books[book.isbn] = book
+        booksFlow.update { it + (book.isbn to book) }
     }
 }
 
