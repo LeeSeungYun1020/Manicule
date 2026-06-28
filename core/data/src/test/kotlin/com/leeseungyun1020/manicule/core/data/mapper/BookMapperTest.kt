@@ -111,4 +111,26 @@ class BookMapperTest {
         assertThat(parseNlkDate("invalid!")).isNull()
         assertThat(parseNlkDate("20241301")).isNull() // Invalid month
     }
+
+    @Test
+    fun book_asEntity_mapsCorrectly() {
+        val book =
+            com.leeseungyun1020.manicule.core.model.Book(
+                isbn = "123",
+                title = "Test",
+                author = "Auth",
+                publisher = "Pub",
+                publishedDate = null,
+                coverUrl = null,
+                totalPages = null,
+                price = null,
+                category = null,
+                tableOfContentsUrl = null,
+                introductionUrl = null,
+                summaryUrl = null,
+            )
+        val entity = book.asEntity()
+        assertThat(entity.isbn).isEqualTo("123")
+        assertThat(entity.title).isEqualTo("Test")
+    }
 }

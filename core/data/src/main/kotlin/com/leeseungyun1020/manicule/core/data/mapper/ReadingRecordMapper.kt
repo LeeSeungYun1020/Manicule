@@ -10,3 +10,11 @@ fun ReadingRecordEntity.asExternalModel() =
         date = date,
         cumulativePage = cumulativePage,
     )
+
+fun ReadingRecord.asEntity() =
+    ReadingRecordEntity(
+        id = id,
+        isbn = isbn,
+        date = date,
+        cumulativePage = cumulativePage,
+    )

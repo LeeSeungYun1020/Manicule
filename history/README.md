@@ -39,3 +39,4 @@
 - [80e7610](80e7610.md) — NlkApi에서 중복되는 cert_key 파라미터 제거
 - [691d24b](691d24b.md) — Network Qualifier 파일 분리 및 명시화
 - [f830ee6](f830ee6.md) — local.properties에서 NLK_AUTH_KEY 미설정 시 빌드 오류 발생
+- [dc1d9df](dc1d9df.md) — BookRepository Offline-First 패턴 적용 및 조회/동기화 로직 분리
