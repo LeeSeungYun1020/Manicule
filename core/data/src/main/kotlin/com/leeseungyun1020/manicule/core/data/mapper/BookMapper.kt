@@ -46,3 +46,19 @@ internal fun parseNlkDate(dateString: String): LocalDate? {
         LocalDate(year, month, day)
     }.getOrNull()
 }
+
+fun Book.asEntity() =
+    BookEntity(
+        isbn = isbn,
+        title = title,
+        author = author,
+        publisher = publisher,
+        publishedDate = publishedDate,
+        coverUrl = coverUrl,
+        totalPages = totalPages,
+        price = price,
+        category = category,
+        tableOfContentsUrl = tableOfContentsUrl,
+        introductionUrl = introductionUrl,
+        summaryUrl = summaryUrl,
+    )

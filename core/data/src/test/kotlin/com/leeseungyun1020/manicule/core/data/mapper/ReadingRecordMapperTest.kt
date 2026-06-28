@@ -27,4 +27,20 @@ class ReadingRecordMapperTest {
         assertThat(record.date).isEqualTo(LocalDate(2024, 4, 12))
         assertThat(record.cumulativePage).isEqualTo(100)
     }
+
+    @Test
+    fun readingRecord_asEntity_mapsCorrectly() {
+        val record =
+            com.leeseungyun1020.manicule.core.model.ReadingRecord(
+                id = 2L,
+                isbn = "54321",
+                date = LocalDate(2025, 1, 1),
+                cumulativePage = 200,
+            )
+        val entity = record.asEntity()
+        assertThat(entity.id).isEqualTo(2L)
+        assertThat(entity.isbn).isEqualTo("54321")
+        assertThat(entity.date).isEqualTo(LocalDate(2025, 1, 1))
+        assertThat(entity.cumulativePage).isEqualTo(200)
+    }
 }

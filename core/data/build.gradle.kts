@@ -5,6 +5,9 @@ plugins {
 
 android {
     namespace = "com.leeseungyun1020.manicule.core.data"
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
