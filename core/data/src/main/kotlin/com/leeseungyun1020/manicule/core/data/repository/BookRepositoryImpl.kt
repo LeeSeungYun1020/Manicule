@@ -25,5 +25,7 @@ class BookRepositoryImpl
 
                 val book = dto.asExternalModel()
                 bookLocalDataSource.upsert(book.asEntity())
+            }.onFailure {
+                android.util.Log.e("BookRepository", "Failed to sync book with ISBN $isbn", it)
             }
     }
