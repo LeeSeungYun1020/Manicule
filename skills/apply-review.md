@@ -35,7 +35,7 @@
 
 1. `LeeSeungYun1020` 계정으로 전환(`gh auth status`, `gh auth switch`)
 2. PR에 작성된 코멘트 ID 목록을 조회(`gh api /repos/:owner/:repo/pulls/<PR번호>/comments`)
-3. 각 리뷰마다 작성한 답글 게시(`gh api -X POST /repos/:owner/:repo/pulls/comments/<조회한_comment_id>/replies`). 별도 comment로 작성되지 않도록 유의.
+3. 각 리뷰마다 작성한 답글 게시(`gh api -X POST /repos/:owner/:repo/pulls/<PR번호>/comments/<조회한_comment_id>/replies`). 별도 comment로 작성되지 않도록 유의.
 
 ## 제약 사항
 
