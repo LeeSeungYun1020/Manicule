@@ -51,7 +51,7 @@ gh api graphql -f query='
 1. 해당 리뷰에서 해결되지 않은 부분 확인
 2. 개선 사항 수집 및 수정 방향 정리. 관련있다면 android developers, kotlin docs 같은 공식 사이트 링크를 포함.
 3. `lsy-auto` 계정으로 전환(`gh auth switch --user lsy-auto`)
-4. 해당 리뷰에 정리한 내용을 답글로 게시(`gh api -X POST /repos/:owner/:repo/pulls/comments/<조회한_comment_id>/replies`). 별도 comment로 작성되지 않도록 유의.
+4. 해당 리뷰에 정리한 내용을 답글로 게시(`gh api -X POST /repos/:owner/:repo/pulls/<PR번호>/comments/<조회한_comment_id>/replies`). 별도 comment로 작성되지 않도록 유의.
 
 ### PR 승인
 
