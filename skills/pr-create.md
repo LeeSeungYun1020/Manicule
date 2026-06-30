@@ -9,7 +9,7 @@
 1. git fetch 및 git push, push 불가능하면 정지 후 사용자에 알림.
 2. 이전 PR 포맷 확인. 최근 머지 PR 조회(`gh pr list --state merged --limit 3`) 후 본문 포맷(`gh pr view <PR번호>`) 확인
 3. 작업 내용 간결하게 요약 정리. 문서화 관련 내용은 요약에 포함하지 않음.
-4. `LeeSeungYun1020` 계정으로 전환(`gh auth status`, `gh auth switch`)
+4. `LeeSeungYun1020` 계정으로 전환(`gh auth switch --user LeeSeungYun1020`)
 5. PR 생성. Assignees는 `LeeSeungYun1020`. Reviewers는 `lsy-auto`로 설정.
 
 

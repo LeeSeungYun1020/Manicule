@@ -19,7 +19,7 @@
 ### 리뷰 해결
 
 1. 스레드 ID 조회
-2. `lsy-auto` 계정으로 전환(`gh auth status`, `gh auth switch`)
+2. `lsy-auto` 계정으로 전환(`gh auth switch --user lsy-auto`)
 3. 해당 리뷰 해결(resolve) 처리
 
 스레드 ID 조회 예시
@@ -50,13 +50,13 @@ gh api graphql -f query='
 
 1. 해당 리뷰에서 해결되지 않은 부분 확인
 2. 개선 사항 수집 및 수정 방향 정리. 관련있다면 android developers, kotlin docs 같은 공식 사이트 링크를 포함.
-3. `lsy-auto` 계정으로 전환(`gh auth status`, `gh auth switch`)
+3. `lsy-auto` 계정으로 전환(`gh auth switch --user lsy-auto`)
 4. 해당 리뷰에 정리한 내용을 답글로 게시(`gh api -X POST /repos/:owner/:repo/pulls/comments/<조회한_comment_id>/replies`). 별도 comment로 작성되지 않도록 유의.
 
 ### PR 승인
 
 1. `plan` 디렉토리 내 계획 준수 여부 확인
-2. `lsy-auto` 계정으로 전환(`gh auth status`, `gh auth switch`)
+2. `lsy-auto` 계정으로 전환(`gh auth switch --user lsy-auto`)
 3. PR approve, 메시지 없이 approve 처리.
 
 ## 제약 사항

@@ -3,7 +3,7 @@
 ## 전제 조건
 
 - 사용자가 리뷰를 요청한 PR이 열린 상태.
-- `lsy-auto` 계정으로 전환 가능(`gh auth status`, `gh auth switch`)
+- `lsy-auto` 계정으로 전환 가능(`gh auth status`)
 
 ## 실행 절차
 
@@ -11,7 +11,7 @@
 2. PR 브랜치를 로컬로 패치하여 체크아웃. 코드 직접 확인.
 3. PR 변경사항 바탕으로 코드 사용부 확인하여 결함, 사이드이펙트 점검.
 4. 계획(`plan`)과 Android/Kotlin 가이드 준수 여부 확인.
-5. `lsy-auto` 계정으로 전환(`gh auth status`, `gh auth switch`)
+5. `lsy-auto` 계정으로 전환(`gh auth switch --user lsy-auto`)
 6. 발견한 문제 중 계획 누락, 현재 PR에서 수정되지 않은 파일의 구조 개선 요구 같이 인라인 코멘트로 작성 불가능한 사항 comment로 등록. `gh pr comment <PR번호> --body "내용"`
 7. 인라인 코멘트 작성 가능한 항목은 `review.json` 파일에 개별 하나의 리뷰 세션으로 정리
 	- 전체 요약 코멘트를 비우고, 개별 인라인 코멘트 목록으로만 구성.
@@ -37,7 +37,7 @@
 }
 ```
 
-8. `lsy-auto` 계정으로 전환(`gh auth status`, `gh auth switch`)
+8. `lsy-auto` 계정으로 전환(`gh auth switch --user lsy-auto`)
 9. `review.json` 파일을 지정하여 리뷰 전송. `gh api repos/:owner/:repo/pulls/<PR번호>/reviews --method POST --input review.json`
 10. 임시 리뷰 파일 삭제
 

@@ -3,7 +3,7 @@
 ## 전제 조건
 
 - 사용자가 요청한 PR이 열려 있고(open), 리뷰가 작성되어 있음.
-- `LeeSeungYun1020` 계정으로 전환 가능(`gh auth status`, `gh auth switch`)
+- `LeeSeungYun1020` 계정으로 전환 가능(`gh auth status`)
 
 ## 실행 절차
 
@@ -33,7 +33,7 @@
 
 ### 답글 작성
 
-1. `LeeSeungYun1020` 계정으로 전환(`gh auth status`, `gh auth switch`)
+1. `LeeSeungYun1020` 계정으로 전환(`gh auth switch --user LeeSeungYun1020`)
 2. PR에 작성된 코멘트 ID 목록을 조회(`gh api /repos/:owner/:repo/pulls/<PR번호>/comments`)
 3. 각 리뷰마다 작성한 답글 게시(`gh api -X POST /repos/:owner/:repo/pulls/<PR번호>/comments/<조회한_comment_id>/replies`). 별도 comment로 작성되지 않도록 유의.
 
