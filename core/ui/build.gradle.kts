@@ -12,6 +12,7 @@ dependencies {
     implementation(projects.core.model)
 
     implementation(libs.androidx.core.ktx)
+    implementation(libs.kotlinx.datetime)
 
     // Coil for Image Loading
     implementation(platform(libs.coil.bom))
