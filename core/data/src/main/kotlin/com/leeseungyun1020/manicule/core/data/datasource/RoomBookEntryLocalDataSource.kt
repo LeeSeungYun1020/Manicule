@@ -7,7 +7,7 @@ import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class BookEntryLocalDataSourceImpl
+class RoomBookEntryLocalDataSource
     @Inject
     constructor(
         private val bookEntryDao: BookEntryDao,

@@ -1,13 +1,13 @@
 package com.leeseungyun1020.manicule.core.data.di
 
 import com.leeseungyun1020.manicule.core.data.datasource.BookEntryLocalDataSource
-import com.leeseungyun1020.manicule.core.data.datasource.BookEntryLocalDataSourceImpl
 import com.leeseungyun1020.manicule.core.data.datasource.BookLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.BookLocalDataSourceImpl
 import com.leeseungyun1020.manicule.core.data.datasource.BookRemoteDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.BookRemoteDataSourceImpl
 import com.leeseungyun1020.manicule.core.data.datasource.ReadingRecordLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.ReadingRecordLocalDataSourceImpl
+import com.leeseungyun1020.manicule.core.data.datasource.RoomBookEntryLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.SearchHistoryLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.SearchHistoryLocalDataSourceImpl
 import com.leeseungyun1020.manicule.core.data.datasource.UserPreferencesLocalDataSource
@@ -34,7 +34,7 @@ abstract class DataSourceModule {
     abstract fun bindSearchHistoryLocalDataSource(dataSource: SearchHistoryLocalDataSourceImpl): SearchHistoryLocalDataSource
 
     @Binds
-    abstract fun bindBookEntryLocalDataSource(dataSource: BookEntryLocalDataSourceImpl): BookEntryLocalDataSource
+    abstract fun bindBookEntryLocalDataSource(dataSource: RoomBookEntryLocalDataSource): BookEntryLocalDataSource
 
     @Binds
     abstract fun bindUserPreferencesLocalDataSource(dataSource: UserPreferencesLocalDataSourceImpl): UserPreferencesLocalDataSource
