@@ -9,8 +9,8 @@ import com.leeseungyun1020.manicule.core.data.datasource.ReadingRecordLocalDataS
 import com.leeseungyun1020.manicule.core.data.datasource.RoomBookEntryLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.RoomBookLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.RoomReadingRecordLocalDataSource
+import com.leeseungyun1020.manicule.core.data.datasource.RoomSearchHistoryLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.SearchHistoryLocalDataSource
-import com.leeseungyun1020.manicule.core.data.datasource.SearchHistoryLocalDataSourceImpl
 import com.leeseungyun1020.manicule.core.data.datasource.UserPreferencesLocalDataSource
 import dagger.Binds
 import dagger.Module
@@ -31,7 +31,7 @@ abstract class DataSourceModule {
     abstract fun bindReadingRecordLocalDataSource(dataSource: RoomReadingRecordLocalDataSource): ReadingRecordLocalDataSource
 
     @Binds
-    abstract fun bindSearchHistoryLocalDataSource(dataSource: SearchHistoryLocalDataSourceImpl): SearchHistoryLocalDataSource
+    abstract fun bindSearchHistoryLocalDataSource(dataSource: RoomSearchHistoryLocalDataSource): SearchHistoryLocalDataSource
 
     @Binds
     abstract fun bindBookEntryLocalDataSource(dataSource: RoomBookEntryLocalDataSource): BookEntryLocalDataSource
