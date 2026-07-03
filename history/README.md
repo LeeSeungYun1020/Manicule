@@ -42,3 +42,4 @@
 - [dc1d9df](dc1d9df.md) — BookRepository Offline-First 패턴 적용 및 조회/동기화 로직 분리
 - [9126253](9126253.md) — Repository 추상화 명명 규칙 지정 및 Flow 변환 시 병렬 비동기 처리(N+1 대응)
 - [6851932](6851932.md) — N+1 최적화를 위한 Room @Relation 도입 및 병렬 처리 로직 제거
+- [1d330c7](1d330c7.md) — 데이터 계층(Repository, DataSource)의 DB 특화 용어를 일반 용어(save, remove)로 추상화
