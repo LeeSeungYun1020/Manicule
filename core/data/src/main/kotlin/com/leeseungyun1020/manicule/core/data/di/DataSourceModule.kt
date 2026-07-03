@@ -5,13 +5,13 @@ import com.leeseungyun1020.manicule.core.data.datasource.BookLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.BookLocalDataSourceImpl
 import com.leeseungyun1020.manicule.core.data.datasource.BookRemoteDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.BookRemoteDataSourceImpl
+import com.leeseungyun1020.manicule.core.data.datasource.DataStoreUserPreferencesLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.ReadingRecordLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.ReadingRecordLocalDataSourceImpl
 import com.leeseungyun1020.manicule.core.data.datasource.RoomBookEntryLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.SearchHistoryLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.SearchHistoryLocalDataSourceImpl
 import com.leeseungyun1020.manicule.core.data.datasource.UserPreferencesLocalDataSource
-import com.leeseungyun1020.manicule.core.data.datasource.UserPreferencesLocalDataSourceImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -37,5 +37,5 @@ abstract class DataSourceModule {
     abstract fun bindBookEntryLocalDataSource(dataSource: RoomBookEntryLocalDataSource): BookEntryLocalDataSource
 
     @Binds
-    abstract fun bindUserPreferencesLocalDataSource(dataSource: UserPreferencesLocalDataSourceImpl): UserPreferencesLocalDataSource
+    abstract fun bindUserPreferencesLocalDataSource(dataSource: DataStoreUserPreferencesLocalDataSource): UserPreferencesLocalDataSource
 }

@@ -7,7 +7,7 @@ import com.leeseungyun1020.manicule.core.model.UserPreferences
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class UserPreferencesLocalDataSourceImpl
+class DataStoreUserPreferencesLocalDataSource
     @Inject
     constructor(
         private val userPreferencesDataStore: UserPreferencesDataStore,
