@@ -35,7 +35,7 @@ class LibraryRepositoryImpl
             bookEntryLocalDataSource.save(entry.asEntity())
         }
 
-        override suspend fun deleteBookEntry(isbn: String) {
-            bookEntryLocalDataSource.delete(isbn)
+        override suspend fun removeBookEntry(isbn: String) {
+            bookEntryLocalDataSource.remove(isbn)
         }
     }

@@ -17,8 +17,8 @@ class ReadingRecordRepositoryImpl
 
         override suspend fun saveRecord(record: ReadingRecord): Long = readingRecordLocalDataSource.save(record.asEntity())
 
-        override suspend fun deleteRecord(id: Long) {
-            readingRecordLocalDataSource.delete(id)
+        override suspend fun removeRecord(id: Long) {
+            readingRecordLocalDataSource.remove(id)
         }
 
         override fun observeRecordsByIsbn(isbn: String): Flow<List<ReadingRecord>> =

@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface BookEntryLocalDataSource {
     suspend fun save(entry: BookEntryEntity)
 
-    suspend fun delete(isbn: String)
+    suspend fun remove(isbn: String)
 
     fun observeByIsbn(isbn: String): Flow<BookEntryWithCurrentPage?>
 

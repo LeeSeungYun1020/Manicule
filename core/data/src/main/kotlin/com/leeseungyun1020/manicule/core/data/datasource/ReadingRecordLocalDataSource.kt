@@ -7,7 +7,7 @@ import kotlinx.datetime.LocalDate
 interface ReadingRecordLocalDataSource {
     suspend fun save(record: ReadingRecordEntity): Long
 
-    suspend fun delete(id: Long)
+    suspend fun remove(id: Long)
 
     fun observeByIsbn(isbn: String): Flow<List<ReadingRecordEntity>>
 

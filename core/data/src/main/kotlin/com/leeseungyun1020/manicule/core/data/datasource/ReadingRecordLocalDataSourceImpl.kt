@@ -13,7 +13,7 @@ class ReadingRecordLocalDataSourceImpl
     ) : ReadingRecordLocalDataSource {
         override suspend fun save(record: ReadingRecordEntity): Long = readingRecordDao.upsert(record)
 
-        override suspend fun delete(id: Long) {
+        override suspend fun remove(id: Long) {
             readingRecordDao.delete(id)
         }
 

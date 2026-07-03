@@ -42,10 +42,10 @@ class ReadingRecordRepositoryImplTest {
         }
 
     @Test
-    fun deleteRecord_removes_from_dao() =
+    fun removeRecord_removes_from_dao() =
         runTest {
             fakeDao.records.add(ReadingRecordEntity(1L, "123", LocalDate(2024, 4, 12), 50))
-            repository.deleteRecord(1L)
+            repository.removeRecord(1L)
             assertThat(fakeDao.records).isEmpty()
         }
 

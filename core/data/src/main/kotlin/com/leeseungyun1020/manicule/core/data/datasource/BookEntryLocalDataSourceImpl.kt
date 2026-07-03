@@ -14,7 +14,7 @@ class BookEntryLocalDataSourceImpl
     ) : BookEntryLocalDataSource {
         override suspend fun save(entry: BookEntryEntity) = bookEntryDao.upsert(entry)
 
-        override suspend fun delete(isbn: String) = bookEntryDao.delete(isbn)
+        override suspend fun remove(isbn: String) = bookEntryDao.delete(isbn)
 
         override fun observeByIsbn(isbn: String): Flow<BookEntryWithCurrentPage?> = bookEntryDao.observeByIsbn(isbn)
 

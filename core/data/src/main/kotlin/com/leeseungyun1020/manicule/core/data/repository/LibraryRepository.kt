@@ -13,5 +13,5 @@ interface LibraryRepository {
 
     suspend fun saveBookEntry(entry: BookEntry)
 
-    suspend fun deleteBookEntry(isbn: String)
+    suspend fun removeBookEntry(isbn: String)
 }
