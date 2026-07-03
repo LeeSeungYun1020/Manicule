@@ -12,7 +12,7 @@ class BookEntryLocalDataSourceImpl
     constructor(
         private val bookEntryDao: BookEntryDao,
     ) : BookEntryLocalDataSource {
-        override suspend fun upsert(entry: BookEntryEntity) = bookEntryDao.upsert(entry)
+        override suspend fun save(entry: BookEntryEntity) = bookEntryDao.upsert(entry)
 
         override suspend fun delete(isbn: String) = bookEntryDao.delete(isbn)
 

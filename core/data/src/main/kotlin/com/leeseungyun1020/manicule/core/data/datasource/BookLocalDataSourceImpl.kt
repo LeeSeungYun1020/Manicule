@@ -14,7 +14,7 @@ class BookLocalDataSourceImpl
 
         override fun observeByIsbn(isbn: String): Flow<BookEntity?> = bookDao.observeByIsbn(isbn)
 
-        override suspend fun upsert(book: BookEntity) {
+        override suspend fun save(book: BookEntity) {
             bookDao.upsert(book)
         }
     }

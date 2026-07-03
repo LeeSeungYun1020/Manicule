@@ -31,20 +31,20 @@ class SearchHistoryRepositoryImplTest {
     @Test
     fun saveQuery_inserts_or_updates_dao() =
         runTest {
-            repository.addQuery("test")
+            repository.saveQuery("test")
             assertThat(fakeDao.queries).hasSize(1)
             assertThat(fakeDao.queries[0].query).isEqualTo("test")
 
             // Update
-            repository.addQuery("test")
+            repository.saveQuery("test")
             assertThat(fakeDao.queries).hasSize(1)
         }
 
     @Test
     fun observeRecentQueries_returns_mapped_flow() =
         runTest {
-            repository.addQuery("apple")
-            repository.addQuery("banana")
+            repository.saveQuery("apple")
+            repository.saveQuery("banana")
 
             val queries = repository.observeRecentQueries(10).first()
             assertThat(queries).hasSize(2)
@@ -54,7 +54,7 @@ class SearchHistoryRepositoryImplTest {
     @Test
     fun clearHistory_deletes_all() =
         runTest {
-            repository.addQuery("test")
+            repository.saveQuery("test")
             repository.clearHistory()
             assertThat(fakeDao.queries).isEmpty()
         }

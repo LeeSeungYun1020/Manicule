@@ -11,7 +11,7 @@ interface LibraryRepository {
 
     fun observeBookEntry(isbn: String): Flow<BookEntry?>
 
-    suspend fun addOrUpdateBookEntry(entry: BookEntry)
+    suspend fun saveBookEntry(entry: BookEntry)
 
     suspend fun deleteBookEntry(isbn: String)
 }

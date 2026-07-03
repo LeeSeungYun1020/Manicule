@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 
 interface ReadingRecordLocalDataSource {
-    suspend fun upsert(record: ReadingRecordEntity): Long
+    suspend fun save(record: ReadingRecordEntity): Long
 
     suspend fun delete(id: Long)
 

@@ -15,13 +15,13 @@ class SearchHistoryRepositoryImpl
         private val clock: Clock,
     ) : SearchHistoryRepository {
 
-        override suspend fun addQuery(query: String) {
+        override suspend fun saveQuery(query: String) {
             val entity =
                 RecentQueryEntity(
                     query = query,
                     lastUsedAt = clock.now(),
                 )
-            searchHistoryLocalDataSource.upsert(entity)
+            searchHistoryLocalDataSource.save(entity)
         }
 
         override fun observeRecentQueries(limit: Int): Flow<List<SearchQuery>> =

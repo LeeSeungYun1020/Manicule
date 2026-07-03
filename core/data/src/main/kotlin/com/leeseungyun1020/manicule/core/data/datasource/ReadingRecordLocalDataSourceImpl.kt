@@ -11,7 +11,7 @@ class ReadingRecordLocalDataSourceImpl
     constructor(
         private val readingRecordDao: ReadingRecordDao,
     ) : ReadingRecordLocalDataSource {
-        override suspend fun upsert(record: ReadingRecordEntity): Long = readingRecordDao.upsert(record)
+        override suspend fun save(record: ReadingRecordEntity): Long = readingRecordDao.upsert(record)
 
         override suspend fun delete(id: Long) {
             readingRecordDao.delete(id)

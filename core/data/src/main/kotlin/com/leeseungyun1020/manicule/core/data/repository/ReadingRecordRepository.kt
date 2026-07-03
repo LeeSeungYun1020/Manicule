@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 
 interface ReadingRecordRepository {
-    suspend fun addOrUpdateRecord(record: ReadingRecord): Long
+    suspend fun saveRecord(record: ReadingRecord): Long
 
     suspend fun deleteRecord(id: Long)
 

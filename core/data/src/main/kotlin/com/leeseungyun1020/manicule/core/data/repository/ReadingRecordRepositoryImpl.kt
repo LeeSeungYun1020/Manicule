@@ -15,7 +15,7 @@ class ReadingRecordRepositoryImpl
         private val readingRecordLocalDataSource: ReadingRecordLocalDataSource,
     ) : ReadingRecordRepository {
 
-        override suspend fun addOrUpdateRecord(record: ReadingRecord): Long = readingRecordLocalDataSource.upsert(record.asEntity())
+        override suspend fun saveRecord(record: ReadingRecord): Long = readingRecordLocalDataSource.save(record.asEntity())
 
         override suspend fun deleteRecord(id: Long) {
             readingRecordLocalDataSource.delete(id)

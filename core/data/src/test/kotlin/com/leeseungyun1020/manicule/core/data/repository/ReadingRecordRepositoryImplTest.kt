@@ -25,7 +25,7 @@ class ReadingRecordRepositoryImplTest {
     }
 
     @Test
-    fun addOrUpdateRecord_upserts_entity_to_dao() =
+    fun saveRecord_saves_entity_to_dao() =
         runTest {
             val record =
                 ReadingRecord(
@@ -34,7 +34,7 @@ class ReadingRecordRepositoryImplTest {
                     date = LocalDate(2024, 4, 12),
                     cumulativePage = 50,
                 )
-            val id = repository.addOrUpdateRecord(record)
+            val id = repository.saveRecord(record)
 
             assertThat(fakeDao.records).hasSize(1)
             assertThat(fakeDao.records[0].isbn).isEqualTo("123")

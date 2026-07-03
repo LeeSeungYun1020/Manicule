@@ -25,7 +25,7 @@ class BookRepositoryImpl
                 val dto = response.docs.firstOrNull() ?: throw NoSuchElementException("API에서 해당 ISBN의 책을 찾을 수 없습니다.")
 
                 val book = dto.asExternalModel()
-                bookLocalDataSource.upsert(book.asEntity())
+                bookLocalDataSource.save(book.asEntity())
             }.onFailure {
                 Log.e("BookRepository", "Failed to sync book with ISBN $isbn", it)
             }

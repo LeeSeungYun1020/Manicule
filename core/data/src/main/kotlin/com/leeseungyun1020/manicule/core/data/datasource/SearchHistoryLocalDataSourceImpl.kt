@@ -10,7 +10,7 @@ class SearchHistoryLocalDataSourceImpl
     constructor(
         private val recentQueryDao: RecentQueryDao,
     ) : SearchHistoryLocalDataSource {
-        override suspend fun upsert(query: RecentQueryEntity) {
+        override suspend fun save(query: RecentQueryEntity) {
             recentQueryDao.upsert(query)
         }
 
