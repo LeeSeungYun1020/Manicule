@@ -30,8 +30,6 @@ fun BookProgressBar(
         LinearProgressIndicator(
             progress = { progress },
             modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.primary,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
