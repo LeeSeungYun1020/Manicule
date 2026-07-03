@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 
-class ReadingRecordLocalDataSourceImpl
+class RoomReadingRecordLocalDataSource
     @Inject
     constructor(
         private val readingRecordDao: ReadingRecordDao,
