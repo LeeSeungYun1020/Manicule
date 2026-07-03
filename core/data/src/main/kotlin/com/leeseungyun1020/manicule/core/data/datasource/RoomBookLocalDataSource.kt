@@ -5,7 +5,7 @@ import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class BookLocalDataSourceImpl
+class RoomBookLocalDataSource
     @Inject
     constructor(
         private val bookDao: BookDao,
