@@ -2,7 +2,7 @@ package com.leeseungyun1020.manicule.core.data.repository
 
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.common.time.Clock
-import com.leeseungyun1020.manicule.core.data.datasource.SearchHistoryLocalDataSourceImpl
+import com.leeseungyun1020.manicule.core.data.datasource.RoomSearchHistoryLocalDataSource
 import com.leeseungyun1020.manicule.core.database.dao.RecentQueryDao
 import com.leeseungyun1020.manicule.core.database.entity.RecentQueryEntity
 import kotlinx.coroutines.flow.Flow
@@ -25,7 +25,7 @@ class SearchHistoryRepositoryImplTest {
     fun setup() {
         fakeDao = FakeRecentQueryDao()
         fakeClock = FakeClock()
-        repository = SearchHistoryRepositoryImpl(SearchHistoryLocalDataSourceImpl(fakeDao), fakeClock)
+        repository = SearchHistoryRepositoryImpl(RoomSearchHistoryLocalDataSource(fakeDao), fakeClock)
     }
 
     @Test
