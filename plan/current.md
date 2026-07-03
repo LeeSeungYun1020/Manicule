@@ -17,9 +17,8 @@
 ## ⏳ 다음 작업 — 2단계 Core Engine
 
 ### 다음 세션에서 진행할 내용 (트랙 병행 가능)
-- **[Track A] core:data** 나머지 Repository 및 DI (PR 2):
-    - `LibraryRepository`, `StatsRepository`, `UserPreferencesRepository` 구현
-    - Repository Hilt DI 모듈 바인딩
+- **[Track A] core:domain** UseCase skeleton:
+    - 데이터 계층을 활용하는 기초적인 도메인 UseCase 설계 및 DI
 - **[Track B] core:ui** 모듈 생성 및 도서 UI 컴포넌트 구현 (PR 1): ✅
     - `core:ui` 모듈 셋업 (`build.gradle.kts` 등) ✅
     - BookCover, BookListItem 컴포넌트 작성 ✅
@@ -30,8 +29,8 @@
 - Track A (Data)
   - 4-1. `core:data` (Mapper) — 매퍼 구현. ✅
   - 4-2. `core:data` (Repo 1) — 일부 Repository 구현. ✅
-  - 4-3. `core:data` (Repo 2) — 나머지 Repository 및 DI. ⏳ 다음
-  - 5. `core:domain` — UseCase skeleton.
+  - 4-3. `core:data` (Repo 2) — 나머지 Repository 및 DI. ✅
+  - 5. `core:domain` — UseCase skeleton. ⏳ 다음
 - Track B (UI)
   - 6-1. `core:ui` (도서) — Book Cover, Item UI 컴포넌트. ✅
   - 6-2. `core:ui` (기타) — ProgressBar, ContributionGrid. ⏳ 다음

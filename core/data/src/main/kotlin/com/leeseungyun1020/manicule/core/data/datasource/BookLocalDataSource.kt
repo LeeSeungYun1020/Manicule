@@ -8,5 +8,5 @@ interface BookLocalDataSource {
 
     fun observeByIsbn(isbn: String): Flow<BookEntity?>
 
-    suspend fun upsert(book: BookEntity)
+    suspend fun save(book: BookEntity)
 }

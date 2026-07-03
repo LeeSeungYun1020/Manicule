@@ -1,7 +1,7 @@
 package com.leeseungyun1020.manicule.core.data.repository
 
 import com.google.common.truth.Truth.assertThat
-import com.leeseungyun1020.manicule.core.data.datasource.ReadingRecordLocalDataSourceImpl
+import com.leeseungyun1020.manicule.core.data.datasource.RoomReadingRecordLocalDataSource
 import com.leeseungyun1020.manicule.core.database.dao.ReadingRecordDao
 import com.leeseungyun1020.manicule.core.database.entity.ReadingRecordEntity
 import com.leeseungyun1020.manicule.core.model.ReadingRecord
@@ -21,11 +21,11 @@ class ReadingRecordRepositoryImplTest {
     @Before
     fun setup() {
         fakeDao = FakeReadingRecordDao()
-        repository = ReadingRecordRepositoryImpl(ReadingRecordLocalDataSourceImpl(fakeDao))
+        repository = ReadingRecordRepositoryImpl(RoomReadingRecordLocalDataSource(fakeDao))
     }
 
     @Test
-    fun addOrUpdateRecord_upserts_entity_to_dao() =
+    fun saveRecord_saves_entity_to_dao() =
         runTest {
             val record =
                 ReadingRecord(
@@ -34,7 +34,7 @@ class ReadingRecordRepositoryImplTest {
                     date = LocalDate(2024, 4, 12),
                     cumulativePage = 50,
                 )
-            val id = repository.addOrUpdateRecord(record)
+            val id = repository.saveRecord(record)
 
             assertThat(fakeDao.records).hasSize(1)
             assertThat(fakeDao.records[0].isbn).isEqualTo("123")
@@ -42,10 +42,10 @@ class ReadingRecordRepositoryImplTest {
         }
 
     @Test
-    fun deleteRecord_removes_from_dao() =
+    fun removeRecord_removes_from_dao() =
         runTest {
             fakeDao.records.add(ReadingRecordEntity(1L, "123", LocalDate(2024, 4, 12), 50))
-            repository.deleteRecord(1L)
+            repository.removeRecord(1L)
             assertThat(fakeDao.records).isEmpty()
         }
 

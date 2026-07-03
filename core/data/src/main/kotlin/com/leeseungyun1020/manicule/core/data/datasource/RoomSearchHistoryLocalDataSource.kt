@@ -5,12 +5,12 @@ import com.leeseungyun1020.manicule.core.database.entity.RecentQueryEntity
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class SearchHistoryLocalDataSourceImpl
+class RoomSearchHistoryLocalDataSource
     @Inject
     constructor(
         private val recentQueryDao: RecentQueryDao,
     ) : SearchHistoryLocalDataSource {
-        override suspend fun upsert(query: RecentQueryEntity) {
+        override suspend fun save(query: RecentQueryEntity) {
             recentQueryDao.upsert(query)
         }
 

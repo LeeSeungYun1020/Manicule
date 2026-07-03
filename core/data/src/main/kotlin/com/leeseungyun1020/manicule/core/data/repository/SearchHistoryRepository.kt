@@ -4,7 +4,7 @@ import com.leeseungyun1020.manicule.core.model.SearchQuery
 import kotlinx.coroutines.flow.Flow
 
 interface SearchHistoryRepository {
-    suspend fun addQuery(query: String)
+    suspend fun saveQuery(query: String)
 
     fun observeRecentQueries(limit: Int = 10): Flow<List<SearchQuery>>
 

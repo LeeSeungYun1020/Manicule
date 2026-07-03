@@ -5,7 +5,7 @@ import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class BookLocalDataSourceImpl
+class RoomBookLocalDataSource
     @Inject
     constructor(
         private val bookDao: BookDao,
@@ -14,7 +14,7 @@ class BookLocalDataSourceImpl
 
         override fun observeByIsbn(isbn: String): Flow<BookEntity?> = bookDao.observeByIsbn(isbn)
 
-        override suspend fun upsert(book: BookEntity) {
+        override suspend fun save(book: BookEntity) {
             bookDao.upsert(book)
         }
     }
