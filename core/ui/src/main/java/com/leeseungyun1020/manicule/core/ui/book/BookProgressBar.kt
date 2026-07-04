@@ -10,8 +10,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.leeseungyun1020.manicule.core.ui.R
 
 @Composable
 fun BookProgressBar(
@@ -33,7 +35,7 @@ fun BookProgressBar(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "$currentPage / ${totalPages}쪽",
+            text = stringResource(id = R.string.book_progress_text, currentPage, totalPages),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
