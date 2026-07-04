@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.leeseungyun1020.manicule.core.database.dao.projection.BookEntryWithCurrentPage
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
@@ -17,6 +18,7 @@ interface BookEntryDao {
     @Query("DELETE FROM book_entries WHERE isbn = :isbn")
     suspend fun delete(isbn: String)
 
+    @Transaction
     @Query(
         value = """
             SELECT *, 
@@ -27,6 +29,7 @@ interface BookEntryDao {
     )
     fun observeByIsbn(isbn: String): Flow<BookEntryWithCurrentPage?>
 
+    @Transaction
     @Query(
         value = """
             SELECT *, 
@@ -37,6 +40,7 @@ interface BookEntryDao {
     )
     fun observeByStatus(status: ReadingStatus): Flow<List<BookEntryWithCurrentPage>>
 
+    @Transaction
     @Query(
         value = """
             SELECT *, 

@@ -4,7 +4,7 @@ import com.leeseungyun1020.manicule.core.network.nlk.NlkApi
 import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkSearchResponseDto
 import javax.inject.Inject
 
-class BookRemoteDataSourceImpl
+class RetrofitBookRemoteDataSource
     @Inject
     constructor(
         private val nlkApi: NlkApi,

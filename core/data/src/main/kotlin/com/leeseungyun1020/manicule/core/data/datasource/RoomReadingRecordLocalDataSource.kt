@@ -6,14 +6,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 
-class ReadingRecordLocalDataSourceImpl
+class RoomReadingRecordLocalDataSource
     @Inject
     constructor(
         private val readingRecordDao: ReadingRecordDao,
     ) : ReadingRecordLocalDataSource {
-        override suspend fun upsert(record: ReadingRecordEntity): Long = readingRecordDao.upsert(record)
+        override suspend fun save(record: ReadingRecordEntity): Long = readingRecordDao.upsert(record)
 
-        override suspend fun delete(id: Long) {
+        override suspend fun remove(id: Long) {
             readingRecordDao.delete(id)
         }
 

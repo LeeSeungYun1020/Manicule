@@ -2,7 +2,7 @@ package com.leeseungyun1020.manicule.core.data.repository
 
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.common.time.Clock
-import com.leeseungyun1020.manicule.core.data.datasource.SearchHistoryLocalDataSourceImpl
+import com.leeseungyun1020.manicule.core.data.datasource.RoomSearchHistoryLocalDataSource
 import com.leeseungyun1020.manicule.core.database.dao.RecentQueryDao
 import com.leeseungyun1020.manicule.core.database.entity.RecentQueryEntity
 import kotlinx.coroutines.flow.Flow
@@ -25,26 +25,26 @@ class SearchHistoryRepositoryImplTest {
     fun setup() {
         fakeDao = FakeRecentQueryDao()
         fakeClock = FakeClock()
-        repository = SearchHistoryRepositoryImpl(SearchHistoryLocalDataSourceImpl(fakeDao), fakeClock)
+        repository = SearchHistoryRepositoryImpl(RoomSearchHistoryLocalDataSource(fakeDao), fakeClock)
     }
 
     @Test
     fun saveQuery_inserts_or_updates_dao() =
         runTest {
-            repository.addQuery("test")
+            repository.saveQuery("test")
             assertThat(fakeDao.queries).hasSize(1)
             assertThat(fakeDao.queries[0].query).isEqualTo("test")
 
             // Update
-            repository.addQuery("test")
+            repository.saveQuery("test")
             assertThat(fakeDao.queries).hasSize(1)
         }
 
     @Test
     fun observeRecentQueries_returns_mapped_flow() =
         runTest {
-            repository.addQuery("apple")
-            repository.addQuery("banana")
+            repository.saveQuery("apple")
+            repository.saveQuery("banana")
 
             val queries = repository.observeRecentQueries(10).first()
             assertThat(queries).hasSize(2)
@@ -54,7 +54,7 @@ class SearchHistoryRepositoryImplTest {
     @Test
     fun clearHistory_deletes_all() =
         runTest {
-            repository.addQuery("test")
+            repository.saveQuery("test")
             repository.clearHistory()
             assertThat(fakeDao.queries).isEmpty()
         }

@@ -1,13 +1,17 @@
 package com.leeseungyun1020.manicule.core.data.di
 
+import com.leeseungyun1020.manicule.core.data.datasource.BookEntryLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.BookLocalDataSource
-import com.leeseungyun1020.manicule.core.data.datasource.BookLocalDataSourceImpl
 import com.leeseungyun1020.manicule.core.data.datasource.BookRemoteDataSource
-import com.leeseungyun1020.manicule.core.data.datasource.BookRemoteDataSourceImpl
+import com.leeseungyun1020.manicule.core.data.datasource.DataStoreUserPreferencesLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.ReadingRecordLocalDataSource
-import com.leeseungyun1020.manicule.core.data.datasource.ReadingRecordLocalDataSourceImpl
+import com.leeseungyun1020.manicule.core.data.datasource.RetrofitBookRemoteDataSource
+import com.leeseungyun1020.manicule.core.data.datasource.RoomBookEntryLocalDataSource
+import com.leeseungyun1020.manicule.core.data.datasource.RoomBookLocalDataSource
+import com.leeseungyun1020.manicule.core.data.datasource.RoomReadingRecordLocalDataSource
+import com.leeseungyun1020.manicule.core.data.datasource.RoomSearchHistoryLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.SearchHistoryLocalDataSource
-import com.leeseungyun1020.manicule.core.data.datasource.SearchHistoryLocalDataSourceImpl
+import com.leeseungyun1020.manicule.core.data.datasource.UserPreferencesLocalDataSource
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -18,14 +22,20 @@ import dagger.hilt.components.SingletonComponent
 abstract class DataSourceModule {
 
     @Binds
-    abstract fun bindBookLocalDataSource(dataSource: BookLocalDataSourceImpl): BookLocalDataSource
+    abstract fun bindBookLocalDataSource(dataSource: RoomBookLocalDataSource): BookLocalDataSource
 
     @Binds
-    abstract fun bindBookRemoteDataSource(dataSource: BookRemoteDataSourceImpl): BookRemoteDataSource
+    abstract fun bindBookRemoteDataSource(dataSource: RetrofitBookRemoteDataSource): BookRemoteDataSource
 
     @Binds
-    abstract fun bindReadingRecordLocalDataSource(dataSource: ReadingRecordLocalDataSourceImpl): ReadingRecordLocalDataSource
+    abstract fun bindReadingRecordLocalDataSource(dataSource: RoomReadingRecordLocalDataSource): ReadingRecordLocalDataSource
 
     @Binds
-    abstract fun bindSearchHistoryLocalDataSource(dataSource: SearchHistoryLocalDataSourceImpl): SearchHistoryLocalDataSource
+    abstract fun bindSearchHistoryLocalDataSource(dataSource: RoomSearchHistoryLocalDataSource): SearchHistoryLocalDataSource
+
+    @Binds
+    abstract fun bindBookEntryLocalDataSource(dataSource: RoomBookEntryLocalDataSource): BookEntryLocalDataSource
+
+    @Binds
+    abstract fun bindUserPreferencesLocalDataSource(dataSource: DataStoreUserPreferencesLocalDataSource): UserPreferencesLocalDataSource
 }

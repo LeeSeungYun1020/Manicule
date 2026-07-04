@@ -4,7 +4,7 @@ import com.leeseungyun1020.manicule.core.database.entity.RecentQueryEntity
 import kotlinx.coroutines.flow.Flow
 
 interface SearchHistoryLocalDataSource {
-    suspend fun upsert(query: RecentQueryEntity)
+    suspend fun save(query: RecentQueryEntity)
 
     fun observeRecent(limit: Int): Flow<List<RecentQueryEntity>>
 
