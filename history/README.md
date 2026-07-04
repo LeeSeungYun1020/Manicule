@@ -40,3 +40,4 @@
 - [691d24b](691d24b.md) — Network Qualifier 파일 분리 및 명시화
 - [f830ee6](f830ee6.md) — local.properties에서 NLK_AUTH_KEY 미설정 시 빌드 오류 발생
 - [dc1d9df](dc1d9df.md) — BookRepository Offline-First 패턴 적용 및 조회/동기화 로직 분리
+- [7c6d080](7c6d080.md) — refactor: BookProgressBar에서 불필요하게 명시된 LinearProgressIndicator 기본 색상 설정 제거
