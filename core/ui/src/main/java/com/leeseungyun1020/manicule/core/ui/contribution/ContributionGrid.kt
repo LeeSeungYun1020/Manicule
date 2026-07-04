@@ -18,7 +18,7 @@ import com.leeseungyun1020.manicule.core.ui.preview.ContributionPreviewParameter
 fun ContributionGrid(
     days: List<ContributionDay>,
     modifier: Modifier = Modifier,
-    onDayClick: (ContributionDay) -> Unit = {},
+    onDayClick: ((ContributionDay) -> Unit)? = null,
 ) {
     // 첫 번째 데이터의 요일을 확인하여 월요일(1) 기준 시작 위치 조정 패딩 생성
     val paddingCount =
@@ -49,7 +49,7 @@ fun ContributionGrid(
                 val day = days[index - paddingCount]
                 ContributionCell(
                     intensity = day.intensity,
-                    onClick = { onDayClick(day) },
+                    onClick = onDayClick?.let { { it(day) } },
                 )
             }
         }
@@ -58,12 +58,33 @@ fun ContributionGrid(
 
 @Preview(showBackground = true)
 @Composable
-private fun ContributionGridPreview() {
-    val dummyDays = ContributionPreviewParameterProvider().values.first()
+private fun ContributionGridPreviewSingle() {
     MaterialTheme {
         ContributionGrid(
-            days = dummyDays,
-            modifier = Modifier.height(150.dp),
+            days = ContributionPreviewParameterProvider().values.first().take(1),
+            modifier = Modifier.height(100.dp),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ContributionGridPreviewSome() {
+    MaterialTheme {
+        ContributionGrid(
+            days = ContributionPreviewParameterProvider().values.first().take(5),
+            modifier = Modifier.height(100.dp),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ContributionGridPreviewMulti() {
+    MaterialTheme {
+        ContributionGrid(
+            days = ContributionPreviewParameterProvider().values.first(),
+            modifier = Modifier.height(100.dp),
         )
     }
 }
