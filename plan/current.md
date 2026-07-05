@@ -8,33 +8,18 @@
 | 단계 | 이름 | 상태 |
 |---|---|---|
 | 1 | Foundation | ✅ |
-| 2 | Core Engine | ⏳ 다음 |
-| 3 | Vertical Slices | ⏳ |
+| 2 | Core Engine | ✅ |
+| 3 | Vertical Slices | ⏳ 다음 |
 | 4 | System Integration Slices | ⏳ |
 | 5 | App Assembly | ⏳ |
 | 6 | Verification | ⏳ |
 
-## ⏳ 다음 작업 — 2단계 Core Engine
+## ⏳ 다음 작업 — 3단계 Vertical Slices
 
-### 다음 세션에서 진행할 내용 (트랙 병행 가능)
-- **[Track A] core:domain** UseCase skeleton:
-    - 데이터 계층을 활용하는 기초적인 도메인 UseCase 설계 및 DI
-- **[Track B] core:ui** 모듈 생성 및 도서 UI 컴포넌트 구현 (PR 1): ✅
-    - `core:ui` 모듈 셋업 (`build.gradle.kts` 등) ✅
-    - BookCover, BookListItem 컴포넌트 작성 ✅
-    - BookProgressBar, ContributionGrid 컴포넌트 작성 ✅
-
-1. `core:database` — Room. ✅
-2. `core:network` — Retrofit + NLK API. ✅
-3. `core:datastore` — Preferences DataStore. ✅
-- Track A (Data)
-  - 4-1. `core:data` (Mapper) — 매퍼 구현. ✅
-  - 4-2. `core:data` (Repo 1) — 일부 Repository 구현. ✅
-  - 4-3. `core:data` (Repo 2) — 나머지 Repository 및 DI. ✅
-  - 5. `core:domain` — UseCase skeleton. ⏳ 다음
-- Track B (UI)
-  - 6-1. `core:ui` (도서) — Book Cover, Item UI 컴포넌트. ✅
-  - 6-2. `core:ui` (기타) — ProgressBar, ContributionGrid. ✅
+### 다음 세션에서 진행할 내용 (Slice 1 - feature:search)
+- DAO/Repository 계층 보강: NLK API PagingSource 구현 및 검색 쿼리 추가
+- Domain 계층 구현: SearchBooksUseCase Flow<PagingData> 로직 등
+- UI 계층 구현: SearchScreen, ViewModel, UiState 작성 (무한 스크롤, 디바운스 적용)
 
 ## 운영
 
@@ -45,8 +30,6 @@
 4. 패키지 루트 `com.leeseungyun1020.manicule.<group>.<module>`.
 5. `app/build.gradle.kts` 의 `implementation(projects.…)` 주석 해제.
 
-### 출시 전 점검 (1단계에서 미뤄둔 항목)
-- 2단계 완료 시 `app:run` 으로 Hilt 그래프 누락 검증.
 
 ### 커밋 / history
 의사결정 있는 커밋은 [history/](../history/README.md) 에 `<short-hash>.md` 추가 (WHY 만). 순수 tooling/format 커밋은 만들지 않음.
