@@ -9,6 +9,8 @@ class SaveRecentQueryUseCase
         private val searchHistoryRepository: SearchHistoryRepository,
     ) {
         suspend operator fun invoke(query: String) {
-            searchHistoryRepository.saveQuery(query)
+            if (query.isNotBlank()) {
+                searchHistoryRepository.saveQuery(query)
+            }
         }
     }
