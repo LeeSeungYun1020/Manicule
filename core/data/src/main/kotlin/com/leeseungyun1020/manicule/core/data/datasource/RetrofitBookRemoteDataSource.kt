@@ -10,4 +10,16 @@ class RetrofitBookRemoteDataSource
         private val nlkApi: NlkApi,
     ) : BookRemoteDataSource {
         override suspend fun searchBooks(isbn: String): NlkSearchResponseDto = nlkApi.searchBooks(pageNo = 1, pageSize = 1, isbn = isbn)
+
+        override suspend fun searchBooksByTitle(
+            query: String,
+            page: Int,
+            size: Int,
+        ): NlkSearchResponseDto = nlkApi.searchBooks(pageNo = page, pageSize = size, title = query)
+
+        override suspend fun searchBooksByAuthor(
+            query: String,
+            page: Int,
+            size: Int,
+        ): NlkSearchResponseDto = nlkApi.searchBooks(pageNo = page, pageSize = size, author = query)
     }

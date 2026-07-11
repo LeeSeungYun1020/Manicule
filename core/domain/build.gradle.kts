@@ -13,4 +13,10 @@ dependencies {
     implementation(projects.core.common)
 
     implementation(libs.kotlinx.datetime)
+    implementation(libs.androidx.paging.runtime)
+
+    testImplementation(libs.junit4)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.truth)
+    testImplementation(libs.turbine)
 }
