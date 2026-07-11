@@ -19,7 +19,7 @@
 ### 다음 세션에서 진행할 내용 (Slice 1 - feature:search)
 - DAO/Repository 계층 보강: NLK API PagingSource 구현 및 검색 쿼리 추가 ✅
 - Domain 계층 구현: SearchBooksUseCase Flow<PagingData> 로직 등 ✅
-- UI 계층 구현: SearchScreen, ViewModel, UiState 작성 (무한 스크롤, 디바운스 적용) ⏳ 다음
+- UI 계층 구현: SearchScreen, ViewModel, UiState 작성 (무한 스크롤, 디바운스, 스캔 화면 이동 버튼 연동) ⏳ 다음
 
 ## 운영
 

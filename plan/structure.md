@@ -74,15 +74,15 @@ manicule/
 | 모듈                   | 레이어    | 책임                                               |
 |----------------------|--------|--------------------------------------------------|
 | `app`                | -      | NavHost, MainActivity, Application 클래스, Hilt 그래프 |
-| `feature:home`       | UI     | 홈 화면(검색창, 잔디 미리보기, 읽는 중 책, 오늘 통계)                |
+| `feature:home`       | UI     | 홈 화면(검색창, 독서 달력 미리보기, 읽는 중 책, 오늘 통계)               |
 | `feature:search`     | UI     | 도서 검색, 최근 검색어                                    |
 | `feature:scanner`    | UI     | 바코드 스캔 화면                                        |
 | `feature:bookdetail` | UI     | 책 상세, 상태/별점/메모, 독서 기록                            |
 | `feature:library`    | UI     | 내 서재(상태 탭, 정렬)                                   |
-| `feature:stats`      | UI     | 통계(이번 달/올해, 52주 잔디)                              |
+| `feature:stats`      | UI     | 통계(오늘/4주/1년/직접선택, 기간별 달력)                       |
 | `feature:settings`   | UI     | 테마, 알림 설정                                        |
 | `core:designsystem`  | UI     | ManiculeTheme, Color, Typography, 공통 Button/Dialog   |
-| `core:ui`            | UI     | BookCard, ContributionGrid 등 feature 간 공유 컴포넌트   |
+| `core:ui`            | UI     | BookCard, ReadingCalendarGrid 등 feature 간 공유 컴포넌트  |
 | `core:common`        | -      | Dispatcher 정의, Result 래퍼, 날짜 유틸                  |
 | `core:model`         | Domain | Book, ReadingStatus, ReadingRecord 등             |
 | `core:domain`        | Domain | UseCase (AddReadingRecord, GetStreak 등)          |
@@ -170,8 +170,8 @@ feature/home/
         ├── HomeSearchBar.kt
         ├── ScanBarcodeButton.kt
         ├── InProgressSection.kt            # "내 서재 →" 포함
-        ├── InProgressEmptyState.kt
-        ├── ContributionPreview.kt          # 최근 8주
+        ├── InProgressEmptyState.kt         # 검색 및 스캔 버튼 포함
+        ├── ReadingCalendarPreview.kt       # 최근 8주
         └── TodaySummaryCard.kt
 ```
 
@@ -190,7 +190,7 @@ feature/search/
         ├── SearchTextField.kt
         ├── RecentQueriesList.kt
         ├── BookSearchResultItem.kt
-        └── EmptyResultPrompt.kt            # "바코드가 있나요?" 안내
+        └── EmptyResultPrompt.kt            # "바코드가 있나요?" 및 스캔 버튼 안내
 ```
 
 ### 3.5 `feature:scanner`
@@ -231,7 +231,7 @@ feature/bookdetail/
         ├── RatingMemoEditor.kt
         ├── ReadingRecordList.kt            # 날짜별 기록
         ├── AddRecordSheet.kt               # 날짜+페이지 입력
-        └── FinishConfirmDialog.kt          # "혹시 책을 다 읽으셨나요?"
+        └── FinishConfirmDialog.kt          # 기록 후 완독 시점 확인용
 ```
 
 ### 3.7 `feature:library`
@@ -247,9 +247,8 @@ feature/library/
     │   └── LibraryNavigation.kt
     └── components/
         ├── StatusTabRow.kt                 # 전체/읽고싶음/읽는 중/완독
-        ├── SortMenu.kt                     # 수정/추가/별점
-        ├── LibraryBookCard.kt              # 진도 표시 포함
-        └── DeleteConfirmDialog.kt          # "기록한 내용이 모두 삭제되어요"
+        ├── SortBottomSheet.kt              # 수정/추가/별점 및 방향 선택
+        └── LibraryBookCard.kt              # 진도 표시 포함
 ```
 
 ### 3.8 `feature:stats`
@@ -260,13 +259,14 @@ feature/stats/
     ├── StatsRoute.kt
     ├── StatsScreen.kt
     ├── StatsViewModel.kt
-    ├── StatsUiState.kt                     # period, summary, contribution, selectedDay
+    ├── StatsUiState.kt                     # period(오늘/4주/1년/직접선택), summary, calendar, selectedDay
     ├── navigation/
     │   └── StatsNavigation.kt              # 인자: focus:String? (잔디 위치 스크롤용)
     └── components/
-        ├── PeriodSelector.kt               # 이번 달 / 올해
+        ├── PeriodSelector.kt               # 오늘 / 4주 / 1년 / 직접 선택
+        ├── PeriodSelectionBottomSheet.kt   # 직접 선택용 DatePicker 바텀 시트
         ├── SummaryCards.kt                 # 완독 권수, 페이지 수
-        ├── ContributionGrid52w.kt          # 52 × 7, 가로 스크롤
+        ├── ReadingCalendarGrid.kt          # 지정 기간 달력 그리드 (동적 가로 스크롤)
         └── SelectedDayRecords.kt
 ```
 
@@ -324,9 +324,9 @@ core/ui/
     │   ├── BookCover.kt                    # Coil 3.x AsyncImage 래퍼, 표지 fallback 처리
     │   ├── BookListItem.kt
     │   └── BookProgressBar.kt              # 132 / 320쪽 표시
-    ├── contribution/
-    │   ├── ContributionCell.kt
-    │   └── ContributionGrid.kt             # 잔디 공통 그리드
+    ├── calendar/
+    │   ├── ReadingCalendarCell.kt
+    │   └── ReadingCalendarGrid.kt          # 독서 달력 공통 그리드
     └── preview/                             # @Preview 용 Sample 데이터
         └── BookPreviewParameterProvider.kt
 ```
@@ -357,7 +357,7 @@ core/model/
     ├── BookEntry.kt                        # Book + Status + rating + memo + finishedAt
     ├── ReadingRecord.kt                    # id, isbn, date, cumulativePage
     ├── DailyReading.kt                     # 통계용 (date, pages)
-    ├── ContributionDay.kt                  # 잔디 한 칸 (date, intensity)
+    ├── ReadingCalendarDay.kt               # 독서 달력 한 칸 (date, intensity)
     ├── ReadingStreak.kt
     ├── PeriodSummary.kt                    # 완독 권수, 페이지 수
     ├── UserPreferences.kt                  # ThemeMode, ReminderConfig
@@ -386,14 +386,14 @@ core/domain/
     │   ├── DeleteBookEntryUseCase.kt
     │   └── UpdateRatingMemoUseCase.kt
     ├── record/
-    │   ├── AddReadingRecordUseCase.kt       # 읽고싶음→읽는 중 자동 전환, 40쪽 이하 신호 반환
+    │   ├── AddReadingRecordUseCase.kt       # 읽고싶음→읽는 중 자동 전환, 10% 또는 40쪽 이하 신호 반환
     │   ├── EditReadingRecordUseCase.kt
     │   ├── DeleteReadingRecordUseCase.kt
     │   └── ObserveBookRecordsUseCase.kt
     ├── stats/
     │   ├── GetTodaySummaryUseCase.kt
-    │   ├── GetPeriodSummaryUseCase.kt       # 이번 달 / 올해
-    │   ├── GetContributionUseCase.kt        # 365일 잔디
+    │   ├── GetPeriodSummaryUseCase.kt       # 지정 기간 (오늘/4주/1년/직접선택)
+    │   ├── GetReadingCalendarUseCase.kt     # 365일 독서 달력
     │   └── GetReadingStreakUseCase.kt
     └── settings/
         ├── GetUserPreferencesUseCase.kt
@@ -510,12 +510,12 @@ core/notifications/
 
 | 화면     | 진입 모듈                | 의존하는 UseCase (core:domain)                                                                                                                                    |
 |--------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 홈      | `feature:home`       | GetLibraryBooksUseCase(읽는 중), GetTodaySummaryUseCase, GetReadingStreakUseCase, GetContributionUseCase                                                         |
+| 홈      | `feature:home`       | GetLibraryBooksUseCase(읽는 중), GetTodaySummaryUseCase, GetReadingStreakUseCase, GetReadingCalendarUseCase                                                      |
 | 검색     | `feature:search`     | SearchBooksUseCase, GetRecentQueriesUseCase, SaveRecentQueryUseCase                                                                                           |
 | 바코드 스캔 | `feature:scanner`    | GetBookByScanUseCase (BarcodeScanner 인터페이스는 core:scanner, core:domain이 의존)                                                                                    |
 | 책 상세   | `feature:bookdetail` | GetBookDetailUseCase, ObserveBookEntryUseCase, ChangeReadingStatusUseCase, UpdateRatingMemoUseCase, AddReadingRecordUseCase, EditReadingRecordUseCase, DeleteReadingRecordUseCase, ObserveBookRecordsUseCase |
 | 서재     | `feature:library`    | GetLibraryBooksUseCase, DeleteBookEntryUseCase                                                                                                                |
-| 통계     | `feature:stats`      | GetPeriodSummaryUseCase, GetContributionUseCase                                                                                                               |
+| 통계     | `feature:stats`      | GetPeriodSummaryUseCase, GetReadingCalendarUseCase                                                                                                            |
 | 설정     | `feature:settings`   | GetUserPreferencesUseCase, SetThemeUseCase, SetReminderUseCase                                                                                                |
 
 ---
@@ -597,6 +597,6 @@ dependencies {
 
 - **빌드 속도**: feature 모듈 변경 시 영향 범위 최소화 → 증분 빌드 단축.
 - **관심사 분리**: 화면 추가가 다른 화면에 영향을 주지 않음.
-- **재사용**: `core:ui` 의 `ContributionGrid` 를 홈(8주 미리보기)·통계(52주)에서 동일 구현으로 사용.
+- **재사용**: `core:ui` 의 `ReadingCalendarGrid` 를 홈(8주 미리보기)·통계(기간 가변형)에서 동일 구현으로 사용.
 - **테스트 용이성**: `core:model`, `core:common`은 순수 JVM 모듈. `core:domain` UseCase, `core:data` Repository는 Fake 구현체로 Android 환경 없이 단위 테스트 가능.
 - **Offline-first 단순화**: Repository SSOT 원칙으로 UI는 항상 Room의 Flow만 구독.

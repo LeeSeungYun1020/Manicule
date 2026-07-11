@@ -68,31 +68,37 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 - DAO·Repository에 검색 쿼리/최근 검색어 메서드 추가, NLK API `PagingSource` 구현
 - `SearchBooksUseCase`(`Flow<PagingData<Book>>` 반환, Paging 3 통합), `GetRecentQueriesUseCase`, `SaveRecentQueryUseCase`
 - SearchScreen, ViewModel, UiState (입력 디바운스 350ms, `LazyColumn` + `collectAsLazyPagingItems()`로 무한 스크롤)
-- **검증 기준**: 키워드 검색 시 결과 목록 표시, 무한 스크롤 동작, 최근 검색어 저장·재실행
+- **검증 기준**: 키워드 검색 시 결과 목록 표시, 무한 스크롤 동작, 최근 검색어 저장·재실행, 결과 없음 화면에서 스캔 화면 이동 버튼 동작
+
+#### Slice 1.5 — 코어 모듈 리팩토링 (명칭 변경)
+현재 1, 2단계가 기구현 완료되었음을 감안하여, 후속 피처 구현에 앞서 기존 `Contribution` 기반 명칭들을 `ReadingCalendar`로 리팩토링한다.
+- `core:model`: `ContributionDay` → `ReadingCalendarDay` 등
+- `core:ui`: `ContributionGrid` → `ReadingCalendarGrid`, `ContributionCell` → `ReadingCalendarCell`
+- `core:domain`: `GetContributionUseCase` → `GetReadingCalendarUseCase`
 
 #### Slice 2 — `feature:bookdetail`
 책 상세, 상태/별점/메모, 독서 기록. 가장 복잡한 핵심 비즈니스 로직.
 
 - BookEntry CRUD, ReadingRecord CRUD DAO·Repository 보강
-- `GetBookDetailUseCase`, `ObserveBookEntryUseCase`, `ChangeReadingStatusUseCase`, `UpdateRatingMemoUseCase`, `AddReadingRecordUseCase`(40쪽 신호 포함), `EditReadingRecordUseCase`, `DeleteReadingRecordUseCase`, `ObserveBookRecordsUseCase`
+- `GetBookDetailUseCase`, `ObserveBookEntryUseCase`, `ChangeReadingStatusUseCase`, `UpdateRatingMemoUseCase`, `AddReadingRecordUseCase`(10% 또는 40쪽 신호 포함), `EditReadingRecordUseCase`, `DeleteReadingRecordUseCase`, `ObserveBookRecordsUseCase`
 - BookHeader, BookPublishInfoSection, BookDescriptionSection(URL fetch), BookTocSection(URL fetch), StatusSelector, RatingMemoEditor, ReadingRecordList, AddRecordSheet, FinishConfirmDialog
-- **검증 기준**: 상태 변경, 기록 추가/수정/삭제, 40쪽 이하 완독 다이얼로그, 상태 전환 규칙
+- **검증 기준**: 상태 변경, 기록 추가/수정/삭제, 10% 또는 40쪽 이하 완독 다이얼로그, 상태 전환 규칙
 
 #### Slice 3 — `feature:library`
 서재 목록, 필터, 정렬, 삭제.
 
 - BookEntryDao 정렬 쿼리 보강
 - `GetLibraryBooksUseCase`, `DeleteBookEntryUseCase`
-- StatusTabRow, SortMenu, LibraryBookCard, DeleteConfirmDialog
-- **검증 기준**: 상태별 탭 필터, 3종 정렬, 진도 표시, 삭제 다이얼로그
+- StatusTabRow, SortBottomSheet, LibraryBookCard
+- **검증 기준**: 상태별 탭 필터, 3종 정렬 및 방향(바텀 시트) 적용, 진도 표시, 삭제 및 상태 변경 시 스낵바 기반 Undo 동작
 
 #### Slice 4 — `feature:home` + `feature:stats`
 집계·통계 화면. 누적된 reading record 데이터를 활용.
 
-- 잔디·통계 집계용 ReadingRecordDao 쿼리 추가
-- `GetTodaySummaryUseCase`, `GetReadingStreakUseCase`, `GetContributionUseCase`, `GetPeriodSummaryUseCase`
-- HomeScreen 컴포넌트 전체, StatsScreen 컴포넌트 전체
-- **검증 기준**: 홈 읽는 중 목록·잔디 미리보기·오늘 통계, 통계 52주 잔디·이번 달/올해 요약
+- 독서 달력·통계 집계용 ReadingRecordDao 쿼리 추가
+- `GetTodaySummaryUseCase`, `GetReadingStreakUseCase`, `GetReadingCalendarUseCase`, `GetPeriodSummaryUseCase`
+- HomeScreen 컴포넌트 전체, StatsScreen 컴포넌트 전체 (PeriodSelectionBottomSheet 등)
+- **검증 기준**: 홈 읽는 중 목록·독서 달력 미리보기·오늘 통계, 통계 가변 기간(오늘/4주/1년/직접선택) 검증 및 달력 연동
 
 ---
 
@@ -105,7 +111,7 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 - `feature:scanner` (CameraPreview, ViewfinderOverlay, PermissionDeniedView)
 - `GetBookByScanUseCase`
 - 홈·검색 화면에서 스캔 진입점 연결
-- **검증 기준**: 카메라 권한 흐름, ISBN 인식 → 책 상세 진입, 인식 실패 다이얼로그
+- **검증 기준**: 카메라 권한 흐름, ISBN 인식 → 책 상세 진입, 인식 실패 메시지 안내 및 검색 화면 이동 버튼 동작
 
 #### Slice 6 — 알림 + 설정
 - `core:notifications` (ReminderScheduler, WorkManagerReminderScheduler, ReminderWorker)
@@ -165,6 +171,7 @@ structure.md에 정의된 모든 모듈이 어느 단계에서 구현되는지 �
 | `core:domain` 베이스 | 2단계 |
 | `core:ui` | 2단계 |
 | `feature:search` | 3단계 Slice 1 |
+| 코어 모듈 리팩토링 | 3단계 Slice 1.5 |
 | `feature:bookdetail` | 3단계 Slice 2 |
 | `feature:library` | 3단계 Slice 3 |
 | `feature:home`, `feature:stats` | 3단계 Slice 4 |
