@@ -74,8 +74,9 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 
 #### Slice 1.5 — 코어 모듈 리팩토링 (명칭 변경 및 데이터 모델 수정)
 
-#### Slice 1.5 — 코어 모듈 리팩토링 (명칭 변경)
-현재 1, 2단계가 기구현 완료되었음을 감안하여, 후속 피처 구현에 앞서 기존 `Contribution` 기반 명칭들을 `ReadingCalendar`로 리팩토링한다.
+현재 1, 2단계가 기구현 완료되었음을 감안하여, 후속 피처 구현에 앞서 기존 `Contribution` 기반 명칭들을 `ReadingCalendar`로 리팩토링하고 프로토타입 변경에 따른 데이터 모델을 수정.
+
+- `core:model`, `core:database`: `ReadingRecord`의 `cumulativePage` 필드를 `time`, `startPage`, `endPage`로 변경
 - `core:model`: `ContributionDay` → `ReadingCalendarDay` 등
 - `core:ui`: `ContributionGrid` → `ReadingCalendarGrid`, `ContributionCell` → `ReadingCalendarCell`
 - `core:domain`: `GetContributionUseCase` → `GetReadingCalendarUseCase`
@@ -86,7 +87,7 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 - BookEntry CRUD, ReadingRecord CRUD DAO·Repository 보강
 - `GetBookDetailUseCase`, `ObserveBookEntryUseCase`, `ChangeReadingStatusUseCase`, `UpdateRatingMemoUseCase`, `AddReadingRecordUseCase`(10% 또는 40쪽 신호 포함), `EditReadingRecordUseCase`, `DeleteReadingRecordUseCase`, `ObserveBookRecordsUseCase`
 - BookHeader, BookPublishInfoSection, BookDescriptionSection(URL fetch), BookTocSection(URL fetch), StatusSelector, RatingMemoEditor, ReadingRecordList, AddRecordSheet, FinishConfirmDialog
-- **검증 기준**: 상태 변경, 기록 추가/수정/삭제, 10% 또는 40쪽 이하 완독 다이얼로그, 상태 전환 규칙
+- **검증 기준**: 상태 변경, 기록 추가(시작/끝 쪽수, 시간 포함)/수정/삭제, 10% 또는 40쪽 이하 완독 다이얼로그, 상태 전환 규칙
 
 #### Slice 3 — `feature:library`
 서재 목록, 필터, 정렬, 삭제.
@@ -161,24 +162,24 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 
 structure.md에 정의된 모든 모듈이 어느 단계에서 구현되는지 정리.
 
-| 모듈 | 단계 |
-|---|---|
-| `build-logic` | 1단계 |
-| `core:model` | 1단계 |
-| `core:common` | 1단계 |
-| `core:designsystem` | 1단계 |
-| `app` 스켈레톤 | 1단계 |
-| `core:database` | 2단계 |
-| `core:network` | 2단계 |
-| `core:datastore` | 2단계 |
-| `core:data` | 2단계 |
-| `core:domain` 베이스 | 2단계 |
-| `core:ui` | 2단계 |
-| `feature:search` | 3단계 Slice 1 |
-| 코어 모듈 리팩토링 | 3단계 Slice 1.5 |
-| `feature:bookdetail` | 3단계 Slice 2 |
-| `feature:library` | 3단계 Slice 3 |
-| `feature:home`, `feature:stats` | 3단계 Slice 4 |
-| `core:scanner`, `feature:scanner` | 4단계 Slice 5 |
-| `core:notifications`, `feature:settings` | 4단계 Slice 6 |
-| `app` 최종 조립 | 5단계 |
+| 모듈                                       | 단계            |
+|------------------------------------------|---------------|
+| `build-logic`                            | 1단계           |
+| `core:model`                             | 1단계           |
+| `core:common`                            | 1단계           |
+| `core:designsystem`                      | 1단계           |
+| `app` 스켈레톤                               | 1단계           |
+| `core:database`                          | 2단계           |
+| `core:network`                           | 2단계           |
+| `core:datastore`                         | 2단계           |
+| `core:data`                              | 2단계           |
+| `core:domain` 베이스                        | 2단계           |
+| `core:ui`                                | 2단계           |
+| `feature:search`                         | 3단계 Slice 1   |
+| `core` 리팩토링, 모델 수정                       | 3단계 Slice 1.5 |
+| `feature:bookdetail`                     | 3단계 Slice 2   |
+| `feature:library`                        | 3단계 Slice 3   |
+| `feature:home`, `feature:stats`          | 3단계 Slice 4   |
+| `core:scanner`, `feature:scanner`        | 4단계 Slice 5   |
+| `core:notifications`, `feature:settings` | 4단계 Slice 6   |
+| `app` 최종 조립                              | 5단계           |

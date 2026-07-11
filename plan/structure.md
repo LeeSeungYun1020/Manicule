@@ -224,14 +224,18 @@ feature/bookdetail/
     ├── navigation/
     │   └── BookDetailNavigation.kt         # 인자: isbn:String
     └── components/
-        ├── BookHeader.kt                   # 표지·제목·저자 (즉시 표시)
-        ├── BookPublishInfoSection.kt       # 페이지 수·가격·분류 (즉시 표시)
+        ├── BookDetailTabs.kt               # "책 정보", "내 기록" 탭
+        ├── BookInfoTabContent.kt           # 표지, 정보, 소개, 목차 영역
+        ├── MyRecordTabContent.kt           # 상태, 리뷰, 기록 영역
+        ├── BookHeader.kt                   # 표지·제목·저자 등 (책 정보 탭 내부)
+        ├── BookPublishInfoSection.kt       # 페이지 수·가격·분류
         ├── BookDescriptionSection.kt       # 책 소개 (introductionUrl fetch)
         ├── BookTocSection.kt               # 목차 (tableOfContentsUrl fetch)
         ├── StatusSelector.kt               # 읽고싶음/읽는 중/완독
-        ├── RatingMemoEditor.kt
-        ├── ReadingRecordList.kt            # 날짜별 기록
-        ├── AddRecordSheet.kt               # 날짜+페이지 입력
+        ├── RatingMemoEditor.kt             # 리뷰 작성 (빈 상태일 경우 점선 UI)
+        ├── ReadingRecordList.kt            # 진행률 프로그레스 바, 날짜별 기록
+        ├── EmptyReadingRecord.kt           # 독서 기록 빈 상태 안내 컴포넌트
+        ├── AddRecordSheet.kt               # 날짜(오늘/어제/직접선택)/시간 세그먼트, 쪽수 입력 바텀시트
         └── FinishConfirmDialog.kt          # 기록 후 완독 시점 확인용
 ```
 
@@ -356,7 +360,7 @@ core/model/
     ├── Book.kt                             # isbn(EA_ISBN), title, author, publisher, pubDate(PUBLISH_PREDATE), coverUrl(TITLE_URL), totalPages(PAGE), price(PRE_PRICE), category(SUBJECT), tableOfContentsUrl(BOOK_TB_CNT_URL), introductionUrl(BOOK_INTRODUCTION_URL), summaryUrl(BOOK_SUMMARY_URL)
     ├── ReadingStatus.kt                    # WANT / READING / FINISHED
     ├── BookEntry.kt                        # Book + Status + rating + memo + finishedAt
-    ├── ReadingRecord.kt                    # id, isbn, date, cumulativePage
+    ├── ReadingRecord.kt                    # id, isbn, date, time, startPage, endPage
     ├── DailyReading.kt                     # 통계용 (date, pages)
     ├── ReadingCalendarDay.kt               # 독서 달력 한 칸 (date, intensity)
     ├── ReadingStreak.kt
@@ -439,7 +443,7 @@ core/database/
     ├── entity/
     │   ├── BookEntity.kt                   # @Entity (PK = isbn)
     │   ├── BookEntryEntity.kt              # status, rating, memo, addedAt, updatedAt, finishedAt
-    │   ├── ReadingRecordEntity.kt          # id, isbn, date, cumulativePage
+    │   ├── ReadingRecordEntity.kt          # id, isbn, date, time, startPage, endPage
     │   └── RecentQueryEntity.kt
     ├── dao/
     │   ├── BookDao.kt
