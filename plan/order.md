@@ -112,7 +112,7 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 
 #### Slice 5 — 바코드 스캔
 - `core:scanner` (CameraX + ML Kit, BarcodeScanner 인터페이스, IsbnValidator)
-- `feature:scanner` (CameraPreview, ViewfinderOverlay, PermissionDeniedView)
+- `feature:scanner` (CameraPreview, ViewfinderOverlay, ScannerErrorState, PermissionDeniedState)
 - `GetBookByScanUseCase`
 - 홈·검색 화면에서 스캔 진입점 연결
 - **검증 기준**: 카메라 권한 흐름, ISBN 인식 → 책 상세 진입, 인식 실패 메시지 안내 및 검색 화면 이동 버튼 동작

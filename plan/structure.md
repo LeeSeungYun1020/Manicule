@@ -189,8 +189,8 @@ feature/search/
     └── components/
         ├── SearchTopBar.kt                 # Material 3 SearchBar 패턴
         ├── RecentQueryList.kt              # 검색어 저장 토글 및 삭제 스낵바 포함
-        ├── SearchResultList.kt
-        └── EmptySearchResult.kt            # "스캔" 버튼 포함
+        ├── SearchResultList.kt             # 총 검색 결과 건수 표시 포함
+        └── EmptySearchResult.kt            # "스캔 화면으로 이동" 버튼 포함
 ```
 
 ### 3.5 `feature:scanner`
@@ -206,8 +206,9 @@ feature/scanner/
     │   └── ScannerNavigation.kt
     └── components/
         ├── CameraPreview.kt                # Preview UseCase 직접 생성, bindToLifecycle, 회전 시 targetRotation 갱신
-        ├── ViewfinderOverlay.kt
-        └── PermissionDeniedView.kt
+        ├── ViewfinderOverlay.kt            # 스캔 영역 가이드 UI 및 안내 문구
+        ├── ScannerErrorState.kt            # "검색" 버튼 포함 (결과 없음/에러)
+        └── PermissionDeniedState.kt        # 카메라 권한 거부 안내
 ```
 
 ### 3.6 `feature:bookdetail`
