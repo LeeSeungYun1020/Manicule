@@ -97,8 +97,8 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 
 - 독서 달력·통계 집계용 ReadingRecordDao 쿼리 추가
 - `GetTodaySummaryUseCase`, `GetReadingStreakUseCase`, `GetReadingCalendarUseCase`, `GetPeriodSummaryUseCase`
-- HomeScreen 컴포넌트 전체, StatsScreen 컴포넌트 전체 (PeriodSelectionBottomSheet 등)
-- **검증 기준**: 홈 읽는 중 목록·독서 달력 미리보기·오늘 통계, 통계 가변 기간(오늘/4주/1년/직접선택) 검증 및 달력 연동
+- HomeScreen 컴포넌트 전체 (HomeEmptyState, ReadingSummaryCard 등), StatsScreen 컴포넌트 전체 (PeriodSelectionBottomSheet 등)
+- **검증 기준**: 홈 빈 상태 및 읽는 중 목록·독서 요약 카드(최근 7일), 통계 가변 기간(오늘/4주/1년/직접선택) 검증, 오늘 탭 읽은 책 목록 표시 및 달력 연동
 
 ---
 

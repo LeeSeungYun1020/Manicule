@@ -169,10 +169,9 @@ feature/home/
     └── components/
         ├── HomeSearchBar.kt
         ├── ScanBarcodeButton.kt
-        ├── InProgressSection.kt            # "내 서재 →" 포함
+        ├── InProgressSection.kt            # "더보기" 포함
         ├── InProgressEmptyState.kt         # 검색 및 스캔 버튼 포함
-        ├── ReadingCalendarPreview.kt       # 최근 8주
-        └── TodaySummaryCard.kt
+        └── ReadingSummaryCard.kt           # 독서 요약 카드 (잔디 7일, 연속 기록, 오늘 페이지)
 ```
 
 ### 3.4 `feature:search`
