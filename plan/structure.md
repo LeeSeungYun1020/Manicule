@@ -182,14 +182,15 @@ feature/search/
     ├── SearchRoute.kt
     ├── SearchScreen.kt
     ├── SearchViewModel.kt
-    ├── SearchUiState.kt                    # Idle / Loading / Results / Empty / Error
+    ├── SearchUiState.kt                    # SearchQuery, RecentQueries, PagingData<Book>, isSaveRecentQueryEnabled
+    ├── SearchUiEvent.kt                    # 토글 변경, 삭제, 삭제 Undo 등
     ├── navigation/
     │   └── SearchNavigation.kt
     └── components/
-        ├── SearchTextField.kt
-        ├── RecentQueriesList.kt
-        ├── BookSearchResultItem.kt
-        └── EmptyResultPrompt.kt            # "바코드가 있나요?" 및 스캔 버튼 안내
+        ├── SearchTopBar.kt                 # Material 3 SearchBar 패턴
+        ├── RecentQueryList.kt              # 검색어 저장 토글 및 삭제 스낵바 포함
+        ├── SearchResultList.kt
+        └── EmptySearchResult.kt            # "스캔" 버튼 포함
 ```
 
 ### 3.5 `feature:scanner`
@@ -454,10 +455,9 @@ core/database/
 
 ```
 core/datastore/
-└── src/main/java/com/example/note/core/datastore/
-    ├── di/
-    │   └── DataStoreModule.kt
-    ├── UserPreferencesDataStore.kt         # Preferences DataStore 래퍼
+    └── src/main/java/com/example/note/core/datastore/
+        ├── ManiculePreferencesDataSource.kt
+        └── UserPreferences.kt                  # Theme, Reminder(on/off, time), SaveRecentQueries(on/off)
     └── PreferencesKeys.kt                  # THEME_MODE, REMINDER_ENABLED, REMINDER_TIME
 ```
 

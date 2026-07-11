@@ -65,10 +65,14 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 #### Slice 1 — `feature:search`
 도서 검색, 최근 검색어. 모든 흐름의 진입점.
 
+- `core:datastore` UserPreferences에 검색어 저장 여부 속성 추가 (진행 중인 단계 반영)
 - DAO·Repository에 검색 쿼리/최근 검색어 메서드 추가, NLK API `PagingSource` 구현
-- `SearchBooksUseCase`(`Flow<PagingData<Book>>` 반환, Paging 3 통합), `GetRecentQueriesUseCase`, `SaveRecentQueryUseCase`
-- SearchScreen, ViewModel, UiState (입력 디바운스 350ms, `LazyColumn` + `collectAsLazyPagingItems()`로 무한 스크롤)
-- **검증 기준**: 키워드 검색 시 결과 목록 표시, 무한 스크롤 동작, 최근 검색어 저장·재실행, 결과 없음 화면에서 스캔 화면 이동 버튼 동작
+- `SearchBooksUseCase`(`Flow<PagingData<Book>>` 반환), `GetRecentQueriesUseCase`, `SaveRecentQueryUseCase`, `DeleteRecentQueryUseCase`,
+  `ToggleSaveRecentQueryUseCase` 등
+- SearchScreen, ViewModel, UiState (입력 디바운스 350ms, 무한 스크롤, 검색어 저장 토글, 삭제 스낵바 Undo)
+- **검증 기준**: 키워드 검색 시 결과 목록 표시, 무한 스크롤 동작, 최근 검색어 저장 켜기/끄기 동작, 검색어 삭제 시 스낵바를 통한 실행취소, 결과 없음 화면에서 스캔 화면 이동 버튼 동작
+
+#### Slice 1.5 — 코어 모듈 리팩토링 (명칭 변경 및 데이터 모델 수정)
 
 #### Slice 1.5 — 코어 모듈 리팩토링 (명칭 변경)
 현재 1, 2단계가 기구현 완료되었음을 감안하여, 후속 피처 구현에 앞서 기존 `Contribution` 기반 명칭들을 `ReadingCalendar`로 리팩토링한다.
