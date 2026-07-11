@@ -231,12 +231,12 @@ feature/bookdetail/
         ├── BookPublishInfoSection.kt       # 페이지 수·가격·분류
         ├── BookDescriptionSection.kt       # 책 소개 (introductionUrl fetch)
         ├── BookTocSection.kt               # 목차 (tableOfContentsUrl fetch)
-        ├── StatusSelector.kt               # 읽고싶음/읽는 중/완독
+        ├── StatusSelector.kt               # 읽고 싶음 / 읽는 중 / 다 읽음
         ├── RatingMemoEditor.kt             # 리뷰 작성 (빈 상태일 경우 점선 UI)
         ├── ReadingRecordList.kt            # 진행률 프로그레스 바, 날짜별 기록
         ├── EmptyReadingRecord.kt           # 독서 기록 빈 상태 안내 컴포넌트
         ├── AddRecordSheet.kt               # 날짜(오늘/어제/직접선택)/시간 세그먼트, 쪽수 입력 바텀시트
-        └── FinishConfirmDialog.kt          # 기록 후 완독 시점 확인용
+        └── FinishConfirmDialog.kt          # 기록 후 다 읽은 시점 확인용
 ```
 
 ### 3.7 `feature:library`
@@ -251,9 +251,10 @@ feature/library/
     ├── navigation/
     │   └── LibraryNavigation.kt
     └── components/
-        ├── StatusTabRow.kt                 # 전체/읽고싶음/읽는 중/완독
-        ├── SortBottomSheet.kt              # 수정/추가/별점 및 방향 선택
-        └── LibraryBookCard.kt              # 진도 표시 포함
+        ├── StatusTabRow.kt                 # 읽고 싶음 / 읽는 중 / 다 읽음
+        ├── SortBottomSheet.kt              # 기준(추가/수정/별점) 및 방향 선택 (적용 버튼으로 확정)
+        ├── LibraryBookCard.kt              # 상태별 표시 (기본, 진도율, 다 읽은 날짜)
+        └── EmptyLibrary.kt                 # 책이 없는 경우 빈 상태 표시 (검색, 스캔 버튼 포함)
 ```
 
 ### 3.8 `feature:stats`
@@ -270,7 +271,7 @@ feature/stats/
     └── components/
         ├── PeriodSelector.kt               # 오늘 / 4주 / 1년 / 직접 선택
         ├── PeriodSelectionBottomSheet.kt   # 직접 선택용 DatePicker 바텀 시트
-        ├── SummaryCards.kt                 # 완독 권수, 페이지 수
+        ├── SummaryCards.kt                 # 다 읽은 권수, 페이지 수
         ├── ReadingCalendarGrid.kt          # 지정 기간 달력 그리드 (동적 가로 스크롤)
         └── SelectedDayRecords.kt
 ```
@@ -364,7 +365,7 @@ core/model/
     ├── DailyReading.kt                     # 통계용 (date, pages)
     ├── ReadingCalendarDay.kt               # 독서 달력 한 칸 (date, intensity)
     ├── ReadingStreak.kt
-    ├── PeriodSummary.kt                    # 완독 권수, 페이지 수
+    ├── PeriodSummary.kt                    # 다 읽은 권수, 페이지 수
     ├── UserPreferences.kt                  # ThemeMode, ReminderConfig
     └── SearchQuery.kt
 ```
@@ -387,7 +388,7 @@ core/domain/
     ├── library/
     │   ├── GetLibraryBooksUseCase.kt        # status, sort 인자
     │   ├── ObserveBookEntryUseCase.kt       # ISBN → BookEntry(상태/별점/메모) 관찰, 미등록 시 null
-    │   ├── ChangeReadingStatusUseCase.kt    # 완독 시 finishedAt 저장 규칙 포함
+    │   ├── ChangeReadingStatusUseCase.kt    # 다 읽음 시 finishedAt 저장 규칙 포함
     │   ├── DeleteBookEntryUseCase.kt
     │   └── UpdateRatingMemoUseCase.kt
     ├── record/
