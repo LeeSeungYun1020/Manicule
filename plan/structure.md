@@ -270,10 +270,11 @@ feature/stats/
     │   └── StatsNavigation.kt              # 인자: focus:String? (잔디 위치 스크롤용)
     └── components/
         ├── PeriodSelector.kt               # 오늘 / 4주 / 1년 / 직접 선택
-        ├── PeriodSelectionBottomSheet.kt   # 직접 선택용 DatePicker 바텀 시트
+일        ├── PeriodSelectionBottomSheet.kt   # 직접 선택 탭의 시작일/종료일 설정용 바텀 시트
         ├── SummaryCards.kt                 # 다 읽은 권수, 페이지 수
-        ├── ReadingCalendarGrid.kt          # 지정 기간 달력 그리드 (동적 가로 스크롤)
-        └── SelectedDayRecords.kt
+        ├── ReadingCalendarGrid.kt          # 지정 기간 달력 그리드 (동적 가로 스크롤, 우측 정렬, 5단계 색상)
+        ├── ReadingChart.kt                 # 책(막대) + 페이지(꺾은선) 복합 차트 (가로 스크롤, 우측 정렬)
+        └── SelectedDayRecords.kt           # 오늘 탭 또는 특정 날짜 클릭 시 하단에 표시되는 해당 일 독서 기록 목록
 ```
 
 ### 3.9 `feature:settings`
