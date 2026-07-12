@@ -291,7 +291,8 @@ feature/settings/
     └── components/
         ├── ThemeSegmentedControl.kt        # 시스템/라이트/다크 테마 선택 (세그먼트 컨트롤)
         ├── ReminderToggle.kt               # 리마인더 on/off 토글 스위치 및 시간 설정 행
-        └── ReminderTimePicker.kt           # 리마인더 시간 변경 다이얼로그/피커
+        ├── ReminderTimePicker.kt           # 리마인더 시간 변경 다이얼로그/피커
+        └── SupportSection.kt               # 오픈소스 라이선스 및 버전 정보 표기 영역
 ```
 
 ---
