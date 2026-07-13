@@ -170,7 +170,7 @@ feature/home/
         ├── HomeSearchBar.kt
         ├── ScanBarcodeButton.kt
         ├── InProgressSection.kt            # "더보기" 포함
-        ├── InProgressEmptyState.kt         # 검색 및 스캔 버튼 포함
+        ├── EmptyInProgress.kt              # 검색 및 스캔 버튼 포함
         └── ReadingSummaryCard.kt           # 독서 요약 카드 (잔디 7일, 연속 기록, 오늘 페이지)
 ```
 
@@ -235,7 +235,7 @@ feature/bookdetail/
         ├── RatingMemoEditor.kt             # 리뷰 작성 (빈 상태일 경우 점선 UI)
         ├── ReadingRecordList.kt            # 진행률 프로그레스 바, 날짜별 기록
         ├── EmptyReadingRecord.kt           # 독서 기록 빈 상태 안내 컴포넌트
-        ├── AddRecordSheet.kt               # 날짜(오늘/어제/직접선택)/시간 세그먼트, 쪽수 입력 바텀시트
+        ├── AddRecordBottomSheet.kt         # 날짜(오늘/어제/직접선택)/시간 세그먼트, 쪽수 입력 바텀시트
         └── FinishConfirmDialog.kt          # 기록 후 다 읽은 시점 확인용
 ```
 
@@ -270,9 +270,8 @@ feature/stats/
     │   └── StatsNavigation.kt              # 인자: focus:String? (잔디 위치 스크롤용)
     └── components/
         ├── PeriodSelector.kt               # 오늘 / 4주 / 1년 / 직접 선택
-일        ├── PeriodSelectionBottomSheet.kt   # 직접 선택 탭의 시작일/종료일 설정용 바텀 시트
+        ├── PeriodSelectionBottomSheet.kt   # 직접 선택 탭의 시작일/종료일 설정용 바텀 시트
         ├── SummaryCards.kt                 # 다 읽은 권수, 페이지 수
-        ├── ReadingCalendarGrid.kt          # 지정 기간 달력 그리드 (동적 가로 스크롤, 우측 정렬, 5단계 색상)
         ├── ReadingChart.kt                 # 책(막대) + 페이지(꺾은선) 복합 차트 (가로 스크롤, 우측 정렬)
         └── SelectedDayRecords.kt           # 오늘 탭 또는 특정 날짜 클릭 시 하단에 표시되는 해당 일 독서 기록 목록
 ```
@@ -314,7 +313,9 @@ core/designsystem/
     │   ├── ManiculeTextField.kt
     │   ├── ManiculeDialog.kt                   # 공통 다이얼로그 (이름·메시지·확인/취소)
     │   ├── ManiculeTopAppBar.kt
-    │   ├── ManiculeEmptyState.kt
+    │   ├── ManiculeEmptyContent.kt             # 빈 상태(Empty State) 공통 화면
+    │   ├── ManiculeBottomSheet.kt              # 공통 바텀시트 레이아웃 (둥근 모서리, 닫기 버튼)
+    │   ├── ManiculeSegmentedControl.kt         # 테두리 있는 둥근 탭 UI (테마, 통계기간 등 공통)
     │   └── ManiculeLoading.kt
     ├── icon/
     │   └── ManiculeIcons.kt
@@ -464,8 +465,8 @@ core/database/
 ```
 core/datastore/
     └── src/main/java/com/example/note/core/datastore/
-        ├── ManiculePreferencesDataSource.kt
-        └── UserPreferences.kt                  # Theme, Reminder(on/off, time), SaveRecentQueries(on/off)
+        ├── UserPreferencesLocalDataSource.kt   # Theme, Reminder(on/off, time) 등 DataStore 읽기/쓰기
+        └── UserPreferencesDataStore.kt         # DataStore 인스턴스 (실제 구현에 맞춤)
     └── PreferencesKeys.kt                  # THEME_MODE, REMINDER_ENABLED, REMINDER_TIME
 ```
 
