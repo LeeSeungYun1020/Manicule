@@ -65,12 +65,10 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 #### Slice 1 — `feature:search`
 도서 검색, 최근 검색어. 모든 흐름의 진입점.
 
-- `core:datastore` UserPreferences에 검색어 저장 여부 속성 추가 (진행 중인 단계 반영)
 - DAO·Repository에 검색 쿼리/최근 검색어 메서드 추가, NLK API `PagingSource` 구현
-- `SearchBooksUseCase`(`Flow<PagingData<Book>>` 반환), `GetRecentQueriesUseCase`, `SaveRecentQueryUseCase`, `DeleteRecentQueryUseCase`,
-  `ToggleSaveRecentQueryUseCase` 등
-- SearchScreen, ViewModel, UiState (입력 디바운스 350ms, 무한 스크롤, 검색어 저장 토글, 삭제 스낵바 Undo)
-- **검증 기준**: 키워드 검색 시 결과 목록 표시, 무한 스크롤 동작, 최근 검색어 저장 켜기/끄기 동작, 검색어 삭제 시 스낵바를 통한 실행취소, 결과 없음 화면에서 스캔 화면 이동 버튼 동작
+- `SearchBooksUseCase`(`Flow<PagingData<Book>>` 반환), `GetRecentQueriesUseCase`, `SaveRecentQueryUseCase`, `DeleteRecentQueryUseCase` 등
+- SearchScreen, ViewModel, UiState (입력 디바운스 350ms, 무한 스크롤, 검색어 삭제 스낵바 Undo, 입력 중 최근 검색어 로컬 필터, 최근 검색어 없음 안내 카드)
+- **검증 기준**: 키워드 검색 시 결과 목록 표시, 무한 스크롤 동작, 검색어 삭제 시 스낵바를 통한 실행취소, 최근 검색어 없음(첫 사용/전체 삭제) 시 안내 카드 표시, 입력 중 최근 검색어 로컬 필터 노출(매칭 없으면 비움), 결과 없음 화면에서 스캔 화면 이동 버튼 동작
 
 #### Slice 1.5 — 코어 모듈 리팩토링 (명칭 변경 및 데이터 모델 수정)
 
@@ -86,8 +84,8 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 
 - BookEntry CRUD, ReadingRecord CRUD DAO·Repository 보강
 - `GetBookDetailUseCase`, `ObserveBookEntryUseCase`, `ChangeReadingStatusUseCase`, `UpdateRatingMemoUseCase`, `AddReadingRecordUseCase`(10% 또는 40쪽 신호 포함), `EditReadingRecordUseCase`, `DeleteReadingRecordUseCase`, `ObserveBookRecordsUseCase`
-- BookHeader, BookPublishInfoSection, BookDescriptionSection(URL fetch), BookTocSection(URL fetch), StatusSelector, RatingMemoEditor, ReadingRecordList, AddRecordSheet, FinishConfirmDialog
-- **검증 기준**: 상태 변경, 기록 추가(시작/끝 쪽수, 시간 포함)/수정/삭제, 10% 또는 40쪽 이하 완독 다이얼로그, 상태 전환 규칙
+- BookHeader, BookPublishInfoSection, BookDescriptionSection(URL fetch), BookTocSection(URL fetch), StatusSelector, RatingMemoEditor(별점·메모 인라인 편집, 별도 시트 없음), ReadingRecordList, AddRecordBottomSheet(직접 선택 시 표준 DatePicker/TimePicker), FinishConfirmDialog
+- **검증 기준**: 상태 변경, 별점·메모 인라인 편집(별 탭 즉시 저장, 메모 자동 저장), 어느 상태에서든 기록 추가(시작/끝 쪽수, 시간 포함)/수정/삭제, 기록 삭제 시 스낵바를 통한 실행취소, 첫 기록 생성 시 읽고 싶음→읽는 중 자동 전환, 남은 페이지 10% 또는 40쪽 이하 다 읽음 확인 다이얼로그 및 다 읽은 날짜 저장
 
 #### Slice 3 — `feature:library`
 서재 목록, 필터, 정렬, 삭제.
@@ -120,7 +118,7 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 
 #### Slice 6 — 알림 + 설정
 - `core:notifications` (ReminderScheduler, WorkManagerReminderScheduler, ReminderWorker)
-- `feature:settings` (ThemeRadioGroup, ReminderToggle, ReminderTimePicker)
+- `feature:settings` (ThemeSegmentedControl, ReminderToggle, ReminderTimePicker)
 - `GetUserPreferencesUseCase`, `SetThemeUseCase`, `SetReminderUseCase`, `GetLatestReadingBookUseCase` (ReminderWorker가 가장 최근 '읽는 중' 책 제목을 메시지에 주입, 없으면 일반 메시지 fallback)
 - **검증 기준**: 테마 즉시 적용, 알림 on/off 및 시간 설정 → 매일 알림 발송, 읽는 중 책 제목이 알림 메시지에 반영
 

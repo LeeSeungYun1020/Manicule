@@ -170,7 +170,7 @@ feature/home/
         ├── HomeSearchBar.kt
         ├── ScanBarcodeButton.kt
         ├── InProgressSection.kt            # "더보기" 포함
-        ├── EmptyInProgress.kt              # 검색 및 스캔 버튼 포함
+        ├── EmptyInProgress.kt              # '읽는 중' 책 없을 때 '읽고 싶음' 책 유무에 따른 안내 및 액션 카드 포함
         └── ReadingSummaryCard.kt           # 독서 요약 카드 (잔디 7일, 연속 기록, 오늘 페이지)
 ```
 
@@ -182,13 +182,14 @@ feature/search/
     ├── SearchRoute.kt
     ├── SearchScreen.kt
     ├── SearchViewModel.kt
-    ├── SearchUiState.kt                    # SearchQuery, RecentQueries, PagingData<Book>, isSaveRecentQueryEnabled
-    ├── SearchUiEvent.kt                    # 토글 변경, 삭제, 삭제 Undo 등
+    ├── SearchUiState.kt                    # query, RecentQueries, filteredQueries(입력 중 로컬 필터), PagingData<Book>, inputPhase(Idle/Typing/Submitted)
+    ├── SearchUiEvent.kt                    # 검색어 삭제, 삭제 Undo 등
     ├── navigation/
     │   └── SearchNavigation.kt
     └── components/
         ├── SearchTopBar.kt                 # Material 3 SearchBar 패턴
-        ├── RecentQueryList.kt              # 검색어 저장 토글 및 삭제 스낵바 포함
+        ├── RecentQueryList.kt              # 최근 검색어 리스트, 개별 삭제 스낵바 Undo 포함. 입력 중에는 최근 검색어를 입력값으로 로컬 필터링해 노출
+        ├── EmptyRecentQuery.kt             # 최근 검색어 없음(첫 사용/전체 삭제) 검색 유도 안내 카드
         ├── SearchResultList.kt             # 총 검색 결과 건수 표시 포함
         └── EmptySearchResult.kt            # "스캔 화면으로 이동" 버튼 포함
 ```
@@ -220,7 +221,7 @@ feature/bookdetail/
     ├── BookDetailScreen.kt
     ├── BookDetailViewModel.kt
     ├── BookDetailUiState.kt                # Book + Records + Status + Rating + Memo
-    ├── BookDetailUiEvent.kt                # ChangeStatus, AddRecord, EditRecord, ...
+    ├── BookDetailUiEvent.kt                # 상태 변경, 별점/메모 변경, 기록 추가/수정/삭제, 기록 삭제 실행취소 등
     ├── navigation/
     │   └── BookDetailNavigation.kt         # 인자: isbn:String
     └── components/
@@ -232,11 +233,11 @@ feature/bookdetail/
         ├── BookDescriptionSection.kt       # 책 소개 (introductionUrl fetch)
         ├── BookTocSection.kt               # 목차 (tableOfContentsUrl fetch)
         ├── StatusSelector.kt               # 읽고 싶음 / 읽는 중 / 다 읽음
-        ├── RatingMemoEditor.kt             # 리뷰 작성 (빈 상태일 경우 점선 UI)
+        ├── RatingMemoEditor.kt             # 별점·메모 인라인 편집 (별 탭 시 즉시 저장, 메모 포커스 아웃 시 자동 저장, 빈 상태는 점선 UI). 별도 시트/다이얼로그 없음
         ├── ReadingRecordList.kt            # 진행률 프로그레스 바, 날짜별 기록
         ├── EmptyReadingRecord.kt           # 독서 기록 빈 상태 안내 컴포넌트
-        ├── AddRecordBottomSheet.kt         # 날짜(오늘/어제/직접선택)/시간 세그먼트, 쪽수 입력 바텀시트
-        └── FinishConfirmDialog.kt          # 기록 후 다 읽은 시점 확인용
+        ├── AddRecordBottomSheet.kt         # 날짜(오늘/어제/직접선택)/시간(지금/직접선택) 세그먼트, 쪽수 입력 바텀시트. '직접 선택' 시 Android 표준 DatePicker/TimePicker 다이얼로그 호출
+        └── FinishConfirmDialog.kt          # 기록 후 남은 페이지 10%/40쪽 이하 시 "혹시 책을 다 읽으셨나요?" 확인, "네" 시 다 읽음 전환
 ```
 
 ### 3.7 `feature:library`
@@ -248,6 +249,7 @@ feature/library/
     ├── LibraryScreen.kt
     ├── LibraryViewModel.kt
     ├── LibraryUiState.kt                   # selectedTab, sort, books
+    ├── LibraryUiEvent.kt                   # 정렬 변경, 상태 필터 변경, 책 삭제, 상태 변경, 실행취소 등
     ├── navigation/
     │   └── LibraryNavigation.kt
     └── components/
@@ -272,8 +274,9 @@ feature/stats/
         ├── PeriodSelector.kt               # 오늘 / 4주 / 1년 / 직접 선택
         ├── PeriodSelectionBottomSheet.kt   # 직접 선택 탭의 시작일/종료일 설정용 바텀 시트
         ├── SummaryCards.kt                 # 다 읽은 권수, 페이지 수
-        ├── ReadingChart.kt                 # 책(막대) + 페이지(꺾은선) 복합 차트 (가로 스크롤, 우측 정렬)
-        └── SelectedDayRecords.kt           # 오늘 탭 또는 특정 날짜 클릭 시 하단에 표시되는 해당 일 독서 기록 목록
+        ├── ReadingChart.kt                 # 책(막대) + 페이지(꺾은선) 복합 차트 (좌축=권수, 우축=페이지 눈금 + 격자선, 가로 스크롤 시 좌우 축 고정·가운데만 스크롤, 우측 정렬)
+        ├── SelectedDayRecords.kt           # 오늘 탭 하단에 표시되는 해당 일 독서 기록 목록
+        └── SelectedDayRecordsBottomSheet.kt # 4주/1년/직접선택 탭 달력에서 특정 날짜 클릭 시 올라오는 독서 기록 바텀 시트
 ```
 
 ### 3.9 `feature:settings`
@@ -290,7 +293,7 @@ feature/settings/
     └── components/
         ├── ThemeSegmentedControl.kt        # 시스템/라이트/다크 테마 선택 (세그먼트 컨트롤)
         ├── ReminderToggle.kt               # 리마인더 on/off 토글 스위치 및 시간 설정 행
-        ├── ReminderTimePicker.kt           # 리마인더 시간 변경 다이얼로그/피커
+        ├── ReminderTimePicker.kt           # 리마인더 시간 변경 (Android 표준 TimePicker 다이얼로그)
         └── SupportSection.kt               # 오픈소스 라이선스 및 버전 정보 표기 영역
 ```
 
@@ -395,7 +398,7 @@ core/domain/
     │   ├── DeleteBookEntryUseCase.kt
     │   └── UpdateRatingMemoUseCase.kt
     ├── record/
-    │   ├── AddReadingRecordUseCase.kt       # 읽고싶음→읽는 중 자동 전환, 10% 또는 40쪽 이하 신호 반환
+    │   ├── AddReadingRecordUseCase.kt       # 읽고싶음→읽는 중 자동 전환(첫 기록 생성 시에만), 남은 페이지 10% 또는 40쪽 이하 신호 반환
     │   ├── EditReadingRecordUseCase.kt
     │   ├── DeleteReadingRecordUseCase.kt
     │   └── ObserveBookRecordsUseCase.kt
