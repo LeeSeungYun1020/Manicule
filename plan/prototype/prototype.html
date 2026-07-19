@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+    <title>읽음표 프로토타입</title>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics="">
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&amp;display=block" rel="stylesheet">
+<style>
+body{margin:0;background:#f0eee9;font-family:'Inter',system-ui,sans-serif}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1A1410;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#1A1410}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1A1410;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)}
+.dv-card{max-width:100%;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+.dv-opt:target .dv-oid{background:#2a78d6;color:#fff}
+.wf-frame{width:300px;background:#FFFBF6;border:3px solid #1A1410;border-radius:30px;box-shadow:4px 4px 0 rgba(0,0,0,.12);position:relative}
+.wf-note{font-family:'Patrick Hand',cursive;color:#c0392b;font-size:13px;line-height:1.3}
+.wf-hand{font-family:'Patrick Hand',cursive}
+.msym{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;white-space:nowrap;direction:ltr;font-feature-settings:'liga';-webkit-font-smoothing:antialiased;display:inline-flex;align-items:center;justify-content:center}
+</style>
+</helmet>
+
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">메인 화면</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>계속 사용자</div>
+<div class="wf-frame">
+  <div style="display:flex;flex-direction:column;height:680px">
+    <div style="flex:1;overflow-y:auto;padding:18px 16px 16px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font:700 17px Inter,sans-serif;color:#1A1410">독서 기록</div>
+        <div style="width:28px;height:28px;border-radius:50%;border:2px solid #1A1410"></div>
+      </div>
+
+      <div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;display:flex;align-items:center;gap:6px;border:2px solid #1A1410;border-radius:22px;padding:9px 12px;background:#F5EFE6">
+            <span class="msym" style="font-size:18px;color:#6f665b">search</span>
+            <span style="font:400 11.5px Inter,sans-serif;color:#6f665b">책 찾아보기</span>
+          </div>
+          <div style="width:42px;height:42px;flex:none;border:2px solid #1A1410;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#1A1410"><span class="msym" style="font-size:22px;color:#1A1410">barcode_scanner</span></div>
+        </div>
+        <div class="wf-note" style="margin-top:6px">↑ 검색창 + 스캔 버튼 분리 배치</div>
+      </div>
+
+      <div style="background:#F5EFE6;border:2px solid #1A1410;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:14px">
+          <div style="font:500 11px Inter,sans-serif;color:#777"><span class="msym" style="font-size:15px;color:#8C6A4A;vertical-align:-3px">local_fire_department</span> 연속 <span style="font:700 15px Inter,sans-serif;color:#1A1410">12일</span></div>
+          <div style="font:500 11px Inter,sans-serif;color:#777">오늘 <span style="font:700 15px Inter,sans-serif;color:#1A1410">42p</span></div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <sc-for list="{{ recent7 }}" as="day" hint-placeholder-count="7">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+              <div style="width:100%;aspect-ratio:1;border-radius:4px;{{ day.cellStyle }}"></div>
+              <div style="font:600 10px Inter,sans-serif;color:#8a8272">{{ day.wd }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;margin-top:2px">
+          <span style="font:500 9px Inter,sans-serif;color:#6f665b">적음</span>
+          <span style="width:10px;height:10px;border-radius:2px;background:#EBE3D6"></span>
+          <span style="width:10px;height:10px;border-radius:2px;background:#E5C7A6"></span>
+          <span style="width:10px;height:10px;border-radius:2px;background:#CD9F6F"></span>
+          <span style="width:10px;height:10px;border-radius:2px;background:#A9763F"></span>
+          <span style="width:10px;height:10px;border-radius:2px;background:#6E4521"></span>
+          <span style="font:500 9px Inter,sans-serif;color:#6f665b">많음</span>
+        </div>
+        <div class="wf-note" style="margin-top:2px">↑ 독서 요약 카드 (달력 + 연속일수 + 오늘 페이지) · 색 농도 = 독서량(범례 참고)</div>
+      </div>
+
+      <div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
+          <span style="font:700 15px Inter,sans-serif;color:#1A1410">읽는 중 (3)</span>
+          <span style="font:400 11px Inter,sans-serif;color:#6f665b">더보기</span>
+        </div>
+        <div style="display:flex;gap:14px;overflow-x:auto;padding-bottom:4px">
+          <div style="flex:none;width:96px;display:flex;flex-direction:column;gap:8px">
+            <div style="width:96px;height:134px;border:2px solid #1A1410;border-radius:8px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+            <div style="font:600 11.5px Inter,sans-serif;color:#333;line-height:1.3">달러구트 꿈 백화점</div>
+            <div style="height:3px;background:#eee;border-radius:2px;overflow:hidden"><div style="width:60%;height:100%;background:#8C6A4A"></div></div>
+          </div>
+          <div style="flex:none;width:96px;display:flex;flex-direction:column;gap:8px">
+            <div style="width:96px;height:134px;border:2px solid #1A1410;border-radius:8px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+            <div style="font:600 11.5px Inter,sans-serif;color:#333;line-height:1.3">아몬드</div>
+            <div style="height:3px;background:#eee;border-radius:2px;overflow:hidden"><div style="width:30%;height:100%;background:#8C6A4A"></div></div>
+          </div>
+          <div style="flex:none;width:96px;display:flex;flex-direction:column;gap:8px;opacity:.5">
+            <div style="width:96px;height:134px;border:2px solid #1A1410;border-radius:8px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+            <div style="font:600 11.5px Inter,sans-serif;color:#333;line-height:1.3">사피엔스</div>
+          </div>
+        </div>
+        <div class="wf-note" style="margin-top:6px">↑ 표지+진행률 카드, 좌우 스크롤</div>
+      </div>
+    </div>
+
+    <div style="flex:none;border-top:2px solid #1A1410;display:flex;padding:8px 4px 10px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+        <span class="msym" style="font-size:22px">home</span>
+        <span style="font:700 11px Inter,sans-serif;color:#8C6A4A">홈</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5">
+        <span class="msym" style="font-size:22px">book_2</span>
+        <span style="font:500 11px Inter,sans-serif;color:#333">서재</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5">
+        <span class="msym" style="font-size:22px">bar_chart</span>
+        <span style="font:500 11px Inter,sans-serif;color:#333">통계</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5">
+        <span class="msym" style="font-size:22px">settings</span>
+        <span style="font:500 11px Inter,sans-serif;color:#333">설정</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>첫 사용자 · 빈 상태</div>
+<div class="wf-frame">
+  <div style="display:flex;flex-direction:column;height:680px">
+    <div style="flex:1;overflow-y:auto;padding:18px 16px 20px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font:700 17px Inter,sans-serif;color:#1A1410">독서 기록</div>
+        <div style="width:28px;height:28px;border-radius:50%;border:2px solid #1A1410"></div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;display:flex;align-items:center;gap:6px;border:2px solid #1A1410;border-radius:22px;padding:9px 12px;background:#F5EFE6">
+          <span class="msym" style="font-size:18px;color:#6f665b">search</span>
+          <span style="font:400 11.5px Inter,sans-serif;color:#6f665b">책 찾아보기</span>
+        </div>
+        <div style="width:42px;height:42px;flex:none;border:2px solid #1A1410;border-radius:12px;display:flex;align-items:center;justify-content:center"><span class="msym" style="font-size:22px;color:#1A1410">barcode_scanner</span></div>
+      </div>
+
+      <div style="border:2px dashed #C9B9A6;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:14px">
+          <div style="font:500 11px Inter,sans-serif;color:#9a9184"><span class="msym" style="font-size:15px;color:#B79E7F;vertical-align:-3px">local_fire_department</span> 연속 <span style="font:700 15px Inter,sans-serif;color:#8a8272">0일</span></div>
+          <div style="font:500 11px Inter,sans-serif;color:#9a9184">오늘&nbsp;<span style="font: 700 15px Inter, sans-serif; color: rgb(138, 130, 114);">33p</span></div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <div style="flex:1;aspect-ratio:1;border-radius:4px;background:#EBE3D6"></div>
+          <div style="flex:1;aspect-ratio:1;border-radius:4px;background:#EBE3D6"></div>
+          <div style="flex:1;aspect-ratio:1;border-radius:4px;background:#EBE3D6"></div>
+          <div style="flex:1;aspect-ratio:1;border-radius:4px;background:#EBE3D6"></div>
+          <div style="flex:1;aspect-ratio:1;border-radius:4px;background:#EBE3D6"></div>
+          <div style="flex:1;aspect-ratio:1;border-radius:4px;background:#EBE3D6"></div>
+          <div style="flex:1;aspect-ratio:1;border-radius:4px;background:#EBE3D6"></div>
+        </div>
+        <div style="font:600 10.5px Inter,sans-serif;color:#8a8272;text-align:center">책을 기록하면 이 자리가 채워져요</div>
+      </div>
+
+      <div style="border:2px solid #1A1410;background:#F5EFE6;border-radius:16px;padding:20px 16px;display:flex;flex-direction:column;gap:16px;margin-top:2px">
+        <div style="text-align:center;display:flex;flex-direction:column;gap:4px">
+          <div style="font:600 13.5px Inter,sans-serif;color:#1A1410">기록하며 읽는 습관 만들기</div>
+          <div style="font:400 11.5px Inter,sans-serif;color:#6f665b;line-height:1.5">이렇게 시작해 보세요</div>
+        </div>
+
+        <div style="position:relative;display:flex;flex-direction:column;gap:14px;padding-left:4px">
+          <div style="position:absolute;left:14px;top:8px;bottom:8px;width:2px;background:#E5D9C6"></div>
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:28px;height:28px;flex:none;border-radius:50%;background:#8C6A4A;color:#fff;display:flex;align-items:center;justify-content:center;z-index:1"><span class="msym" style="font-size:16px">search</span></div>
+            <div style="padding-top:3px"><div style="font:600 12.5px Inter,sans-serif;color:#1A1410">검색이나 스캔하여 책 추가</div><div style="font:400 11px Inter,sans-serif;color:#6f665b;margin-top:2px">제목·저자로 찾거나 바코드를 찍어요</div></div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:28px;height:28px;flex:none;border-radius:50%;background:#E5C7A6;color:#8C6A4A;display:flex;align-items:center;justify-content:center;z-index:1"><span class="msym" style="font-size:16px">edit_note</span></div>
+            <div style="padding-top:3px"><div style="font:600 12.5px Inter,sans-serif;color:#1A1410">읽으며 기록 남기기</div><div style="font:400 11px Inter,sans-serif;color:#6f665b;margin-top:2px">읽은 페이지와 한줄평을 기록해요</div></div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:28px;height:28px;flex:none;border-radius:50%;background:#E5C7A6;color:#8C6A4A;display:flex;align-items:center;justify-content:center;z-index:1"><span class="msym" style="font-size:16px">bar_chart</span></div>
+            <div style="padding-top:3px"><div style="font:600 12.5px Inter,sans-serif;color:#1A1410">통계로 습관 확인</div><div style="font:400 11px Inter,sans-serif;color:#6f665b;margin-top:2px">달력을 채우고 연속 기록을 쌓아요.</div></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;height:40px;border-radius:20px;background:#8C6A4A;display:flex;align-items:center;justify-content:center;gap:5px;font:700 12px Inter,sans-serif;color:#fff"><span class="msym" style="font-size:16px">search</span>검색</div>
+          <div style="flex:1;height:40px;border-radius:20px;border:2px solid #1A1410;display:flex;align-items:center;justify-content:center;gap:5px;font:600 12px Inter,sans-serif;color:#1A1410"><span class="msym" style="font-size:16px">barcode_scanner</span>스캔</div>
+        </div>
+      </div>
+      
+    </div>
+
+    <div style="flex:none;border-top:2px solid #1A1410;display:flex;padding:8px 4px 10px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+        <span class="msym" style="font-size:22px">home</span>
+        <span style="font:700 11px Inter,sans-serif;color:#8C6A4A">홈</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5">
+        <span class="msym" style="font-size:22px">book_2</span>
+        <span style="font:500 11px Inter,sans-serif;color:#333">서재</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5">
+        <span class="msym" style="font-size:22px">bar_chart</span>
+        <span style="font:500 11px Inter,sans-serif;color:#333">통계</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5">
+        <span class="msym" style="font-size:22px">settings</span>
+        <span style="font:500 11px Inter,sans-serif;color:#333">설정</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>기록 있음 · 읽는 중인 책 없음</div>
+<div class="wf-frame">
+  <div style="display:flex;flex-direction:column;height:680px">
+    <div style="flex:1;overflow-y:auto;padding:18px 16px 16px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font:700 17px Inter,sans-serif;color:#1A1410">독서 기록</div>
+        <div style="width:28px;height:28px;border-radius:50%;border:2px solid #1A1410"></div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;display:flex;align-items:center;gap:6px;border:2px solid #1A1410;border-radius:22px;padding:9px 12px;background:#F5EFE6">
+          <span class="msym" style="font-size:18px;color:#6f665b">search</span>
+          <span style="font:400 11.5px Inter,sans-serif;color:#6f665b">책 찾아보기</span>
+        </div>
+        <div style="width:42px;height:42px;flex:none;border:2px solid #1A1410;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#1A1410"><span class="msym" style="font-size:22px;color:#1A1410">barcode_scanner</span></div>
+      </div>
+
+      <div style="background:#F5EFE6;border:2px solid #1A1410;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:14px">
+          <div style="font:500 11px Inter,sans-serif;color:#777"><span class="msym" style="font-size:15px;color:#8C6A4A;vertical-align:-3px">local_fire_department</span> 연속 <span style="font:700 15px Inter,sans-serif;color:#1A1410">0일</span></div>
+          <div style="font:500 11px Inter,sans-serif;color:#777">읽은 책 <span style="font:700 15px Inter,sans-serif;color:#1A1410">8권</span></div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:100%;aspect-ratio:1;border-radius:4px;background:#E5C7A6"></div><div style="font:600 10px Inter,sans-serif;color:#8a8272">월</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:100%;aspect-ratio:1;border-radius:4px;background:#EBE3D6"></div><div style="font:600 10px Inter,sans-serif;color:#8a8272">화</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:100%;aspect-ratio:1;border-radius:4px;background:#EBE3D6"></div><div style="font:600 10px Inter,sans-serif;color:#8a8272">수</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:100%;aspect-ratio:1;border-radius:4px;background:#EBE3D6"></div><div style="font:600 10px Inter,sans-serif;color:#8a8272">목</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:100%;aspect-ratio:1;border-radius:4px;background:#EBE3D6"></div><div style="font:600 10px Inter,sans-serif;color:#8a8272">금</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:100%;aspect-ratio:1;border-radius:4px;background:#EBE3D6"></div><div style="font:600 10px Inter,sans-serif;color:#8a8272">토</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:100%;aspect-ratio:1;border-radius:4px;background:#EBE3D6"></div><div style="font:600 10px Inter,sans-serif;color:#8a8272">일</div></div>
+        </div>
+        <div class="wf-note" style="margin-top:2px">↑ 실제 지난 기록은 유지, 최근엔 활동 없어 잔디가 옅음 · 연속일수는 0으로</div>
+      </div>
+
+      <div>
+        <div style="font:600 11px Inter,sans-serif;color:#8C6A4A;margin-bottom:8px">읽고 싶은 책이 있는 경우</div>
+        <div style="border:2px dashed #C9B9A6;border-radius:16px;padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
+          <span class="msym" style="font-size:26px;color:#8C6A4A">auto_stories</span>
+          <div style="font:600 13.5px Inter,sans-serif;color:#1A1410">지금 읽는 책이 없어요</div>
+          <div style="font:400 11.5px Inter,sans-serif;color:#6f665b;line-height:1.5">읽고 싶은 책 3권이 대기 중이에요<br>목록에서 골라 바로 시작해 보세요</div>
+          <div style="display:flex;gap:8px;width:100%;margin-top:4px">
+            <div style="flex:1;height:40px;border-radius:20px;background:#8C6A4A;display:flex;align-items:center;justify-content:center;gap:5px;font:700 12px Inter,sans-serif;color:#fff"><span class="msym" style="font-size:16px">bookmark</span>고르기</div>
+            <div style="width:40px;height:40px;flex:none;border-radius:20px;border:2px solid #1A1410;display:flex;align-items:center;justify-content:center"><span class="msym" style="font-size:18px;color:#1A1410">search</span></div>
+            <div style="width:40px;height:40px;flex:none;border-radius:20px;border:2px solid #1A1410;display:flex;align-items:center;justify-content:center"><span class="msym" style="font-size:18px;color:#1A1410">barcode_scanner</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font:600 11px Inter,sans-serif;color:#8C6A4A;margin-bottom:8px">읽고 싶은 책이 없는 경우</div>
+        <div style="border:2px dashed #C9B9A6;border-radius:16px;padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
+          <span class="msym" style="font-size:26px;color:#8C6A4A">auto_stories</span>
+          <div style="font:600 13.5px Inter,sans-serif;color:#1A1410">지금 읽는 책이 없어요</div>
+          <div style="font:400 11.5px Inter,sans-serif;color:#6f665b;line-height:1.5">책을 검색하거나 스캔해 추가해 보세요</div>
+          <div style="display:flex;gap:8px;width:100%;margin-top:4px">
+            <div style="flex:1;height:40px;border-radius:20px;background:#8C6A4A;display:flex;align-items:center;justify-content:center;gap:5px;font:700 12px Inter,sans-serif;color:#fff"><span class="msym" style="font-size:16px">search</span>검색</div>
+            <div style="flex:1;height:40px;border-radius:20px;border:2px solid #1A1410;display:flex;align-items:center;justify-content:center;gap:5px;font:600 12px Inter,sans-serif;color:#1A1410"><span class="msym" style="font-size:16px">barcode_scanner</span>스캔</div>
+          </div>
+        </div>
+      </div>
+      <div class="wf-note" style="margin-top:-6px">↑ '읽는 중' 목록 자리에 유도 카드. 두 상태는 대기 중인 '읽고 싶음' 권수로 분기 · 1b(완전 신규)와 달리 통계 카드는 실제 기록이라 계속 노출 · 0권 상태는 1b와 동일한 검색/스캔 버튼으로 통일</div>
+    </div>
+
+    <div style="flex:none;border-top:2px solid #1A1410;display:flex;padding:8px 4px 10px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+        <span class="msym" style="font-size:22px">home</span>
+        <span style="font:700 11px Inter,sans-serif;color:#8C6A4A">홈</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5">
+        <span class="msym" style="font-size:22px">book_2</span>
+        <span style="font:500 11px Inter,sans-serif;color:#333">서재</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5">
+        <span class="msym" style="font-size:22px">bar_chart</span>
+        <span style="font:500 11px Inter,sans-serif;color:#333">통계</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5">
+        <span class="msym" style="font-size:22px">settings</span>
+        <span style="font:500 11px Inter,sans-serif;color:#333">설정</span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+
+</div>
+</section>
+
+<section class="dv-turn" id="t2">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">텍스트 검색<br></span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="2a">
+<div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>저장된 검색어 없음 · 빈 상태</div>
+<div class="wf-frame">
+  <div style="padding:18px 16px 24px;display:flex;flex-direction:column;gap:16px;min-height:600px">
+    <div style="display:flex;align-items:center;gap:6px;border:2px solid #1A1410;border-radius:14px;padding:12px 14px;background:#F5EFE6">
+      <span class="msym" style="font-size:20px;color:#1A1410">arrow_back</span>
+      <span style="font:400 12.5px Inter,sans-serif;color:#6f665b">책 찾아보기</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;border:2px dashed #C9B9A6;border-radius:14px;padding:16px">
+      <span class="msym" style="font-size:22px;color:#C9B9A6">search</span>
+      <div style="font:500 12.5px Inter,sans-serif;color:#6f665b;line-height:1.4">책 제목, 저자를 검색해 보세요.</div>
+    </div>
+    <div class="wf-note">↑ 첫 사용자 또는 검색 기록 없음일 때 <a class="dv-oid" href="#2b">2b</a>의 리스트 대신 노출</div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="2b">
+<div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>리스트+구분선</div>
+<div class="wf-frame">
+  <div style="padding:18px 16px 24px;display:flex;flex-direction:column;gap:16px;min-height:600px">
+    <div style="display:flex;align-items:center;gap:6px;border:2px solid #1A1410;border-radius:14px;padding:12px 14px;background:#F5EFE6">
+      <span class="msym" style="font-size:20px;color:#1A1410">arrow_back</span>
+      <span style="font:400 12.5px Inter,sans-serif;color:#6f665b">책 찾아보기</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span style="font:700 13px Inter,sans-serif;color:#1A1410">최근 검색</span>
+      <div style="display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 4px;border-bottom:1px solid #efe9df">
+          <span style="display:inline-flex;align-items:center;gap:10px;font:400 13px Inter,sans-serif;color:#333"><span class="msym" style="font-size:18px;color:#8a8272">history</span>달러구트 꿈 백화점</span>
+          <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none;font-size:15px;color:#8a8272;margin:-13px -12px -13px 0"><span class="msym" style="font-size:17px">delete</span></span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 4px;border-bottom:1px solid #efe9df">
+          <span style="display:inline-flex;align-items:center;gap:10px;font:400 13px Inter,sans-serif;color:#333"><span class="msym" style="font-size:18px;color:#8a8272">history</span>아몬드</span>
+          <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none;font-size:15px;color:#8a8272;margin:-13px -12px -13px 0"><span class="msym" style="font-size:17px">delete</span></span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 4px;border-bottom:1px solid #efe9df">
+          <span style="display:inline-flex;align-items:center;gap:10px;font:400 13px Inter,sans-serif;color:#333"><span class="msym" style="font-size:18px;color:#8a8272">history</span>민음사</span>
+          <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none;font-size:15px;color:#8a8272;margin:-13px -12px -13px 0"><span class="msym" style="font-size:17px">delete</span></span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 4px">
+          <span style="display:inline-flex;align-items:center;gap:10px;font:400 13px Inter,sans-serif;color:#333"><span class="msym" style="font-size:18px;color:#8a8272">history</span>사피엔스</span>
+          <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none;font-size:15px;color:#8a8272;margin:-13px -12px -13px 0"><span class="msym" style="font-size:17px">delete</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="wf-note">좌측 아이콘 뒤로가기(←)로 검색 종료. 별도 버튼 없이 키보드 검색(엔터)으로 실행</div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="2c">
+<div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a>입력 중 · 최근 검색어 로컬 필터</div>
+<div class="wf-frame">
+  <div style="padding:18px 16px 24px;display:flex;flex-direction:column;gap:16px;min-height:600px">
+    <div style="display:flex;align-items:center;gap:6px;border:2px solid #1A1410;border-radius:14px;padding:12px 14px;background:#F5EFE6">
+      <span class="msym" style="font-size:20px;color:#1A1410">arrow_back</span>
+      <span style="font:400 12.5px Inter,sans-serif;color:#333">아몬<span style="display:inline-block;width:1.5px;height:14px;background:#1A1410;vertical-align:-2px;margin-left:1px"></span></span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 4px;border-bottom:1px solid #efe9df">
+          <span class="msym" style="font-size:18px;color:#8a8272">search</span>
+          <span style="font:400 13px Inter,sans-serif;color:#333"><span style="font-weight:700;color:#1A1410">아몬</span>드</span>
+        </div>
+      </div>
+    </div>
+    <div class="wf-note">↑ 추천·연관 검색어 API가 없어, 저장된 최근 검색어(<a class="dv-oid" href="#2b">2b</a>)를 입력값으로 로컬 필터링해 노출(입력한 부분 굵게 강조). 항목 탭 시 해당 검색어로 <a class="dv-oid" href="#3a">3a</a> 결과 화면으로 이동. 매칭 결과가 없으면 목록 없이 검색 상자만 유지. 아이콘은 검색(search)으로 두어 향후 서버 연관검색 API 도입 시에도 재사용</div>
+  </div>
+</div>
+</div>
+
+</div>
+
+</section>
+
+<section class="dv-turn" id="t3">
+<div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">텍스트 검색 결과</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="3a">
+<div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>컴팩트 리스트 · 얇은 구분선</div>
+<div class="wf-frame">
+  <div style="padding:18px 16px 24px;display:flex;flex-direction:column;gap:14px;min-height:640px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="flex:1;display:flex;align-items:center;gap:6px;border:2px solid #1A1410;border-radius:20px;padding:7px 12px;background:#F5EFE6">
+        <span class="msym" style="font-size:20px;color:#1A1410">arrow_back</span>
+        <span style="font:400 11.5px Inter,sans-serif;color:#333">아몬드</span>
+      </div>
+    </div>
+    <div style="font:500 11px Inter,sans-serif;color:#6f665b">검색 결과 12건</div>
+    <div style="display:flex;flex-direction:column">
+      <div style="display:flex;gap:12px;padding:12px 2px;border-bottom:1px solid #efe9df">
+        <div style="flex:none;width:56px;height:80px;border:1.5px solid #1A1410;border-radius:4px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+        <div style="display:flex;flex-direction:column;gap:4px;justify-content:center">
+          <div style="font:600 13px Inter,sans-serif;color:#1A1410">아몬드</div>
+          <div style="font:400 11px Inter,sans-serif;color:#777">손원평</div>
+          <div style="font:400 10.5px Inter,sans-serif;color:#6f665b">창비 · 2017.03.31</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;padding:12px 2px;border-bottom:1px solid #efe9df">
+        <div style="flex:none;width:56px;height:80px;border:1.5px solid #1A1410;border-radius:4px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+        <div style="display:flex;flex-direction:column;gap:4px;justify-content:center">
+          <div style="font:600 13px Inter,sans-serif;color:#1A1410">아몬드 (리커버 특별판)</div>
+          <div style="font:400 11px Inter,sans-serif;color:#777">손원평</div>
+          <div style="font:400 10.5px Inter,sans-serif;color:#6f665b">창비 · 2023.11.10</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;padding:12px 2px">
+        <div style="flex:none;width:56px;height:80px;border:1.5px solid #1A1410;border-radius:4px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+        <div style="display:flex;flex-direction:column;gap:4px;justify-content:center">
+          <div style="font:600 13px Inter,sans-serif;color:#1A1410">아몬드 나무 아래</div>
+          <div style="font:400 11px Inter,sans-serif;color:#777">이서수</div>
+          <div style="font:400 10.5px Inter,sans-serif;color:#6f665b">문학동네 · 2021.06.02</div>
+        </div>
+      </div>
+    </div>
+    <div class="wf-note">↑ 행 전체 탭하면 책 정보 화면으로 이동, 얇은 구분선만으로 항목 분리</div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="3b">
+<div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a>검색 결과 없음</div>
+<div class="wf-frame">
+  <div style="padding:18px 16px 24px;display:flex;flex-direction:column;gap:14px;min-height:640px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="flex:1;display:flex;align-items:center;gap:6px;border:2px solid #1A1410;border-radius:20px;padding:7px 12px;background:#F5EFE6">
+        <span class="msym" style="font-size:20px;color:#1A1410">arrow_back</span>
+        <span style="font:400 11.5px Inter,sans-serif;color:#333">쿼카책</span>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border:2px dashed #C9B9A6;border-radius:18px;padding:28px 20px">
+      <div style="position:relative;width:44px;height:44px">
+        <div style="position:absolute;left:0;top:0;width:32px;height:32px;border:3px solid #C9B9A6;border-radius:50%"></div>
+        <div style="position:absolute;left:28px;top:28px;width:14px;height:3px;background:#C9B9A6;border-radius:2px;transform:rotate(45deg)"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div style="font:600 13.5px Inter,sans-serif;color:#1A1410;text-align:center">검색 결과가 없어요</div>
+        <div style="font:400 12px Inter,sans-serif;color:#6f665b;line-height:1.5;text-align:center">책에 있는 바코드를 스캔해 찾아보세요</div>
+      </div>
+      <div style="display:flex;gap:8px;width:100%;margin-top:4px">
+        <div style="flex:1;height:44px;border-radius:22px;background:#8C6A4A;display:flex;align-items:center;justify-content:center;gap:6px;font:700 12.5px Inter,sans-serif;color:#fff"><span class="msym" style="font-size:18px">barcode_scanner</span>스캔</div>
+      </div>
+    </div>
+    <div class="wf-note">↑ <a class="dv-oid" href="#3a">3a</a> 검색창 유지, 결과 영역만 이 점선 카드로 교체. '스캔'은 바코드 검색 화면으로 이동</div>
+  </div>
+</div>
+</div>
+
+</div>
+
+</section>
+
+<section class="dv-turn" id="t4">
+<div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">바코드 검색<br></span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="4a">
+<div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a>카메라 스캔</div>
+<div class="wf-frame" style="background:#2A231C">
+  <div style="position:relative;height:640px;overflow:hidden;border-radius:27px">
+    <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#2A231C,#2A231C 10px,#241d16 10px,#241d16 20px);display:flex;align-items:center;justify-content:center">
+      <span style="font-family:ui-monospace,Menlo,monospace;font-size:9px;color:#6b6255">camera preview</span>
+    </div>
+    <div style="position:absolute;top:18px;left:16px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center">
+      <span class="msym" style="font-size:20px;color:#fff">arrow_back</span>
+    </div>
+    <div style="position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:210px;height:130px">
+      <div style="position:absolute;left:0;top:0;width:22px;height:22px;border-top:3px solid #fff;border-left:3px solid #fff;border-radius:4px 0 0 0"></div>
+      <div style="position:absolute;right:0;top:0;width:22px;height:22px;border-top:3px solid #fff;border-right:3px solid #fff;border-radius:0 4px 0 0"></div>
+      <div style="position:absolute;left:0;bottom:0;width:22px;height:22px;border-bottom:3px solid #fff;border-left:3px solid #fff;border-radius:0 0 0 4px"></div>
+      <div style="position:absolute;right:0;bottom:0;width:22px;height:22px;border-bottom:3px solid #fff;border-right:3px solid #fff;border-radius:0 0 4px 0"></div>
+    </div>
+    <div style="position:absolute;left:0;right:0;bottom:64px;display:flex;justify-content:center">
+      <span style="font:500 12.5px Inter,sans-serif;color:#fff;background:rgba(0,0,0,.4);padding:8px 16px;border-radius:20px">바코드를 사각형 안에 맞춰주세요</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="4b">
+<div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a>바코드 인식 실패 · 검색 결과 없음</div>
+<div class="wf-frame">
+  <div style="padding:18px 16px 24px;display:flex;flex-direction:column;gap:14px;height:640px;box-sizing:border-box">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="msym" style="font-size:22px;color:#1A1410">arrow_back</span>
+      <div style="font:700 17px Inter,sans-serif;color:#1A1410">바코드 스캔</div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border:2px dashed #C9B9A6;border-radius:18px;padding:28px 20px">
+      <div style="position:relative;width:44px;height:44px">
+        <div style="position:absolute;left:0;top:0;width:32px;height:32px;border:3px solid #C9B9A6;border-radius:50%"></div>
+        <div style="position:absolute;left:28px;top:28px;width:14px;height:3px;background:#C9B9A6;border-radius:2px;transform:rotate(45deg)"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div style="font:600 13.5px Inter,sans-serif;color:#1A1410;text-align:center">바코드를 인식하지 못했어요</div>
+        <div style="font:400 12px Inter,sans-serif;color:#6f665b;line-height:1.5;text-align:center">제목이나 저자로 검색해 찾아보세요</div>
+      </div>
+      <div style="height:44px;width:100%;border-radius:22px;background:#8C6A4A;display:flex;align-items:center;justify-content:center;gap:6px;font:700 13px Inter,sans-serif;color:#fff;margin-top:4px"><span class="msym" style="font-size:18px">search</span>검색</div>
+    </div>
+    <div class="wf-note">↑ '검색' 클릭 시 텍스트 검색 화면으로 이동, <a class="dv-oid" href="#3b">3b</a>와 같은 톤의 점선 카드</div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="4c">
+<div class="dv-olabel"><a class="dv-oid" href="#4c">4c</a>카메라 권한 거부</div>
+<div class="wf-frame">
+  <div style="padding:18px 16px 24px;display:flex;flex-direction:column;gap:14px;height:640px;box-sizing:border-box">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="msym" style="font-size:22px;color:#1A1410">arrow_back</span>
+      <div style="font:700 17px Inter,sans-serif;color:#1A1410">바코드 스캔</div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border:2px dashed #C9B9A6;border-radius:18px;padding:28px 20px">
+      <div style="position:relative;width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#C9B9A6">
+        <span class="msym" style="font-size:36px">no_photography</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div style="font:600 13.5px Inter,sans-serif;color:#1A1410;text-align:center">카메라 접근 권한이 필요해요</div>
+        <div style="font:400 12px Inter,sans-serif;color:#6f665b;line-height:1.5;text-align:center">바코드를 스캔하기 위해 카메라 권한을 허용해 주세요</div>
+      </div>
+      <div style="display:flex;gap:8px;width:100%;margin-top:4px">
+        <div style="flex:1;height:44px;border-radius:22px;background:#8C6A4A;display:flex;align-items:center;justify-content:center;gap:6px;font:700 12.5px Inter,sans-serif;color:#fff"><span class="msym" style="font-size:18px">photo_camera</span>권한 허용</div>
+        <div style="flex:1;height:44px;border-radius:22px;border:2px solid #1A1410;display:flex;align-items:center;justify-content:center;gap:6px;font:600 12.5px Inter,sans-serif;color:#1A1410"><span class="msym" style="font-size:18px">search</span>검색</div>
+      </div>
+    </div>
+    <div class="wf-note">↑ 버튼 탭 시 권한 요청 프롬프트 노출 또는 시스템 설정으로 이동</div>
+  </div>
+</div>
+</div>
+
+</div>
+
+</section>
+
+<section class="dv-turn" id="t5">
+<div class="dv-thd"><a class="dv-tid" href="#t5">5</a><span class="dv-tname">책 정보</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="5a">
+<div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a>책 정보 탭 · 검색해서 진입</div>
+<div class="wf-frame">
+  <div style="display:flex;flex-direction:column;height:680px">
+    <div style="padding:18px 16px 0;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="msym" style="font-size:22px;color:#1A1410">arrow_back</span>
+        <div style="font:700 15px Inter,sans-serif;color:#1A1410">아몬드</div>
+      </div>
+      <div style="display:flex;border-bottom:2px solid #efe9df">
+        <div style="flex:1;text-align:center;padding:10px 0;font:700 12.5px Inter,sans-serif;color:#8C6A4A;border-bottom:2px solid #8C6A4A;margin-bottom:-2px">책 정보</div>
+        <div style="flex:1;text-align:center;padding:10px 0;font:500 12.5px Inter,sans-serif;color:#6f665b">내 기록</div>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px 16px 24px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;gap:14px">
+        <div style="flex:none;width:88px;height:126px;border:2px solid #1A1410;border-radius:6px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+        <div style="display:flex;flex-direction:column;gap:5px;justify-content:center">
+          <div style="font:700 15px Inter,sans-serif;color:#1A1410;line-height:1.3">아몬드</div>
+          <div style="font:400 12px Inter,sans-serif;color:#777">손원평 지음</div>
+          <div style="font:400 11px Inter,sans-serif;color:#6f665b">창비 · 2017.03.31</div>
+          <div style="font:400 11px Inter,sans-serif;color:#6f665b">264쪽 · 12,000원</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font:700 12.5px Inter,sans-serif;color:#1A1410">소개</div>
+        <div style="font:400 12px Inter,sans-serif;color:#555;line-height:1.6">감정을 느끼지 못하는 소년 윤재가 세상과 부딪히며 성장해가는 이야기. 사람들 사이에서...</div>
+        <div style="font:600 11px Inter,sans-serif;color:#8C6A4A">더보기 ▾</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font:700 12.5px Inter,sans-serif;color:#1A1410">목차</div>
+        <div style="font:400 12px Inter,sans-serif;color:#555;line-height:1.7">1. 이상한 아이<br>2. 곰돌이<br>3. 사람이라는 세계</div>
+        <div style="font:600 11px Inter,sans-serif;color:#8C6A4A">더보기 ▾</div>
+      </div>
+    </div>
+    <div class="wf-note" style="padding:0 16px 12px">↑ 검색 결과로 진입 시 책 정보 탭 표시</div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="5b">
+<div class="dv-olabel"><a class="dv-oid" href="#5b">5b</a>내 기록 탭 - 리뷰/기록 있음</div>
+<div class="wf-frame">
+  <div style="display:flex;flex-direction:column;height:680px">
+    <div style="padding:18px 16px 0;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="msym" style="font-size:22px;color:#1A1410">arrow_back</span>
+        <div style="font:700 15px Inter,sans-serif;color:#1A1410">아몬드</div>
+      </div>
+      <div style="display:flex;border-bottom:2px solid #efe9df">
+        <div style="flex:1;text-align:center;padding:10px 0;font:500 12.5px Inter,sans-serif;color:#6f665b">책 정보</div>
+        <div style="flex:1;text-align:center;padding:10px 0;font:700 12.5px Inter,sans-serif;color:#8C6A4A;border-bottom:2px solid #8C6A4A;margin-bottom:-2px">내 기록</div>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px 16px 24px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font:700 15px Inter,sans-serif;color:#1A1410">상태</div>
+        <div style="display:flex;flex-shrink:0;border:2px solid #1A1410;border-radius:12px;overflow:hidden">
+          <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">읽고 싶음</div>
+          <div style="flex:1;padding:9px 0;text-align:center;font:700 11.5px Inter,sans-serif;color:#fff;background:#8C6A4A">읽는 중</div>
+          <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">다 읽음</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font:700 15px Inter,sans-serif;color:#1A1410">내 리뷰</div>
+        <div style="border:2px solid #1A1410;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;background:#F5EFE6">
+          <div style="font-size:16px;letter-spacing:3px;color:#8C6A4A">★★★★☆</div>
+          <div style="font:400 11.5px Inter,sans-serif;color:#777;border-top:1px solid #e5ddcf;padding-top:8px">담담한 문장이 오래 남는 책. 다시 읽고 싶다.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font:700 15px Inter,sans-serif;color:#1A1410">독서 기록</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="position:relative;height:8px;background:#efe9df;border-radius:4px">
+            <div style="position:absolute;left:0;width:26%;height:8px;background:#8C6A4A;border-radius:4px"></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font:500 11px Inter,sans-serif;color:#6f665b">68 / 264쪽</span>
+            <span style="font:600 11px Inter,sans-serif;color:#8C6A4A">26%</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;justify-content:center;padding:10px 2px 12px">
+            <div style="height:34px;padding:0 18px;border-radius:17px;background:#8C6A4A;display:flex;align-items:center;justify-content:center;gap:5px;font:700 12px Inter,sans-serif;color:#fff">＋ 기록 추가</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px 6px">
+            <span style="font:700 13px Inter,sans-serif;color:#1A1410">7월 8일</span>
+            <span style="font:700 13px Inter,sans-serif;color:#8C6A4A">26p</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 2px;border-bottom:1px solid #efe9df">
+            <span style="font:400 12px Inter,sans-serif;color:#333">오후 9:12 · 42–68쪽</span>
+            <span style="display:flex;align-items:center;gap:2px;margin:-9px -6px -9px 0">
+              <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:26px;height:26px;border-radius:8px;background:#F5EFE6;display:flex;align-items:center;justify-content:center;font-size:12px;color:#8C6A4A"><span class="msym" style="font-size:15px">edit</span></span></span>
+              <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:26px;height:26px;border-radius:8px;background:#F5EFE6;display:flex;align-items:center;justify-content:center;font-size:12px;color:#cf5c50"><span class="msym" style="font-size:15px">delete</span></span></span>
+            </span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px 6px">
+            <span style="font:700 13px Inter,sans-serif;color:#1A1410">7월 6일</span>
+            <span style="font:700 13px Inter,sans-serif;color:#8C6A4A">42p</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 2px;border-bottom:1px solid #efe9df">
+            <span style="font:400 12px Inter,sans-serif;color:#333">오후 8:03 · 10–42쪽</span>
+            <span style="display:flex;align-items:center;gap:2px;margin:-9px -6px -9px 0">
+              <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:26px;height:26px;border-radius:8px;background:#F5EFE6;display:flex;align-items:center;justify-content:center;font-size:12px;color:#8C6A4A"><span class="msym" style="font-size:15px">edit</span></span></span>
+              <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:26px;height:26px;border-radius:8px;background:#F5EFE6;display:flex;align-items:center;justify-content:center;font-size:12px;color:#cf5c50"><span class="msym" style="font-size:15px">delete</span></span></span>
+            </span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 2px;border-bottom:1px solid #efe9df">
+            <span style="font:400 12px Inter,sans-serif;color:#333">오후 7:40 · 1–10쪽</span>
+            <span style="display:flex;align-items:center;gap:2px;margin:-9px -6px -9px 0">
+              <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:26px;height:26px;border-radius:8px;background:#F5EFE6;display:flex;align-items:center;justify-content:center;font-size:12px;color:#8C6A4A"><span class="msym" style="font-size:15px">edit</span></span></span>
+              <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:26px;height:26px;border-radius:8px;background:#F5EFE6;display:flex;align-items:center;justify-content:center;font-size:12px;color:#cf5c50"><span class="msym" style="font-size:15px">delete</span></span></span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="wf-note" style="padding:0 16px 12px">↑ '읽는 중'/'다 읽음' 상태일 때 이 탭으로 기본 진입, 상단 탭에서 '책 정보'로 전환 가능. 내 리뷰는 별도 시트 없이 화면에서 바로 편집 — 별 탭 시 즉시 저장(같은 별 재탭 시 0점), 메모 영역 탭 시 인라인 입력 후 포커스 아웃 시 자동 저장</div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="5c">
+<div class="dv-olabel"><a class="dv-oid" href="#5c">5c</a>내 기록 탭 · 리뷰/기록 없음</div>
+<div class="wf-frame">
+  <div style="display:flex;flex-direction:column;height:680px">
+    <div style="padding:18px 16px 0;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="msym" style="font-size:22px;color:#1A1410">arrow_back</span>
+        <div style="font:700 15px Inter,sans-serif;color:#1A1410">아몬드</div>
+      </div>
+      <div style="display:flex;border-bottom:2px solid #efe9df">
+        <div style="flex:1;text-align:center;padding:10px 0;font:500 12.5px Inter,sans-serif;color:#6f665b">책 정보</div>
+        <div style="flex:1;text-align:center;padding:10px 0;font:700 12.5px Inter,sans-serif;color:#8C6A4A;border-bottom:2px solid #8C6A4A;margin-bottom:-2px">내 기록</div>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px 16px 24px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font:700 15px Inter,sans-serif;color:#1A1410">상태</div>
+        <div style="display:flex;flex-shrink:0;border:2px solid #1A1410;border-radius:12px;overflow:hidden">
+          <div style="flex:1;padding:9px 0;text-align:center;font:700 11.5px Inter,sans-serif;color:#fff;background:#8C6A4A">읽고 싶음</div>
+          <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">읽는 중</div>
+          <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">다 읽음</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font:700 15px Inter,sans-serif;color:#1A1410">내 리뷰</div>
+        <div style="border:2px dashed #C9B9A6;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:16px;letter-spacing:3px;color:#C9B9A6">☆☆☆☆☆</div>
+          <div style="font:400 11.5px Inter,sans-serif;color:#8a8272;border-top:1px solid #efe9df;padding-top:8px">읽고 난 감상을 별점과 함께 남겨 보세요</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font:700 15px Inter,sans-serif;color:#1A1410">독서 기록</div>
+        <div style="border:2px dashed #C9B9A6;border-radius:14px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center">
+          <div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center">
+            <span class="msym" style="font-size:30px;color:#C9B9A6">bookmark</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+            <div style="font:600 13px Inter,sans-serif;color:#1A1410">아직 독서 기록이 없어요</div>
+            <div style="font:400 12px Inter,sans-serif;color:#6f665b;line-height:1.5">읽은 쪽수를 추가하면 매일 얼마나 읽었는지 확인할 수 있어요</div>
+          </div>
+          <div style="height:38px;padding:0 20px;border-radius:19px;background:#8C6A4A;display:flex;align-items:center;justify-content:center;gap:5px;font:700 12px Inter,sans-serif;color:#fff;margin-top:2px">＋ 기록 추가</div>
+        </div>
+      </div>
+    </div>
+    <div class="wf-note" style="padding:0 16px 12px">↑ 처음 읽는 책이라 리뷰·기록 데이터가 없는 상태, 별점은 0(빈 별), 상태는 기본값 '읽고 싶음'. 빈 별을 탭하면 바로 별점이 저장되고, 안내 문구 영역을 탭하면 인라인 메모 입력이 시작됨(별도 시트 없음)</div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="5d">
+<div class="dv-olabel"><a class="dv-oid" href="#5d">5d</a>'기록 추가' 바텀시트 · 날짜/시간 세그먼트</div>
+<div class="wf-frame">
+  <div style="position:relative;height:680px;overflow:hidden;border-radius:27px;background:#FFFBF6">
+    <div style="padding:18px 16px 0;display:flex;flex-direction:column;gap:14px;filter:blur(1.5px);opacity:.5">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="msym" style="font-size:22px;color:#1A1410">arrow_back</span>
+        <div style="font:700 15px Inter,sans-serif;color:#1A1410">아몬드</div>
+      </div>
+    </div>
+    <div style="position:absolute;inset:0;background:rgba(26,20,16,.35)"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;background:#FFFBF6;border-radius:20px 20px 0 0;padding:20px;display:flex;flex-direction:column;gap:16px;box-shadow:0 -4px 16px rgba(0,0,0,.12)">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font:700 14px Inter,sans-serif;color:#1A1410">기록 추가</div>
+        <span class="msym" style="font-size:20px;color:#6f665b">close</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="font:500 11px Inter,sans-serif;color:#777">날짜</div>
+        <div style="display:flex;border:2px solid #1A1410;border-radius:10px;overflow:hidden">
+          <div style="flex:1;padding:9px 0;text-align:center;font:700 11.5px Inter,sans-serif;color:#fff;background:#8C6A4A">오늘</div>
+          <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">어제</div>
+          <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">직접 선택</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+          <div style="font:500 11px Inter,sans-serif;color:#777">시작 쪽수</div>
+          <div style="border:2px solid #1A1410;border-radius:10px;padding:10px 12px;font:500 12.5px Inter,sans-serif;color:#1A1410">42</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+          <div style="font:500 11px Inter,sans-serif;color:#777">끝 쪽수</div>
+          <div style="border:2px solid #1A1410;border-radius:10px;padding:10px 12px;font:500 12.5px Inter,sans-serif;color:#1A1410">68</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="font:500 11px Inter,sans-serif;color:#777">시간</div>
+        <div style="display:flex;border:2px solid #1A1410;border-radius:10px;overflow:hidden">
+          <div style="flex:1;padding:9px 0;text-align:center;font:700 11.5px Inter,sans-serif;color:#fff;background:#8C6A4A">지금</div>
+          <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">직접 선택</div>
+        </div>
+      </div>
+      <div style="height:46px;border-radius:23px;background:#8C6A4A;display:flex;align-items:center;justify-content:center;font:700 13px Inter,sans-serif;color:#fff;margin-top:4px">추가</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="5e">
+<div class="dv-olabel"><a class="dv-oid" href="#5e">5e</a>기록 삭제 → 스낵바 + 실행취소</div>
+<div class="wf-frame">
+  <div style="position:relative;display:flex;flex-direction:column;height:680px">
+    <div style="padding:18px 16px 0;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="msym" style="font-size:22px;color:#1A1410">arrow_back</span>
+        <div style="font:700 15px Inter,sans-serif;color:#1A1410">아몬드</div>
+      </div>
+      <div style="display:flex;border-bottom:2px solid #efe9df">
+        <div style="flex:1;text-align:center;padding:10px 0;font:500 12.5px Inter,sans-serif;color:#6f665b">책 정보</div>
+        <div style="flex:1;text-align:center;padding:10px 0;font:700 12.5px Inter,sans-serif;color:#8C6A4A;border-bottom:2px solid #8C6A4A;margin-bottom:-2px">내 기록</div>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px 16px 24px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font:700 15px Inter,sans-serif;color:#1A1410">독서 기록</div>
+      </div>
+      <div style="display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;justify-content:center;padding:2px 2px 12px">
+          <div style="height:34px;padding:0 18px;border-radius:17px;background:#8C6A4A;display:flex;align-items:center;justify-content:center;gap:5px;font:700 12px Inter,sans-serif;color:#fff">＋ 기록 추가</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 2px 6px">
+          <span style="font:700 13px Inter,sans-serif;color:#1A1410">7월 6일</span>
+          <span style="font:700 13px Inter,sans-serif;color:#8C6A4A">42p</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 2px;border-bottom:1px solid #efe9df">
+          <span style="font:400 12px Inter,sans-serif;color:#333">오후 8:03 · 10–42쪽</span>
+          <span style="display:flex;align-items:center;gap:2px;margin:-9px -6px -9px 0">
+            <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:26px;height:26px;border-radius:8px;background:#F5EFE6;display:flex;align-items:center;justify-content:center;color:#8C6A4A"><span class="msym" style="font-size:15px">edit</span></span></span>
+            <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:26px;height:26px;border-radius:8px;background:#F5EFE6;display:flex;align-items:center;justify-content:center;color:#cf5c50"><span class="msym" style="font-size:15px">delete</span></span></span>
+          </span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 2px;border-bottom:1px solid #efe9df">
+          <span style="font:400 12px Inter,sans-serif;color:#333">오후 7:40 · 1–10쪽</span>
+          <span style="display:flex;align-items:center;gap:2px;margin:-9px -6px -9px 0">
+            <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:26px;height:26px;border-radius:8px;background:#F5EFE6;display:flex;align-items:center;justify-content:center;color:#8C6A4A"><span class="msym" style="font-size:15px">edit</span></span></span>
+            <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:none"><span style="width:26px;height:26px;border-radius:8px;background:#F5EFE6;display:flex;align-items:center;justify-content:center;color:#cf5c50"><span class="msym" style="font-size:15px">delete</span></span></span>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div style="position:absolute;left:12px;right:12px;bottom:16px;background:#2A231C;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.22);padding:14px 12px 14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <span style="font:500 12.5px Inter,sans-serif;color:#F5EFE6">기록을 삭제했어요</span>
+      <span style="font:700 12.5px Inter,sans-serif;color:#E5C7A6;padding:2px 4px">실행취소</span>
+    </div>
+  </div>
+</div>
+<div class="wf-note" style="width:300px;margin:-4px 0 0">↑ 삭제는 즉시 실행하지 않고 스낵바로 노출(약 4~5초). '실행취소' 탭 시 복구, 시간 경과/다른 동작 시 확정 삭제. 검색어 삭제(2b)도 동일 패턴. 여러 건 연속 삭제 시 스낵바는 최신 1건만 표시</div>
+</div>
+
+<div class="dv-opt" id="5f">
+<div class="dv-olabel"><a class="dv-oid" href="#5f">5f</a>다 읽음 확인 다이얼로그</div>
+<div class="wf-frame">
+  <div style="position:relative;height:680px;overflow:hidden;border-radius:27px;background:#FFFBF6">
+    <div style="padding:18px 16px 0;display:flex;flex-direction:column;gap:14px;filter:blur(1.5px);opacity:.5">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="msym" style="font-size:22px;color:#1A1410">arrow_back</span>
+        <div style="font:700 15px Inter,sans-serif;color:#1A1410">아몬드</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="position:relative;height:8px;background:#efe9df;border-radius:4px">
+          <div style="position:absolute;left:0;width:96%;height:8px;background:#8C6A4A;border-radius:4px"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font:500 11px Inter,sans-serif;color:#6f665b">254 / 264쪽</span>
+          <span style="font:600 11px Inter,sans-serif;color:#8C6A4A">96%</span>
+        </div>
+      </div>
+    </div>
+    <div style="position:absolute;inset:0;background:rgba(26,20,16,.35)"></div>
+    <div style="position:absolute;left:24px;right:24px;top:50%;transform:translateY(-50%);background:#FFFBF6;border-radius:20px;padding:26px 22px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.2)">
+      <span class="msym" style="font-size:30px;color:#8C6A4A">celebration</span>
+      <div style="font:700 16px Inter,sans-serif;color:#1A1410;line-height:1.4">혹시 책을 다 읽었나요?</div>
+      <div style="font:400 12.5px Inter,sans-serif;color:#6f665b;line-height:1.5">254 / 264쪽까지 기록했어요. 다 읽었다면 '다 읽음'으로 표시할게요</div>
+      <div style="display:flex;gap:8px;width:100%;margin-top:4px">
+        <div style="flex:1;height:44px;border-radius:22px;border:2px solid #1A1410;display:flex;align-items:center;justify-content:center;font:600 12.5px Inter,sans-serif;color:#1A1410">아니요</div>
+        <div style="flex:1;height:44px;border-radius:22px;background:#8C6A4A;display:flex;align-items:center;justify-content:center;font:700 12.5px Inter,sans-serif;color:#fff">네</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="wf-note" style="width:300px;margin:-4px 0 0">↑ <a class="dv-oid" href="#5d">5d</a>에서 '추가' 후, 남은 쪽수(총 페이지−끝 쪽수)가 일정량 이하이면서 상태가 아직 '다 읽음'이 아닐 때 노출. '네' 선택 시 상태를 '다 읽음'으로 전환하고 다 읽은 날짜를 오늘로 기록, '아니요' 선택 시 기록만 저장하고 상태는 유지</div>
+</div>
+
+</div>
+
+</section>
+
+<section class="dv-turn" id="t6">
+<div class="dv-thd"><a class="dv-tid" href="#t6">6</a><span class="dv-tname">서재</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="6a">
+<div class="dv-olabel"><a class="dv-oid" href="#6a">6a</a>'읽고 싶음' 탭&nbsp;</div>
+<div class="wf-frame">
+  <div style="display:flex;flex-direction:column;height:680px">
+    <div style="flex:none;padding:18px 16px 0;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font:700 17px Inter,sans-serif;color:#1A1410">서재</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font:600 11px Inter,sans-serif;color:#8C6A4A">수정한 날짜 · 최신순</span>
+          <div style="width:32px;height:32px;border:2px solid #1A1410;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">
+            <div style="width:16px;height:2px;background:#1A1410;border-radius:1px"></div>
+            <div style="width:11px;height:2px;background:#1A1410;border-radius:1px"></div>
+            <div style="width:6px;height:2px;background:#1A1410;border-radius:1px"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-shrink:0;border:2px solid #1A1410;border-radius:12px;overflow:hidden">
+        <div style="flex:1;padding:9px 0;text-align:center;font:700 11.5px Inter,sans-serif;color:#fff;background:#8C6A4A">읽고 싶음</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">읽는 중</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">다 읽음</div>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px 16px 20px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px 10px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3">달러구트 꿈 백화점</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3">사피엔스</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3">불편한 편의점</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3">클루지</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3">아몬드</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3">숨결이 바람 될 때</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:none;border-top:2px solid #1A1410;display:flex;padding:8px 4px 10px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">home</span><span style="font:500 11px Inter,sans-serif;color:#333">홈</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><span class="msym" style="font-size:22px">book_2</span><span style="font:700 11px Inter,sans-serif;color:#8C6A4A">서재</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">bar_chart</span><span style="font:500 11px Inter,sans-serif;color:#333">통계</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">settings</span><span style="font:500 11px Inter,sans-serif;color:#333">설정</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="6b">
+<div class="dv-olabel"><a class="dv-oid" href="#6b">6b</a>'읽는 중' 탭 · '읽고 싶음'에 진행률 표기 추가</div>
+<div class="wf-frame">
+  <div style="display:flex;flex-direction:column;height:680px">
+    <div style="flex:none;padding:18px 16px 0;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font:700 17px Inter,sans-serif;color:#1A1410">서재</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font:600 11px Inter,sans-serif;color:#8C6A4A">수정한 날짜 · 최신순</span>
+          <div style="width:32px;height:32px;border:2px solid #1A1410;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">
+            <div style="width:16px;height:2px;background:#1A1410;border-radius:1px"></div>
+            <div style="width:11px;height:2px;background:#1A1410;border-radius:1px"></div>
+            <div style="width:6px;height:2px;background:#1A1410;border-radius:1px"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-shrink:0;border:2px solid #1A1410;border-radius:12px;overflow:hidden">
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">읽고 싶음</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:700 11.5px Inter,sans-serif;color:#fff;background:#8C6A4A">읽는 중</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">다 읽음</div>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px 16px 22px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px 10px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="position:relative;aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;overflow:visible;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)">
+            <div style="position:absolute;right:10px;top:0;width:9px;height:64%;background:#8C6A4A;clip-path:polygon(0 0,100% 0,100% 82%,50% 100%,0 82%)"></div>
+            <div style="position:absolute;right:2px;bottom:-8px;padding:2.5px 7px;background:#8C6A4A;border:1.5px solid #1A1410;border-radius:9px;font:700 8px Inter,sans-serif;color:#fff;white-space:nowrap">64%</div>
+          </div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3;margin-top:5px">달러구트 꿈 백화점</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="position:relative;aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;overflow:visible;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)">
+            <div style="position:absolute;right:10px;top:0;width:9px;height:26%;background:#8C6A4A;clip-path:polygon(0 0,100% 0,100% 82%,50% 100%,0 82%)"></div>
+            <div style="position:absolute;right:2px;bottom:-8px;padding:2.5px 7px;background:#8C6A4A;border:1.5px solid #1A1410;border-radius:9px;font:700 8px Inter,sans-serif;color:#fff;white-space:nowrap">26%</div>
+          </div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3;margin-top:5px">아몬드</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="position:relative;aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;overflow:visible;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)">
+            <div style="position:absolute;right:10px;top:0;width:9px;height:8%;background:#8C6A4A;clip-path:polygon(0 0,100% 0,100% 30%,50% 100%,0 30%)"></div>
+            <div style="position:absolute;right:2px;bottom:-8px;padding:2.5px 7px;background:#8C6A4A;border:1.5px solid #1A1410;border-radius:9px;font:700 8px Inter,sans-serif;color:#fff;white-space:nowrap">8%</div>
+          </div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3;margin-top:5px">사피엔스</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:none;border-top:2px solid #1A1410;display:flex;padding:8px 4px 10px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">home</span><span style="font:500 11px Inter,sans-serif;color:#333">홈</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><span class="msym" style="font-size:22px">book_2</span><span style="font:700 11px Inter,sans-serif;color:#8C6A4A">서재</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">bar_chart</span><span style="font:500 11px Inter,sans-serif;color:#333">통계</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">settings</span><span style="font:500 11px Inter,sans-serif;color:#333">설정</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="6c">
+<div class="dv-olabel"><a class="dv-oid" href="#6c">6c</a>'다 읽음' 탭 · '읽고 싶음'에 다 읽은 날짜 표기 추가</div>
+<div class="wf-frame">
+  <div style="display:flex;flex-direction:column;height:680px">
+    <div style="flex:none;padding:18px 16px 0;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font:700 17px Inter,sans-serif;color:#1A1410">서재</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font:600 11px Inter,sans-serif;color:#8C6A4A">수정한 날짜 · 최신순</span>
+          <div style="width:32px;height:32px;border:2px solid #1A1410;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">
+            <div style="width:16px;height:2px;background:#1A1410;border-radius:1px"></div>
+            <div style="width:11px;height:2px;background:#1A1410;border-radius:1px"></div>
+            <div style="width:6px;height:2px;background:#1A1410;border-radius:1px"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-shrink:0;border:2px solid #1A1410;border-radius:12px;overflow:hidden">
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">읽고 싶음</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">읽는 중</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:700 11.5px Inter,sans-serif;color:#fff;background:#8C6A4A">다 읽음</div>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:16px 16px 20px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px 10px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="position:relative;aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;overflow:visible;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)">
+            <div style="position:absolute;right:2px;bottom:-8px;padding:2.5px 7px;background:#8C6A4A;border:1.5px solid #1A1410;border-radius:9px;font:700 8px Inter,sans-serif;color:#fff;white-space:nowrap">2026/7/8</div>
+          </div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3;margin-top:5px">불편한 편의점</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="position:relative;aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;overflow:visible;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)">
+            <div style="position:absolute;right:2px;bottom:-8px;padding:2.5px 7px;background:#8C6A4A;border:1.5px solid #1A1410;border-radius:9px;font:700 8px Inter,sans-serif;color:#fff;white-space:nowrap">2026/6/29</div>
+          </div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3;margin-top:5px">숨결이 바람 될 때</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="position:relative;aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;overflow:visible;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)">
+            <div style="position:absolute;right:2px;bottom:-8px;padding:2.5px 7px;background:#8C6A4A;border:1.5px solid #1A1410;border-radius:9px;font:700 8px Inter,sans-serif;color:#fff;white-space:nowrap">2026/6/14</div>
+          </div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3;margin-top:5px">클루지</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="position:relative;aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;overflow:visible;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)">
+            <div style="position:absolute;right:2px;bottom:-8px;padding:2.5px 7px;background:#8C6A4A;border:1.5px solid #1A1410;border-radius:9px;font:700 8px Inter,sans-serif;color:#fff;white-space:nowrap">2026/5/30</div>
+          </div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3;margin-top:5px">사피엔스</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="position:relative;aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;overflow:visible;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)">
+            <div style="position:absolute;right:2px;bottom:-8px;padding:2.5px 7px;background:#8C6A4A;border:1.5px solid #1A1410;border-radius:9px;font:700 8px Inter,sans-serif;color:#fff;white-space:nowrap">2026/5/12</div>
+          </div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3;margin-top:5px">달러구트 꿈 백화점</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="position:relative;aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;overflow:visible;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)">
+            <div style="position:absolute;right:2px;bottom:-8px;padding:2.5px 7px;background:#8C6A4A;border:1.5px solid #1A1410;border-radius:9px;font:700 8px Inter,sans-serif;color:#fff;white-space:nowrap">2026/4/3</div>
+          </div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3;margin-top:5px">아몬드</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:none;border-top:2px solid #1A1410;display:flex;padding:8px 4px 10px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">home</span><span style="font:500 11px Inter,sans-serif;color:#333">홈</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><span class="msym" style="font-size:22px">book_2</span><span style="font:700 11px Inter,sans-serif;color:#8C6A4A">서재</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">bar_chart</span><span style="font:500 11px Inter,sans-serif;color:#333">통계</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">settings</span><span style="font:500 11px Inter,sans-serif;color:#333">설정</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="6d">
+<div class="dv-olabel"><a class="dv-oid" href="#6d">6d</a>빈 상태 (3개 탭 공통 컴포넌트)</div>
+<div class="wf-frame">
+  <div style="display:flex;flex-direction:column;height:680px">
+    <div style="flex:none;padding:18px 16px 0;display:flex;flex-direction:column;gap:14px">
+      <div style="font:700 17px Inter,sans-serif;color:#1A1410">서재</div>
+      <div style="display:flex;flex-shrink:0;border:2px solid #1A1410;border-radius:12px;overflow:hidden">
+        <div style="flex:1;padding:9px 0;text-align:center;font:700 11.5px Inter,sans-serif;color:#fff;background:#8C6A4A">읽고 싶음</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">읽는 중</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">다 읽음</div>
+      </div>
+    </div>
+    <div style="flex:1;padding:16px 16px 20px;display:flex;flex-direction:column">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;border:2px dashed #C9B9A6;border-radius:18px;padding:32px 24px;text-align:center">
+        <div style="position:relative;width:60px;height:60px;display:flex;align-items:flex-end;justify-content:center;gap:3px">
+          <div style="width:9px;height:44px;background:#F5EFE6;border:2px solid #1A1410;border-radius:2px 2px 0 0"></div>
+          <div style="width:9px;height:52px;background:#F5EFE6;border:2px solid #1A1410;border-radius:2px 2px 0 0"></div>
+          <div style="width:9px;height:36px;background:#F5EFE6;border:2px solid #1A1410;border-radius:2px 2px 0 0"></div>
+          <div style="width:9px;height:48px;background:#8C6A4A;border:2px solid #1A1410;border-radius:2px 2px 0 0"></div>
+          <div style="position:absolute;left:0;right:0;bottom:0;height:4px;background:#1A1410;border-radius:2px"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <div style="font:600 14.5px Inter,sans-serif;color:#1A1410;line-height:1.4">서재가 비어 있어요</div>
+          <div style="font:400 12px Inter,sans-serif;color:#6f665b;line-height:1.5">책을 검색하거나 스캔해 서재에 담아 보세요</div>
+        </div>
+        <div style="display:flex;gap:8px;width:100%;margin-top:2px">
+          <div style="flex:1;height:44px;border-radius:22px;background:#8C6A4A;display:flex;align-items:center;justify-content:center;gap:6px;font:700 12.5px Inter,sans-serif;color:#fff"><span class="msym" style="font-size:18px">search</span>검색</div>
+          <div style="flex:1;height:44px;border-radius:22px;border:2px solid #1A1410;display:flex;align-items:center;justify-content:center;gap:6px;font:600 12.5px Inter,sans-serif;color:#1A1410"><span class="msym" style="font-size:18px">barcode_scanner</span>스캔</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:none;border-top:2px solid #1A1410;display:flex;padding:8px 4px 10px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">home</span><span style="font:500 11px Inter,sans-serif;color:#333">홈</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><span class="msym" style="font-size:22px">book_2</span><span style="font:700 11px Inter,sans-serif;color:#8C6A4A">서재</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">bar_chart</span><span style="font:500 11px Inter,sans-serif;color:#333">통계</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">settings</span><span style="font:500 11px Inter,sans-serif;color:#333">설정</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+
+<div class="dv-opt" id="6e">
+<div class="dv-olabel"><a class="dv-oid" href="#6e">6e</a>필터 아이콘 탭 → 정렬 바텀시트</div>
+<div class="wf-frame">
+  <div style="position:relative;height:680px;overflow:hidden;border-radius:27px;background:#FFFBF6">
+    <div style="padding:18px 16px 0;display:flex;flex-direction:column;gap:14px;filter:blur(1.5px);opacity:.5">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font:700 17px Inter,sans-serif;color:#1A1410">서재</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font:600 11px Inter,sans-serif;color:#8C6A4A">수정한 날짜 · 최신순</span>
+          <div style="width:32px;height:32px;border:2px solid #1A1410;border-radius:10px"></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-shrink:0;border:2px solid #1A1410;border-radius:12px;overflow:hidden">
+        <div style="flex:1;padding:9px 0;text-align:center;font:700 11.5px Inter,sans-serif;color:#fff;background:#8C6A4A">읽고 싶음</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">읽는 중</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">다 읽음</div>
+      </div>
+    </div>
+    <div style="position:absolute;inset:0;background:rgba(26,20,16,.35)"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;background:#FFFBF6;border-radius:20px 20px 0 0;padding:20px;display:flex;flex-direction:column;gap:6px;box-shadow:0 -4px 16px rgba(0,0,0,.12)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font:700 14px Inter,sans-serif;color:#1A1410">정렬</div>
+        <span class="msym" style="font-size:20px;color:#6f665b">close</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px;border-bottom:1px solid #efe9df">
+          <span style="font:500 13px Inter,sans-serif;color:#1A1410">추가한 날짜</span>
+          <div style="width:20px;height:20px;border-radius:50%;border:2px solid #C9B9A6;flex:none"></div>
+        </div>
+
+        <div style="border-bottom:1px solid #efe9df">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px 12px">
+            <span style="font:700 13px Inter,sans-serif;color:#1A1410">수정한 날짜</span>
+            <div style="width:20px;height:20px;border-radius:50%;background:#8C6A4A;border:2px solid #1A1410;display:flex;align-items:center;justify-content:center;flex:none">
+              <div style="width:8px;height:8px;border-radius:50%;background:#fff"></div>
+            </div>
+          </div>
+          <div style="display:flex;border:2px solid #1A1410;border-radius:10px;overflow:hidden;margin:0 4px 14px">
+            <div style="flex:1;padding:9px 0;text-align:center;font:700 11.5px Inter,sans-serif;color:#fff;background:#8C6A4A">최신순</div>
+            <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">오래된순</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 4px">
+          <span style="font:500 13px Inter,sans-serif;color:#1A1410">별점</span>
+          <div style="width:20px;height:20px;border-radius:50%;border:2px solid #C9B9A6;flex:none"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <div style="flex:1;height:46px;border-radius:23px;border:2px solid #1A1410;display:flex;align-items:center;justify-content:center;font:700 13px Inter,sans-serif;color:#1A1410">취소</div>
+        <div style="flex:1;height:46px;border-radius:23px;background:#8C6A4A;display:flex;align-items:center;justify-content:center;font:700 13px Inter,sans-serif;color:#fff">적용</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="wf-note" style="width:300px;margin:-4px 0 0">↑ A안: 선택된 기준 아래에 방향 세그먼트([최신순 | 오래된순], 별점은 [높은순 | 낮은순])가 펼쳐져 두 방향을 모두 노출. 라디오로 기준 선택 → 방향 선택 → 하단 취소/적용으로 확정(지연 적용). 기본값 '수정한 날짜·최신순'. 별점 데이터 없는 '읽고 싶음' 책은 별점순 시 맨 뒤로. 현재 정렬 상태는 목록 상단 필터 옆에도 표기</div>
+</div>
+
+<div class="dv-opt" id="6f">
+<div class="dv-olabel"><a class="dv-oid" href="#6f">6f</a>서재 목록 롱프레스 메뉴</div>
+<div class="wf-frame">
+  <div style="position:relative;height:680px;overflow:hidden;border-radius:27px;background:#FFFBF6">
+    <div style="padding:18px 16px 0;display:flex;flex-direction:column;gap:14px;filter:blur(1.5px);opacity:.5">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font:700 17px Inter,sans-serif;color:#1A1410">서재</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font:600 11px Inter,sans-serif;color:#8C6A4A">수정한 날짜 · 최신순</span>
+          <div style="width:32px;height:32px;border:2px solid #1A1410;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">
+            <div style="width:16px;height:2px;background:#1A1410;border-radius:1px"></div>
+            <div style="width:11px;height:2px;background:#1A1410;border-radius:1px"></div>
+            <div style="width:6px;height:2px;background:#1A1410;border-radius:1px"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-shrink:0;border:2px solid #1A1410;border-radius:12px;overflow:hidden">
+        <div style="flex:1;padding:9px 0;text-align:center;font:700 11.5px Inter,sans-serif;color:#fff;background:#8C6A4A">읽고 싶음</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">읽는 중</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">다 읽음</div>
+      </div>
+    </div>
+    <div style="filter:blur(1.5px);opacity:.5;overflow-y:hidden;padding:16px 16px 20px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px 10px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3">달러구트 꿈 백화점</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3">사피엔스</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="aspect-ratio:2/3;border:1.5px solid #1A1410;border-radius:5px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="font:600 10.5px Inter,sans-serif;color:#1A1410;line-height:1.3">불편한 편의점</div>
+        </div>
+      </div>
+    </div>
+    
+    <div style="position:absolute;inset:0;background:rgba(26,20,16,.35)"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;background:#FFFBF6;border-radius:20px 20px 0 0;padding:20px 20px 30px;display:flex;flex-direction:column;gap:8px;box-shadow:0 -4px 16px rgba(0,0,0,.12)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:36px;height:54px;flex:none;border:1.5px solid #1A1410;border-radius:4px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="font:700 15px Inter,sans-serif;color:#1A1410">달러구트 꿈 백화점</div>
+        </div>
+        <span class="msym" style="font-size:24px;color:#6f665b">close</span>
+      </div>
+      
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid #efe9df">
+        <span class="msym" style="font-size:20px;color:#1A1410">menu_book</span>
+        <span style="font:600 14px Inter,sans-serif;color:#1A1410">읽는 중으로 이동</span>
+      </div>
+      
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid #efe9df">
+        <span class="msym" style="font-size:20px;color:#1A1410">done_all</span>
+        <span style="font:600 14px Inter,sans-serif;color:#1A1410">다 읽음으로 이동</span>
+      </div>
+      
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 4px">
+        <span class="msym" style="font-size:20px;color:#D32F2F">delete</span>
+        <span style="font:600 14px Inter,sans-serif;color:#D32F2F">내 서재에서 삭제</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="wf-note" style="width:300px;margin:-4px 0 0">↑ 항목을 길게 누르면 나타나는 바텀 시트. 현재 상태('읽고 싶음')를 제외한 나머지 상태('읽는 중', '다 읽음')로 변경할 수 있는 메뉴와 '삭제' 메뉴 제공. 삭제 시에는 스낵바를 통해 실행취소(Undo) 가능</div>
+</div>
+
+</div>
+
+</section>
+
+<section class="dv-turn" id="t7">
+<div class="dv-thd"><a class="dv-tid" href="#t7">7</a><span class="dv-tname">통계</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="7a">
+<div class="dv-olabel"><a class="dv-oid" href="#7a">7a</a>4주 탭</div>
+<div class="wf-frame">
+  <div style="display:flex;flex-direction:column;height:680px">
+    <div style="flex:1;overflow-y:auto;padding:18px 16px 16px;display:flex;flex-direction:column;gap:16px">
+      <div style="font:700 17px Inter,sans-serif;color:#1A1410">통계</div>
+
+      <div style="display:flex;flex-shrink:0;border:2px solid #1A1410;border-radius:12px;overflow:hidden">
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 10.5px Inter,sans-serif;color:#6f665b">오늘</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:700 10.5px Inter,sans-serif;color:#fff;background:#8C6A4A">4주</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 10.5px Inter,sans-serif;color:#6f665b">1년</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 10.5px Inter,sans-serif;color:#6f665b">직접 선택</div>
+      </div>
+
+      <div style="font:600 12px Inter,sans-serif;color:#777">{{ rangeLabel4 }}</div>
+
+      <div style="background:#F5EFE6;border:2px solid #1A1410;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px">
+        <div style="font:700 12.5px Inter,sans-serif;color:#1A1410">독서 달력</div>
+        <div style="display:flex;gap:6px">
+          <div style="flex:none;display:flex;flex-direction:column;gap:3px">
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">월</div>
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">화</div>
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">수</div>
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">목</div>
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">금</div>
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">토</div>
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">일</div>
+            <div style="height:14px"></div>
+          </div>
+          <div style="overflow-x:auto;flex:1">
+            <div style="display:flex;gap:3px;width:max-content">
+              <sc-for list="{{ weeks28Chrono }}" as="week" hint-placeholder-count="4">
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:center">
+                  <sc-for list="{{ week.days }}" as="day" hint-placeholder-count="7">
+                    <div style="width:18px;height:18px;border-radius:3px;flex:none;{{ day.cellStyle }}"></div>
+                  </sc-for>
+                  <div style="height:14px;font:500 8px Inter,sans-serif;color:#8a8272;white-space:nowrap">
+                    <sc-if value="{{ week.showLabel }}" hint-placeholder-val="{{ true }}">{{ week.label }}</sc-if>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;margin-top:2px">
+          <span style="font:500 9px Inter,sans-serif;color:#6f665b">적음</span>
+          <span style="width:11px;height:11px;border-radius:2px;background:#EBE3D6"></span>
+          <span style="width:11px;height:11px;border-radius:2px;background:#E5C7A6"></span>
+          <span style="width:11px;height:11px;border-radius:2px;background:#CD9F6F"></span>
+          <span style="width:11px;height:11px;border-radius:2px;background:#A9763F"></span>
+          <span style="width:11px;height:11px;border-radius:2px;background:#6E4521"></span>
+          <span style="font:500 9px Inter,sans-serif;color:#6f665b">많음</span>
+        </div>
+        <div class="wf-note" style="margin-top:-2px">↑ 왼쪽=과거, 오른쪽=이번주. 그래프와 같은 시간축 방향. 색 농도 = 독서량</div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;background:#F5EFE6;border:2px solid #1A1410;border-radius:14px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span class="msym" style="font-size:20px;color:#8C6A4A">local_fire_department</span>
+          <span style="font:700 15px Inter,sans-serif;color:#1A1410">{{ stats4.streak }}일</span>
+          <span style="font:500 11px Inter,sans-serif;color:#6f665b">연속 기록</span>
+        </div>
+        <div style="flex:1;background:#F5EFE6;border:2px solid #1A1410;border-radius:14px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span class="msym" style="font-size:20px;color:#8C6A4A">auto_stories</span>
+          <span style="font:700 15px Inter,sans-serif;color:#1A1410">{{ stats4.pages }}p</span>
+          <span style="font:500 11px Inter,sans-serif;color:#6f665b">읽은 페이지</span>
+        </div>
+        <div style="flex:1;background:#F5EFE6;border:2px solid #1A1410;border-radius:14px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span class="msym" style="font-size:20px;color:#8C6A4A">menu_book</span>
+          <span style="font:700 15px Inter,sans-serif;color:#1A1410">{{ stats4.books }}권</span>
+          <span style="font:500 11px Inter,sans-serif;color:#6f665b">읽은 책</span>
+        </div>
+      </div>
+
+      <div style="background:#F5EFE6;border:2px solid #1A1410;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font:700 12.5px Inter,sans-serif;color:#1A1410">읽은 책 · 페이지</span>
+          <div style="display:flex;gap:10px">
+            <span style="display:flex;align-items:center;gap:4px;font:500 11px Inter,sans-serif;color:#777"><span style="width:8px;height:8px;border-radius:2px;background:#8C6A4A;display:inline-block"></span>책</span>
+            <span style="display:flex;align-items:center;gap:4px;font:500 11px Inter,sans-serif;color:#777"><span style="width:10px;height:2px;background:#1A1410;display:inline-block"></span>페이지</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <div style="position:relative;width:24px;height:100px;flex:none">
+            <sc-for list="{{ booksAxisTicks4 }}" as="t" hint-placeholder-count="3">
+              <span style="position:absolute;left:0;top:{{ t.y }}px;transform:translateY(-50%);font:500 8px Inter,sans-serif;color:#8C6A4A;white-space:nowrap">{{ t.label }}</span>
+            </sc-for>
+          </div>
+          <div style="position:relative;height:100px;flex:1">
+            <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 224 100" preserveAspectRatio="none">
+              <sc-for list="{{ axisTicks4 }}" as="t" hint-placeholder-count="3">
+                <line x1="0" y1="{{ t.y }}" x2="224" y2="{{ t.y }}" stroke="#E3D9C8" stroke-width="1" stroke-dasharray="3,3"></line>
+              </sc-for>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;align-items:flex-end;gap:4px">
+              <sc-for list="{{ chart4 }}" as="c" hint-placeholder-count="4">
+                <div style="flex:1;display:flex;justify-content:center">
+                  <div style="width:22px;border-radius:4px 4px 0 0;background:#8C6A4A;height:{{ c.barH }}px"></div>
+                </div>
+              </sc-for>
+            </div>
+            <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 224 100" preserveAspectRatio="none">
+              <polyline points="{{ points4 }}" fill="none" stroke="#1A1410" stroke-width="2"></polyline>
+              <sc-for list="{{ chart4 }}" as="c" hint-placeholder-count="4">
+                <circle cx="{{ c.cx }}" cy="{{ c.cy }}" r="3" fill="#fff" stroke="#1A1410" stroke-width="2"></circle>
+              </sc-for>
+            </svg>
+          </div>
+          <div style="position:relative;width:26px;height:100px;flex:none">
+            <sc-for list="{{ axisTicks4 }}" as="t" hint-placeholder-count="3">
+              <span style="position:absolute;left:0;top:{{ t.y }}px;transform:translateY(-50%);font:500 8px Inter,sans-serif;color:#9b9284;white-space:nowrap">{{ t.label }}</span>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;gap:4px;padding-left:30px">
+          <sc-for list="{{ chart4 }}" as="c" hint-placeholder-count="4">
+            <div style="flex:1;text-align:center;font:500 11px Inter,sans-serif;color:#6f665b">{{ c.label }}</div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:none;border-top:2px solid #1A1410;display:flex;padding:8px 4px 10px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">home</span><span style="font:500 11px Inter,sans-serif;color:#333">홈</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">book_2</span><span style="font:500 11px Inter,sans-serif;color:#333">서재</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><span class="msym" style="font-size:22px">bar_chart</span><span style="font:700 11px Inter,sans-serif;color:#8C6A4A">통계</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">settings</span><span style="font:500 11px Inter,sans-serif;color:#333">설정</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="7b">
+<div class="dv-olabel"><a class="dv-oid" href="#7b">7b</a>1년 탭</div>
+<div class="wf-frame">
+  <div style="display:flex;flex-direction:column;height:680px">
+    <div style="flex:1;overflow-y:auto;padding:18px 16px 16px;display:flex;flex-direction:column;gap:16px">
+      <div style="font:700 17px Inter,sans-serif;color:#1A1410">통계</div>
+
+      <div style="display:flex;flex-shrink:0;border:2px solid #1A1410;border-radius:12px;overflow:hidden">
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 10.5px Inter,sans-serif;color:#6f665b">오늘</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 10.5px Inter,sans-serif;color:#6f665b">4주</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:700 10.5px Inter,sans-serif;color:#fff;background:#8C6A4A">1년</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 10.5px Inter,sans-serif;color:#6f665b">직접 선택</div>
+      </div>
+
+      <div style="font:600 12px Inter,sans-serif;color:#777">{{ rangeLabel52 }}</div>
+
+      <div style="background:#F5EFE6;border:2px solid #1A1410;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px">
+        <div style="font:700 12.5px Inter,sans-serif;color:#1A1410">독서 달력</div>
+        <div style="display:flex;gap:6px">
+          <div style="flex:none;display:flex;flex-direction:column;gap:3px">
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">월</div>
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">화</div>
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">수</div>
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">목</div>
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">금</div>
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">토</div>
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">일</div>
+            <div style="height:14px"></div>
+          </div>
+          <div style="overflow-x:auto;flex:1">
+            <div style="display:flex;gap:3px;width:max-content">
+              <sc-for list="{{ weeks52Chrono }}" as="week" hint-placeholder-count="12">
+                <div style="display:flex;flex-direction:column;gap:3px;align-items:center">
+                  <sc-for list="{{ week.days }}" as="day" hint-placeholder-count="7">
+                    <div style="width:18px;height:18px;border-radius:3px;flex:none;{{ day.cellStyle }}"></div>
+                  </sc-for>
+                  <div style="height:14px;font:500 8px Inter,sans-serif;color:#8a8272;white-space:nowrap">
+                    <sc-if value="{{ week.showLabel }}" hint-placeholder-val="{{ true }}">{{ week.label }}</sc-if>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;margin-top:2px">
+          <span style="font:500 9px Inter,sans-serif;color:#6f665b">적음</span>
+          <span style="width:11px;height:11px;border-radius:2px;background:#EBE3D6"></span>
+          <span style="width:11px;height:11px;border-radius:2px;background:#E5C7A6"></span>
+          <span style="width:11px;height:11px;border-radius:2px;background:#CD9F6F"></span>
+          <span style="width:11px;height:11px;border-radius:2px;background:#A9763F"></span>
+          <span style="width:11px;height:11px;border-radius:2px;background:#6E4521"></span>
+          <span style="font:500 9px Inter,sans-serif;color:#6f665b">많음</span>
+        </div>
+        <div class="wf-note" style="margin-top:-2px">↑ 1년치(52주)라 가로 스크롤, 왼쪽이 과거·오른쪽이 최신 주 — 아래 차트와 같은 방향. 색 농도 = 독서량</div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;background:#F5EFE6;border:2px solid #1A1410;border-radius:14px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span class="msym" style="font-size:20px;color:#8C6A4A">local_fire_department</span>
+          <span style="font:700 15px Inter,sans-serif;color:#1A1410">{{ stats52.streak }}일</span>
+          <span style="font:500 11px Inter,sans-serif;color:#6f665b">연속 기록</span>
+        </div>
+        <div style="flex:1;background:#F5EFE6;border:2px solid #1A1410;border-radius:14px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span class="msym" style="font-size:20px;color:#8C6A4A">auto_stories</span>
+          <span style="font:700 15px Inter,sans-serif;color:#1A1410">{{ stats52.pages }}p</span>
+          <span style="font:500 11px Inter,sans-serif;color:#6f665b">읽은 페이지</span>
+        </div>
+        <div style="flex:1;background:#F5EFE6;border:2px solid #1A1410;border-radius:14px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span class="msym" style="font-size:20px;color:#8C6A4A">menu_book</span>
+          <span style="font:700 15px Inter,sans-serif;color:#1A1410">{{ stats52.books }}권</span>
+          <span style="font:500 11px Inter,sans-serif;color:#6f665b">읽은 책</span>
+        </div>
+      </div>
+
+      <div style="background:#F5EFE6;border:2px solid #1A1410;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font:700 12.5px Inter,sans-serif;color:#1A1410">읽은 책 · 페이지</span>
+          <div style="display:flex;gap:10px">
+            <span style="display:flex;align-items:center;gap:4px;font:500 11px Inter,sans-serif;color:#777"><span style="width:8px;height:8px;border-radius:2px;background:#8C6A4A;display:inline-block"></span>책</span>
+            <span style="display:flex;align-items:center;gap:4px;font:500 11px Inter,sans-serif;color:#777"><span style="width:10px;height:2px;background:#1A1410;display:inline-block"></span>페이지</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <div style="position:relative;width:22px;height:100px;flex:none">
+            <sc-for list="{{ booksAxisTicks52 }}" as="t" hint-placeholder-count="3">
+              <span style="position:absolute;left:0;top:{{ t.y }}px;transform:translateY(-50%);font:500 8px Inter,sans-serif;color:#8C6A4A;white-space:nowrap">{{ t.label }}</span>
+            </sc-for>
+          </div>
+          <div style="overflow-x:auto;flex:1;min-width:0">
+            <div style="width:728px;display:flex;flex-direction:column;gap:10px">
+              <div style="position:relative;height:100px">
+                <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 728 100" preserveAspectRatio="none">
+                  <sc-for list="{{ axisTicks52 }}" as="t" hint-placeholder-count="3">
+                    <line x1="0" y1="{{ t.y }}" x2="728" y2="{{ t.y }}" stroke="#E3D9C8" stroke-width="1" stroke-dasharray="3,3"></line>
+                  </sc-for>
+                </svg>
+                <div style="position:absolute;inset:0;display:flex;align-items:flex-end;gap:1px">
+                  <sc-for list="{{ chart52 }}" as="c" hint-placeholder-count="52">
+                    <div style="flex:1;display:flex;justify-content:center">
+                      <div style="width:8px;border-radius:2px 2px 0 0;background:#8C6A4A;height:{{ c.barH }}px"></div>
+                    </div>
+                  </sc-for>
+                </div>
+                <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 728 100" preserveAspectRatio="none">
+                  <polyline points="{{ points52 }}" fill="none" stroke="#1A1410" stroke-width="2"></polyline>
+                </svg>
+              </div>
+              <div style="display:flex;gap:1px">
+                <sc-for list="{{ chart52 }}" as="c" hint-placeholder-count="52">
+                  <div style="flex:1;text-align:center;font:500 8px Inter,sans-serif;color:#6f665b">
+                    <sc-if value="{{ c.showLabel }}" hint-placeholder-val="{{ true }}">{{ c.label }}</sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <div style="position:relative;width:26px;height:100px;flex:none">
+            <sc-for list="{{ axisTicks52 }}" as="t" hint-placeholder-count="3">
+              <span style="position:absolute;left:0;top:{{ t.y }}px;transform:translateY(-50%);font:500 8px Inter,sans-serif;color:#9b9284;white-space:nowrap">{{ t.label }}</span>
+            </sc-for>
+          </div>
+        </div>
+        <div class="wf-note" style="margin-top:-2px">↑ 가운데 그래프만 가로 스크롤, 좌우 축은 고정. 라벨은 일부만 표시</div>
+      </div>
+    </div>
+
+    <div style="flex:none;border-top:2px solid #1A1410;display:flex;padding:8px 4px 10px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">home</span><span style="font:500 11px Inter,sans-serif;color:#333">홈</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">book_2</span><span style="font:500 11px Inter,sans-serif;color:#333">서재</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><span class="msym" style="font-size:22px">bar_chart</span><span style="font:700 11px Inter,sans-serif;color:#8C6A4A">통계</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">settings</span><span style="font:500 11px Inter,sans-serif;color:#333">설정</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="7c">
+<div class="dv-olabel"><a class="dv-oid" href="#7c">7c</a>오늘 탭&nbsp;</div>
+<div class="wf-frame">
+  <div style="display:flex;flex-direction:column;height:680px">
+    <div style="flex:1;overflow-y:auto;padding:18px 16px 16px;display:flex;flex-direction:column;gap:16px">
+      <div style="font:700 17px Inter,sans-serif;color:#1A1410">통계</div>
+
+      <div style="display:flex;flex-shrink:0;border:2px solid #1A1410;border-radius:12px;overflow:hidden">
+        <div style="flex:1;padding:9px 0;text-align:center;font:700 10.5px Inter,sans-serif;color:#fff;background:#8C6A4A">오늘</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 10.5px Inter,sans-serif;color:#6f665b">4주</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 10.5px Inter,sans-serif;color:#6f665b">1년</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 10.5px Inter,sans-serif;color:#6f665b">직접 선택</div>
+      </div>
+
+      <div style="font:600 12px Inter,sans-serif;color:#777">{{ todayLabel }}</div>
+
+      <div style="background:#F5EFE6;border:2px solid #1A1410;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px">
+        <div style="font:700 12.5px Inter,sans-serif;color:#1A1410">독서 달력</div>
+        <div style="display:flex;gap:6px">
+          <sc-for list="{{ recent7 }}" as="day" hint-placeholder-count="7">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+              <div style="width:100%;aspect-ratio:1;border-radius:4px;{{ day.cellStyle }}"></div>
+              <div style="font:600 10px Inter,sans-serif;color:#8a8272">{{ day.wd }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;margin-top:2px">
+          <span style="font:500 9px Inter,sans-serif;color:#6f665b">적음</span>
+          <span style="width:11px;height:11px;border-radius:2px;background:#EBE3D6"></span>
+          <span style="width:11px;height:11px;border-radius:2px;background:#E5C7A6"></span>
+          <span style="width:11px;height:11px;border-radius:2px;background:#CD9F6F"></span>
+          <span style="width:11px;height:11px;border-radius:2px;background:#A9763F"></span>
+          <span style="width:11px;height:11px;border-radius:2px;background:#6E4521"></span>
+          <span style="font:500 9px Inter,sans-serif;color:#6f665b">많음</span>
+        </div>
+        <div class="wf-note" style="margin-top:2px">↑ 오늘 기준 최근 7일, 오늘 칸만 테두리로 강조. 색 농도 = 독서량</div>
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;background:#F5EFE6;border:2px solid #1A1410;border-radius:14px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span class="msym" style="font-size:20px;color:#8C6A4A">local_fire_department</span>
+          <span style="font:700 15px Inter,sans-serif;color:#1A1410">{{ streak }}일</span>
+          <span style="font:500 11px Inter,sans-serif;color:#6f665b">연속 기록</span>
+        </div>
+        <div style="flex:1;background:#F5EFE6;border:2px solid #1A1410;border-radius:14px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span class="msym" style="font-size:20px;color:#8C6A4A">auto_stories</span>
+          <span style="font:700 15px Inter,sans-serif;color:#1A1410">{{ todayPages }}p</span>
+          <span style="font:500 11px Inter,sans-serif;color:#6f665b">읽은 페이지</span>
+        </div>
+        <div style="flex:1;background:#F5EFE6;border:2px solid #1A1410;border-radius:14px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span class="msym" style="font-size:20px;color:#8C6A4A">menu_book</span>
+          <span style="font:700 15px Inter,sans-serif;color:#1A1410">{{ todayBooksTouched }}권</span>
+          <span style="font:500 11px Inter,sans-serif;color:#6f665b">읽은 책</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font:700 12.5px Inter,sans-serif;color:#1A1410">오늘 읽은 책 · 3권</div>
+        <div style="display:flex;gap:12px;padding:10px 2px;border-bottom:1px solid #efe9df;align-items:center">
+          <div style="flex:none;width:44px;height:62px;border:1.5px solid #1A1410;border-radius:4px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="flex:1;display:flex;align-items:center;gap:6px">
+            <span style="font:600 12px Inter,sans-serif;color:#1A1410">달러구트 꿈 백화점</span>
+            <span style="font:700 8.5px Inter,sans-serif;color:#8C6A4A;background:#EDE0D1;border-radius:8px;padding:1px 6px">2회</span>
+          </div>
+          <div style="font:700 11px Inter,sans-serif;color:#8C6A4A">54p</div>
+        </div>
+        <div style="display:flex;gap:12px;padding:10px 2px;border-bottom:1px solid #efe9df;align-items:center">
+          <div style="flex:none;width:44px;height:62px;border:1.5px solid #1A1410;border-radius:4px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="flex:1;font:600 12px Inter,sans-serif;color:#1A1410">아몬드</div>
+          <div style="font:700 11px Inter,sans-serif;color:#8C6A4A">16p</div>
+        </div>
+        <div style="display:flex;gap:12px;padding:10px 2px;border-bottom:1px solid #efe9df;align-items:center">
+          <div style="flex:none;width:44px;height:62px;border:1.5px solid #1A1410;border-radius:4px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="flex:1;font:600 12px Inter,sans-serif;color:#1A1410">불편한 편의점</div>
+          <div style="font:700 11px Inter,sans-serif;color:#8C6A4A">12p</div>
+        </div>
+        <div class="wf-note">↑ 각 항목을 탭하면 해당 책의 <a class="dv-oid" href="#5b">5b</a>(내 기록 탭)로 이동해 세션별 쪽수·시간을 확인</div>
+      </div>
+    </div>
+
+    <div style="flex:none;border-top:2px solid #1A1410;display:flex;padding:8px 4px 10px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">home</span><span style="font:500 11px Inter,sans-serif;color:#333">홈</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">book_2</span><span style="font:500 11px Inter,sans-serif;color:#333">서재</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><span class="msym" style="font-size:22px">bar_chart</span><span style="font:700 11px Inter,sans-serif;color:#8C6A4A">통계</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">settings</span><span style="font:500 11px Inter,sans-serif;color:#333">설정</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="dv-opt" id="7d">
+<div class="dv-olabel"><a class="dv-oid" href="#7d">7d</a>기간 설정 바텀시트</div>
+<div class="wf-frame">
+  <div style="position:relative;height:680px;overflow:hidden;border-radius:27px;background:#FFFBF6">
+    <div style="padding:18px 16px 0;display:flex;flex-direction:column;gap:14px;filter:blur(1.5px);opacity:.5">
+      <div style="font:700 17px Inter,sans-serif;color:#1A1410">통계</div>
+      <div style="display:flex;flex-shrink:0;border:2px solid #1A1410;border-radius:12px;overflow:hidden">
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 10.5px Inter,sans-serif;color:#6f665b">오늘</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 10.5px Inter,sans-serif;color:#6f665b">4주</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 10.5px Inter,sans-serif;color:#6f665b">1년</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:700 10.5px Inter,sans-serif;color:#fff;background:#8C6A4A">직접 선택</div>
+      </div>
+      <div style="font:600 12px Inter,sans-serif;color:#777">2026.06.12 ~ 2026.07.09</div>
+    </div>
+    <div style="position:absolute;inset:0;background:rgba(26,20,16,.35)"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;background:#FFFBF6;border-radius:20px 20px 0 0;padding:20px;display:flex;flex-direction:column;gap:16px;box-shadow:0 -4px 16px rgba(0,0,0,.12)">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font:700 14px Inter,sans-serif;color:#1A1410">기간 설정</div>
+        <span class="msym" style="font-size:20px;color:#6f665b">close</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+          <div style="font:500 11px Inter,sans-serif;color:#777">시작일</div>
+          <div style="border:2px solid #1A1410;border-radius:10px;padding:10px 12px;font:500 12.5px Inter,sans-serif;color:#1A1410">2026.06.12</div>
+        </div>
+        <div style="padding-top:18px;font:500 13px Inter,sans-serif;color:#6f665b">–</div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+          <div style="font:500 11px Inter,sans-serif;color:#777">종료일</div>
+          <div style="border:2px solid #1A1410;border-radius:10px;padding:10px 12px;font:500 12.5px Inter,sans-serif;color:#1A1410">2026.07.09</div>
+        </div>
+      </div>
+      <div style="height:46px;border-radius:23px;background:#8C6A4A;display:flex;align-items:center;justify-content:center;font:700 13px Inter,sans-serif;color:#fff;margin-top:4px">적용</div>
+    </div>
+  </div>
+</div>
+<div class="wf-note" style="width:300px;margin:-4px 0 0">↑ 시작일/종료일 탭하면 캘린더 피커 표시(별도 화면), 최대 선택 기간 365일. 적용하면 세그먼트가 "직접 선택"으로 전환되고 그 아래 라벨이 "6/12~7/9" 같은 커스텀 범위로 바뀜</div>
+</div>
+
+<div class="dv-opt" id="7e">
+<div class="dv-olabel"><a class="dv-oid" href="#7e">7e</a>달력 특정 날짜 탭 (바텀 시트)</div>
+<div class="wf-frame">
+  <div style="position:relative;height:680px;overflow:hidden;border-radius:27px;background:#FFFBF6">
+    <!-- Blurred 7a background -->
+    <div style="padding:18px 16px 16px;display:flex;flex-direction:column;gap:16px;filter:blur(1.5px);opacity:.5">
+      <div style="font:700 17px Inter,sans-serif;color:#1A1410">통계</div>
+      <div style="display:flex;flex-shrink:0;border:2px solid #1A1410;border-radius:12px;overflow:hidden">
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 10.5px Inter,sans-serif;color:#6f665b">오늘</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:700 10.5px Inter,sans-serif;color:#fff;background:#8C6A4A">4주</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 10.5px Inter,sans-serif;color:#6f665b">1년</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font:500 10.5px Inter,sans-serif;color:#6f665b">직접 선택</div>
+      </div>
+      <div style="font:600 12px Inter,sans-serif;color:#777">6월 12일 ~ 7월 9일</div>
+      
+      <div style="background:#F5EFE6;border:2px solid #1A1410;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px">
+        <div style="font:700 12.5px Inter,sans-serif;color:#1A1410">독서 달력</div>
+        <div style="display:flex;gap:6px">
+          <div style="flex:none;display:flex;flex-direction:column;gap:3px">
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">월</div>
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">화</div>
+            <div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font:600 10px Inter,sans-serif;color:#8a8272">수</div>
+          </div>
+          <div style="overflow-x:hidden;flex:1">
+            <div style="display:flex;gap:3px;width:max-content">
+              <div style="display:flex;flex-direction:column;gap:3px;align-items:center">
+                <div style="width:18px;height:18px;border-radius:3px;flex:none;background:#A9763F"></div>
+                <div style="width:18px;height:18px;border-radius:3px;flex:none;background:#CD9F6F"></div>
+                <div style="width:18px;height:18px;border-radius:3px;flex:none;background:#6E4521;border:2px solid #1A1410"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bottom Sheet -->
+    <div style="position:absolute;inset:0;background:rgba(26,20,16,.35)"></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;background:#FFFBF6;border-radius:20px 20px 0 0;padding:24px 20px 30px;display:flex;flex-direction:column;gap:16px;box-shadow:0 -4px 16px rgba(0,0,0,.12)">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font:700 15px Inter,sans-serif;color:#1A1410">6/15 읽은 책 · 3권</div>
+        <span class="msym" style="font-size:24px;color:#6f665b">close</span>
+      </div>
+      
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:12px;padding:10px 2px;border-bottom:1px solid #efe9df;align-items:center">
+          <div style="flex:none;width:44px;height:62px;border:1.5px solid #1A1410;border-radius:4px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="flex:1;display:flex;align-items:center;gap:6px">
+            <span style="font:600 12px Inter,sans-serif;color:#1A1410">달러구트 꿈 백화점</span>
+            <span style="font:700 8.5px Inter,sans-serif;color:#8C6A4A;background:#EDE0D1;border-radius:8px;padding:1px 6px">2회</span>
+          </div>
+          <div style="font:700 11px Inter,sans-serif;color:#8C6A4A">54p</div>
+        </div>
+        <div style="display:flex;gap:12px;padding:10px 2px;border-bottom:1px solid #efe9df;align-items:center">
+          <div style="flex:none;width:44px;height:62px;border:1.5px solid #1A1410;border-radius:4px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="flex:1;font:600 12px Inter,sans-serif;color:#1A1410">아몬드</div>
+          <div style="font:700 11px Inter,sans-serif;color:#8C6A4A">16p</div>
+        </div>
+        <div style="display:flex;gap:12px;padding:10px 2px;border-bottom:1px solid #efe9df;align-items:center">
+          <div style="flex:none;width:44px;height:62px;border:1.5px solid #1A1410;border-radius:4px;background:repeating-linear-gradient(135deg,#eee,#eee 6px,#e2e2e2 6px,#e2e2e2 12px)"></div>
+          <div style="flex:1;font:600 12px Inter,sans-serif;color:#1A1410">불편한 편의점</div>
+          <div style="font:700 11px Inter,sans-serif;color:#8C6A4A">12p</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="wf-note" style="width:300px;margin:-4px 0 0">↑ 4주, 1년, 직접 선택 탭에서 달력의 특정 날짜를 탭했을 때 하단에서 올라오는 바텀 시트. 7c(오늘 탭)의 리스트 UI를 차용. 리스트 항목 탭 시 해당 책의 기록 탭(5b)으로 이동</div>
+</div>
+
+</div>
+
+</section>
+
+<section class="dv-turn" id="t8">
+<div class="dv-thd"><a class="dv-tid" href="#t8">8</a><span class="dv-tname">설정<br></span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="8a">
+<div class="dv-olabel"><a class="dv-oid" href="#8a">8a</a>기본</div>
+<div class="wf-frame">
+  <div style="display:flex;flex-direction:column;height:680px">
+    <div style="flex:1;overflow-y:auto;padding:18px 16px 16px;display:flex;flex-direction:column;gap:20px">
+      <div style="font:700 17px Inter,sans-serif;color:#1A1410">설정</div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font:700 12.5px Inter,sans-serif;color:#1A1410">화면</div>
+        <div style="background:#F5EFE6;border:2px solid #1A1410;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px">
+          <div style="font:500 12px Inter,sans-serif;color:#777">테마</div>
+          <div style="display:flex;border:2px solid #1A1410;border-radius:12px;overflow:hidden;background:#FFFBF6">
+            <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">시스템</div>
+            <div style="flex:1;padding:9px 0;text-align:center;font:700 11.5px Inter,sans-serif;color:#fff;background:#8C6A4A">라이트</div>
+            <div style="flex:1;padding:9px 0;text-align:center;font:500 11.5px Inter,sans-serif;color:#6f665b">다크</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font:700 12.5px Inter,sans-serif;color:#1A1410">알림</div>
+        <div style="background:#F5EFE6;border:2px solid #1A1410;border-radius:14px;padding:2px 14px;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #e5ddcf">
+            <span style="font:500 13px Inter,sans-serif;color:#1A1410">독서 리마인더</span>
+            <div style="width:34px;height:20px;border-radius:10px;background:#8C6A4A;position:relative;flex:none">
+              <div style="position:absolute;right:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff"></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0">
+            <span style="font:500 13px Inter,sans-serif;color:#1A1410">리마인더 시간</span>
+            <span style="display:flex;align-items:center;gap:6px">
+              <span style="font:600 12.5px Inter,sans-serif;color:#8C6A4A">오후 9:00</span>
+              <span class="msym" style="font-size:18px;color:#C9B9A6">chevron_right</span>
+            </span>
+          </div>
+        </div>
+        <div class="wf-note">↑ 리마인더가 꺼지면 '리마인더 시간' 행은 사라짐. 시간 행 탭 시 시간 피커 표시</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font:700 12.5px Inter,sans-serif;color:#1A1410">지원</div>
+        <div style="background:#F5EFE6;border:2px solid #1A1410;border-radius:14px;padding:2px 14px;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #e5ddcf">
+            <span style="font:500 13px Inter,sans-serif;color:#1A1410">오픈소스 라이선스</span>
+            <span class="msym" style="font-size:18px;color:#C9B9A6">chevron_right</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0">
+            <span style="font:500 13px Inter,sans-serif;color:#1A1410">버전 정보</span>
+            <span style="font:500 12px Inter,sans-serif;color:#6f665b">1.4.2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:none;border-top:2px solid #1A1410;display:flex;padding:8px 4px 10px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">home</span><span style="font:500 11px Inter,sans-serif;color:#333">홈</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">book_2</span><span style="font:500 11px Inter,sans-serif;color:#333">서재</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;opacity:.5"><span class="msym" style="font-size:22px">bar_chart</span><span style="font:500 11px Inter,sans-serif;color:#333">통계</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><span class="msym" style="font-size:22px">settings</span><span style="font:700 11px Inter,sans-serif;color:#8C6A4A">설정</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const fmtMD = (d) => `${d.getMonth() + 1}/${d.getDate()}`;
+    const pad2 = (n) => String(n).padStart(2, '0');
+    const fmtDot = (d) => `${d.getFullYear()}.${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`;
+    const TODAY = new Date(2026, 6, 9);
+    const todayDow = TODAY.getDay();
+    const startOfThisWeek = new Date(TODAY);
+    startOfThisWeek.setDate(TODAY.getDate() - todayDow);
+
+    let seed = 42;
+    const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+
+    const levelColors = ['#EBE3D6', '#E5C7A6', '#CD9F6F', '#A9763F', '#6E4521'];
+    const weekdayLetters = ['일', '월', '화', '수', '목', '금', '토'];
+
+    const buildWeeks = (numWeeks, sparseLabel) => {
+      const weeks = [];
+      for (let w = 0; w < numWeeks; w++) {
+        const weekStart = new Date(startOfThisWeek);
+        weekStart.setDate(startOfThisWeek.getDate() - 7 * w);
+        const days = [];
+        for (let d = 0; d < 7; d++) {
+          const date = new Date(weekStart);
+          date.setDate(weekStart.getDate() + d);
+          const isFuture = date.getTime() > TODAY.getTime();
+          const isToday = date.getTime() === TODAY.getTime();
+          let level = 0;
+          if (!isFuture) {
+            const r = rand();
+            level = r > 0.88 ? 4 : r > 0.7 ? 3 : r > 0.5 ? 2 : r > 0.28 ? 1 : 0;
+          }
+          const base = isFuture
+            ? 'border:1.5px dashed #ddd3c4'
+            : `background:${levelColors[level]};${isToday ? 'outline:2px solid #1A1410;outline-offset:1px' : ''}`;
+          days.push({ future: isFuture, today: isToday, cellStyle: base });
+        }
+        const showLabel = !sparseLabel || w === 0 || w === numWeeks - 1 || w % 13 === 0;
+        weeks.push({ days, label: w === 0 ? '이번주' : fmtMD(weekStart), showLabel });
+      }
+      return weeks;
+    };
+
+    const buildChart = (numWeeks, chartWidth, sparse) => {
+      const raw = [];
+      for (let w = numWeeks - 1; w >= 0; w--) {
+        raw.push({ w, books: Math.round(rand() * 3), pages: 40 + Math.round(rand() * 300) });
+      }
+      const maxBooks = Math.max(...raw.map((c) => c.books), 1);
+      const maxPages = Math.max(...raw.map((c) => c.pages), 1);
+      const n = raw.length;
+      const slot = chartWidth / n;
+      const chart = raw.map((c, i) => ({
+        books: c.books,
+        pages: c.pages,
+        cx: Math.round(slot * (i + 0.5)),
+        cy: Math.round(92 - (c.pages / maxPages) * 76),
+        barH: Math.round((c.books / maxBooks) * 70),
+        label: c.w === 0 ? '이번주' : `${c.w}주전`,
+        showLabel: !sparse || i === 0 || i === n - 1 || i % 13 === 0
+      }));
+      const axisTicks = [
+        { y: 16, label: `${maxPages}p` },
+        { y: 54, label: `${Math.round(maxPages / 2)}p` },
+        { y: 92, label: '0' }
+      ];
+      const booksAxisTicks = [
+        { y: 30, label: `${maxBooks}권` },
+        { y: 65, label: `${Math.round(maxBooks / 2)}권` },
+        { y: 100, label: '0' }
+      ];
+      return {
+        chart,
+        points: chart.map((c) => `${c.cx},${c.cy}`).join(' '),
+        totalBooks: raw.reduce((s, c) => s + c.books, 0),
+        totalPages: raw.reduce((s, c) => s + c.pages, 0),
+        axisTicks,
+        booksAxisTicks,
+        maxBooks
+      };
+    };
+
+    const weeks28 = buildWeeks(4, false);
+    const weeks52 = buildWeeks(52, true);
+    const weeks28Chrono = weeks28.slice().reverse();
+    const weeks52Chrono = weeks52.slice().reverse();
+    const c4 = buildChart(4, 224, false);
+    const c52 = buildChart(52, 728, true);
+
+    const recent7 = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(TODAY);
+      date.setDate(TODAY.getDate() - i);
+      const isToday = i === 0;
+      const r = rand();
+      const level = r > 0.88 ? 4 : r > 0.7 ? 3 : r > 0.5 ? 2 : r > 0.28 ? 1 : 0;
+      recent7.push({
+        wd: weekdayLetters[date.getDay()],
+        cellStyle: `background:${levelColors[level]};${isToday ? 'outline:2px solid #1A1410;outline-offset:1px' : ''}`
+      });
+    }
+
+    return {
+      recent7,
+      weeks28,
+      weeks52,
+      weeks28Chrono,
+      weeks52Chrono,
+      chart4: c4.chart,
+      points4: c4.points,
+      axisTicks4: c4.axisTicks,
+      booksAxisTicks4: c4.booksAxisTicks,
+      maxBooks4: c4.maxBooks,
+      chart52: c52.chart,
+      points52: c52.points,
+      axisTicks52: c52.axisTicks,
+      booksAxisTicks52: c52.booksAxisTicks,
+      maxBooks52: c52.maxBooks,
+      stats4: { streak: 12, pages: c4.totalPages.toLocaleString(), books: c4.totalBooks },
+      stats52: { streak: 12, pages: c52.totalPages.toLocaleString(), books: c52.totalBooks },
+      streak: 12,
+      todayPages: 82,
+      todayBooksTouched: 3,
+      rangeLabel4: (() => {
+        const start = new Date(TODAY);
+        start.setDate(TODAY.getDate() - 27);
+        return `${fmtDot(start)} ~ ${fmtDot(TODAY)}`;
+      })(),
+      rangeLabel52: (() => {
+        const start = new Date(TODAY);
+        start.setDate(TODAY.getDate() - 363);
+        return `${fmtDot(start)} ~ ${fmtDot(TODAY)}`;
+      })(),
+      todayLabel: `${fmtDot(TODAY)} (${weekdayLetters[todayDow]})`
+    };
+  }
+}
+</script>
+</body>
+</html>
