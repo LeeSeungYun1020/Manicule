@@ -1,3 +1,4 @@
 - [AGENTS.md](AGENTS.md) 파일에 명시된 참고 파일과 컨벤션 준수.
 - 권한 문제로 실행 불가능한 경우 `\명령어`나 절대경로를 사용해 실행 시도.(예: `\gh auth status`) 그럼에도 실패 시 에러 메시지에서 제시하는 권한 허가 명령 시도.(예: `gh.read({"org":"","repo":"","pr":"15"})`)
-- [skills/skills.md](skills/skills.md) 디렉토리 절차 준수. 진행 중 흐름 변경 시 실수하지 않도록 [skills/](skills/) 하위의 단계별 절차 파일([work.md](skills/work.md), [pr-create.md](skills/pr-create.md) 등)을 재확인할 것.
+- [skills/skills.md](skills/skills.md) 디렉토리 절차 준수. 항상 진행 중인 단계를 가장 먼저 표시(출력).
+- 절차 진행 중 흐름 변경 시 [skills/](skills/) 하위의 단계별 절차 파일([work.md](skills/work.md), [pr-create.md](skills/pr-create.md) 등)과 이전 메시지에 출력된 단계를 반드시 재확인하여 단계 누락 방지.
