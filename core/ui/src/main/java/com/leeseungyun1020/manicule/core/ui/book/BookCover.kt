@@ -10,9 +10,10 @@ import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.ui.R
 
 @Composable
@@ -33,10 +34,10 @@ fun BookCover(
     )
 }
 
-@Preview(name = "With Placeholder", showBackground = true)
+@ManiculePreview
 @Composable
 private fun BookCoverPlaceholderPreview() {
-    MaterialTheme {
+    ManiculeTheme {
         Box(modifier = Modifier.padding(16.dp)) {
             BookCover(
                 imageUrl = null,
@@ -46,10 +47,10 @@ private fun BookCoverPlaceholderPreview() {
     }
 }
 
-@Preview(name = "With Image", showBackground = true)
+@ManiculePreview
 @Composable
 private fun BookCoverImagePreview() {
-    MaterialTheme {
+    ManiculeTheme {
         Box(modifier = Modifier.padding(16.dp)) {
             BookCover(
                 imageUrl = "https://nl.go.kr/seoji/fu/ecip/dbfiles/CIP_FILES_TBL/2025/02/9791161759692.jpg",

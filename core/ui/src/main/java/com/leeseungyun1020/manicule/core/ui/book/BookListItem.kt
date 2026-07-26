@@ -15,8 +15,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 
 @Composable
 fun BookListItem(
@@ -72,10 +73,10 @@ fun BookListItem(
     }
 }
 
-@Preview(showBackground = true)
+@ManiculePreview
 @Composable
 private fun BookListItemPreview() {
-    MaterialTheme {
+    ManiculeTheme {
         BookListItem(
             title = "Kotlin in action 2/e",
             author = "세바스티안 아이그너,로만 엘리자로프,스베트라나 이사코바,드미트리 제메로프 지음 ;오현석 옮김",

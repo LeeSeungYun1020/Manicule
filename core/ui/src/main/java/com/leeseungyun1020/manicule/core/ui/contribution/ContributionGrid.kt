@@ -6,11 +6,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.model.ContributionDay
 import com.leeseungyun1020.manicule.core.ui.preview.ContributionPreviewParameterProvider
 
@@ -56,10 +56,10 @@ fun ContributionGrid(
     }
 }
 
-@Preview(showBackground = true)
+@ManiculePreview
 @Composable
 private fun ContributionGridPreviewSingle() {
-    MaterialTheme {
+    ManiculeTheme {
         ContributionGrid(
             days = ContributionPreviewParameterProvider().values.first().take(1),
             modifier = Modifier.height(100.dp),
@@ -67,10 +67,10 @@ private fun ContributionGridPreviewSingle() {
     }
 }
 
-@Preview(showBackground = true)
+@ManiculePreview
 @Composable
 private fun ContributionGridPreviewSome() {
-    MaterialTheme {
+    ManiculeTheme {
         ContributionGrid(
             days = ContributionPreviewParameterProvider().values.first().take(5),
             modifier = Modifier.height(100.dp),
@@ -78,10 +78,10 @@ private fun ContributionGridPreviewSome() {
     }
 }
 
-@Preview(showBackground = true)
+@ManiculePreview
 @Composable
 private fun ContributionGridPreviewMulti() {
-    MaterialTheme {
+    ManiculeTheme {
         ContributionGrid(
             days = ContributionPreviewParameterProvider().values.first(),
             modifier = Modifier.height(100.dp),
