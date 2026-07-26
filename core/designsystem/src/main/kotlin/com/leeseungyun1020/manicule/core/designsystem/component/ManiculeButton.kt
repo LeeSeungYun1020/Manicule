@@ -1,5 +1,6 @@
 package com.leeseungyun1020.manicule.core.designsystem.component
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +12,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 
 @Composable
 fun ManiculeButton(
@@ -58,5 +61,18 @@ fun ManiculeTextButton(
 ) {
     TextButton(onClick = onClick, modifier = modifier, enabled = enabled) {
         Text(text = text)
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun ManiculeButtonPreview() {
+    ManiculeTheme {
+        Column {
+            ManiculeButton(onClick = {}, text = "Enabled Button")
+            ManiculeButton(onClick = {}, text = "Disabled Button", enabled = false)
+            ManiculeOutlinedButton(onClick = {}, text = "Outlined Button")
+            ManiculeTextButton(onClick = {}, text = "Text Button")
+        }
     }
 }

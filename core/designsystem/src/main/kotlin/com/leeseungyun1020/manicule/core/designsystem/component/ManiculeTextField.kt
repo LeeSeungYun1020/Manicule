@@ -1,5 +1,6 @@
 package com.leeseungyun1020.manicule.core.designsystem.component
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -7,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 
 @Composable
 fun ManiculeTextField(
@@ -38,4 +41,17 @@ fun ManiculeTextField(
         isError = isError,
         supportingText = supportingText,
     )
+}
+
+@ManiculePreview
+@Composable
+private fun ManiculeTextFieldPreview() {
+    ManiculeTheme {
+        Column {
+            ManiculeTextField(value = "", onValueChange = {}, placeholder = "Empty")
+            ManiculeTextField(value = "Input text", onValueChange = {})
+            ManiculeTextField(value = "Error text", onValueChange = {}, isError = true)
+            ManiculeTextField(value = "Disabled text", onValueChange = {}, enabled = false)
+        }
+    }
 }

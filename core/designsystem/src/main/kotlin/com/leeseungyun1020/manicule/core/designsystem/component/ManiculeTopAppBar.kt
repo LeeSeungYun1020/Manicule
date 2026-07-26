@@ -9,6 +9,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,4 +35,15 @@ fun ManiculeTopAppBar(
         },
         actions = { actions() },
     )
+}
+
+@ManiculePreview
+@Composable
+private fun ManiculeTopAppBarPreview() {
+    ManiculeTheme {
+        ManiculeTopAppBar(
+            title = "Title",
+            onNavigateBack = {},
+        )
+    }
 }

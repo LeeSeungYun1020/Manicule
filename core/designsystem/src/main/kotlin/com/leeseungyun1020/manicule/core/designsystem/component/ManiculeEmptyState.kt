@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 
 /**
  * 데이터가 비어있을 때 표시하는 공통 빈 상태 컴포넌트.
@@ -54,5 +56,18 @@ fun ManiculeEmptyState(
             Spacer(modifier = Modifier.height(12.dp))
             ManiculeTextButton(onClick = onActionClick, text = actionLabel)
         }
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun ManiculeEmptyStatePreview() {
+    ManiculeTheme {
+        ManiculeEmptyState(
+            title = "서재가 비어 있어요",
+            description = "책을 검색하거나 스캔해 보세요",
+            actionLabel = "검색",
+            onActionClick = {},
+        )
     }
 }

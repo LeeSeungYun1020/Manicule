@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 
 @Composable
 fun ManiculeLoading(modifier: Modifier = Modifier) {
@@ -19,5 +21,13 @@ fun ManiculeLoading(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator()
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun ManiculeLoadingPreview() {
+    ManiculeTheme {
+        ManiculeLoading()
     }
 }

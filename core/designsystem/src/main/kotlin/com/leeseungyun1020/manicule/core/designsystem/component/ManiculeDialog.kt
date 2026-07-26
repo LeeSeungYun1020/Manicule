@@ -1,10 +1,15 @@
 package com.leeseungyun1020.manicule.core.designsystem.component
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 
 /**
  * Manicule 의 모든 다이얼로그가 통일된 형태를 갖도록 하는 공통 다이얼로그.
@@ -45,4 +50,25 @@ fun ManiculeDialog(
                 null
             },
     )
+}
+
+@ManiculePreview
+@Composable
+private fun ManiculeDialogPreview() {
+    ManiculeTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+        ) {
+            ManiculeDialog(
+                onDismissRequest = {},
+                title = "책 삭제",
+                message = "기록한 내용이 모두 삭제되어요",
+                confirmText = "삭제",
+                onConfirm = {},
+                dismissText = "취소",
+                onDismiss = {},
+            )
+        }
+    }
 }
