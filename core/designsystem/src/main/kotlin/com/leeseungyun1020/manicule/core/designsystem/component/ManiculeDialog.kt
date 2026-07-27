@@ -1,13 +1,26 @@
 package com.leeseungyun1020.manicule.core.designsystem.component
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 
@@ -28,28 +41,59 @@ fun ManiculeDialog(
     confirmText: String,
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier,
+    icon: (@Composable () -> Unit)? = null,
     dismissText: String? = null,
     onDismiss: (() -> Unit)? = null,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismissRequest,
-        modifier = modifier,
-        title = { Text(text = title) },
-        text = { Text(text = message) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) { Text(text = confirmText) }
-        },
-        dismissButton =
-            if (dismissText != null) {
-                {
-                    TextButton(onClick = { (onDismiss ?: onDismissRequest).invoke() }) {
-                        Text(text = dismissText)
-                    }
+    Dialog(onDismissRequest = onDismissRequest) {
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = modifier,
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(24.dp),
+            ) {
+                if (icon != null) {
+                    icon()
+                    Spacer(modifier = Modifier.height(14.dp))
                 }
-            } else {
-                null
-            },
-    )
+                Text(
+                    text = title,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+                Text(
+                    text = message,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    if (dismissText != null) {
+                        ManiculeOutlinedButton(
+                            onClick = { (onDismiss ?: onDismissRequest).invoke() },
+                            text = dismissText,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    ManiculeButton(
+                        onClick = onConfirm,
+                        text = confirmText,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+    }
 }
 
 @ManiculePreview
@@ -68,6 +112,54 @@ private fun ManiculeDialogPreview() {
                 onConfirm = {},
                 dismissText = "취소",
                 onDismiss = {},
+            )
+        }
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun ManiculeIconDialogPreview() {
+    ManiculeTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+        ) {
+            ManiculeDialog(
+                onDismissRequest = {},
+                icon = {
+                    Icon(
+                        imageVector = ManiculeIcons.Star,
+                        contentDescription = null,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                },
+                title = "혹시 책을 다 읽었나요?",
+                message = "다 읽었다면 '다 읽음'으로 표시할게요",
+                confirmText = "네",
+                onConfirm = {},
+                dismissText = "아니요",
+                onDismiss = {},
+            )
+        }
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun ManiculeSingleButtonDialogPreview() {
+    ManiculeTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+        ) {
+            ManiculeDialog(
+                onDismissRequest = {},
+                title = "오류",
+                message = "바코드를 인식하지 못했어요",
+                confirmText = "확인",
+                onConfirm = {},
             )
         }
     }
