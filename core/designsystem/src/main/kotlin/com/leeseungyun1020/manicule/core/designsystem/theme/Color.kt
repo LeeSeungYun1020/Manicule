@@ -153,21 +153,3 @@ internal val DarkColorScheme =
         scrim = ManiculePalette.Neutral0,
         surfaceTint = ManiculePalette.Brown80,
     )
-
-val GrassLight: List<Color> =
-    listOf(
-        Color(0xFFEBE3D6),
-        Color(0xFFE5C7A6),
-        Color(0xFFCD9F6F),
-        Color(0xFFA9763F),
-        Color(0xFF6E4521),
-    )
-
-val GrassDark: List<Color> =
-    listOf(
-        Color(0xFF3D2F23),
-        Color(0xFF513923),
-        Color(0xFF7A5A41),
-        Color(0xFFAE8662),
-        Color(0xFFE9C9AC),
-    )

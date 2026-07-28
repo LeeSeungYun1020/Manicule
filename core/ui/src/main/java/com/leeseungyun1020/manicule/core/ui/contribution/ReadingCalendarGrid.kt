@@ -6,18 +6,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.size
 import com.leeseungyun1020.manicule.core.model.ContributionDay
-import com.leeseungyun1020.manicule.core.ui.preview.ContributionPreviewParameterProvider
+import com.leeseungyun1020.manicule.core.ui.preview.ReadingCalendarPreviewParameterProvider
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 
 @Composable
-fun ContributionGrid(
+fun ReadingCalendarGrid(
     days: List<ContributionDay>,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
     onDayClick: ((ContributionDay) -> Unit)? = null,
 ) {
     // 첫 번째 데이터의 요일을 확인하여 월요일(1) 기준 시작 위치 조정 패딩 생성
@@ -34,21 +40,24 @@ fun ContributionGrid(
     val initialIndex = maxOf(0, totalItems - 1)
     val state = rememberLazyGridState(initialFirstVisibleItemIndex = initialIndex)
 
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+
     LazyHorizontalGrid(
         rows = GridCells.Fixed(7),
         state = state,
         modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        contentPadding = contentPadding,
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.size.calendarCellGap),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.size.calendarCellGap),
     ) {
         items(count = totalItems) { index ->
             if (index < paddingCount) {
-                ContributionCell(intensity = null)
+                ReadingCalendarCell(intensity = null)
             } else {
                 val day = days[index - paddingCount]
-                ContributionCell(
+                ReadingCalendarCell(
                     intensity = day.intensity,
+                    isToday = day.date == today,
                     onClick = onDayClick?.let { { it(day) } },
                 )
             }
@@ -58,10 +67,10 @@ fun ContributionGrid(
 
 @ManiculePreview
 @Composable
-private fun ContributionGridPreviewSingle() {
+private fun ReadingCalendarGridPreviewSingle() {
     ManiculeTheme {
-        ContributionGrid(
-            days = ContributionPreviewParameterProvider().values.first().take(1),
+        ReadingCalendarGrid(
+            days = ReadingCalendarPreviewParameterProvider().values.first().take(1),
             modifier = Modifier.height(100.dp),
         )
     }
@@ -69,10 +78,10 @@ private fun ContributionGridPreviewSingle() {
 
 @ManiculePreview
 @Composable
-private fun ContributionGridPreviewSome() {
+private fun ReadingCalendarGridPreviewSome() {
     ManiculeTheme {
-        ContributionGrid(
-            days = ContributionPreviewParameterProvider().values.first().take(5),
+        ReadingCalendarGrid(
+            days = ReadingCalendarPreviewParameterProvider().values.first().take(5),
             modifier = Modifier.height(100.dp),
         )
     }
@@ -80,10 +89,10 @@ private fun ContributionGridPreviewSome() {
 
 @ManiculePreview
 @Composable
-private fun ContributionGridPreviewMulti() {
+private fun ReadingCalendarGridPreviewMulti() {
     ManiculeTheme {
-        ContributionGrid(
-            days = ContributionPreviewParameterProvider().values.first(),
+        ReadingCalendarGrid(
+            days = ReadingCalendarPreviewParameterProvider().values.first(),
             modifier = Modifier.height(100.dp),
         )
     }
