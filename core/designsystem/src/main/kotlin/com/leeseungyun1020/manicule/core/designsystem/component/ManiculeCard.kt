@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -18,8 +17,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeBorder
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.maniculeColors
 
 @Composable
 fun ManiculeCard(
@@ -28,10 +29,10 @@ fun ManiculeCard(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.large,
         colors =
             CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             ),
         content = content,
     )
@@ -40,19 +41,22 @@ fun ManiculeCard(
 @Composable
 fun ManiculeDashedCard(
     modifier: Modifier = Modifier,
-    borderColor: Color = MaterialTheme.colorScheme.outlineVariant,
+    borderColor: Color = MaterialTheme.maniculeColors.dashedBorder,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
-        modifier = modifier
-            .drawBehind {
-                val dash = PathEffect.dashPathEffect(floatArrayOf(20f, 20f), 0f)
-                drawRoundRect(
-                    color = borderColor,
-                    style = Stroke(width = 2.dp.toPx(), pathEffect = dash),
-                    cornerRadius = CornerRadius(16.dp.toPx()),
-                )
-            }.background(Color.Transparent, RoundedCornerShape(16.dp)),
+        modifier =
+            modifier
+                .drawBehind {
+                    val dashOn = ManiculeBorder.dashOn.toPx()
+                    val dashOff = ManiculeBorder.dashOff.toPx()
+                    val dash = PathEffect.dashPathEffect(floatArrayOf(dashOn, dashOff), 0f)
+                    drawRoundRect(
+                        color = borderColor,
+                        style = Stroke(width = ManiculeBorder.dashed.toPx(), pathEffect = dash),
+                        cornerRadius = CornerRadius(16.dp.toPx()),
+                    )
+                }.background(Color.Transparent, MaterialTheme.shapes.large),
         content = content,
     )
 }

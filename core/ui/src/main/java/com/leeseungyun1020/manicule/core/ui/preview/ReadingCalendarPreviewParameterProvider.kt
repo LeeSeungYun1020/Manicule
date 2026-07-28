@@ -8,7 +8,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.todayIn
 
-class ContributionPreviewParameterProvider : PreviewParameterProvider<List<ContributionDay>> {
+class ReadingCalendarPreviewParameterProvider : PreviewParameterProvider<List<ContributionDay>> {
     override val values: Sequence<List<ContributionDay>>
         get() {
             val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
