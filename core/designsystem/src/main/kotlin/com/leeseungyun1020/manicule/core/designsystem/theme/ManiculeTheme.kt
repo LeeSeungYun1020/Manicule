@@ -23,9 +23,13 @@ fun ManiculeTheme(
     content: @Composable () -> Unit,
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val extendedColors = if (darkTheme) DarkExtendedColors else LightExtendedColors
     val grassColors = if (darkTheme) GrassDark else GrassLight
 
-    CompositionLocalProvider(LocalGrassColors provides grassColors) {
+    CompositionLocalProvider(
+        LocalManiculeColors provides extendedColors,
+        LocalGrassColors provides grassColors,
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = ManiculeTypography,
