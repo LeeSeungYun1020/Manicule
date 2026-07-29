@@ -21,6 +21,7 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeBorder
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.maniculeColors
+import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
 @Composable
 fun ManiculeCard(
@@ -54,7 +55,7 @@ fun ManiculeDashedCard(
                     drawRoundRect(
                         color = borderColor,
                         style = Stroke(width = ManiculeBorder.dashed.toPx(), pathEffect = dash),
-                        cornerRadius = CornerRadius(16.dp.toPx()),
+                        cornerRadius = CornerRadius(MaterialTheme.spacing.lg.toPx()),
                     )
                 }.background(Color.Transparent, MaterialTheme.shapes.large),
         content = content,

@@ -15,9 +15,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
 @Composable
 fun BookListItem(
@@ -33,24 +33,25 @@ fun BookListItem(
             modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface)
-                .padding(16.dp),
+                .padding(MaterialTheme.spacing.lg),
     ) {
         BookCover(
             imageUrl = imageUrl,
-            modifier = Modifier.size(64.dp, 92.dp),
+            modifier = Modifier.size(BookCoverSize.Small.width, BookCoverSize.Small.height),
             contentDescription = title,
+            showBorder = true,
         )
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(MaterialTheme.spacing.lg))
         Column(
             modifier =
                 Modifier
-                    .height(92.dp)
+                    .height(BookCoverSize.Small.height)
                     .weight(1f),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,

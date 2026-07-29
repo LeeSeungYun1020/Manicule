@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.border
+import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
 /**
  * Manicule 전용 Segmented Button.
@@ -50,10 +51,10 @@ fun <T> ManiculeSegmentedButton(
             modifier
                 .fillMaxWidth()
                 .border(
-                    width = 2.dp,
+                    width = MaterialTheme.border.ring,
                     color = MaterialTheme.colorScheme.onBackground,
-                    shape = RoundedCornerShape(12.dp),
-                ).clip(RoundedCornerShape(12.dp))
+                    shape = MaterialTheme.shapes.medium,
+                ).clip(MaterialTheme.shapes.medium)
                 .selectableGroup(),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -69,7 +70,7 @@ fun <T> ManiculeSegmentedButton(
                             selected = isSelected,
                             onClick = { onOptionSelected(option) },
                             role = Role.RadioButton,
-                        ).padding(vertical = 9.dp),
+                        ).padding(vertical = MaterialTheme.spacing.sm),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

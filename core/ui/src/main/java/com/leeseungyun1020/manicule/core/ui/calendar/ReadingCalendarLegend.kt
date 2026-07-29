@@ -1,4 +1,4 @@
-package com.leeseungyun1020.manicule.core.ui.contribution
+package com.leeseungyun1020.manicule.core.ui.calendar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

@@ -14,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.ui.R
 
 @Composable
@@ -34,7 +35,7 @@ fun BookProgressBar(
             progress = { progress },
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.xs))
         Text(
             text = stringResource(id = R.string.book_progress_text, currentPage, totalPages),
             style = MaterialTheme.typography.labelSmall,

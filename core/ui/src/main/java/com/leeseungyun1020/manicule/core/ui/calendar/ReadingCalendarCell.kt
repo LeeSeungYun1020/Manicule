@@ -1,4 +1,4 @@
-package com.leeseungyun1020.manicule.core.ui.contribution
+package com.leeseungyun1020.manicule.core.ui.calendar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +21,7 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.maniculeColors
 import com.leeseungyun1020.manicule.core.designsystem.theme.size
+import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
 @Composable
 fun ReadingCalendarCell(
@@ -59,7 +60,7 @@ fun ReadingCalendarCell(
                             color = todayRingColor,
                             topLeft = Offset(-expand, -expand),
                             size = Size(size.width + expand * 2, size.height + expand * 2),
-                            cornerRadius = CornerRadius(4.dp.toPx() + expand),
+                            cornerRadius = CornerRadius(MaterialTheme.spacing.xs.toPx() + expand),
                             style = Stroke(width = ManiculeBorder.ring.toPx()),
                         )
                     }
