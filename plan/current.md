@@ -14,7 +14,21 @@
 | 5 | App Assembly | ⏳ |
 | 6 | Verification | ⏳ |
 
-## ⏳ 진행 중인 작업 — 3단계 Vertical Slices
+## ⏳ 진행 중인 작업 — 공통 컴포넌트(디자인시스템) 개선
+
+### 진행 현황
+- `ManiculeButton`, `ManiculeTextButton`, `ManiculeOutlinedButton`: Stadium 형태 및 크기/아이콘 위치 개선 ✅
+- `ManiculeIconButton`: 공통 아이콘 버튼 추가 ✅
+- `ManiculeCard`, `ManiculeDashedCard`: 외곽선 및 점선 카드 추가 ✅
+- `ManiculeEmptyState`: DashedCard 적용 ✅
+- `ManiculeDialog`: 커스텀 Dialog 형태로 개편 및 아이콘 추가 적용 ✅
+- `ManiculeBottomSheet`: ModalBottomSheet 형태의 공통 바텀시트 추가 ✅
+- `ManiculeSegmentedButton`: Segmented 버튼 컴포넌트 추가 ✅
+- 디자인 시스템 토큰(색상/확장색상/치수) 도입 및 기반 정비 ✅
+- `core:designsystem` 공통 컴포넌트(`ManiculeTopAppBar`, `ManiculeEmptyState`, `ManiculeDialog` 등) 토큰 적용 완료 ✅
+- `ReadingCalendar` (기존 Contribution) 리네임 및 신규 디자인 토큰 적용 ✅
+
+## ⏳ 대기 중인 작업 — 3단계 Vertical Slices
 
 ### 다음 세션에서 진행할 내용 (Slice 1 - feature:search)
 - DAO/Repository 계층 보강: NLK API PagingSource 구현 및 검색 쿼리 추가 ✅

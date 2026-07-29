@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
 /**
  * 데이터가 비어있을 때 표시하는 공통 빈 상태 컴포넌트.
@@ -39,23 +40,25 @@ fun ManiculeEmptyState(
         modifier = modifier.fillMaxWidth(),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 20.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = MaterialTheme.spacing.lg, vertical = MaterialTheme.spacing.xl),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
             if (icon != null) {
                 icon()
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.sm))
             }
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
             )
             if (description != null) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.sm))
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
@@ -64,7 +67,7 @@ fun ManiculeEmptyState(
                 )
             }
             if (actionLabel != null && onActionClick != null) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.md))
                 ManiculeButton(onClick = onActionClick, text = actionLabel)
             }
         }
