@@ -27,6 +27,7 @@
 - 디자인 시스템 토큰(색상/확장색상/치수) 도입 및 기반 정비 ✅
 - `core:designsystem` 공통 컴포넌트(`ManiculeTopAppBar`, `ManiculeEmptyState`, `ManiculeDialog` 등) 토큰 적용 완료 ✅
 - `ReadingCalendar` (기존 Contribution) 리네임 및 신규 디자인 토큰 적용 ✅
+- `core:ui` 공통 컴포넌트(`BookCover`, `BookListItem`, `BookProgressBar`) 토큰 적용 완료 ✅
 
 ## ⏳ 대기 중인 작업 — 3단계 Vertical Slices
 
