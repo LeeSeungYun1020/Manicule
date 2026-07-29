@@ -1,5 +1,6 @@
 package com.leeseungyun1020.manicule.core.ui.book
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -10,26 +11,44 @@ import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.maniculeColors
 import com.leeseungyun1020.manicule.core.ui.R
+
+enum class BookCoverSize(
+    val width: Dp,
+    val height: Dp,
+) {
+    Small(64.dp, 92.dp),
+    Medium(100.dp, 150.dp),
+}
 
 @Composable
 fun BookCover(
     imageUrl: String?,
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
-    placeholder: Painter = ColorPainter(MaterialTheme.colorScheme.primaryContainer),
+    showBorder: Boolean = false,
+    placeholder: Painter? = null,
 ) {
+    val actualPlaceholder = placeholder ?: ColorPainter(MaterialTheme.maniculeColors.coverPlaceholder)
+    val finalModifier = if (showBorder) {
+        modifier.border(1.dp, MaterialTheme.maniculeColors.coverBorder)
+    } else {
+        modifier
+    }
+
     AsyncImage(
         model = imageUrl,
         contentDescription = contentDescription,
-        modifier = modifier,
-        placeholder = placeholder,
-        error = placeholder,
-        fallback = placeholder,
+        modifier = finalModifier,
+        placeholder = actualPlaceholder,
+        error = actualPlaceholder,
+        fallback = actualPlaceholder,
         contentScale = ContentScale.Crop,
     )
 }
