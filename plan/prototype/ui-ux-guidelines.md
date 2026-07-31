@@ -28,9 +28,7 @@
 | Side-Effect    | `LaunchedEffect`(suspend 트리거), `DisposableEffect`(리스너 등록/해제), `rememberUpdatedState`(장수명 이펙트 내 최신 콜백). 컴포지션 본문에서 네트워크/DB 호출 금지 |
 | 테스트            | `createComposeRule()` 로 UI 테스트. `onNodeWithText`, `performClick`, `assertIsDisplayed` 패턴                                       |
 
-> 상세: `android docs compose-state`, `android docs compose-side-effects`
-> 또는 [Compose API Guidelines](https://android.googlesource.com/platform/frameworks/support/+/androidx-main/compose/docs/compose-api-guidelines.md)
-> 참조
+상세: `android docs compose-state`, `android docs compose-side-effects` 또는 [Compose API Guidelines](https://android.googlesource.com/platform/frameworks/support/+/androidx-main/compose/docs/compose-api-guidelines.md) 참조
 
 ---
 
@@ -43,14 +41,13 @@
 - **색상 명암비**: 일반 텍스트 4.5:1 이상, 대형 텍스트(24sp+) 및 아이콘 3.0:1 이상 (WCAG AA)
 - **상태별 UI**: 모든 화면에서 로딩 / 에러 / 빈 상태를 처리. 빈 상태는 `ManiculeEmptyState` 활용
 - **내비게이션**: 하단 탭 3\~5개. 시스템 뒤로가기 지원. Type-safe Navigation 사용
-- **햅틱**: 길게 누르기 등 주요 제스처에 `LocalHapticFeedback` 적용
 
 ---
 
 ## 4. Material 3 가이드라인
 
 - **테마 래퍼**: Screen / Preview 최상위에서 반드시 `ManiculeTheme`으로 래핑. `ManiculeTheme`이 `MaterialTheme` + `LocalGrassColors` 등 프로젝트 CompositionLocal을 제공
-- **토큰 접근**: 컴포넌트 내부에서 `MaterialTheme.colorScheme` / `.typography` / `.shapes` 를 통해 접근. 잔디 색상은 `LocalGrassColors.current`. 하드코딩 색상(`Color(0xFF...)`) 금지
+- **토큰 접근**: 컴포넌트 내부에서 `MaterialTheme.colorScheme` / `.typography` / `.shapes` 및 `MaterialTheme.spacing`/`size`/`border` 토큰을 통해 접근. 달력 레벨 색상은 `MaterialTheme.maniculeColors.calendarLevels` 사용. 하드코딩 색상(`Color(0xFF...)`) 금지
 - **컴포넌트 패턴**: M3 표준 컴포넌트 사용 (`TopAppBar`, `BottomSheet`, `SegmentedButton`, `SearchBar`, `Snackbar`, `Card` 등). 커스텀 구현 전 M3 컴포넌트로 대체 가능한지
   확인
 - **Elevation**: M3는 그림자 대신 Tonal Elevation(surface 색상 위 틴팅)으로 깊이를 표현. `surfaceContainerLow` ~ `surfaceContainerHighest` 단계 활용
@@ -98,17 +95,27 @@
 
 | 위치                  | 컴포넌트                                               | 용도            |
 |---------------------|----------------------------------------------------|---------------|
-| `core:designsystem` | `ManiculeButton` / `OutlinedButton` / `TextButton` | 버튼 3종         |
+| `core:designsystem` | `ManiculeBottomSheet`                              | 공통 바텀시트      |
+|                     | `ManiculeButton`                                   | 버튼 (기본, Outlined, Text) |
+|                     | `ManiculeCard`                                     | 공통 카드 (기본, Dashed) |
 |                     | `ManiculeDialog`                                   | 확인/취소 다이얼로그   |
 |                     | `ManiculeEmptyState`                               | 빈 상태 안내       |
 |                     | `ManiculeLoading`                                  | 전체화면 로딩       |
+|                     | `ManiculeSegmentedButton`                          | 세그먼트 버튼      |
 |                     | `ManiculeTextField`                                | 텍스트 입력        |
 |                     | `ManiculeTopAppBar`                                | 상단 앱바         |
-|                     | `ManiculeIcons`                                    | 아이콘 중앙 관리     |
-| `core:ui`           | `BookCover`                                        | 표지 이미지 (Coil) |
+|                     | `ManiculeSearchBar` (추가 예정)                       | 공통 검색 바       |
+|                     | `ManiculeSectionHeader` (추가 예정)                   | 섹션 헤더         |
+|                     | `ManiculeSnackbarHost` (추가 예정)                    | 스낵바 호스트 및 Undo 지원 |
+|                     | `ManiculeChip` (추가 예정)                            | 칩 (최근 검색어 등) |
+|                     | `ManiculeTabRow` (추가 예정)                          | 공통 탭 행        |
+|                     | `ManiculeRatingBar` (추가 예정)                       | 별점 입력 컴포넌트   |
+|                     | `ManiculeExpandableText` (추가 예정)                  | 확장 텍스트 (더보기)  |
+|                     | `ManiculeStatTile` (추가 예정)                        | 통계 수치 표시 타일  |
+| `core:ui`           | `BookCover` / `BookCoverOverlay` (예정)               | 표지 및 오버레이    |
 |                     | `BookListItem`                                     | 컴팩트 책 리스트 아이템 |
 |                     | `BookProgressBar`                                  | 독서 진행률 바      |
-|                     | `ContributionCell` / `Grid`                        | 독서 달력 잔디      |
+|                     | `ReadingCalendarGrid` / `Cell` / `Legend`          | 독서 달력 및 범례    |
 
 ### 활용 규칙
 
@@ -121,20 +128,28 @@
 
 ---
 
-## 8. 체크리스트
+## 8. 구현 검수 체크리스트 (완료 보고 전 필수 확인)
 
-UI 구현 완료 시 아래 항목을 확인한다.
+AI는 UI 구현을 마치고 사용자에게 보고하기 전, 반드시 아래 카테고리별 항목들을 스스로 점검해야 한다.
 
-- [ ] [prototype.html](prototype.html) 해당 섹션/변형 확인 완료
-- [ ] 프로토타입과 가이드라인 충돌 여부 점검, 충돌 시 사용자 재검토 완료
-- [ ] 기존 공통 컴포넌트 활용 가능 여부 확인
-- [ ] 터치 타겟 48 × 48 dp 이상
-- [ ] `ManiculeTheme` 래핑 확인 (Screen / Preview 최상위)
-- [ ] `MaterialTheme` 토큰으로 접근 (하드코딩 색상 없음, 잔디는 `LocalGrassColors`)
-- [ ] 로딩 / 에러 / 빈 상태 처리
-- [ ] `LazyColumn` items에 `key`, `contentType` 지정
-- [ ] `contentDescription` 제공 (인터랙티브/의미 있는 이미지)
-- [ ] Light/Dark 모드 Preview 확인
-- [ ] 다중 상태 Preview 작성 완료
-- [ ] 사용자 노출 문자열 `stringResource` 사용
-- [ ] Edge-to-Edge 인셋 처리 (`statusBarsPadding`, `navigationBarsPadding`, `imePadding`)
+### 8.1. 기획 및 아키텍처 준수
+- [ ] **프로토타입 확인**: `prototype.html`의 해당 화면 섹션/변형을 누락 없이 반영했는가?
+- [ ] **가이드라인 우선**: 프로토타입 디자인과 가이드라인(명암비, 토큰 등) 충돌 시 가이드라인을 우선 적용했는가?
+- [ ] **도메인 분리 원칙**: `core:designsystem`(도메인 무관)과 `core:ui`(도메인 종속) 컴포넌트 배치 기준을 엄수했는가?
+- [ ] **재사용 우선**: 커스텀 UI 구현 전, 기존 공통 컴포넌트나 M3 표준 컴포넌트로 대체할 수 없는지 먼저 확인했는가?
+
+### 8.2. UI/UX 및 접근성 (A11y)
+- [ ] **터치 타겟**: 클릭 가능한 모든 요소가 최소 `48x48dp` 크기를 보장하는가?
+- [ ] **상태(State) 대응**: 정상 상태뿐만 아니라 로딩, 에러, 빈 상태(`ManiculeEmptyState`)가 모두 구현되었는가?
+- [ ] **접근성 제공**: 의미 있는 인터랙티브 요소에 `contentDescription`이 제공되었는가? (순수 장식만 `null`)
+- [ ] **Edge-to-Edge**: 화면 상하단 인셋(`statusBarsPadding`, `navigationBarsPadding`, `imePadding`)이 겹치지 않게 처리되었는가?
+
+### 8.3. Compose 기술 및 성능 규칙
+- [ ] **하드코딩 완벽 통제 (색상/치수)**: 
+    - **색상**: `MaterialTheme.colorScheme` 및 확장 색상 토큰 사용 (ARGB 리터럴 금지)
+    - **치수**: 간격/크기/테두리 등 모든 dp 값은 `Dimension.kt`에 정의된 `MaterialTheme.spacing`, `.size`, `.border` 확장 변수를 사용 (`16.dp` 같은 리터럴 직접 사용 금지)
+- [ ] **상태 관리 (State)**: State Hoisting 원칙을 지키고, ViewModel 상태 수집 시 반드시 `collectAsStateWithLifecycle()`을 사용했는가?
+- [ ] **문자열 리소스**: 하드코딩된 한글/영문 텍스트 없이 모두 `stringResource`로 추출되었는가?
+- [ ] **리스트 최적화**: `LazyColumn/Row` 사용 시 항목 성능을 위해 `key`와 `contentType`을 명시했는가?
+- [ ] **네트워크 이미지**: Coil `AsyncImage` 사용 시 네트워크 지연/실패에 대비한 `placeholder`와 `error` 처리가 구현되었는가?
+- [ ] **Preview 완결성**: Light/Dark 모드 및 다중 상태 Preview로 작성되었고, 최상위가 `ManiculeTheme`으로 래핑되었는가?

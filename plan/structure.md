@@ -324,7 +324,6 @@ core/designsystem/
     │   ├── ManiculeSegmentedButton.kt          # 테두리 있는 둥근 탭 UI (테마, 통계기간 등 공통)
     │   ├── ManiculeLoading.kt
     │   ├── ManiculeSearchBar.kt                # 공통 검색 바
-    │   ├── ManiculeListItem.kt                 # 공통 리스트 아이템
     │   ├── ManiculeSectionHeader.kt            # 섹션 헤더
     │   ├── ManiculeSnackbarHost.kt             # 스낵바 호스트 및 Undo 지원
     │   ├── ManiculeChip.kt                     # 최근 검색어 등 칩
