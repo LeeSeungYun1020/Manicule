@@ -17,7 +17,6 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeBorder
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
-import com.leeseungyun1020.manicule.core.designsystem.theme.maniculeColors
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.ui.R
 
@@ -37,9 +36,9 @@ fun BookCover(
     showBorder: Boolean = false,
     placeholder: Painter? = null,
 ) {
-    val actualPlaceholder = placeholder ?: ColorPainter(MaterialTheme.maniculeColors.coverPlaceholder)
+    val actualPlaceholder = placeholder ?: ColorPainter(MaterialTheme.colorScheme.surfaceVariant)
     val finalModifier = if (showBorder) {
-        modifier.border(ManiculeBorder.cover, MaterialTheme.maniculeColors.coverBorder)
+        modifier.border(ManiculeBorder.cover, MaterialTheme.colorScheme.outlineVariant)
     } else {
         modifier
     }
