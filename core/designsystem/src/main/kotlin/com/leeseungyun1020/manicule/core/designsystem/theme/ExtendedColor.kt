@@ -7,7 +7,6 @@ import androidx.compose.ui.graphics.Color
 @Immutable
 data class ManiculeExtendedColors(
     val calendarLevels: List<Color>,
-    val calendarTodayRing: Color,
     val calendarPlaceholder: Color,
     val chartBar: Color,
     val chartLine: Color,
@@ -32,7 +31,6 @@ internal val LightExtendedColors =
             ManiculePalette.Brown48,
             ManiculePalette.Brown30,
         ),
-        calendarTodayRing = ManiculePalette.Brown40,
         calendarPlaceholder = Color.Transparent,
         chartBar = ManiculePalette.Brown40,
         chartLine = ManiculePalette.Blue24,
@@ -57,7 +55,6 @@ internal val DarkExtendedColors =
             ManiculePalette.Brown64,
             ManiculePalette.Brown82,
         ),
-        calendarTodayRing = ManiculePalette.Brown80,
         calendarPlaceholder = Color.Transparent,
         chartBar = ManiculePalette.Brown80,
         chartLine = ManiculePalette.Blue60,
