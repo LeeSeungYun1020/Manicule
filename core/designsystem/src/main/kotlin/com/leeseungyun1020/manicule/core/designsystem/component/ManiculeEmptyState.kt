@@ -15,9 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
@@ -78,7 +78,7 @@ fun ManiculeEmptyState(
 @Composable
 private fun ManiculeEmptyStatePreview() {
     ManiculeTheme {
-        Box(Modifier.padding(16.dp)) {
+        Box(Modifier.padding(MaterialTheme.spacing.lg)) {
             ManiculeEmptyState(
                 title = "서재가 비어 있어요",
                 description = "책을 검색하거나 스캔해 보세요",
@@ -89,7 +89,7 @@ private fun ManiculeEmptyStatePreview() {
                         imageVector = ManiculeIcons.Tab.LibraryFilled,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(48.dp),
+                        modifier = Modifier.size(ManiculeSize.iconEmptyState),
                     )
                 },
             )

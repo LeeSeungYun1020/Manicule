@@ -23,8 +23,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.border
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
@@ -89,8 +89,8 @@ fun <T> ManiculeSegmentedButton(
 private fun ManiculeSegmentedButtonPreview() {
     ManiculeTheme {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(ManiculeSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(ManiculeSpacing.lg),
         ) {
             var selectedOption1 by remember { mutableStateOf("읽는 중") }
             ManiculeSegmentedButton(

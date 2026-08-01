@@ -16,10 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
@@ -129,7 +129,7 @@ private fun ManiculeIconDialogPreview() {
                     Icon(
                         imageVector = ManiculeIcons.Star,
                         contentDescription = null,
-                        modifier = Modifier.padding(bottom = 8.dp),
+                        modifier = Modifier.padding(bottom = ManiculeSpacing.sm),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 },

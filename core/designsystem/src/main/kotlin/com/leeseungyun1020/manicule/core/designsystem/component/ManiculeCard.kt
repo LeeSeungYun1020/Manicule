@@ -16,9 +16,9 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeBorder
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.maniculeColors
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
@@ -67,19 +67,19 @@ fun ManiculeDashedCard(
 private fun ManiculeCardPreview() {
     ManiculeTheme {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(ManiculeSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(ManiculeSpacing.lg),
         ) {
             ManiculeCard {
                 Text(
                     text = "일반 카드",
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(ManiculeSpacing.lg),
                 )
             }
             ManiculeDashedCard {
                 Text(
                     text = "점선 카드",
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(ManiculeSpacing.lg),
                 )
             }
         }

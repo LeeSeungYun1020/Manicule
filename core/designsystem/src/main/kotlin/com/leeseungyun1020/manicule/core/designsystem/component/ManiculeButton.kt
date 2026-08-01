@@ -17,9 +17,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
@@ -101,8 +101,8 @@ fun ManiculeIconButton(
 private fun ManiculeButtonPreview() {
     ManiculeTheme {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(ManiculeSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(ManiculeSpacing.lg),
         ) {
             ManiculeButton(
                 onClick = {},

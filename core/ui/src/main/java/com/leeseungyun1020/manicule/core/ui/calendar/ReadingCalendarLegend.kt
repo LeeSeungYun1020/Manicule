@@ -13,9 +13,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.maniculeColors
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
@@ -60,7 +60,7 @@ fun ReadingCalendarLegend(
 @Composable
 private fun ReadingCalendarLegendPreview() {
     ManiculeTheme {
-        Box(modifier = Modifier.padding(16.dp)) {
+        Box(modifier = Modifier.padding(ManiculeSpacing.lg)) {
             ReadingCalendarLegend()
         }
     }
