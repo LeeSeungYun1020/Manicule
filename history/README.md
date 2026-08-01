@@ -46,3 +46,5 @@
 - [7c6d080](7c6d080.md) — BookProgressBar에서 불필요하게 명시된 LinearProgressIndicator 기본 색상 설정 제거
 - [59ef423](59ef423.md) — ktlint multiline-expression-wrapping 규칙 비활성화
 - [0632a7f](0632a7f.md) — refactor: ui 공통 컴포넌트 토큰화 적용 및 calendar 패키지 리네임
+- [5aed759](5aed759.md) — refactor: BookCover 신국판 비율(1.48) 적용
+
