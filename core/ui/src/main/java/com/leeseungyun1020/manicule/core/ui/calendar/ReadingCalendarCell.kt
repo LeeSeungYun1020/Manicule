@@ -14,10 +14,11 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeBorder
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.maniculeColors
 import com.leeseungyun1020.manicule.core.designsystem.theme.size
@@ -28,6 +29,7 @@ fun ReadingCalendarCell(
     intensity: Int?,
     modifier: Modifier = Modifier,
     isToday: Boolean = false,
+    contentDescription: String? = null,
     onClick: (() -> Unit)? = null,
 ) {
     val backgroundColor =
@@ -36,6 +38,15 @@ fun ReadingCalendarCell(
         } else {
             val safeIntensity = intensity.coerceIn(0, 4)
             MaterialTheme.maniculeColors.calendarLevels[safeIntensity]
+        }
+
+    val semanticsModifier =
+        if (contentDescription != null) {
+            Modifier.semantics {
+                this.contentDescription = contentDescription
+            }
+        } else {
+            Modifier
         }
 
     val clickableModifier =
@@ -67,7 +78,8 @@ fun ReadingCalendarCell(
                 }
                 .clip(MaterialTheme.shapes.extraSmall)
                 .background(backgroundColor)
-                .then(clickableModifier),
+                .then(clickableModifier)
+                .then(semanticsModifier),
     )
 }
 
