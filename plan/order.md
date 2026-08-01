@@ -59,6 +59,7 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 ### 3단계 — 핵심 피처 버티컬 슬라이싱 (Vertical Slices)
 
 > **Vertical Slicing 적용.** 각 슬라이스를 Data 보강 → Domain UseCase → UI feature 순으로 한 번에 관통한다.
+> **UI 컴포넌트 버티컬 슬라이싱.** 각 기능 구현 시점에 `structure.md`에 명시된 공통 컴포넌트(`ManiculeSearchBar` 등)를 해당 슬라이스에서 함께 구현한다.
 
 사용자 핵심 흐름(검색 → 등록 → 조회 → 통계) 순서로 진행한다.
 
@@ -72,11 +73,11 @@ Repository 단위 테스트(FakeDao, FakeApi)와 Room in-memory 테스트를 동
 
 #### Slice 1.5 — 코어 모듈 리팩토링 (명칭 변경 및 데이터 모델 수정)
 
-현재 1, 2단계가 기구현 완료되었음을 감안하여, 후속 피처 구현에 앞서 기존 `Contribution` 기반 명칭들을 `ReadingCalendar`로 리팩토링하고 프로토타입 변경에 따른 데이터 모델을 수정.
+현재 1, 2단계 및 디자인 시스템 기반 정비가 완료된 상태. `Contribution` 관련 명칭 변경.
 
 - `core:model`, `core:database`: `ReadingRecord`의 `cumulativePage` 필드를 `time`, `startPage`, `endPage`로 변경
 - `core:model`: `ContributionDay` → `ReadingCalendarDay` 등
-- `core:ui`: `ContributionGrid` → `ReadingCalendarGrid`, `ContributionCell` → `ReadingCalendarCell`
+- `core:ui`: `ContributionGrid` → `ReadingCalendarGrid` 등 UI 명칭 변경 및 신규 토큰 적용
 - `core:domain`: `GetContributionUseCase` → `GetReadingCalendarUseCase`
 
 #### Slice 2 — `feature:bookdetail`

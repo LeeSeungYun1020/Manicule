@@ -17,25 +17,15 @@
 ## ⏳ 진행 중인 작업 — 공통 컴포넌트(디자인시스템) 개선
 
 ### 진행 현황
-- `ManiculeButton`, `ManiculeTextButton`, `ManiculeOutlinedButton`: Stadium 형태 및 크기/아이콘 위치 개선 ✅
-- `ManiculeIconButton`: 공통 아이콘 버튼 추가 ✅
-- `ManiculeCard`, `ManiculeDashedCard`: 외곽선 및 점선 카드 추가 ✅
-- `ManiculeEmptyState`: DashedCard 적용 ✅
-- `ManiculeDialog`: 커스텀 Dialog 형태로 개편 및 아이콘 추가 적용 ✅
-- `ManiculeBottomSheet`: ModalBottomSheet 형태의 공통 바텀시트 추가 ✅
-- `ManiculeSegmentedButton`: Segmented 버튼 컴포넌트 추가 ✅
-- 디자인 시스템 토큰(색상/확장색상/치수) 도입 및 기반 정비 ✅
-- `core:designsystem` 공통 컴포넌트(`ManiculeTopAppBar`, `ManiculeEmptyState`, `ManiculeDialog` 등) 토큰 적용 완료 ✅
+- 기반 정비 완료: 디자인 시스템 토큰(색상/치수) 도입 및 버튼, 카드, 바텀시트 등 공통 컴포넌트 일괄 개선 적용 ✅
 - `ReadingCalendar` (기존 Contribution) 리네임 및 신규 디자인 토큰 적용 ✅
-- `core:ui` 공통 컴포넌트(`BookCover`, `BookListItem`, `BookProgressBar`) 토큰 적용 완료 ✅
 
 ## ⏳ 대기 중인 작업 — 3단계 Vertical Slices
 
-### 다음 세션에서 진행할 내용 (Slice 1 - feature:search)
-- DAO/Repository 계층 보강: NLK API PagingSource 구현 및 검색 쿼리 추가 ✅
-- Domain 계층 구현: SearchBooksUseCase Flow<PagingData> 로직 등 ✅
-- Data/Domain 계층 보강: GetRecentQueriesUseCase, SaveRecentQueryUseCase, DeleteRecentQueryUseCase 구현 (최근 검색어 및 Undo 기능 용도) ⏳ 다음
-- UI 계층 구현: SearchScreen, ViewModel, UiState 작성 (무한 스크롤, 디바운스, 입력 중 최근 검색어 로컬 필터 노출, 최근 검색어 없음 안내 카드, 최근 검색어 개별 삭제 스낵바 Undo, 총 검색 건수 표시, 검색 결과 없음 UI 및 스캔 화면 이동 연동 등) ⏳ 다음
+### 다음 세션에서 진행할 내용 (Slice 1 - feature:search UI 및 연계 컴포넌트)
+- Data/Domain 계층 보강: 최근 검색어 CRUD UseCase 및 Repository 구현 (Undo 기능 용도) ⏳ 다음
+- 공통 컴포넌트 구현: `ManiculeSearchBar`, `ManiculeSnackbarHost`, `ManiculeChip` 등 `structure.md`에 명시된 검색 화면용 기반 컴포넌트 신규 작성 ⏳ 다음
+- UI 계층 구현: SearchScreen, ViewModel 구현 (무한 스크롤, 디바운스, 입력 중 로컬 필터 노출, 빈 상태 안내 카드, 스낵바 Undo 연동 등) ⏳ 다음
 
 ## 운영
 
