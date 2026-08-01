@@ -316,6 +316,7 @@ core/designsystem/
     │   └── ManiculeTheme.kt                # MaterialTheme 래퍼, 다크/라이트
     ├── component/
     │   ├── ManiculeButton.kt
+    │   ├── ManiculeCard.kt                     # 공통 카드 (기본, Dashed)
     │   ├── ManiculeTextField.kt
     │   ├── ManiculeDialog.kt                   # 공통 다이얼로그 (이름·메시지·확인/취소)
     │   ├── ManiculeTopAppBar.kt
@@ -353,7 +354,8 @@ core/ui/
     │   ├── ReadingCalendarGrid.kt          # 독서 달력 공통 그리드
     │   └── ReadingCalendarLegend.kt        # 달력 색상 범례
     └── preview/                             # @Preview 용 Sample 데이터
-        └── BookPreviewParameterProvider.kt
+        ├── BookPreviewParameterProvider.kt
+        └── ReadingCalendarPreviewParameterProvider.kt
 ```
 
 ### 4.3 `core:common`

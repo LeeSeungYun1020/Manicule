@@ -98,7 +98,7 @@
 | 위치                  | 컴포넌트                                               | 용도            |
 |---------------------|----------------------------------------------------|---------------|
 | `core:designsystem` | `ManiculeBottomSheet`                              | 공통 바텀시트      |
-|                     | `ManiculeButton`                                   | 버튼 (기본, Outlined, Text) |
+|                     | `ManiculeButton` / `ManiculeIconButton`            | 버튼 (기본, Outlined, Text, Icon) |
 |                     | `ManiculeCard`                                     | 공통 카드 (기본, Dashed) |
 |                     | `ManiculeDialog`                                   | 확인/취소 다이얼로그   |
 |                     | `ManiculeEmptyState`                               | 빈 상태 안내       |
