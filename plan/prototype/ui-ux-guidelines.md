@@ -65,6 +65,8 @@
 - **RTL 지원**: `padding(start, end)` 사용 (left/right 금지). 방향성 아이콘은 `Icons.AutoMirrored` 사용
 - **LazyColumn 성능**: `items(key = { ... }, contentType = { ... })` 필수 지정
 - **이미지**: Coil `AsyncImage` + `crossfade(true)` + placeholder/error fallback. `BookCover` 래퍼 활용
+- **이미지 위 텍스트 시인성**: 책 표지 등 이미지 위에 텍스트를 겹쳐 렌더링할 경우, 이미지가 흰색이더라도 글씨가 명확히 보이도록 텍스트 배경에 반드시 반투명 딤(Dim) 처리나 그라디언트 오버레이를 적용한다.
+- **상태 전용 색상 남용 금지**: 특정 상태(읽는 중, 완료 등)나 옵션, 메뉴 등을 구분하기 위해 임의의 커스텀 색상(예: 초록색, 파란색 등)을 부여하지 않는다. 상태 구분은 아이콘이나 텍스트 정보로만 표현한다.
 - **Edge-to-Edge**: `enableEdgeToEdge()` 적용. `statusBarsPadding()`, `navigationBarsPadding()`, `imePadding()` 으로 인셋 처리
 - **접근성**: 인터랙티브 요소에 `contentDescription` 제공. 순수 장식 이미지는 `null`. 카드 내 텍스트 그룹은 `semantics(mergeDescendants = true)`
 
