@@ -54,6 +54,11 @@ object ManiculeSize {
 
     val dividerThickness: Dp = 1.dp
     val bottomSheetHandleWidth: Dp = 32.dp
+
+    val coverSmallWidth: Dp = 62.dp
+    val coverSmallHeight: Dp = 92.dp
+    val coverMediumWidth: Dp = 100.dp
+    val coverMediumHeight: Dp = 148.dp
 }
 
 object ManiculeBorder {

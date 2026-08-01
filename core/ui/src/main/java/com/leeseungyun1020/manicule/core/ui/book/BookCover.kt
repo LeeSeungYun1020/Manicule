@@ -12,19 +12,21 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeBorder
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.maniculeColors
+import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.ui.R
 
 enum class BookCoverSize(
     val width: Dp,
     val height: Dp,
 ) {
-    Small(64.dp, 92.dp),
-    Medium(100.dp, 150.dp),
+    Small(ManiculeSize.coverSmallWidth, ManiculeSize.coverSmallHeight),
+    Medium(ManiculeSize.coverMediumWidth, ManiculeSize.coverMediumHeight),
 }
 
 @Composable
@@ -37,7 +39,7 @@ fun BookCover(
 ) {
     val actualPlaceholder = placeholder ?: ColorPainter(MaterialTheme.maniculeColors.coverPlaceholder)
     val finalModifier = if (showBorder) {
-        modifier.border(1.dp, MaterialTheme.maniculeColors.coverBorder)
+        modifier.border(ManiculeBorder.cover, MaterialTheme.maniculeColors.coverBorder)
     } else {
         modifier
     }
@@ -57,10 +59,10 @@ fun BookCover(
 @Composable
 private fun BookCoverPlaceholderPreview() {
     ManiculeTheme {
-        Box(modifier = Modifier.padding(16.dp)) {
+        Box(modifier = Modifier.padding(MaterialTheme.spacing.lg)) {
             BookCover(
                 imageUrl = null,
-                modifier = Modifier.size(100.dp, 150.dp),
+                modifier = Modifier.size(BookCoverSize.Medium.width, BookCoverSize.Medium.height),
             )
         }
     }
@@ -70,12 +72,13 @@ private fun BookCoverPlaceholderPreview() {
 @Composable
 private fun BookCoverImagePreview() {
     ManiculeTheme {
-        Box(modifier = Modifier.padding(16.dp)) {
+        Box(modifier = Modifier.padding(MaterialTheme.spacing.lg)) {
             BookCover(
                 imageUrl = "https://nl.go.kr/seoji/fu/ecip/dbfiles/CIP_FILES_TBL/2025/02/9791161759692.jpg",
-                modifier = Modifier.size(100.dp, 150.dp),
+                modifier = Modifier.size(BookCoverSize.Medium.width, BookCoverSize.Medium.height),
                 placeholder = painterResource(id = R.drawable.sample_book_cover),
             )
         }
     }
 }
+
