@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
@@ -23,7 +24,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.border
@@ -64,6 +67,7 @@ fun <T> ManiculeSegmentedButton(
                 modifier =
                     Modifier
                         .weight(1f)
+                        .defaultMinSize(minHeight = ManiculeSize.touchTargetMin)
                         .background(
                             if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
                         ).selectable(
@@ -78,6 +82,8 @@ fun <T> ManiculeSegmentedButton(
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                     color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
