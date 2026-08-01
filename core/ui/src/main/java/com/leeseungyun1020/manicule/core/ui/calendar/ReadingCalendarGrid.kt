@@ -9,11 +9,13 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.size
 import com.leeseungyun1020.manicule.core.model.ContributionDay
+import com.leeseungyun1020.manicule.core.ui.R
 import com.leeseungyun1020.manicule.core.ui.preview.ReadingCalendarPreviewParameterProvider
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
@@ -55,9 +57,19 @@ fun ReadingCalendarGrid(
                 ReadingCalendarCell(intensity = null)
             } else {
                 val day = days[index - paddingCount]
+                val contentDescription =
+                    pluralStringResource(
+                        id = R.plurals.reading_calendar_cell_content_description,
+                        count = day.pages,
+                        day.date.year,
+                        day.date.monthNumber,
+                        day.date.dayOfMonth,
+                        day.pages,
+                    )
                 ReadingCalendarCell(
                     intensity = day.intensity,
                     isToday = day.date == today,
+                    contentDescription = contentDescription,
                     onClick = onDayClick?.let { { it(day) } },
                 )
             }

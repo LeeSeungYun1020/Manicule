@@ -3,4 +3,8 @@
     <string name="book_progress_text">%1$d / %2$d</string>
     <string name="reading_calendar_legend_less">적음</string>
     <string name="reading_calendar_legend_more">많음</string>
+    <plurals name="reading_calendar_cell_content_description">
+        <item quantity="zero">%1$d/%2$02d/%3$02d, 독서 기록 없음</item>
+        <item quantity="other">%1$d/%2$02d/%3$02d, %4$d 페이지</item>
+    </plurals>
 </resources>
