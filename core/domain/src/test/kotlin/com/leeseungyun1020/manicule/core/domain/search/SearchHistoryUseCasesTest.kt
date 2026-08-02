@@ -76,7 +76,7 @@ private class FakeSearchHistoryRepository(
         return flowOf(recentQueries)
     }
 
-    override suspend fun deleteQuery(query: String) {
+    override suspend fun removeQuery(query: String) {
         deletedQueries += query
     }
 

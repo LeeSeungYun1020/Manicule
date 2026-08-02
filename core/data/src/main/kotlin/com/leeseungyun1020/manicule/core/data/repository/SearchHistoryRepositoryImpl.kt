@@ -29,8 +29,8 @@ class SearchHistoryRepositoryImpl
                 list.map { SearchQuery(query = it.query, executedAt = it.lastUsedAt) }
             }
 
-        override suspend fun deleteQuery(query: String) {
-            searchHistoryLocalDataSource.delete(query)
+        override suspend fun removeQuery(query: String) {
+            searchHistoryLocalDataSource.remove(query)
         }
 
         override suspend fun clearHistory() {

@@ -8,7 +8,7 @@ interface SearchHistoryRepository {
 
     fun observeRecentQueries(limit: Int = 10): Flow<List<SearchQuery>>
 
-    suspend fun deleteQuery(query: String)
+    suspend fun removeQuery(query: String)
 
     suspend fun clearHistory()
 }

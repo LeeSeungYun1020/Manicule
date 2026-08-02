@@ -60,12 +60,12 @@ class SearchHistoryRepositoryImplTest {
         }
 
     @Test
-    fun deleteQuery_deletes_only_matching_query() =
+    fun removeQuery_removes_only_matching_query() =
         runTest {
             repository.saveQuery("apple")
             repository.saveQuery("banana")
 
-            repository.deleteQuery("apple")
+            repository.removeQuery("apple")
 
             assertThat(fakeDao.queries.map { it.query }).containsExactly("banana")
         }

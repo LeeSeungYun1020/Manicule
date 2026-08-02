@@ -10,7 +10,7 @@ class DeleteRecentQueryUseCase
     ) {
         suspend operator fun invoke(query: String) {
             if (query.isNotBlank()) {
-                searchHistoryRepository.deleteQuery(query)
+                searchHistoryRepository.removeQuery(query)
             }
         }
     }
