@@ -24,7 +24,7 @@
 ## ⏳ 대기 중인 작업 — 3단계 Vertical Slices
 
 ### 다음 세션에서 진행할 내용 (Slice 1 - feature:search UI 및 연계 컴포넌트)
-- Data/Domain 계층 보강: 최근 검색어 CRUD UseCase 및 Repository 구현 (Undo 기능 용도) ⏳ 다음
+- Data/Domain 계층 보강: 최근 검색어 조회·저장·전체 삭제·개별 삭제 Repository 및 UseCase 구현 ✅
 - 공통 컴포넌트 구현: `ManiculeSearchBar`, `ManiculeSnackbarHost`, `ManiculeChip` 등 `structure.md`에 명시된 검색 화면용 기반 컴포넌트 신규 작성 ⏳ 다음
 - UI 계층 구현: SearchScreen, ViewModel 구현 (무한 스크롤, 디바운스, 입력 중 로컬 필터 노출, 빈 상태 안내 카드, 스낵바 Undo 연동 등) ⏳ 다음
 
