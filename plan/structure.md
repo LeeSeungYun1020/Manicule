@@ -155,7 +155,7 @@ feature/<name>/
     └── components/                         # 해당 화면 전용 컴포저블
 ```
 
-### 3.3 `feature:home`
+### 3.3 `feature:home` (홈, 1a~1c)
 
 ```
 feature/home/
@@ -174,7 +174,7 @@ feature/home/
         └── ReadingSummaryCard.kt           # 독서 요약 카드 (잔디 7일, 연속 기록, 오늘 페이지)
 ```
 
-### 3.4 `feature:search`
+### 3.4 `feature:search` (검색, 2a~3b)
 
 ```
 feature/search/
@@ -194,7 +194,7 @@ feature/search/
         └── EmptySearchResult.kt            # "스캔 화면으로 이동" 버튼 포함
 ```
 
-### 3.5 `feature:scanner`
+### 3.5 `feature:scanner` (바코드 스캔, 4a)
 
 ```
 feature/scanner/
@@ -212,7 +212,7 @@ feature/scanner/
         └── PermissionDeniedState.kt        # 카메라 권한 거부 안내
 ```
 
-### 3.6 `feature:bookdetail`
+### 3.6 `feature:bookdetail` (책 상세, 5a~5f)
 
 ```
 feature/bookdetail/
@@ -240,7 +240,7 @@ feature/bookdetail/
         └── FinishConfirmDialog.kt          # 기록 후 남은 페이지 10%/40쪽 이하 시 "혹시 책을 다 읽으셨나요?" 확인, "네" 시 다 읽음 전환
 ```
 
-### 3.7 `feature:library`
+### 3.7 `feature:library` (서재, 6a~6f)
 
 ```
 feature/library/
@@ -259,7 +259,7 @@ feature/library/
         └── EmptyLibrary.kt                 # 책이 없는 경우 빈 상태 표시 (검색, 스캔 버튼 포함)
 ```
 
-### 3.8 `feature:stats`
+### 3.8 `feature:stats` (통계, 7a~7e)
 
 ```
 feature/stats/
@@ -279,7 +279,7 @@ feature/stats/
         └── SelectedDayRecordsBottomSheet.kt # 4주/1년/직접선택 탭 달력에서 특정 날짜 클릭 시 올라오는 독서 기록 바텀 시트
 ```
 
-### 3.9 `feature:settings`
+### 3.9 `feature:settings` (설정, 8a)
 
 ```
 feature/settings/
@@ -308,18 +308,30 @@ core/designsystem/
 └── src/main/java/com/example/note/core/designsystem/
     ├── theme/
     │   ├── Color.kt                        # Material 3 고정 브랜드 컬러 (라이트/다크)
+    │   ├── ExtendedColor.kt                # 확장 색상 토큰
     │   ├── Type.kt                         # Noto Sans KR (Downloadable Fonts) + 시스템 폰트 fallback
+    │   ├── Dimension.kt                    # 치수 (Spacing, Size, Border)
     │   ├── Shape.kt
+    │   ├── Motion.kt                       # (추후 도입) 애니메이션 시간/에이징 곡선 토큰
     │   └── ManiculeTheme.kt                # MaterialTheme 래퍼, 다크/라이트
     ├── component/
     │   ├── ManiculeButton.kt
+    │   ├── ManiculeCard.kt                     # 공통 카드 (기본, Dashed)
     │   ├── ManiculeTextField.kt
     │   ├── ManiculeDialog.kt                   # 공통 다이얼로그 (이름·메시지·확인/취소)
     │   ├── ManiculeTopAppBar.kt
-    │   ├── ManiculeEmptyContent.kt             # 빈 상태(Empty State) 공통 화면
+    │   ├── ManiculeEmptyState.kt               # 빈 상태(Empty State) 공통 화면
     │   ├── ManiculeBottomSheet.kt              # 공통 바텀시트 레이아웃 (둥근 모서리, 닫기 버튼)
-    │   ├── ManiculeSegmentedControl.kt         # 테두리 있는 둥근 탭 UI (테마, 통계기간 등 공통)
-    │   └── ManiculeLoading.kt
+    │   ├── ManiculeSegmentedButton.kt          # 테두리 있는 둥근 탭 UI (테마, 통계기간 등 공통)
+    │   ├── ManiculeLoading.kt
+    │   ├── ManiculeSearchBar.kt                # 공통 검색 바
+    │   ├── ManiculeSectionHeader.kt            # 섹션 헤더
+    │   ├── ManiculeSnackbarHost.kt             # 스낵바 호스트 및 Undo 지원
+    │   ├── ManiculeChip.kt                     # 최근 검색어 등 칩
+    │   ├── ManiculeTabRow.kt                   # 공통 탭 행
+    │   ├── ManiculeRatingBar.kt                # 별점 컴포넌트
+    │   ├── ManiculeExpandableText.kt           # "더보기" 포함된 확장 텍스트
+    │   └── ManiculeStatTile.kt                 # 통계 및 수치 표시 타일
     ├── icon/
     │   └── ManiculeIcons.kt
     └── res/                                # 색상·문자열 등 디자인 토큰
@@ -334,13 +346,16 @@ core/ui/
 └── src/main/java/com/example/note/core/ui/
     ├── book/
     │   ├── BookCover.kt                    # Coil 3.x AsyncImage 래퍼, 표지 fallback 처리
+    │   ├── BookCoverOverlay.kt             # 스캔 가이드나 상태 등 표지 위에 올라가는 오버레이
     │   ├── BookListItem.kt
     │   └── BookProgressBar.kt              # 132 / 320쪽 표시
     ├── calendar/
     │   ├── ReadingCalendarCell.kt
-    │   └── ReadingCalendarGrid.kt          # 독서 달력 공통 그리드
+    │   ├── ReadingCalendarGrid.kt          # 독서 달력 공통 그리드
+    │   └── ReadingCalendarLegend.kt        # 달력 색상 범례
     └── preview/                             # @Preview 용 Sample 데이터
-        └── BookPreviewParameterProvider.kt
+        ├── BookPreviewParameterProvider.kt
+        └── ReadingCalendarPreviewParameterProvider.kt
 ```
 
 ### 4.3 `core:common`

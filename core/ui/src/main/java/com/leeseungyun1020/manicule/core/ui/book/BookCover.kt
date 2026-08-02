@@ -1,5 +1,6 @@
 package com.leeseungyun1020.manicule.core.ui.book
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -10,50 +11,70 @@ import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import coil3.compose.AsyncImage
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeBorder
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.ui.R
+
+enum class BookCoverSize(
+    val width: Dp,
+    val height: Dp,
+) {
+    Small(ManiculeSize.coverSmallWidth, ManiculeSize.coverSmallHeight),
+    Medium(ManiculeSize.coverMediumWidth, ManiculeSize.coverMediumHeight),
+}
 
 @Composable
 fun BookCover(
     imageUrl: String?,
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
-    placeholder: Painter = ColorPainter(MaterialTheme.colorScheme.primaryContainer),
+    showBorder: Boolean = false,
+    placeholder: Painter? = null,
 ) {
+    val actualPlaceholder = placeholder ?: ColorPainter(MaterialTheme.colorScheme.surfaceVariant)
+    val finalModifier = if (showBorder) {
+        modifier.border(ManiculeBorder.cover, MaterialTheme.colorScheme.outlineVariant)
+    } else {
+        modifier
+    }
+
     AsyncImage(
         model = imageUrl,
         contentDescription = contentDescription,
-        modifier = modifier,
-        placeholder = placeholder,
-        error = placeholder,
-        fallback = placeholder,
+        modifier = finalModifier,
+        placeholder = actualPlaceholder,
+        error = actualPlaceholder,
+        fallback = actualPlaceholder,
         contentScale = ContentScale.Crop,
     )
 }
 
-@Preview(name = "With Placeholder", showBackground = true)
+@ManiculePreview
 @Composable
 private fun BookCoverPlaceholderPreview() {
-    MaterialTheme {
-        Box(modifier = Modifier.padding(16.dp)) {
+    ManiculeTheme {
+        Box(modifier = Modifier.padding(MaterialTheme.spacing.lg)) {
             BookCover(
                 imageUrl = null,
-                modifier = Modifier.size(100.dp, 150.dp),
+                modifier = Modifier.size(BookCoverSize.Medium.width, BookCoverSize.Medium.height),
             )
         }
     }
 }
 
-@Preview(name = "With Image", showBackground = true)
+@ManiculePreview
 @Composable
 private fun BookCoverImagePreview() {
-    MaterialTheme {
-        Box(modifier = Modifier.padding(16.dp)) {
+    ManiculeTheme {
+        Box(modifier = Modifier.padding(MaterialTheme.spacing.lg)) {
             BookCover(
                 imageUrl = "https://nl.go.kr/seoji/fu/ecip/dbfiles/CIP_FILES_TBL/2025/02/9791161759692.jpg",
-                modifier = Modifier.size(100.dp, 150.dp),
+                modifier = Modifier.size(BookCoverSize.Medium.width, BookCoverSize.Medium.height),
                 placeholder = painterResource(id = R.drawable.sample_book_cover),
             )
         }

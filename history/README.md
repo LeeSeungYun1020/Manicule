@@ -44,3 +44,7 @@
 - [6851932](6851932.md) — N+1 최적화를 위한 Room @Relation 도입 및 병렬 처리 로직 제거
 - [1d330c7](1d330c7.md) — 데이터 계층(Repository, DataSource)의 DB 특화 용어를 일반 용어(save, remove)로 추상화
 - [7c6d080](7c6d080.md) — BookProgressBar에서 불필요하게 명시된 LinearProgressIndicator 기본 색상 설정 제거
+- [59ef423](59ef423.md) — ktlint multiline-expression-wrapping 규칙 비활성화
+- [0632a7f](0632a7f.md) — refactor: ui 공통 컴포넌트 토큰화 적용 및 calendar 패키지 리네임
+- [5aed759](5aed759.md) — refactor: BookCover 신국판 비율(1.48) 적용
+

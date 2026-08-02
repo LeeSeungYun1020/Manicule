@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="book_progress_text">%1$d / %2$d</string>
+    <string name="reading_calendar_legend_less">Less</string>
+    <string name="reading_calendar_legend_more">More</string>
+    <plurals name="reading_calendar_cell_content_description">
+        <item quantity="zero">%1$d/%2$02d/%3$02d, No reading record</item>
+        <item quantity="one">%1$d/%2$02d/%3$02d, %4$d page</item>
+        <item quantity="other">%1$d/%2$02d/%3$02d, %4$d pages</item>
+    </plurals>
+</resources>

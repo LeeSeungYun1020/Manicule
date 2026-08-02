@@ -11,8 +11,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.ui.R
 
 @Composable
@@ -33,7 +35,7 @@ fun BookProgressBar(
             progress = { progress },
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.xs))
         Text(
             text = stringResource(id = R.string.book_progress_text, currentPage, totalPages),
             style = MaterialTheme.typography.labelSmall,
@@ -42,14 +44,14 @@ fun BookProgressBar(
     }
 }
 
-@Preview(showBackground = true)
+@ManiculePreview
 @Composable
 private fun BookProgressBarPreview() {
-    MaterialTheme {
+    ManiculeTheme {
         BookProgressBar(
             currentPage = 132,
             totalPages = 320,
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(ManiculeSpacing.lg),
         )
     }
 }
