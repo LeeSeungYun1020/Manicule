@@ -15,6 +15,9 @@ interface RecentQueryDao {
     @Query("SELECT * FROM recent_queries ORDER BY lastUsedAt DESC LIMIT :limit")
     fun observeRecent(limit: Int = 10): Flow<List<RecentQueryEntity>>
 
+    @Query("DELETE FROM recent_queries WHERE `query` = :query")
+    suspend fun delete(query: String)
+
     @Query("DELETE FROM recent_queries")
     suspend fun clear()
 }

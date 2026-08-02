@@ -17,6 +17,8 @@ class ClearRecentQueriesUseCaseTest {
 
             override fun observeRecentQueries(limit: Int): Flow<List<SearchQuery>> = TODO("Not needed")
 
+            override suspend fun deleteQuery(query: String) = error("Not needed")
+
             override suspend fun clearHistory() {
                 clearCalled = true
             }

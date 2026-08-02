@@ -8,5 +8,7 @@ interface SearchHistoryLocalDataSource {
 
     fun observeRecent(limit: Int): Flow<List<RecentQueryEntity>>
 
+    suspend fun delete(query: String)
+
     suspend fun clear()
 }
