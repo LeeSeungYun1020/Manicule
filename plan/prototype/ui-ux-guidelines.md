@@ -14,6 +14,17 @@
     - 터치 타겟 최소 크기
 - 재검토 결과 및 결정 사항은 [history/](../../history/README.md) 에 기록한다.
 
+### 확정된 프로토타입 편차
+
+아래는 이미 재검토가 끝난 항목이다. **프로토타입이 아니라 이 표를 따른다.**
+
+| 화면 | 프로토타입 | 확정 사항 | 근거 |
+|---|---|---|---|
+| 전체 | 앱바 제목 좌측 정렬 | **중앙 정렬**(`CenterAlignedTopAppBar`) + 스크롤 시 접힘 | M3 가이드라인 우선 |
+| 1a 홈 | 우측 상단 원형 아바타 | **구현 제외** | `plan.md` 3.1·§4 에 없는 미기획 요소 |
+| 6a 서재 | 앱바 안에 정렬 상태 텍스트 | 앱바는 **정렬 아이콘만**, 상태 텍스트는 **탭 아래·목록 위** | M3 중앙 정렬 앱바는 title + action 1개 구성 |
+| 1a·7a·8a | 제목이 본문 스크롤 영역 안 | **앱바로 통일** | 화면 간 일관성 |
+
 ---
 
 ## 2. Jetpack Compose 개발 규칙
@@ -46,8 +57,16 @@
 
 ## 4. Material 3 가이드라인
 
-- **테마 래퍼**: Screen / Preview 최상위에서 반드시 `ManiculeTheme`으로 래핑. `ManiculeTheme`이 `MaterialTheme` + `LocalGrassColors` 등 프로젝트 CompositionLocal을 제공
+- **테마 래퍼**: Screen / Preview 최상위에서 반드시 `ManiculeTheme`으로 래핑. `ManiculeTheme`이 `MaterialTheme` + `LocalManiculeColors` 등 프로젝트 CompositionLocal을 제공
 - **토큰 접근**: 컴포넌트 내부에서 `MaterialTheme.colorScheme` / `.typography` / `.shapes` 및 `MaterialTheme.spacing`/`size`/`border` 토큰을 통해 접근. 달력 레벨 색상은 `MaterialTheme.maniculeColors.calendarLevels` 사용. 하드코딩 색상(`Color(0xFF...)`) 금지
+- **확장 색상 추가 기준**: `ManiculeExtendedColors` 에 필드를 추가하려면 **세 조건을 모두** 만족해야 한다. 하나라도 어긋나면 `colorScheme` 표준 역할이나 컴포넌트 내 `private const` 를 쓴다
+    1. `colorScheme` 36개 역할 중 의미가 맞는 것이 없다
+    2. 라이트/다크에서 값이 **다르게** 결정된다 (같으면 상수)
+    3. 2개 이상의 컴포넌트가 공유한다
+    - 예: 표지·카메라 오버레이 딤은 `colorScheme.scrim` + 알파, 차트 막대는 `primary`, 격자선은 `outlineVariant`, 축 레이블은 `onSurfaceVariant` 로 해결된다
+- **상단 앱바**: `ManiculeTopAppBar`(중앙 정렬) + `TopAppBarDefaults.enterAlwaysScrollBehavior()` 로 스크롤 시 접힘/복귀. `Scaffold` 에 `Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)` 연결 필수
+    - **탭이 있는 화면**(책 정보·서재)은 탭을 앱바 *안*에 넣지 않는다. `Scaffold(topBar = { Column { ManiculeTopAppBar(...); ManiculeTabRow(...) } })` 구조로 두면 앱바만 접히고 탭은 상단에 남는다
+    - **앱바를 쓰지 않는 화면**: 검색(2a~3a, 상단이 `ManiculeSearchBar`), 바코드 스캔 카메라 화면(4a, 카메라 위 떠 있는 뒤로가기 버튼). 스캔 실패·권한 거부(4b·4c)는 앱바를 사용한다
 - **컴포넌트 패턴**: M3 표준 컴포넌트 사용 (`TopAppBar`, `BottomSheet`, `SegmentedButton`, `SearchBar`, `Snackbar`, `Card` 등). 커스텀 구현 전 M3 컴포넌트로 대체 가능한지
   확인
 - **Elevation**: M3는 그림자 대신 Tonal Elevation(surface 색상 위 틴팅)으로 깊이를 표현. `surfaceContainerLow` ~ `surfaceContainerHighest` 단계 활용
@@ -93,7 +112,10 @@
 
 ## 7. 공통 컴포넌트 규칙
 
-### 현재 공통 컴포넌트
+### 공통 컴포넌트 목록
+
+전체 목록이다. 각 컴포넌트의 **구현 여부는 코드베이스에서 직접 확인**한다(문서에 구현 상태를 중복 기록하지 않는다).
+파일 위치는 [structure.md](../structure.md) §4.1·§4.2, 착수 순서는 [order.md](../order.md) 참조.
 
 | 위치                  | 컴포넌트                                               | 용도            |
 |---------------------|----------------------------------------------------|---------------|
@@ -102,31 +124,74 @@
 |                     | `ManiculeCard`                                     | 공통 카드 (기본, Dashed) |
 |                     | `ManiculeDialog`                                   | 확인/취소 다이얼로그   |
 |                     | `ManiculeEmptyState`                               | 빈 상태 안내       |
-|                     | `ManiculeLoading`                                  | 전체화면 로딩       |
+|                     | `ManiculeLoading`                                  | 로딩 인디케이터 (크기는 호출부 `modifier` 지정) |
 |                     | `ManiculeSegmentedButton`                          | 세그먼트 버튼      |
 |                     | `ManiculeTextField`                                | 텍스트 입력        |
 |                     | `ManiculeTopAppBar`                                | 상단 앱바         |
-|                     | `ManiculeSearchBar` (추가 예정)                       | 공통 검색 바       |
-|                     | `ManiculeSectionHeader` (추가 예정)                   | 섹션 헤더         |
-|                     | `ManiculeSnackbarHost` (추가 예정)                    | 스낵바 호스트 및 Undo 지원 |
-|                     | `ManiculeChip` (추가 예정)                            | 칩 (최근 검색어 등) |
-|                     | `ManiculeTabRow` (추가 예정)                          | 공통 탭 행        |
-|                     | `ManiculeRatingBar` (추가 예정)                       | 별점 입력 컴포넌트   |
-|                     | `ManiculeExpandableText` (추가 예정)                  | 확장 텍스트 (더보기)  |
-|                     | `ManiculeStatTile` (추가 예정)                        | 통계 수치 표시 타일  |
-| `core:ui`           | `BookCover` / `BookCoverOverlay` (예정)               | 표지 및 오버레이    |
+|                     | `ManiculeSearchBar`                                    | 공통 검색 바       |
+|                     | `ManiculeSectionHeader`                                | 섹션 헤더         |
+|                     | `ManiculeSnackbarHost`                                 | 스낵바 호스트 및 Undo 지원 |
+|                     | `ManiculeTabRow`                                       | 공통 탭 행        |
+|                     | `ManiculeRatingBar`                                    | 별점 입력 컴포넌트   |
+|                     | `ManiculeExpandableText`                               | 확장 텍스트 (더보기)  |
+|                     | `ManiculeStatTile`                                     | 통계 수치 표시 타일  |
+| `core:ui`           | `BookCover` / `BookCoverOverlay`                     | 표지 및 오버레이    |
 |                     | `BookListItem`                                     | 컴팩트 책 리스트 아이템 |
 |                     | `BookProgressBar`                                  | 독서 진행률 바      |
 |                     | `ReadingCalendarGrid` / `Cell` / `Legend`          | 독서 달력 및 범례    |
 
+### 프로토타입 변형 ↔ 컴포넌트 커버리지
+
+[prototype.html](prototype.html) 의 **29개 변형**이 모두 아래 컴포넌트로 분해되는지 확인한 표.
+분해되지 않는 칸이 생기면 컴포넌트 목록이 미완이라는 뜻이다. 화면 구현 착수 시 해당 행을 먼저 확인한다.
+
+**(f)** = feature 모듈 소유. 표기 없는 것은 `core:designsystem` / `core:ui` / M3 표준.
+
+| 변형 | 화면 | 구성 컴포넌트 |
+|---|---|---|
+| **1a** 계속 사용자 | 홈 | `ManiculeSearchBar`(readOnly) · `ManiculeIconButton`(스캔) · `ManiculeCard`(요약, onClick) · `ReadingCalendarGrid`(최근 7일) · `ManiculeStatTile`×2 · `ManiculeSectionHeader`(더보기) · `BookCarouselItem`(f) |
+| **1b** 첫 사용자 · 빈 상태 | 홈 | `ManiculeSearchBar`(readOnly) · `ManiculeDashedCard`(빈 요약) · `OnboardingGuide`(f) · `ManiculeButton`×2 |
+| **1c** 읽는 중 없음 | 홈 | 1a 요약부 + `ManiculeEmptyState`(inline, `actions` 1~2개) |
+| **2a** 검색어 없음 | 검색 | `ManiculeSearchBar`(autoFocus) · `ManiculeEmptyState` — 앱바 없음 |
+| **2b** 최근 검색어 리스트 | 검색 | `ManiculeSearchBar` · `ManiculeSectionHeader` · M3 `ListItem`(leading=History, trailing=Delete)×n · `HorizontalDivider` |
+| **2c** 입력 중 로컬 필터 | 검색 | `ManiculeSearchBar` · M3 `ListItem`(leading=Search, 입력값 부분 강조는 호출부 `AnnotatedString`)×n |
+| **3a** 결과 컴팩트 리스트 | 검색 결과 | `ManiculeSearchBar` · "검색 결과" 캡션(`labelMedium`·`onSurfaceVariant`, 배지 아님) · `BookListItem`×n · `ManiculeLoading`(작은 크기, 페이징) |
+| **3b** 결과 없음 | 검색 결과 | `ManiculeSearchBar` · `ManiculeEmptyState`(`actions`=스캔) |
+| **4a** 카메라 스캔 | 스캔 | `BarcodeScannerOverlay`(f, `colorScheme.scrim` + 알파) — 앱바 없음, 카메라 위 떠 있는 뒤로가기 |
+| **4b** 인식 실패 | 스캔 | `ManiculeTopAppBar` · `ManiculeEmptyState`(`actions`=검색) |
+| **4c** 권한 거부 | 스캔 | `ManiculeTopAppBar` · `ManiculeEmptyState`(`actions`=카메라 사용·검색, Filled+Outlined **2개**) |
+| **5a** 책 정보 탭 | 책 정보 | `ManiculeTopAppBar` + `ManiculeTabRow`(앱바 밖) · `BookCover`(대형) · 정보 행 Text 나열 · `ManiculeExpandableText`×2 |
+| **5b** 내 기록 · 있음 | 책 정보 | `ManiculeTabRow` · `ManiculeSegmentedButton`(상태 3) · `ManiculeRatingBar` · `ManiculeTextField`(`maxLines`) · `BookProgressBar` · `ManiculeSectionHeader`(추가) · M3 `ListItem`(기록 행)×n |
+| **5c** 내 기록 · 없음 | 책 정보 | 5b + `ManiculeDashedCard`(리뷰 유도, `RatingBar` 0점) + `ManiculeEmptyState`(기록 없음) |
+| **5d** 기록 추가 시트 | 책 정보 | `ManiculeBottomSheet` · `ManiculeSegmentedButton`×2(날짜/시간) · `ManiculeTextField`(`keyboardType = Number`)×2 · `ManiculeButton` · M3 `DatePickerDialog`/`TimePickerDialog`('직접 선택' 시) |
+| **5e** 삭제 스낵바 | 책 정보 | `ManiculeSnackbarHost` + `showUndoSnackbar` |
+| **5f** 다 읽음 확인 다이얼로그 | 책 정보 | `ManiculeDialog`(`icon` = Celebration) |
+| **6a** 읽고 싶음 탭 | 서재 | `ManiculeTopAppBar`(actions=정렬 `ManiculeIconButton`) + `ManiculeTabRow`(앱바 밖) · **정렬 상태 캡션**(`labelMedium`, 탭 아래·목록 위) · `LibraryBookCard`(f)×n |
+| **6b** 읽는 중 탭 | 서재 | 6a + `BookCoverOverlay`(진도율 책갈피) |
+| **6c** 다 읽음 탭 | 서재 | 6a + `BookCoverOverlay`(다 읽은 날짜) |
+| **6d** 빈 상태 | 서재 | `ManiculeTabRow` · `ManiculeEmptyState`(`actions`=검색·스캔) |
+| **6e** 정렬 바텀시트 | 서재 | `ManiculeBottomSheet` · M3 `ListItem`(selected)×3 · `ManiculeSegmentedButton`(방향) · `ManiculeButton`(적용) |
+| **6f** 롱프레스 메뉴 | 서재 | `ManiculeBottomSheet` · M3 `ListItem`(삭제) · M3 `ListItem`×2(상태 변경) — 전 항목 `onSurface`, 강조색 없음 |
+| **7a** 4주 탭 | 통계 | `ManiculeTopAppBar` · `ManiculeSegmentedButton`(기간 4) · `ManiculeCard` · `ReadingCalendarGrid` · `ReadingCalendarLegend` · `ManiculeStatTile`×3 · `ReadingChart`(f) |
+| **7b** 1년 탭 | 통계 | 7a (가로 스크롤 + 좌우 축 고정) |
+| **7c** 오늘 탭 | 통계 | 7a 요약부 + `BookListItem`(소형, trailing=횟수·쪽수)×n |
+| **7d** 기간 설정 시트 | 통계 | `ManiculeBottomSheet` · M3 `ListItem`×2(시작/종료일) · M3 `DatePickerDialog` · `ManiculeButton` |
+| **7e** 날짜 탭 시트 | 통계 | `ManiculeBottomSheet` · `BookListItem`(소형)×n |
+| **8a** 설정 | 설정 | `ManiculeTopAppBar` · `ManiculeSectionHeader`×3 · `ManiculeSegmentedButton`(테마 3) · M3 `ListItem`(trailing=Switch) · M3 `ListItem`(시간·라이선스·버전) · M3 `TimePickerDialog` |
+
+> 이 매트릭스는 화면 콘텐츠만 다룬다. 범위 밖 2건 — ① 하단 탭 `NavigationBar` 는 `app` 셸(`ManiculeNavHost`) 소관이라 행마다 반복 표기하지 않는다(상단 앱바는 화면마다 구성이 달라 표기한다). ② 오픈소스 라이선스 화면([plan.md](../plan.md) 3.6)은 서드파티 라이브러리가 그리는 독립 화면으로 `feature:settings` 소관이며 29 변형에 없다.
+
 ### 활용 규칙
 
 1. **기존 확인 우선**: 새 컴포넌트 구현 전 위 목록에서 대체 가능한지 확인.
-2. **공통 추출 기준**: 2개 이상 feature 모듈에서 사용되는 UI 요소는 공통 컴포넌트로 추출.
-3. **배치 기준**:
+2. **M3 표준이 1순위**: 위 목록에 없더라도 M3 표준 컴포넌트로 해결되면 래퍼를 만들지 않는다. "2개 이상에서 쓰인다"는 사실만으로는 추출 근거가 되지 않는다.
+    - 확정 예: 최근 검색어 행(2b·2c)·설정 행(8a)·바텀시트 선택 행(6e·6f·7d)은 **M3 `ListItem` 을 직접 사용**한다. 2c 의 입력값 부분 강조는 호출부에서 `AnnotatedString` 으로 처리
+3. **공통 추출 기준**: 2개 이상 feature 모듈에서 사용되며 M3 표준으로 대체되지 않는 UI 요소는 공통 컴포넌트로 추출.
+4. **배치 기준**:
     - `core:designsystem` — 도메인 무관 기본 UI 원자 (Button, Dialog 등)
     - `core:ui` — 도메인 모델(`Book`, `ReadingRecord` 등)에 의존하는 공유 위젯
-4. **커스텀 스타일링 지양**: 공통 컴포넌트 사용 시 `Modifier` 파라미터로 외형 조정. 내부 스타일 직접 변경 금지.
+5. **커스텀 스타일링 지양**: 공통 컴포넌트 사용 시 `Modifier` 파라미터로 외형 조정. 내부 스타일 직접 변경 금지.
+6. **공유 파일 추가 규약**: `ManiculeIcons.kt` 와 `core:designsystem` 의 `strings.xml` 은 **파일 말미에 추가(append-only)**. 알파벳순 삽입은 병렬 작업 시 충돌을 만든다.
 
 ---
 
@@ -147,7 +212,7 @@ AI는 UI 구현을 마치고 사용자에게 보고하기 전, 반드시 아래 
 - [ ] **Edge-to-Edge**: 화면 상하단 인셋(`statusBarsPadding`, `navigationBarsPadding`, `imePadding`)이 겹치지 않게 처리되었는가?
 
 ### 8.3. Compose 기술 및 성능 규칙
-- [ ] **하드코딩 완벽 통제 (색상/치수)**: 
+- [ ] **하드코딩 완벽 통제 (색상/치수)**:
     - **색상**: `MaterialTheme.colorScheme` 및 확장 색상 토큰 사용 (ARGB 리터럴 금지)
     - **치수**: 간격/크기/테두리 등 모든 dp 값은 `Dimension.kt`에 정의된 `MaterialTheme.spacing`, `.size`, `.border` 확장 변수를 사용 (`16.dp` 같은 리터럴 직접 사용 금지)
 - [ ] **상태 관리 (State)**: State Hoisting 원칙을 지키고, ViewModel 상태 수집 시 반드시 `collectAsStateWithLifecycle()`을 사용했는가?
