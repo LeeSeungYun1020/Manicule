@@ -43,4 +43,18 @@ class RecentQueryDaoTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
+
+    @Test
+    fun delete_removes_only_matching_query() =
+        runTest {
+            dao.upsert(RecentQueryEntity("query1", Instant.fromEpochMilliseconds(100)))
+            dao.upsert(RecentQueryEntity("query2", Instant.fromEpochMilliseconds(200)))
+
+            dao.delete("query1")
+
+            dao.observeRecent(10).test {
+                assertThat(awaitItem().map { it.query }).containsExactly("query2")
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 }

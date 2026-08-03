@@ -16,6 +16,10 @@ class RoomSearchHistoryLocalDataSource
 
         override fun observeRecent(limit: Int): Flow<List<RecentQueryEntity>> = recentQueryDao.observeRecent(limit)
 
+        override suspend fun remove(query: String) {
+            recentQueryDao.delete(query)
+        }
+
         override suspend fun clear() {
             recentQueryDao.clear()
         }

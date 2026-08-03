@@ -58,6 +58,17 @@ class SearchHistoryRepositoryImplTest {
             repository.clearHistory()
             assertThat(fakeDao.queries).isEmpty()
         }
+
+    @Test
+    fun removeQuery_removes_only_matching_query() =
+        runTest {
+            repository.saveQuery("apple")
+            repository.saveQuery("banana")
+
+            repository.removeQuery("apple")
+
+            assertThat(fakeDao.queries.map { it.query }).containsExactly("banana")
+        }
 }
 
 class FakeClock(
@@ -85,6 +96,10 @@ class FakeRecentQueryDao : RecentQueryDao {
     }
 
     override fun observeRecent(limit: Int): Flow<List<RecentQueryEntity>> = flowOf(queries.sortedByDescending { it.lastUsedAt }.take(limit))
+
+    override suspend fun delete(query: String) {
+        queries.removeAll { it.query == query }
+    }
 
     override suspend fun clear() {
         queries.clear()
