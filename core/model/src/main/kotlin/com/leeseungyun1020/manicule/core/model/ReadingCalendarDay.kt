@@ -12,7 +12,7 @@ import kotlinx.datetime.LocalDate
  * - 3: 50–99 페이지
  * - 4: 100+ 페이지
  */
-data class ContributionDay(
+data class ReadingCalendarDay(
     val date: LocalDate,
     val pages: Int,
     val intensity: Int,
@@ -36,6 +36,6 @@ data class ContributionDay(
         fun of(
             date: LocalDate,
             pages: Int,
-        ): ContributionDay = ContributionDay(date = date, pages = pages, intensity = intensityOf(pages))
+        ): ReadingCalendarDay = ReadingCalendarDay(date = date, pages = pages, intensity = intensityOf(pages))
     }
 }
