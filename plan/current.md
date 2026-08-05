@@ -13,7 +13,7 @@
 | 레인 | 범위 | `depends_on` | 상태 |
 |---|---|---|---|
 | C1 | ReadingRecord 시간·시작/끝 페이지와 `pagesRead` 단일 계산, Entity/Converter, `currentPage` 쿼리, Mapper/Repository 명칭 | 없음 | ⏳ 실행 가능 |
-| C2 | 모듈 스캐폴딩, feature 소유 route 타입과 navigation 확장 함수 계약 | 없음 | ⏳ 실행 가능 |
+| C2 | 모듈 스캐폴딩, feature 소유 route 타입과 navigation 확장 함수 계약 | 없음 | 🚧 모듈·route 완료, navigation 경계 대기 |
 | C3 | 다중 feature 공용 Composable 계약·구현·크기·Preview; feature 전용 UI 제외 | 없음 | ⏳ 실행 가능 |
 
 ## 버티컬 레인
@@ -36,7 +36,7 @@
 
 ## 다음 실행 가능 작업
 
-1. C1·C2·C3를 독립 PR 흐름으로 동시에 진행한다.
+1. C1·C3를 계속 진행하고, C2는 feature navigation 확장 함수와 app 조립 경계 PR을 진행한다.
 2. C1이 머지되면 V7 공유 집계 PR을 시작한다. C2·C3 완료를 기다리지 않는다.
 3. C2와 필요한 C3 컴포넌트 PR이 머지되면 V1·V2·V3를 시작한다. C1 완료를 기다리지 않는다.
 4. C1·C2와 필요한 C3 PR이 머지되면 V4와 V5 목록·정렬을 시작한다.
