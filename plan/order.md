@@ -58,13 +58,13 @@
 
 | 계층 | 범위 |
 |---|---|
-| Model | `ReadingRecord`를 `id`, `isbn`, `date`, `time`, `startPage`, `endPage`로 확정한다. `pagesRead`는 `startPage == 1`이면 `endPage`, 그 외에는 `endPage - startPage`인 파생값으로 단일 구현하고 범위를 검증한다. `ContributionDay`는 `ReadingCalendarDay`로 명칭을 통일한다. |
+| Model | `ReadingRecord`를 `id`, `isbn`, `date`, `time`, `startPage`, `endPage`로 확정한다. 양끝 쪽을 포함하는 `pagesRead = endPage - startPage + 1`을 파생값으로 단일 구현하고 범위를 검증한다. `ContributionDay`는 `ReadingCalendarDay`로 명칭을 통일한다. |
 | Database | Entity와 `LocalTime` Converter를 갱신한다. 하루 여러 기록을 허용하고 기록을 `date DESC, time DESC`로 조회한다. 현재 페이지는 `MAX(endPage)`로 계산한다. |
 | Data/Domain | Mapper를 갱신하고 Repository API를 `getMaxEndPage` 의미로 통일한다. `GetContributionUseCase`를 `GetReadingCalendarUseCase`로 바꾼다. |
 | UI contract | `ReadingCalendarGrid`와 Preview provider가 `ReadingCalendarDay`를 사용하도록 타입을 맞춘다. |
-| 검증 | `1–10 = 10`, `10–42 = 32`, `42–68 = 26`과 재독·겹침 기록 합산을 포함한 모델 테스트, Mapper·Repository·DAO 테스트와 `BookEntryDao`의 `currentPage` 쿼리 테스트를 갱신한다. |
+| 검증 | `1–10 = 10`, `11–42 = 32`, `43–68 = 26`과 재독·겹침 기록 합산을 포함한 모델 테스트, Mapper·Repository·DAO 테스트와 `BookEntryDao`의 `currentPage` 쿼리 테스트를 갱신한다. |
 
-각 기록은 실제 독서 세션이므로 재독하거나 범위가 겹쳐도 `pagesRead`를 합산한다. 인접 기록의 공통 경계는 첫 기록에만 포함해 중복 계산하지 않는다. V4와 V7은 이 모델 파생값을 재사용하고 별도 쪽수 산식을 만들지 않는다.
+각 기록은 실제 독서 세션이므로 재독하거나 범위가 겹치면 해당 세션에서 다시 읽은 쪽도 `pagesRead`에 합산한다. 이어 읽는 기록은 이전 `endPage + 1`부터 시작한다. V4와 V7은 이 모델 파생값을 재사용하고 별도 쪽수 산식을 만들지 않는다.
 
 앱은 미출시 상태이며 보존할 개발 DB 데이터가 없다. Room `version = 1`을 유지하고 변경된 스키마 JSON만 재생성한다.
 
