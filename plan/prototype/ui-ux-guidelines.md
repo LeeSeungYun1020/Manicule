@@ -160,7 +160,7 @@
 | **4c** 권한 거부 | 스캔 | `ManiculeTopAppBar` · `ManiculeEmptyState`(`actions`=카메라 사용·검색, Filled+Outlined **2개**) |
 | **5a** 책 정보 탭 | 책 정보 | `ManiculeTopAppBar` + `ManiculeTabRow`(앱바 밖) · `BookCover`(대형) · 정보 행 Text 나열 · `BookDetailExpandableText`(f)×2 |
 | **5b** 내 기록 · 있음 | 책 정보 | `ManiculeTabRow` · `ManiculeSegmentedButton`(상태 3) · `BookDetailRatingBar`(f) · `ManiculeTextField`(`maxLines`) · `BookProgressBar` · `ManiculeSectionHeader`(추가) · M3 `ListItem`(기록 행)×n |
-| **5c** 내 기록 · 없음 | 책 정보 | 5b + `ManiculeDashedCard`(리뷰 유도, `RatingBar` 0점) + `ManiculeEmptyState`(기록 없음) |
+| **5c** 내 기록 · 없음 | 책 정보 | 5b + `ManiculeDashedCard`(리뷰 유도, `BookDetailRatingBar` 0점) + `ManiculeEmptyState`(기록 없음) |
 | **5d** 기록 추가 시트 | 책 정보 | `ManiculeBottomSheet` · `ManiculeSegmentedButton`×2(날짜/시간) · `ManiculeTextField`(`keyboardType = Number`)×2 · `ManiculeButton` · M3 `DatePickerDialog`/`TimePickerDialog`('직접 선택' 시) |
 | **5e** 삭제 스낵바 | 책 정보 | `ManiculeSnackbarHost` + `showUndoSnackbar` |
 | **5f** 다 읽음 확인 다이얼로그 | 책 정보 | `ManiculeDialog`(`icon` = Celebration) |
