@@ -22,7 +22,7 @@ interface BookEntryDao {
     @Query(
         value = """
             SELECT *, 
-            (SELECT cumulativePage FROM reading_records WHERE isbn = book_entries.isbn ORDER BY date DESC LIMIT 1) AS currentPage 
+            (SELECT MAX(endPage) FROM reading_records WHERE isbn = book_entries.isbn) AS currentPage
             FROM book_entries 
             WHERE isbn = :isbn
         """,
@@ -33,7 +33,7 @@ interface BookEntryDao {
     @Query(
         value = """
             SELECT *, 
-            (SELECT cumulativePage FROM reading_records WHERE isbn = book_entries.isbn ORDER BY date DESC LIMIT 1) AS currentPage 
+            (SELECT MAX(endPage) FROM reading_records WHERE isbn = book_entries.isbn) AS currentPage
             FROM book_entries 
             WHERE status = :status
         """,
@@ -44,7 +44,7 @@ interface BookEntryDao {
     @Query(
         value = """
             SELECT *, 
-            (SELECT cumulativePage FROM reading_records WHERE isbn = book_entries.isbn ORDER BY date DESC LIMIT 1) AS currentPage 
+            (SELECT MAX(endPage) FROM reading_records WHERE isbn = book_entries.isbn) AS currentPage
             FROM book_entries
         """,
     )

@@ -8,7 +8,9 @@ fun ReadingRecordEntity.asExternalModel() =
         id = id,
         isbn = isbn,
         date = date,
-        cumulativePage = cumulativePage,
+        time = time,
+        startPage = startPage,
+        endPage = endPage,
     )
 
 fun ReadingRecord.asEntity() =
@@ -16,5 +18,7 @@ fun ReadingRecord.asEntity() =
         id = id,
         isbn = isbn,
         date = date,
-        cumulativePage = cumulativePage,
+        time = time,
+        startPage = startPage,
+        endPage = endPage,
     )

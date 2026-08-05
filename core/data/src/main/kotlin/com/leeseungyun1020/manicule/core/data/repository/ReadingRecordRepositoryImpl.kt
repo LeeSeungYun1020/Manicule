@@ -38,5 +38,5 @@ class ReadingRecordRepositoryImpl
                 }
             }
 
-        override suspend fun getLatestCumulativePage(isbn: String): Int? = readingRecordLocalDataSource.latestCumulativeFor(isbn)
+        override suspend fun getMaxEndPage(isbn: String): Int? = readingRecordLocalDataSource.getMaxEndPage(isbn)
     }

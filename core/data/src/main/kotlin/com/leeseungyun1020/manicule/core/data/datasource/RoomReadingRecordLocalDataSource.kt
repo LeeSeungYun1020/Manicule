@@ -24,5 +24,5 @@ class RoomReadingRecordLocalDataSource
             end: LocalDate,
         ): Flow<List<ReadingRecordEntity>> = readingRecordDao.observeBetween(start, end)
 
-        override suspend fun latestCumulativeFor(isbn: String): Int? = readingRecordDao.latestCumulativeFor(isbn)
+        override suspend fun getMaxEndPage(isbn: String): Int? = readingRecordDao.getMaxEndPage(isbn)
     }

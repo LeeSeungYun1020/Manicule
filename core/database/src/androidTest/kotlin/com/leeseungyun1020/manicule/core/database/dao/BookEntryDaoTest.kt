@@ -13,6 +13,7 @@ import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -38,7 +39,7 @@ class BookEntryDaoTest {
     }
 
     @Test
-    fun currentPage_is_from_latest_date_even_if_cumulative_is_lower() =
+    fun currentPage_is_highest_end_page_even_if_latest_record_is_lower() =
         runTest {
             val isbn = "123"
             bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
@@ -54,12 +55,28 @@ class BookEntryDaoTest {
                 )
             dao.upsert(entry)
 
-            recordDao.upsert(ReadingRecordEntity(isbn = isbn, date = LocalDate(2024, 1, 1), cumulativePage = 100))
-            recordDao.upsert(ReadingRecordEntity(isbn = isbn, date = LocalDate(2024, 1, 2), cumulativePage = 50))
+            recordDao.upsert(
+                ReadingRecordEntity(
+                    isbn = isbn,
+                    date = LocalDate(2024, 1, 1),
+                    time = LocalTime(10, 0),
+                    startPage = 80,
+                    endPage = 100,
+                ),
+            )
+            recordDao.upsert(
+                ReadingRecordEntity(
+                    isbn = isbn,
+                    date = LocalDate(2024, 1, 2),
+                    time = LocalTime(10, 0),
+                    startPage = 1,
+                    endPage = 50,
+                ),
+            )
 
             dao.observeByIsbn(isbn).test {
                 val result = awaitItem()
-                assertThat(result?.currentPage).isEqualTo(50)
+                assertThat(result?.currentPage).isEqualTo(100)
                 cancelAndIgnoreRemainingEvents()
             }
         }

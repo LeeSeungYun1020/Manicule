@@ -1,22 +1,28 @@
 package com.leeseungyun1020.manicule.core.model
 
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 /**
- * 한 책에 대한 날짜별 누적 페이지 기록.
- *
- * "4월 24일 — 100쪽까지" 처럼 그 날짜까지 읽은 누적 페이지 수를 저장한다.
- * 당일 읽은 페이지 수는 이전 기록과의 차이로 계산한다.
+ * 한 책을 읽은 세션 기록.
  */
 data class ReadingRecord(
     val id: Long,
     val isbn: String,
     val date: LocalDate,
-    val cumulativePage: Int,
+    val time: LocalTime,
+    val startPage: Int,
+    val endPage: Int,
 ) {
+    val pagesRead: Int
+        get() = endPage - startPage + 1
+
     init {
-        require(cumulativePage >= 0) {
-            "cumulativePage must be non-negative, was $cumulativePage"
+        require(startPage >= 1) {
+            "startPage must be at least 1, was $startPage"
+        }
+        require(endPage >= startPage) {
+            "endPage must be at least startPage, was $endPage"
         }
     }
 }

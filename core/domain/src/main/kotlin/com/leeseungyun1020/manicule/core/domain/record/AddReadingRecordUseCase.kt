@@ -3,6 +3,7 @@ package com.leeseungyun1020.manicule.core.domain.record
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
 import com.leeseungyun1020.manicule.core.data.repository.ReadingRecordRepository
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import javax.inject.Inject
 
 /** 기록 추가 결과 */
@@ -27,7 +28,9 @@ class AddReadingRecordUseCase
         suspend operator fun invoke(
             isbn: String,
             date: LocalDate,
-            cumulativePage: Int,
+            time: LocalTime,
+            startPage: Int,
+            endPage: Int,
         ): AddRecordResult {
             TODO("3단계 Slice 2에서 구현")
         }
