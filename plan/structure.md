@@ -124,7 +124,7 @@ app/
 ├── build.gradle.kts
 └── src/main/
     ├── AndroidManifest.xml
-    └── java/com/leeseungyun1020/manicule/
+    └── kotlin/com/leeseungyun1020/manicule/
         ├── ManiculeApplication.kt              # @HiltAndroidApp
         ├── MainActivity.kt                  # 단일 Activity, UserPreferences 수집과 루트 ManiculeTheme 적용
         └── navigation/
