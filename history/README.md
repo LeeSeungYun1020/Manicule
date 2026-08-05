@@ -48,3 +48,4 @@
 - [0632a7f](0632a7f.md) — refactor: ui 공통 컴포넌트 토큰화 적용 및 calendar 패키지 리네임
 - [5aed759](5aed759.md) — refactor: BookCover 신국판 비율(1.48) 적용
 - [4bea968](4bea968.md) — docs: 버티컬 슬라이스 병렬 작업 계획 개편
+- [d804e5e](d804e5e.md) — feat: 상단·탐색 공용 컴포넌트 추가
