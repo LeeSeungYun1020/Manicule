@@ -10,6 +10,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.leeseungyun1020.manicule.feature.home.navigation.HomeRoute
+import com.leeseungyun1020.manicule.feature.library.navigation.LibraryRoute
+import com.leeseungyun1020.manicule.feature.settings.navigation.SettingsRoute
+import com.leeseungyun1020.manicule.feature.stats.navigation.StatsRoute
 
 /**
  * Manicule 의 최상위 navigation 상태 컨테이너.
