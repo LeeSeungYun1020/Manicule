@@ -23,10 +23,12 @@ Android 공식 권장 아키텍처(3-layer)를 따른다.
 ┌──────────────────────▼─────────────────────────┐
 │                  Data Layer                    │  Repository · DataSource
 │   (core:data, core:database, core:network,     │
-│    core:datastore, core:scanner,               │
-│    core:notifications)                         │
+│    core:datastore, core:scanner)               │
 └────────────────────────────────────────────────┘
 ```
+
+`core:notifications`는 Android 시스템 진입점과 WorkManager 구현을 소유하는 플랫폼 모듈이다.
+`app`에서 조립하며 `core:domain`이 정의한 알림 계약을 구현한다.
 
 핵심 규칙:
 
@@ -91,35 +93,29 @@ manicule/
 | `core:datastore`     | Data   | UserPreferences (테마, 알림)                         |
 | `core:network`       | Data   | 국립중앙도서관 ISBN API 클라이언트                           |
 | `core:scanner`       | Data   | CameraX + ML Kit 기반의 바코드 분석기 및 원천 데이터 제공         |
-| `core:notifications` | Data   | WorkManager / AlarmManager 기반 리마인더               |
+| `core:notifications` | Platform | WorkManager 기반 리마인더 예약·발송, 알림 채널 (`core:domain` 계약 구현) |
 
 ### 2.2 모듈 의존 그래프
 
 ```
-                         ┌─────┐
-                         │ app │
-                         └──┬──┘
-        ┌──────────────────┼──────────────────────┐
-        ▼                  ▼                      ▼
-  feature:home   feature:search   feature:scanner   ...
-        │                  │                      │
-        └──────┬───────────┴──────────┬───────────┘
-                    ▼                        ▼
-              core:domain              core:designsystem
-           /       |       \                 ▲
-          ▼        ▼        ▼                │
-     core:data  core:scanner  core:notifications
-    /    │    \                           core:ui
-network database datastore             core:common
-       \   │   /
-        core:model
+app
+├── feature:* ───────────────┬──> core:domain ──┬──> core:data ──┬──> core:network
+│                            │                   │                 ├──> core:database
+│                            │                   │                 └──> core:datastore
+│                            │                   └──> core:scanner
+│                            ├──> core:designsystem
+│                            └──> core:ui ───────────> core:designsystem
+└── core:notifications ─────────> core:domain
+
+core:data, core:domain, core:ui ──> core:model / core:common
 ```
 
 ---
 
 ## 3. 모듈별 파일 구조
 
-> 패키지 루트는 `com.leeseungyun1020.manicule`. 실제 패키지는 프로젝트 정책에 맞춰 변경.
+> 패키지 루트는 `com.leeseungyun1020.manicule`.
+> 소스 디렉터리는 `src/main/kotlin` 을 기본으로 하되, `core:ui` 는 기존 생성 이력에 따라 `src/main/java` 를 유지한다(신규 파일도 동일 위치에 추가).
 
 ### 3.1 `app`
 
@@ -128,12 +124,12 @@ app/
 ├── build.gradle.kts
 └── src/main/
     ├── AndroidManifest.xml
-    └── java/com/example/note/
+    └── kotlin/com/leeseungyun1020/manicule/
         ├── ManiculeApplication.kt              # @HiltAndroidApp
-        ├── MainActivity.kt                  # 단일 Activity + Compose
+        ├── MainActivity.kt                  # 단일 Activity, UserPreferences 수집과 루트 ManiculeTheme 적용
         └── navigation/
             ├── ManiculeNavHost.kt               # 최상위 NavHost
-            ├── TopLevelDestination.kt       # 홈/서재/통계/설정 4개 탭
+            ├── TopLevelDestination.kt       # feature route를 사용하는 홈/서재/통계/설정 4개 탭
             └── ManiculeAppState.kt              # rememberManiculeAppState
 ```
 
@@ -144,22 +140,24 @@ app/
 ```
 feature/<name>/
 ├── build.gradle.kts
-└── src/main/java/com/example/note/feature/<name>/
+└── src/main/kotlin/com/leeseungyun1020/manicule/feature/<name>/
     ├── <Name>Route.kt                      # ViewModel 주입, 상태 수집
     ├── <Name>Screen.kt                     # @Composable 순수 UI
     ├── <Name>ViewModel.kt                  # @HiltViewModel, StateFlow
     ├── <Name>UiState.kt                    # sealed interface or data class
     ├── <Name>UiEvent.kt                    # 사용자 이벤트(선택)
     ├── navigation/
-    │   └── <Name>Navigation.kt             # NavGraphBuilder.<name>Screen()
+    │   └── <Name>Navigation.kt             # public entry route + NavGraphBuilder.<name>Screen()
     └── components/                         # 해당 화면 전용 컴포저블
 ```
+
+각 `<Name>Navigation.kt`는 해당 feature의 route 타입을 물리적으로 소유한다. C2가 route와 stub을 생성하고, 대응 V 레인이 같은 파일의 destination 구현을 교체한다. `app`은 이 route를 import하며 별도 route를 다시 선언하지 않는다.
 
 ### 3.3 `feature:home` (홈, 1a~1c)
 
 ```
 feature/home/
-└── src/main/java/com/example/note/feature/home/
+└── src/main/kotlin/com/leeseungyun1020/manicule/feature/home/
     ├── HomeRoute.kt
     ├── HomeScreen.kt
     ├── HomeViewModel.kt
@@ -178,7 +176,7 @@ feature/home/
 
 ```
 feature/search/
-└── src/main/java/com/example/note/feature/search/
+└── src/main/kotlin/com/leeseungyun1020/manicule/feature/search/
     ├── SearchRoute.kt
     ├── SearchScreen.kt
     ├── SearchViewModel.kt
@@ -190,7 +188,7 @@ feature/search/
         ├── SearchTopBar.kt                 # Material 3 SearchBar 패턴
         ├── RecentQueryList.kt              # 최근 검색어 리스트, 개별 삭제 스낵바 Undo 포함. 입력 중에는 최근 검색어를 입력값으로 로컬 필터링해 노출
         ├── EmptyRecentQuery.kt             # 최근 검색어 없음(첫 사용/전체 삭제) 검색 유도 안내 카드
-        ├── SearchResultList.kt             # 총 검색 결과 건수 표시 포함
+        ├── SearchResultList.kt             # Paging 기반 컴팩트 검색 결과 목록
         └── EmptySearchResult.kt            # "스캔 화면으로 이동" 버튼 포함
 ```
 
@@ -198,7 +196,7 @@ feature/search/
 
 ```
 feature/scanner/
-└── src/main/java/com/example/note/feature/scanner/
+└── src/main/kotlin/com/leeseungyun1020/manicule/feature/scanner/
     ├── ScannerRoute.kt
     ├── ScannerScreen.kt
     ├── ScannerViewModel.kt
@@ -216,7 +214,7 @@ feature/scanner/
 
 ```
 feature/bookdetail/
-└── src/main/java/com/example/note/feature/bookdetail/
+└── src/main/kotlin/com/leeseungyun1020/manicule/feature/bookdetail/
     ├── BookDetailRoute.kt
     ├── BookDetailScreen.kt
     ├── BookDetailViewModel.kt
@@ -234,6 +232,8 @@ feature/bookdetail/
         ├── BookTocSection.kt               # 목차 (tableOfContentsUrl fetch)
         ├── StatusSelector.kt               # 읽고 싶음 / 읽는 중 / 다 읽음
         ├── RatingMemoEditor.kt             # 별점·메모 인라인 편집 (별 탭 시 즉시 저장, 메모 포커스 아웃 시 자동 저장, 빈 상태는 점선 UI). 별도 시트/다이얼로그 없음
+        ├── BookDetailRatingBar.kt          # 책 상세 전용 별점 입력
+        ├── BookDetailExpandableText.kt     # 책 소개·목차가 공유하는 feature 내부 확장 텍스트
         ├── ReadingRecordList.kt            # 진행률 프로그레스 바, 날짜별 기록
         ├── EmptyReadingRecord.kt           # 독서 기록 빈 상태 안내 컴포넌트
         ├── AddRecordBottomSheet.kt         # 날짜(오늘/어제/직접선택)/시간(지금/직접선택) 세그먼트, 쪽수 입력 바텀시트. '직접 선택' 시 Android 표준 DatePicker/TimePicker 다이얼로그 호출
@@ -244,7 +244,7 @@ feature/bookdetail/
 
 ```
 feature/library/
-└── src/main/java/com/example/note/feature/library/
+└── src/main/kotlin/com/leeseungyun1020/manicule/feature/library/
     ├── LibraryRoute.kt
     ├── LibraryScreen.kt
     ├── LibraryViewModel.kt
@@ -263,7 +263,7 @@ feature/library/
 
 ```
 feature/stats/
-└── src/main/java/com/example/note/feature/stats/
+└── src/main/kotlin/com/leeseungyun1020/manicule/feature/stats/
     ├── StatsRoute.kt
     ├── StatsScreen.kt
     ├── StatsViewModel.kt
@@ -283,7 +283,7 @@ feature/stats/
 
 ```
 feature/settings/
-└── src/main/java/com/example/note/feature/settings/
+└── src/main/kotlin/com/leeseungyun1020/manicule/feature/settings/
     ├── SettingsRoute.kt
     ├── SettingsScreen.kt
     ├── SettingsViewModel.kt
@@ -305,14 +305,14 @@ feature/settings/
 
 ```
 core/designsystem/
-└── src/main/java/com/example/note/core/designsystem/
+└── src/main/kotlin/com/leeseungyun1020/manicule/core/designsystem/
     ├── theme/
     │   ├── Color.kt                        # Material 3 고정 브랜드 컬러 (라이트/다크)
     │   ├── ExtendedColor.kt                # 확장 색상 토큰
     │   ├── Type.kt                         # Noto Sans KR (Downloadable Fonts) + 시스템 폰트 fallback
     │   ├── Dimension.kt                    # 치수 (Spacing, Size, Border)
     │   ├── Shape.kt
-    │   ├── Motion.kt                       # (추후 도입) 애니메이션 시간/에이징 곡선 토큰
+    │   ├── Motion.kt                       # 애니메이션 시간/이징 곡선 토큰
     │   └── ManiculeTheme.kt                # MaterialTheme 래퍼, 다크/라이트
     ├── component/
     │   ├── ManiculeButton.kt
@@ -327,10 +327,7 @@ core/designsystem/
     │   ├── ManiculeSearchBar.kt                # 공통 검색 바
     │   ├── ManiculeSectionHeader.kt            # 섹션 헤더
     │   ├── ManiculeSnackbarHost.kt             # 스낵바 호스트 및 Undo 지원
-    │   ├── ManiculeChip.kt                     # 최근 검색어 등 칩
     │   ├── ManiculeTabRow.kt                   # 공통 탭 행
-    │   ├── ManiculeRatingBar.kt                # 별점 컴포넌트
-    │   ├── ManiculeExpandableText.kt           # "더보기" 포함된 확장 텍스트
     │   └── ManiculeStatTile.kt                 # 통계 및 수치 표시 타일
     ├── icon/
     │   └── ManiculeIcons.kt
@@ -343,10 +340,9 @@ core/designsystem/
 
 ```
 core/ui/
-└── src/main/java/com/example/note/core/ui/
+└── src/main/java/com/leeseungyun1020/manicule/core/ui/
     ├── book/
     │   ├── BookCover.kt                    # Coil 3.x AsyncImage 래퍼, 표지 fallback 처리
-    │   ├── BookCoverOverlay.kt             # 스캔 가이드나 상태 등 표지 위에 올라가는 오버레이
     │   ├── BookListItem.kt
     │   └── BookProgressBar.kt              # 132 / 320쪽 표시
     ├── calendar/
@@ -362,7 +358,7 @@ core/ui/
 
 ```
 core/common/
-└── src/main/java/com/example/note/core/common/
+└── src/main/kotlin/com/leeseungyun1020/manicule/core/common/
     ├── di/
     │   └── DispatchersModule.kt            # @IoDispatcher, @DefaultDispatcher
     ├── result/
@@ -378,11 +374,11 @@ core/common/
 
 ```
 core/model/
-└── src/main/java/com/example/note/core/model/
+└── src/main/kotlin/com/leeseungyun1020/manicule/core/model/
     ├── Book.kt                             # isbn(EA_ISBN), title, author, publisher, pubDate(PUBLISH_PREDATE), coverUrl(TITLE_URL), totalPages(PAGE), price(PRE_PRICE), category(SUBJECT), tableOfContentsUrl(BOOK_TB_CNT_URL), introductionUrl(BOOK_INTRODUCTION_URL), summaryUrl(BOOK_SUMMARY_URL)
     ├── ReadingStatus.kt                    # WANT / READING / FINISHED
     ├── BookEntry.kt                        # Book + Status + rating + memo + finishedAt
-    ├── ReadingRecord.kt                    # id, isbn, date, time, startPage, endPage
+    ├── ReadingRecord.kt                    # id, isbn, date, time, startPage, endPage, 파생 pagesRead
     ├── DailyReading.kt                     # 통계용 (date, pages)
     ├── ReadingCalendarDay.kt               # 독서 달력 한 칸 (date, intensity)
     ├── ReadingStreak.kt
@@ -395,7 +391,7 @@ core/model/
 
 ```
 core/domain/
-└── src/main/java/com/example/note/core/domain/
+└── src/main/kotlin/com/leeseungyun1020/manicule/core/domain/
     ├── di/
     │   └── DomainModule.kt
     ├── book/
@@ -423,16 +419,18 @@ core/domain/
     │   ├── GetReadingCalendarUseCase.kt     # 365일 독서 달력
     │   └── GetReadingStreakUseCase.kt
     └── settings/
+        ├── ReminderScheduler.kt             # 리마인더 예약·취소 도메인 계약
+        ├── GetReminderContentUseCase.kt     # 최근 읽는 중 책 제목 또는 기본 메시지 생성
         ├── GetUserPreferencesUseCase.kt
         ├── SetThemeUseCase.kt
-        └── SetReminderUseCase.kt           # 알림 스케줄링 트리거
+        └── SetReminderUseCase.kt            # ReminderScheduler를 통한 예약·취소
 ```
 
 ### 4.6 `core:data`
 
 ```
 core/data/
-└── src/main/java/com/example/note/core/data/
+└── src/main/kotlin/com/leeseungyun1020/manicule/core/data/
     ├── di/
     │   └── DataModule.kt                   # Repository 바인딩
     ├── repository/
@@ -458,7 +456,7 @@ core/data/
 
 ```
 core/database/
-└── src/main/java/com/example/note/core/database/
+└── src/main/kotlin/com/leeseungyun1020/manicule/core/database/
     ├── di/
     │   └── DatabaseModule.kt
     ├── ManiculeDatabase.kt                     # @Database, version, migrations
@@ -482,7 +480,7 @@ core/database/
 
 ```
 core/datastore/
-    └── src/main/java/com/example/note/core/datastore/
+    └── src/main/kotlin/com/leeseungyun1020/manicule/core/datastore/
         ├── UserPreferencesLocalDataSource.kt   # Theme, Reminder(on/off, time) 등 DataStore 읽기/쓰기
         └── UserPreferencesDataStore.kt         # DataStore 인스턴스 (실제 구현에 맞춤)
     └── PreferencesKeys.kt                  # THEME_MODE, REMINDER_ENABLED, REMINDER_TIME
@@ -492,7 +490,7 @@ core/datastore/
 
 ```
 core/network/
-└── src/main/java/com/example/note/core/network/
+└── src/main/kotlin/com/leeseungyun1020/manicule/core/network/
     ├── di/
     │   └── NetworkModule.kt                # Retrofit, OkHttp, Json
     ├── nlk/                                # 국립중앙도서관 ISBN API
@@ -508,7 +506,7 @@ core/network/
 
 ```
 core/scanner/
-└── src/main/java/com/example/note/core/scanner/
+└── src/main/kotlin/com/leeseungyun1020/manicule/core/scanner/
     ├── di/
     │   └── ScannerModule.kt
     ├── BarcodeScanner.kt                   # interface — Flow<ScanResult>
@@ -521,14 +519,17 @@ core/scanner/
 
 ```
 core/notifications/
-└── src/main/java/com/example/note/core/notifications/
+└── src/main/kotlin/com/leeseungyun1020/manicule/core/notifications/
     ├── di/
     │   └── NotificationsModule.kt
-    ├── ReminderScheduler.kt                # interface
-    ├── WorkManagerReminderScheduler.kt     # WorkManager 기반 일일 알림
-    ├── ReminderWorker.kt
+    ├── WorkManagerReminderScheduler.kt     # domain ReminderScheduler 구현
+    ├── ReminderWorker.kt                   # GetReminderContentUseCase로 발송 시점 메시지 조회
     └── NotificationChannels.kt
 ```
+
+> **의존 방향**: `app → core:notifications → core:domain`. `core:domain`은 `core:notifications`를 알지 않으며,
+> `core:notifications`도 `core:data`의 Repository를 직접 주입하지 않는다. 컨텍스트 메시지는
+> `GetReminderContentUseCase`가 Repository를 통해 생성한다.
 
 ---
 
@@ -584,6 +585,15 @@ dependencies {
 ```
 
 ```kotlin
+// app/build.gradle.kts
+dependencies {
+	implementation(projects.core.designsystem)
+	implementation(projects.core.domain)
+	implementation(projects.core.model)
+}
+```
+
+```kotlin
 // core/domain/build.gradle.kts
 plugins {
 	alias(libs.plugins.manicule.android.library)
@@ -594,7 +604,13 @@ dependencies {
 	implementation(projects.core.model)
 	implementation(projects.core.data)
 	implementation(projects.core.scanner)
-	implementation(projects.core.notifications)
+}
+```
+
+```kotlin
+// core/notifications/build.gradle.kts
+dependencies {
+	implementation(projects.core.domain)
 }
 ```
 
@@ -613,7 +629,7 @@ dependencies {
 | `core:scanner`       | ISBN 유효성 검증 알고리즘 및 스캔 결과 가공 테스트                                    |
 | `core:notifications` | WorkManager 기반 알림 예약 및 스케줄링 검증                                     |
 | `core:designsystem`  | 공통 컴포넌트(Button, Dialog 등) Compose UI 테스트(`createComposeRule`) |
-| `core:ui`            | BookCard, ContributionGrid Compose UI 테스트                         |
+| `core:ui`            | BookCover, BookListItem, BookProgressBar, ReadingCalendarGrid Compose UI 테스트 |
 | `feature:*`          | ViewModel StateFlow 검증, Compose UI 테스트(`createAndroidComposeRule`) |
 | `app`                | Navigation 통합 테스트                                                  |
 
