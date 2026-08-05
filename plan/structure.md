@@ -629,7 +629,7 @@ dependencies {
 | `core:scanner`       | ISBN 유효성 검증 알고리즘 및 스캔 결과 가공 테스트                                    |
 | `core:notifications` | WorkManager 기반 알림 예약 및 스케줄링 검증                                     |
 | `core:designsystem`  | 공통 컴포넌트(Button, Dialog 등) Compose UI 테스트(`createComposeRule`) |
-| `core:ui`            | BookCard, ContributionGrid Compose UI 테스트                         |
+| `core:ui`            | BookCover, BookListItem, BookProgressBar, ReadingCalendarGrid Compose UI 테스트 |
 | `feature:*`          | ViewModel StateFlow 검증, Compose UI 테스트(`createAndroidComposeRule`) |
 | `app`                | Navigation 통합 테스트                                                  |
 
