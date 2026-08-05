@@ -1,6 +1,8 @@
 package com.leeseungyun1020.manicule.core.ui.book
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,10 +14,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.ui.R
+import kotlin.math.roundToInt
 
 @Composable
 fun BookProgressBar(
@@ -29,18 +33,32 @@ fun BookProgressBar(
         } else {
             0f
         }
+    val percentage = (progress * 100).roundToInt()
 
     Column(modifier = modifier) {
         LinearProgressIndicator(
             progress = { progress },
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(ManiculeSize.progressBarThick),
         )
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.xs))
-        Text(
-            text = stringResource(id = R.string.book_progress_text, currentPage, totalPages),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = stringResource(id = R.string.book_progress_text, currentPage, totalPages),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = stringResource(id = R.string.book_progress_percentage, percentage),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -48,10 +66,13 @@ fun BookProgressBar(
 @Composable
 private fun BookProgressBarPreview() {
     ManiculeTheme {
-        BookProgressBar(
-            currentPage = 132,
-            totalPages = 320,
+        Column(
             modifier = Modifier.padding(ManiculeSpacing.lg),
-        )
+            verticalArrangement = Arrangement.spacedBy(ManiculeSpacing.lg),
+        ) {
+            BookProgressBar(currentPage = 0, totalPages = 0)
+            BookProgressBar(currentPage = 132, totalPages = 320)
+            BookProgressBar(currentPage = 400, totalPages = 320)
+        }
     }
 }

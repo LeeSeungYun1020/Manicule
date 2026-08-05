@@ -1,7 +1,8 @@
 package com.leeseungyun1020.manicule.core.ui.book
 
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
@@ -35,13 +36,16 @@ fun BookCover(
     contentDescription: String? = null,
     showBorder: Boolean = false,
     placeholder: Painter? = null,
+    size: BookCoverSize = BookCoverSize.Medium,
 ) {
     val actualPlaceholder = placeholder ?: ColorPainter(MaterialTheme.colorScheme.surfaceVariant)
-    val finalModifier = if (showBorder) {
-        modifier.border(ManiculeBorder.cover, MaterialTheme.colorScheme.outlineVariant)
-    } else {
-        modifier
-    }
+    val sizedModifier = modifier.size(size.width, size.height)
+    val finalModifier =
+        if (showBorder) {
+            sizedModifier.border(ManiculeBorder.cover, MaterialTheme.colorScheme.outlineVariant)
+        } else {
+            sizedModifier
+        }
 
     AsyncImage(
         model = imageUrl,
@@ -58,10 +62,17 @@ fun BookCover(
 @Composable
 private fun BookCoverPlaceholderPreview() {
     ManiculeTheme {
-        Box(modifier = Modifier.padding(MaterialTheme.spacing.lg)) {
+        Column(
+            modifier = Modifier.padding(MaterialTheme.spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+        ) {
             BookCover(
                 imageUrl = null,
-                modifier = Modifier.size(BookCoverSize.Medium.width, BookCoverSize.Medium.height),
+                size = BookCoverSize.Small,
+            )
+            BookCover(
+                imageUrl = null,
+                size = BookCoverSize.Medium,
             )
         }
     }
@@ -71,10 +82,18 @@ private fun BookCoverPlaceholderPreview() {
 @Composable
 private fun BookCoverImagePreview() {
     ManiculeTheme {
-        Box(modifier = Modifier.padding(MaterialTheme.spacing.lg)) {
+        Column(
+            modifier = Modifier.padding(MaterialTheme.spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+        ) {
             BookCover(
                 imageUrl = "https://nl.go.kr/seoji/fu/ecip/dbfiles/CIP_FILES_TBL/2025/02/9791161759692.jpg",
-                modifier = Modifier.size(BookCoverSize.Medium.width, BookCoverSize.Medium.height),
+                size = BookCoverSize.Small,
+                placeholder = painterResource(id = R.drawable.sample_book_cover),
+            )
+            BookCover(
+                imageUrl = "https://nl.go.kr/seoji/fu/ecip/dbfiles/CIP_FILES_TBL/2025/02/9791161759692.jpg",
+                size = BookCoverSize.Medium,
                 placeholder = painterResource(id = R.drawable.sample_book_cover),
             )
         }
