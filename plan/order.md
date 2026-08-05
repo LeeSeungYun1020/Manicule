@@ -58,11 +58,13 @@
 
 | 계층 | 범위 |
 |---|---|
-| Model | `ReadingRecord`를 `id`, `isbn`, `date`, `time`, `startPage`, `endPage`로 확정하고 페이지 범위를 검증한다. `ContributionDay`는 `ReadingCalendarDay`로 명칭을 통일한다. |
+| Model | `ReadingRecord`를 `id`, `isbn`, `date`, `time`, `startPage`, `endPage`로 확정한다. `pagesRead`는 `startPage == 1`이면 `endPage`, 그 외에는 `endPage - startPage`인 파생값으로 단일 구현하고 범위를 검증한다. `ContributionDay`는 `ReadingCalendarDay`로 명칭을 통일한다. |
 | Database | Entity와 `LocalTime` Converter를 갱신한다. 하루 여러 기록을 허용하고 기록을 `date DESC, time DESC`로 조회한다. 현재 페이지는 `MAX(endPage)`로 계산한다. |
 | Data/Domain | Mapper를 갱신하고 Repository API를 `getMaxEndPage` 의미로 통일한다. `GetContributionUseCase`를 `GetReadingCalendarUseCase`로 바꾼다. |
 | UI contract | `ReadingCalendarGrid`와 Preview provider가 `ReadingCalendarDay`를 사용하도록 타입을 맞춘다. |
-| 검증 | 모델·Mapper·Repository·DAO 테스트와 `BookEntryDao`의 `currentPage` 쿼리 테스트를 갱신한다. |
+| 검증 | `1–10 = 10`, `10–42 = 32`, `42–68 = 26`과 재독·겹침 기록 합산을 포함한 모델 테스트, Mapper·Repository·DAO 테스트와 `BookEntryDao`의 `currentPage` 쿼리 테스트를 갱신한다. |
+
+각 기록은 실제 독서 세션이므로 재독하거나 범위가 겹쳐도 `pagesRead`를 합산한다. 인접 기록의 공통 경계는 첫 기록에만 포함해 중복 계산하지 않는다. V4와 V7은 이 모델 파생값을 재사용하고 별도 쪽수 산식을 만들지 않는다.
 
 앱은 미출시 상태이며 보존할 개발 DB 데이터가 없다. Room `version = 1`을 유지하고 변경된 스키마 JSON만 재생성한다.
 
@@ -73,8 +75,8 @@
 | 영역 | 범위 |
 |---|---|
 | Module | `core:scanner`, `core:notifications`, 7개 `feature:*` 모듈을 개설하고 Gradle 의존성을 연결한다. |
-| Navigation | `SearchRoute`, `ScannerRoute`, `BookDetailRoute(isbn)`, 상위 탭 route 등 타입과 `NavGraphBuilder` 확장 함수 시그니처를 확정하고 stub destination을 연결한다. |
-| App boundary | 각 feature의 navigation 확장 함수까지만 연결하고 `app`의 실제 destination 교체는 I1이 소유한다. |
+| Navigation | 각 `feature:<name>`의 public `<Name>Navigation.kt`가 entry route 타입과 `NavGraphBuilder.<name>Screen()`을 함께 소유한다. C2가 route와 stub destination을 생성한다. |
+| App boundary | `app`의 `TopLevelDestination`과 `ManiculeNavHost`는 feature route를 import한다. V 레인은 자기 navigation 파일의 stub을 실제 destination으로 교체하고, app destination 조립은 I1이 소유한다. |
 | 검증 | 모듈 의존 그래프와 type-safe route 컴파일을 확인한다. |
 
 권장 PR 순서:
@@ -89,7 +91,7 @@
 | 영역 | 범위 |
 |---|---|
 | Contract | 두 개 이상 feature에서 사용하는 `ManiculeSearchBar`, `ManiculeSnackbarHost`, `ManiculeSectionHeader`, `ManiculeTabRow`, `ManiculeStatTile`과 기존 `ManiculeTopAppBar`, `ManiculeEmptyState`, `ManiculeLoading`, `BookCoverSize`, `BookProgressBar`의 시그니처를 확정한다. |
-| Implementation | 확정된 공용 컴포넌트를 `core:designsystem` 또는 `core:ui`에 구현한다. 특정 feature 전용 컴포넌트는 포함하지 않는다. |
+| Implementation | 확정된 공용 컴포넌트를 `core:designsystem` 또는 `core:ui`에 구현한다. V4의 별점·확장 텍스트와 V5의 표지 오버레이처럼 특정 feature 전용 컴포넌트는 포함하지 않는다. |
 | Preview | 크기·상태별 Preview 계약과 `BookPreviewParameterProvider`를 준비한다. |
 | 검증 | 공용 컴포넌트 Preview와 기본 UI 테스트를 확인한다. |
 
@@ -144,7 +146,7 @@
 | Domain | `ReminderScheduler` 계약, 리마인더 on/off·시간 변경 UseCase, 최근 읽는 중 책 제목 또는 기본 메시지를 만드는 `GetReminderContentUseCase`를 구현한다. 이 콘텐츠는 설정 화면 상태가 아니라 Worker가 발송 시점에 조회하는 알림 메시지다. |
 | Platform | `core:notifications`에 도메인 Scheduler 구현, 알림 채널과 Worker를 구현한다. Worker는 `GetReminderContentUseCase`를 호출하며 `core:data` Repository를 직접 주입하지 않는다. |
 | UI | 테마 선택, 알림 토글·시간 선택, 라이선스·앱 버전 화면과 ViewModel을 구현한다. |
-| 검증 | 스케줄 등록·취소·재설정, 읽는 중 책 제목/fallback 메시지, 테마 즉시 적용과 설정 UI 테스트를 작성한다. |
+| 검증 | 스케줄 등록·취소·재설정, 읽는 중 책 제목/fallback 메시지, 테마 선택 저장과 설정 UI 테스트를 작성한다. |
 
 권장 PR 순서:
 
@@ -239,14 +241,15 @@
 
 ### I1 — 앱 조립
 
-`depends_on`: C2; 각 destination은 대응 V 레인의 navigation PR
+`depends_on`: C2; 각 destination은 대응 V 레인의 navigation PR. 앱 루트 테마 연결은 V3의 테마 저장·조회 계약
 
-이 레인만 `app`의 `ManiculeNavHost`와 최상위 화면 간 콜백 조립을 변경한다. C2의 stub을 유지한 채 시작하고, 각 V 레인의 navigation destination이 머지되는 즉시 해당 destination을 실제 화면으로 교체한다. 모든 V 레인의 완료를 기다리는 전체 배리어는 두지 않는다.
+이 레인만 `app`의 `ManiculeNavHost`, 최상위 화면 간 콜백과 앱 루트 테마 조립을 변경한다. C2의 stub을 유지한 채 시작하고, 각 V 레인의 navigation destination이 머지되는 즉시 해당 destination을 실제 화면으로 교체한다. 모든 V 레인의 완료를 기다리는 전체 배리어는 두지 않는다.
 
 조립 작업은 필요한 V 레인이 머지된 destination부터 점진적으로 진행한다.
 
 - stub destination을 실제 `NavGraphBuilder.<name>Screen()`으로 교체하고 화면 간 콜백·인자를 연결한다.
 - TopLevelDestination 4개와 시작 destination을 확인한다.
+- V3의 기존 `GetUserPreferencesUseCase` 흐름이 준비되면 `app/build.gradle.kts`의 `core:domain` 의존성을 활성화하고 `MainActivity.kt`에서 이를 수집해 `ThemeMode`를 루트 `ManiculeTheme`에 전달한다. 새 app ViewModel 도입은 이 계획에서 선결하지 않는다.
 - 검색 → 책 상세 → 기록 추가 → 서재 → 통계 E2E 흐름을 검증한다.
 - 다크/라이트/시스템 테마, 오프라인 캐시, 알림, 스캔 권한, 폰·태블릿·폴더블과 회전을 통합 검증한다.
 

@@ -132,10 +132,8 @@
 |                     | `ManiculeSectionHeader`                                | 섹션 헤더         |
 |                     | `ManiculeSnackbarHost`                                 | 스낵바 호스트 및 Undo 지원 |
 |                     | `ManiculeTabRow`                                       | 공통 탭 행        |
-|                     | `ManiculeRatingBar`                                    | 별점 입력 컴포넌트   |
-|                     | `ManiculeExpandableText`                               | 확장 텍스트 (더보기)  |
 |                     | `ManiculeStatTile`                                     | 통계 수치 표시 타일  |
-| `core:ui`           | `BookCover` / `BookCoverOverlay`                     | 표지 및 오버레이    |
+| `core:ui`           | `BookCover`                                          | 책 표지           |
 |                     | `BookListItem`                                     | 컴팩트 책 리스트 아이템 |
 |                     | `BookProgressBar`                                  | 독서 진행률 바      |
 |                     | `ReadingCalendarGrid` / `Cell` / `Legend`          | 독서 달력 및 범례    |
@@ -160,15 +158,15 @@
 | **4a** 카메라 스캔 | 스캔 | `BarcodeScannerOverlay`(f, `colorScheme.scrim` + 알파) — 앱바 없음, 카메라 위 떠 있는 뒤로가기 |
 | **4b** 인식 실패 | 스캔 | `ManiculeTopAppBar` · `ManiculeEmptyState`(`actions`=검색) |
 | **4c** 권한 거부 | 스캔 | `ManiculeTopAppBar` · `ManiculeEmptyState`(`actions`=카메라 사용·검색, Filled+Outlined **2개**) |
-| **5a** 책 정보 탭 | 책 정보 | `ManiculeTopAppBar` + `ManiculeTabRow`(앱바 밖) · `BookCover`(대형) · 정보 행 Text 나열 · `ManiculeExpandableText`×2 |
-| **5b** 내 기록 · 있음 | 책 정보 | `ManiculeTabRow` · `ManiculeSegmentedButton`(상태 3) · `ManiculeRatingBar` · `ManiculeTextField`(`maxLines`) · `BookProgressBar` · `ManiculeSectionHeader`(추가) · M3 `ListItem`(기록 행)×n |
+| **5a** 책 정보 탭 | 책 정보 | `ManiculeTopAppBar` + `ManiculeTabRow`(앱바 밖) · `BookCover`(대형) · 정보 행 Text 나열 · `BookDetailExpandableText`(f)×2 |
+| **5b** 내 기록 · 있음 | 책 정보 | `ManiculeTabRow` · `ManiculeSegmentedButton`(상태 3) · `BookDetailRatingBar`(f) · `ManiculeTextField`(`maxLines`) · `BookProgressBar` · `ManiculeSectionHeader`(추가) · M3 `ListItem`(기록 행)×n |
 | **5c** 내 기록 · 없음 | 책 정보 | 5b + `ManiculeDashedCard`(리뷰 유도, `RatingBar` 0점) + `ManiculeEmptyState`(기록 없음) |
 | **5d** 기록 추가 시트 | 책 정보 | `ManiculeBottomSheet` · `ManiculeSegmentedButton`×2(날짜/시간) · `ManiculeTextField`(`keyboardType = Number`)×2 · `ManiculeButton` · M3 `DatePickerDialog`/`TimePickerDialog`('직접 선택' 시) |
 | **5e** 삭제 스낵바 | 책 정보 | `ManiculeSnackbarHost` + `showUndoSnackbar` |
 | **5f** 다 읽음 확인 다이얼로그 | 책 정보 | `ManiculeDialog`(`icon` = Celebration) |
 | **6a** 읽고 싶음 탭 | 서재 | `ManiculeTopAppBar`(actions=정렬 `ManiculeIconButton`) + `ManiculeTabRow`(앱바 밖) · **정렬 상태 캡션**(`labelMedium`, 탭 아래·목록 위) · `LibraryBookCard`(f)×n |
-| **6b** 읽는 중 탭 | 서재 | 6a + `BookCoverOverlay`(진도율 책갈피) |
-| **6c** 다 읽음 탭 | 서재 | 6a + `BookCoverOverlay`(다 읽은 날짜) |
+| **6b** 읽는 중 탭 | 서재 | 6a의 `LibraryBookCard`(f)에 진도율 책갈피 포함 |
+| **6c** 다 읽음 탭 | 서재 | 6a의 `LibraryBookCard`(f)에 다 읽은 날짜 포함 |
 | **6d** 빈 상태 | 서재 | `ManiculeTabRow` · `ManiculeEmptyState`(`actions`=검색·스캔) |
 | **6e** 정렬 바텀시트 | 서재 | `ManiculeBottomSheet` · M3 `ListItem`(selected)×3 · `ManiculeSegmentedButton`(방향) · `ManiculeButton`(적용) |
 | **6f** 롱프레스 메뉴 | 서재 | `ManiculeBottomSheet` · M3 `ListItem`(삭제) · M3 `ListItem`×2(상태 변경) — 전 항목 `onSurface`, 강조색 없음 |

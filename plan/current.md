@@ -12,9 +12,9 @@
 
 | 레인 | 범위 | `depends_on` | 상태 |
 |---|---|---|---|
-| C1 | ReadingRecord 시간·시작/끝 페이지 모델, Entity/Converter, `currentPage` 쿼리, Mapper/Repository 명칭 | 없음 | ⏳ 실행 가능 |
-| C2 | 모듈 스캐폴딩, Navigation route 타입과 feature navigation 확장 함수 계약 | 없음 | ⏳ 실행 가능 |
-| C3 | 다중 feature 공용 Composable 계약·구현·크기·Preview | 없음 | ⏳ 실행 가능 |
+| C1 | ReadingRecord 시간·시작/끝 페이지와 `pagesRead` 단일 계산, Entity/Converter, `currentPage` 쿼리, Mapper/Repository 명칭 | 없음 | ⏳ 실행 가능 |
+| C2 | 모듈 스캐폴딩, feature 소유 route 타입과 navigation 확장 함수 계약 | 없음 | ⏳ 실행 가능 |
+| C3 | 다중 feature 공용 Composable 계약·구현·크기·Preview; feature 전용 UI 제외 | 없음 | ⏳ 실행 가능 |
 
 ## 버티컬 레인
 
@@ -32,7 +32,7 @@
 
 | 레인 | 범위 | `depends_on` | 상태 |
 |---|---|---|---|
-| I1 | `ManiculeNavHost`, 최상위 콜백과 destination 점진 교체, E2E 조립 | C2; 각 destination은 대응 V navigation PR | ⏳ 대기 |
+| I1 | `ManiculeNavHost`, 최상위 콜백, destination 점진 교체, 앱 루트 테마와 E2E 조립 | C2; 각 destination은 대응 V navigation PR, 루트 테마는 V3 테마 계약 | ⏳ 대기 |
 
 ## 다음 실행 가능 작업
 
@@ -53,7 +53,8 @@
 - 동일 기능 중복 구현과 기존 공용 API 의미의 동시 변경은 금지한다.
 - 여러 작업자가 같은 파일에 항목을 추가해 생긴 단순 병합 충돌은 최종 머지자가 최신 `main` 기준으로 정리한다.
 - 공용 API 변경을 기다리는 레인은 해당 소유 PR 머지 후 rebase한다.
-- `app`의 `ManiculeNavHost`와 최상위 화면 콜백은 I1만 변경한다. V 레인은 자기 feature의 navigation 확장 함수까지 소유한다.
+- 각 feature route와 navigation 확장 함수는 해당 feature가 소유한다. C2가 stub을 생성하고 V 레인이 같은 파일을 구현하며, `app`의 destination 조립은 I1만 변경한다.
+- V3는 테마 설정 저장·조회 계약을 소유하고, I1은 기존 설정 흐름을 `MainActivity`의 루트 `ManiculeTheme`에 연결한다.
 
 ### 모듈 추가 절차
 

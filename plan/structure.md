@@ -126,10 +126,10 @@ app/
     ├── AndroidManifest.xml
     └── java/com/leeseungyun1020/manicule/
         ├── ManiculeApplication.kt              # @HiltAndroidApp
-        ├── MainActivity.kt                  # 단일 Activity + Compose
+        ├── MainActivity.kt                  # 단일 Activity, UserPreferences 수집과 루트 ManiculeTheme 적용
         └── navigation/
             ├── ManiculeNavHost.kt               # 최상위 NavHost
-            ├── TopLevelDestination.kt       # 홈/서재/통계/설정 4개 탭
+            ├── TopLevelDestination.kt       # feature route를 사용하는 홈/서재/통계/설정 4개 탭
             └── ManiculeAppState.kt              # rememberManiculeAppState
 ```
 
@@ -147,9 +147,11 @@ feature/<name>/
     ├── <Name>UiState.kt                    # sealed interface or data class
     ├── <Name>UiEvent.kt                    # 사용자 이벤트(선택)
     ├── navigation/
-    │   └── <Name>Navigation.kt             # NavGraphBuilder.<name>Screen()
+    │   └── <Name>Navigation.kt             # public entry route + NavGraphBuilder.<name>Screen()
     └── components/                         # 해당 화면 전용 컴포저블
 ```
+
+각 `<Name>Navigation.kt`는 해당 feature의 route 타입을 물리적으로 소유한다. C2가 route와 stub을 생성하고, 대응 V 레인이 같은 파일의 destination 구현을 교체한다. `app`은 이 route를 import하며 별도 route를 다시 선언하지 않는다.
 
 ### 3.3 `feature:home` (홈, 1a~1c)
 
@@ -230,6 +232,8 @@ feature/bookdetail/
         ├── BookTocSection.kt               # 목차 (tableOfContentsUrl fetch)
         ├── StatusSelector.kt               # 읽고 싶음 / 읽는 중 / 다 읽음
         ├── RatingMemoEditor.kt             # 별점·메모 인라인 편집 (별 탭 시 즉시 저장, 메모 포커스 아웃 시 자동 저장, 빈 상태는 점선 UI). 별도 시트/다이얼로그 없음
+        ├── BookDetailRatingBar.kt          # 책 상세 전용 별점 입력
+        ├── BookDetailExpandableText.kt     # 책 소개·목차가 공유하는 feature 내부 확장 텍스트
         ├── ReadingRecordList.kt            # 진행률 프로그레스 바, 날짜별 기록
         ├── EmptyReadingRecord.kt           # 독서 기록 빈 상태 안내 컴포넌트
         ├── AddRecordBottomSheet.kt         # 날짜(오늘/어제/직접선택)/시간(지금/직접선택) 세그먼트, 쪽수 입력 바텀시트. '직접 선택' 시 Android 표준 DatePicker/TimePicker 다이얼로그 호출
@@ -324,8 +328,6 @@ core/designsystem/
     │   ├── ManiculeSectionHeader.kt            # 섹션 헤더
     │   ├── ManiculeSnackbarHost.kt             # 스낵바 호스트 및 Undo 지원
     │   ├── ManiculeTabRow.kt                   # 공통 탭 행
-    │   ├── ManiculeRatingBar.kt                # 별점 컴포넌트
-    │   ├── ManiculeExpandableText.kt           # "더보기" 포함된 확장 텍스트
     │   └── ManiculeStatTile.kt                 # 통계 및 수치 표시 타일
     ├── icon/
     │   └── ManiculeIcons.kt
@@ -341,7 +343,6 @@ core/ui/
 └── src/main/java/com/leeseungyun1020/manicule/core/ui/
     ├── book/
     │   ├── BookCover.kt                    # Coil 3.x AsyncImage 래퍼, 표지 fallback 처리
-    │   ├── BookCoverOverlay.kt             # 스캔 가이드나 상태 등 표지 위에 올라가는 오버레이
     │   ├── BookListItem.kt
     │   └── BookProgressBar.kt              # 132 / 320쪽 표시
     ├── calendar/
@@ -377,7 +378,7 @@ core/model/
     ├── Book.kt                             # isbn(EA_ISBN), title, author, publisher, pubDate(PUBLISH_PREDATE), coverUrl(TITLE_URL), totalPages(PAGE), price(PRE_PRICE), category(SUBJECT), tableOfContentsUrl(BOOK_TB_CNT_URL), introductionUrl(BOOK_INTRODUCTION_URL), summaryUrl(BOOK_SUMMARY_URL)
     ├── ReadingStatus.kt                    # WANT / READING / FINISHED
     ├── BookEntry.kt                        # Book + Status + rating + memo + finishedAt
-    ├── ReadingRecord.kt                    # id, isbn, date, time, startPage, endPage
+    ├── ReadingRecord.kt                    # id, isbn, date, time, startPage, endPage, 파생 pagesRead
     ├── DailyReading.kt                     # 통계용 (date, pages)
     ├── ReadingCalendarDay.kt               # 독서 달력 한 칸 (date, intensity)
     ├── ReadingStreak.kt
@@ -580,6 +581,15 @@ dependencies {
 	implementation(projects.core.domain)
 	implementation(projects.core.model)
 	implementation(projects.core.common)
+}
+```
+
+```kotlin
+// app/build.gradle.kts
+dependencies {
+	implementation(projects.core.designsystem)
+	implementation(projects.core.domain)
+	implementation(projects.core.model)
 }
 ```
 
