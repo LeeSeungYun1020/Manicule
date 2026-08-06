@@ -11,6 +11,7 @@ dependencies {
     implementation(projects.core.model)
     implementation(projects.core.data)
     implementation(projects.core.common)
+    implementation(projects.core.scanner)
 
     implementation(libs.kotlinx.datetime)
     implementation(libs.androidx.paging.runtime)
