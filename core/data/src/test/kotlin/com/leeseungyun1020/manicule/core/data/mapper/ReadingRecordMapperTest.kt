@@ -2,6 +2,7 @@ package com.leeseungyun1020.manicule.core.data.mapper
 
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.database.entity.ReadingRecordEntity
+import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import org.junit.Test
@@ -37,7 +38,7 @@ class ReadingRecordMapperTest {
     @Test
     fun readingRecord_asEntity_mapsCorrectly() {
         val record =
-            com.leeseungyun1020.manicule.core.model.ReadingRecord(
+            ReadingRecord(
                 id = 2L,
                 isbn = "54321",
                 date = LocalDate(2025, 1, 1),
