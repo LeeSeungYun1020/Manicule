@@ -40,12 +40,20 @@ class ReadingRecordTest {
         }
     }
 
+    @Test
+    fun `isbn must not be blank`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            record(startPage = 1, endPage = 10, isbn = " ")
+        }
+    }
+
     private fun record(
         startPage: Int,
         endPage: Int,
+        isbn: String = "123",
     ) = ReadingRecord(
         id = 0,
-        isbn = "123",
+        isbn = isbn,
         date = LocalDate(2024, 4, 12),
         time = LocalTime(10, 30),
         startPage = startPage,

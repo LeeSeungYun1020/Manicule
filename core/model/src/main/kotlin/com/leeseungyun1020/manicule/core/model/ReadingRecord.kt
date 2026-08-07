@@ -18,6 +18,9 @@ data class ReadingRecord(
         get() = endPage - startPage + 1
 
     init {
+        require(isbn.isNotBlank()) {
+            "isbn must not be blank"
+        }
         require(startPage >= 1) {
             "startPage must be at least 1, was $startPage"
         }
