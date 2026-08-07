@@ -10,10 +10,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.leeseungyun1020.manicule.feature.home.navigation.HomeRoute
-import com.leeseungyun1020.manicule.feature.library.navigation.LibraryRoute
-import com.leeseungyun1020.manicule.feature.settings.navigation.SettingsRoute
-import com.leeseungyun1020.manicule.feature.stats.navigation.StatsRoute
 
 /**
  * Manicule 의 최상위 navigation 상태 컨테이너.
@@ -33,13 +29,9 @@ class ManiculeAppState(
      */
     val currentTopLevelDestination: TopLevelDestination?
         @Composable get() {
-            val current = navController.currentBackStackEntryAsState().value?.destination
-            return when {
-                current?.hasRoute<HomeRoute>() == true -> TopLevelDestination.HOME
-                current?.hasRoute<LibraryRoute>() == true -> TopLevelDestination.LIBRARY
-                current?.hasRoute<StatsRoute>() == true -> TopLevelDestination.STATS
-                current?.hasRoute<SettingsRoute>() == true -> TopLevelDestination.SETTINGS
-                else -> null
+            val current = navController.currentBackStackEntryAsState().value?.destination ?: return null
+            return topLevelDestinations.firstOrNull { destination ->
+                current.hasRoute(destination.route::class)
             }
         }
 
