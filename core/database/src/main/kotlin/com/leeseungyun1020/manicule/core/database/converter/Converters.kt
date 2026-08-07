@@ -4,6 +4,7 @@ import androidx.room.TypeConverter
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 class Converters {
     @TypeConverter
@@ -11,6 +12,12 @@ class Converters {
 
     @TypeConverter
     fun toLocalDate(value: String?): LocalDate? = value?.let { LocalDate.parse(it) }
+
+    @TypeConverter
+    fun fromLocalTime(value: LocalTime?): String? = value?.toString()
+
+    @TypeConverter
+    fun toLocalTime(value: String?): LocalTime? = value?.let { LocalTime.parse(it) }
 
     @TypeConverter
     fun fromInstant(value: Instant?): Long? = value?.toEpochMilliseconds()

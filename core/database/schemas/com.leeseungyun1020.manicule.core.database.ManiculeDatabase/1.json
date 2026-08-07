@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "bea1f291d873c5aa85064ad425da0ca1",
+    "identityHash": "f2815468e09f8a2fb32b00eb2c1df8b3",
     "entities": [
       {
         "tableName": "books",
@@ -146,7 +146,7 @@
       },
       {
         "tableName": "reading_records",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `isbn` TEXT NOT NULL, `date` TEXT NOT NULL, `cumulativePage` INTEGER NOT NULL, FOREIGN KEY(`isbn`) REFERENCES `books`(`isbn`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `isbn` TEXT NOT NULL, `date` TEXT NOT NULL, `time` TEXT NOT NULL, `startPage` INTEGER NOT NULL, `endPage` INTEGER NOT NULL, FOREIGN KEY(`isbn`) REFERENCES `books`(`isbn`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -167,8 +167,20 @@
             "notNull": true
           },
           {
-            "fieldPath": "cumulativePage",
-            "columnName": "cumulativePage",
+            "fieldPath": "time",
+            "columnName": "time",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startPage",
+            "columnName": "startPage",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endPage",
+            "columnName": "endPage",
             "affinity": "INTEGER",
             "notNull": true
           }
@@ -181,14 +193,13 @@
         },
         "indices": [
           {
-            "name": "index_reading_records_isbn_date",
-            "unique": true,
+            "name": "index_reading_records_isbn",
+            "unique": false,
             "columnNames": [
-              "isbn",
-              "date"
+              "isbn"
             ],
             "orders": [],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_reading_records_isbn_date` ON `${TABLE_NAME}` (`isbn`, `date`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_reading_records_isbn` ON `${TABLE_NAME}` (`isbn`)"
           },
           {
             "name": "index_reading_records_date",
@@ -241,7 +252,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bea1f291d873c5aa85064ad425da0ca1')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f2815468e09f8a2fb32b00eb2c1df8b3')"
     ]
   }
 }
