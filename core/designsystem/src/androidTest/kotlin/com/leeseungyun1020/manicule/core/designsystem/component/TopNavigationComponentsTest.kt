@@ -42,13 +42,13 @@ class TopNavigationComponentsTest {
     }
 
     @Test
-    fun searchBar_requestsFocusWhenAutoFocusIsEnabled() {
+    fun searchBar_requestsInitialFocus() {
         composeTestRule.setContent {
             ManiculeTheme {
                 ManiculeSearchBar(
                     state = rememberTextFieldState(),
                     onSearch = {},
-                    autoFocus = true,
+                    requestInitialFocus = true,
                 )
             }
         }
@@ -57,16 +57,13 @@ class TopNavigationComponentsTest {
     }
 
     @Test
-    fun readOnlySearchBar_triggersOnlyReadOnlyClick() {
+    fun searchEntry_invokesClick() {
         val clickCount = mutableIntStateOf(0)
         composeTestRule.setContent {
             ManiculeTheme {
-                ManiculeSearchBar(
-                    state = rememberTextFieldState(),
-                    onSearch = {},
+                ManiculeSearchEntry(
+                    onClick = { clickCount.intValue++ },
                     placeholder = "Find a book",
-                    readOnly = true,
-                    onReadOnlyClick = { clickCount.intValue++ },
                 )
             }
         }
@@ -74,24 +71,6 @@ class TopNavigationComponentsTest {
         composeTestRule.onNodeWithText("Find a book").performClick()
 
         composeTestRule.runOnIdle { assertEquals(1, clickCount.intValue) }
-    }
-
-    @Test
-    fun editableSearchBar_doesNotTriggerReadOnlyClick() {
-        val clickCount = mutableIntStateOf(0)
-        composeTestRule.setContent {
-            ManiculeTheme {
-                ManiculeSearchBar(
-                    state = rememberTextFieldState(),
-                    onSearch = {},
-                    onReadOnlyClick = { clickCount.intValue++ },
-                )
-            }
-        }
-
-        composeTestRule.onNode(hasSetTextAction()).performClick()
-
-        composeTestRule.runOnIdle { assertEquals(0, clickCount.intValue) }
     }
 
     @Test

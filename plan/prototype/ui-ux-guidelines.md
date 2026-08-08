@@ -128,6 +128,7 @@
 |                     | `ManiculeSegmentedButton`                          | 세그먼트 버튼      |
 |                     | `ManiculeTextField`                                | 텍스트 입력        |
 |                     | `ManiculeTopAppBar`                                | 상단 앱바         |
+|                     | `ManiculeSearchEntry`                              | 검색 화면 진입      |
 |                     | `ManiculeSearchBar`                                    | 공통 검색 바       |
 |                     | `ManiculeSectionHeader`                                | 섹션 헤더         |
 |                     | `ManiculeSnackbarHost`                                 | 스낵바 호스트 및 Undo 지원 |
@@ -147,10 +148,10 @@
 
 | 변형 | 화면 | 구성 컴포넌트 |
 |---|---|---|
-| **1a** 계속 사용자 | 홈 | `ManiculeSearchBar`(readOnly) · `ManiculeIconButton`(스캔) · `ManiculeCard`(요약, onClick) · `ReadingCalendarGrid`(최근 7일) · `ManiculeStatTile`×2 · `ManiculeSectionHeader`(더보기) · `BookCarouselItem`(f) |
-| **1b** 첫 사용자 · 빈 상태 | 홈 | `ManiculeSearchBar`(readOnly) · `ManiculeDashedCard`(빈 요약) · `OnboardingGuide`(f) · `ManiculeButton`×2 |
+| **1a** 계속 사용자 | 홈 | `ManiculeSearchEntry` · `ManiculeIconButton`(스캔) · `ManiculeCard`(요약, onClick) · `ReadingCalendarGrid`(최근 7일) · `ManiculeStatTile`×2 · `ManiculeSectionHeader`(더보기) · `BookCarouselItem`(f) |
+| **1b** 첫 사용자 · 빈 상태 | 홈 | `ManiculeSearchEntry` · `ManiculeDashedCard`(빈 요약) · `OnboardingGuide`(f) · `ManiculeButton`×2 |
 | **1c** 읽는 중 없음 | 홈 | 1a 요약부 + `ManiculeEmptyState`(inline, `actions` 1~2개) |
-| **2a** 검색어 없음 | 검색 | `ManiculeSearchBar`(autoFocus) · `ManiculeEmptyState` — 앱바 없음 |
+| **2a** 검색어 없음 | 검색 | `ManiculeSearchBar`(requestInitialFocus) · `ManiculeEmptyState` — 앱바 없음 |
 | **2b** 최근 검색어 리스트 | 검색 | `ManiculeSearchBar` · `ManiculeSectionHeader` · M3 `ListItem`(leading=History, trailing=Delete)×n · `HorizontalDivider` |
 | **2c** 입력 중 로컬 필터 | 검색 | `ManiculeSearchBar` · M3 `ListItem`(leading=Search, 입력값 부분 강조는 호출부 `AnnotatedString`)×n |
 | **3a** 결과 컴팩트 리스트 | 검색 결과 | `ManiculeSearchBar` · "검색 결과" 캡션(`labelMedium`·`onSurfaceVariant`, 배지 아님) · `BookListItem`×n · `ManiculeLoading`(작은 크기, 페이징) |
