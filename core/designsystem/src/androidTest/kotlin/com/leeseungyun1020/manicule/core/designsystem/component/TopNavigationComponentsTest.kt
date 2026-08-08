@@ -2,10 +2,17 @@ package com.leeseungyun1020.manicule.core.designsystem.component
 
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
@@ -68,7 +75,17 @@ class TopNavigationComponentsTest {
             }
         }
 
-        composeTestRule.onNodeWithText("Find a book").performClick()
+        val searchEntry = composeTestRule.onNodeWithContentDescription("Find a book")
+        searchEntry
+            .assertHasClickAction()
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.Role,
+                    Role.Button,
+                ),
+            )
+        composeTestRule.onAllNodes(hasSetTextAction()).assertCountEquals(0)
+        searchEntry.performClick()
 
         composeTestRule.runOnIdle { assertEquals(1, clickCount.intValue) }
     }
