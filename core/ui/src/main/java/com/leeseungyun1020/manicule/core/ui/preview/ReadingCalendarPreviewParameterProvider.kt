@@ -1,15 +1,15 @@
 package com.leeseungyun1020.manicule.core.ui.preview
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import com.leeseungyun1020.manicule.core.model.ContributionDay
+import com.leeseungyun1020.manicule.core.model.ReadingCalendarDay
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.todayIn
 
-class ReadingCalendarPreviewParameterProvider : PreviewParameterProvider<List<ContributionDay>> {
-    override val values: Sequence<List<ContributionDay>>
+class ReadingCalendarPreviewParameterProvider : PreviewParameterProvider<List<ReadingCalendarDay>> {
+    override val values: Sequence<List<ReadingCalendarDay>>
         get() {
             val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
             val days =
@@ -23,7 +23,7 @@ class ReadingCalendarPreviewParameterProvider : PreviewParameterProvider<List<Co
                             daysAgo % 2 == 0 -> 60
                             else -> 120
                         }
-                    ContributionDay.of(date, pages)
+                    ReadingCalendarDay.of(date, pages)
                 }
             return sequenceOf(days)
         }

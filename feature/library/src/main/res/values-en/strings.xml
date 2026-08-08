@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_stub_label">Library\n(stub — implemented in a later phase)</string>
+</resources>

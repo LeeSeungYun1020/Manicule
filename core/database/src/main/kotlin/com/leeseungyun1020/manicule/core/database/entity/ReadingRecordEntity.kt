@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 @Entity(
     tableName = "reading_records",
@@ -17,7 +18,7 @@ import kotlinx.datetime.LocalDate
         ),
     ],
     indices = [
-        Index(value = ["isbn", "date"], unique = true),
+        Index(value = ["isbn"]),
         Index(value = ["date"]),
     ],
 )
@@ -25,5 +26,7 @@ data class ReadingRecordEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val isbn: String,
     val date: LocalDate,
-    val cumulativePage: Int,
+    val time: LocalTime,
+    val startPage: Int,
+    val endPage: Int,
 )

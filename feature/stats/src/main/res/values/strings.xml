@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stats_stub_label">통계\n(stub — 후속 단계에서 구현)</string>
+</resources>
