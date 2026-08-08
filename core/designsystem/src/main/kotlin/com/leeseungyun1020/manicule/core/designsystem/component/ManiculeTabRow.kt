@@ -22,8 +22,7 @@ fun <T> ManiculeTabRow(
     modifier: Modifier = Modifier,
     tabLabel: (T) -> String = { it.toString() },
 ) {
-    require(tabs.isNotEmpty()) { "tabs must not be empty" }
-    require(selectedTabIndex in tabs.indices) { "selectedTabIndex must be in tabs.indices" }
+    if (tabs.isEmpty() || selectedTabIndex !in tabs.indices) return
 
     SecondaryTabRow(
         selectedTabIndex = selectedTabIndex,
