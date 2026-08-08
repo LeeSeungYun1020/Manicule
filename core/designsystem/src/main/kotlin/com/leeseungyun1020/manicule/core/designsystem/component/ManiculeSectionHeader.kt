@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -15,12 +16,17 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 
+@Immutable
+class ManiculeSectionHeaderAction(
+    val label: String,
+    val onClick: () -> Unit,
+)
+
 @Composable
 fun ManiculeSectionHeader(
     title: String,
     modifier: Modifier = Modifier,
-    actionLabel: String? = null,
-    onActionClick: (() -> Unit)? = null,
+    action: ManiculeSectionHeaderAction? = null,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -34,9 +40,9 @@ fun ManiculeSectionHeader(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        if (actionLabel != null && onActionClick != null) {
-            TextButton(onClick = onActionClick) {
-                Text(text = actionLabel)
+        if (action != null) {
+            TextButton(onClick = action.onClick) {
+                Text(text = action.label)
             }
         }
     }
@@ -49,8 +55,11 @@ private fun ManiculeSectionHeaderPreview() {
         ManiculeSectionHeader(
             title = "Recently searched",
             modifier = Modifier.padding(horizontal = ManiculeSpacing.lg),
-            actionLabel = "Clear all",
-            onActionClick = {},
+            action =
+                ManiculeSectionHeaderAction(
+                    label = "Clear all",
+                    onClick = {},
+                ),
         )
     }
 }

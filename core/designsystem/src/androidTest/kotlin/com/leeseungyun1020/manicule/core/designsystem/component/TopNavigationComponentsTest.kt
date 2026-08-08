@@ -97,8 +97,11 @@ class TopNavigationComponentsTest {
             ManiculeTheme {
                 ManiculeSectionHeader(
                     title = "Recent searches",
-                    actionLabel = "Clear all",
-                    onActionClick = { clickCount.intValue++ },
+                    action =
+                        ManiculeSectionHeaderAction(
+                            label = "Clear all",
+                            onClick = { clickCount.intValue++ },
+                        ),
                 )
             }
         }
