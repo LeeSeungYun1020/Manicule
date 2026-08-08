@@ -7,6 +7,7 @@
 
 - `ReadingCalendar` UI 명칭과 그리드 터치·날짜별 툴팁
 - 최근 검색어 조회·저장·전체 삭제·개별 삭제 Repository와 UseCase
+- 검색 화면 진입용 `ManiculeSearchEntry`와 입력용 `ManiculeSearchBar` 역할 분리
 
 ## 선행 계약
 
