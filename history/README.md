@@ -54,3 +54,4 @@
 - [13daace](13daace.md) — refactor: 검색 진입과 입력 컴포넌트 분리
 - [26bce83](26bce83.md) — refactor: 독서 기록 세션 계약 적용
 - [a542480](a542480.md) — refactor: feature navigation 경계 적용
+- [5cbc5dd](5cbc5dd.md) — feat: 공유 독서 통계 집계 구현
