@@ -13,7 +13,7 @@ import kotlinx.datetime.LocalDate
  * @property addedAt       서재에 처음 추가된 시각
  * @property updatedAt     마지막 수정 시각 (정렬에 사용)
  * @property finishedAt    완독 일자 (FINISHED 일 때만 의미 있음)
- * @property currentPage   가장 최근 [ReadingRecord.cumulativePage]. 진도 표시용 캐시 — 미기록 시 null.
+ * @property currentPage   [ReadingRecord.endPage]의 최댓값. 진도 표시용 캐시 — 미기록 시 null.
  */
 data class BookEntry(
     val book: Book,

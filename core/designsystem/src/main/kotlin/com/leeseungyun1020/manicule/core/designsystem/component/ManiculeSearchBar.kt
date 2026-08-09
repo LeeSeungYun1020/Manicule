@@ -1,6 +1,5 @@
 package com.leeseungyun1020.manicule.core.designsystem.component
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -31,17 +30,15 @@ fun ManiculeSearchBar(
     onSearch: (String) -> Unit,
     modifier: Modifier = Modifier,
     placeholder: String? = null,
-    readOnly: Boolean = false,
-    autoFocus: Boolean = false,
-    onReadOnlyClick: (() -> Unit)? = null,
+    requestInitialFocus: Boolean = false,
     leadingIcon: (@Composable () -> Unit)? = null,
     trailingIcon: (@Composable () -> Unit)? = null,
 ) {
     val focusRequester = remember { FocusRequester() }
     val searchBarState = rememberSearchBarState()
 
-    LaunchedEffect(autoFocus, readOnly) {
-        if (autoFocus && !readOnly) {
+    LaunchedEffect(requestInitialFocus) {
+        if (requestInitialFocus) {
             focusRequester.requestFocus()
         }
     }
@@ -52,17 +49,7 @@ fun ManiculeSearchBar(
                 textFieldState = state,
                 searchBarState = searchBarState,
                 onSearch = onSearch,
-                modifier =
-                    Modifier
-                        .focusRequester(focusRequester)
-                        .then(
-                            if (readOnly && onReadOnlyClick != null) {
-                                Modifier.clickable(onClick = onReadOnlyClick)
-                            } else {
-                                Modifier
-                            },
-                        ),
-                readOnly = readOnly,
+                modifier = Modifier.focusRequester(focusRequester),
                 placeholder = placeholder?.let { { Text(text = it) } },
                 leadingIcon = leadingIcon,
                 trailingIcon = trailingIcon,
@@ -85,7 +72,7 @@ private fun ManiculeSearchBarPreview() {
                 onSearch = {},
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = "Search books",
-                autoFocus = true,
+                requestInitialFocus = true,
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
@@ -94,26 +81,5 @@ private fun ManiculeSearchBarPreview() {
                 },
             )
         }
-    }
-}
-
-@ManiculePreview
-@Composable
-private fun ManiculeReadOnlySearchBarPreview() {
-    ManiculeTheme {
-        ManiculeSearchBar(
-            state = rememberTextFieldState(),
-            onSearch = {},
-            modifier = Modifier.fillMaxWidth().padding(ManiculeSpacing.lg),
-            placeholder = "Find a book",
-            readOnly = true,
-            onReadOnlyClick = {},
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = null,
-                )
-            },
-        )
     }
 }

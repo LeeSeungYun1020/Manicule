@@ -51,3 +51,6 @@
 - [d804e5e](d804e5e.md) — feat: 상단·탐색 공용 컴포넌트 추가
 - [f2caed9](f2caed9.md) — feat: 피드백·상태 공용 컴포넌트 추가
 - [48be36b](48be36b.md) — feat: 통계·도서 표시 컴포넌트 확정
+- [13daace](13daace.md) — refactor: 검색 진입과 입력 컴포넌트 분리
+- [26bce83](26bce83.md) — refactor: 독서 기록 세션 계약 적용
+- [a542480](a542480.md) — refactor: feature navigation 경계 적용

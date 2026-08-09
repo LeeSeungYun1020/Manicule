@@ -29,13 +29,9 @@ class ManiculeAppState(
      */
     val currentTopLevelDestination: TopLevelDestination?
         @Composable get() {
-            val current = navController.currentBackStackEntryAsState().value?.destination
-            return when {
-                current?.hasRoute<HomeRoute>() == true -> TopLevelDestination.HOME
-                current?.hasRoute<LibraryRoute>() == true -> TopLevelDestination.LIBRARY
-                current?.hasRoute<StatsRoute>() == true -> TopLevelDestination.STATS
-                current?.hasRoute<SettingsRoute>() == true -> TopLevelDestination.SETTINGS
-                else -> null
+            val current = navController.currentBackStackEntryAsState().value?.destination ?: return null
+            return topLevelDestinations.firstOrNull { destination ->
+                current.hasRoute(destination.route::class)
             }
         }
 

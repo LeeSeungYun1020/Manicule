@@ -324,6 +324,7 @@ core/designsystem/
     │   ├── ManiculeBottomSheet.kt              # 공통 바텀시트 레이아웃 (둥근 모서리, 닫기 버튼)
     │   ├── ManiculeSegmentedButton.kt          # 테두리 있는 둥근 탭 UI (테마, 통계기간 등 공통)
     │   ├── ManiculeLoading.kt
+    │   ├── ManiculeSearchEntry.kt              # 검색 화면 진입
     │   ├── ManiculeSearchBar.kt                # 공통 검색 바
     │   ├── ManiculeSectionHeader.kt            # 섹션 헤더
     │   ├── ManiculeSnackbarHost.kt             # 스낵바 호스트 및 Undo 지원

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="book_detail_stub_label">Book details\n(stub — implemented in a later phase)</string>
+</resources>

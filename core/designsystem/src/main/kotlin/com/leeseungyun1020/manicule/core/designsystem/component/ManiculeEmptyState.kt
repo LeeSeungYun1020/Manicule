@@ -3,8 +3,8 @@ package com.leeseungyun1020.manicule.core.designsystem.component
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,7 +34,7 @@ fun ManiculeEmptyState(
     modifier: Modifier = Modifier,
     description: String? = null,
     icon: (@Composable () -> Unit)? = null,
-    actions: (@Composable RowScope.() -> Unit)? = null,
+    actions: (@Composable FlowRowScope.() -> Unit)? = null,
 ) {
     ManiculeDashedCard(
         modifier = modifier.fillMaxWidth(),
@@ -68,9 +68,9 @@ fun ManiculeEmptyState(
             }
             if (actions != null) {
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.md))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
-                    verticalAlignment = Alignment.CenterVertically,
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm, Alignment.CenterHorizontally),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
                     content = actions,
                 )
             }

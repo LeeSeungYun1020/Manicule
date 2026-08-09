@@ -25,12 +25,13 @@ fun ManiculeSnackbarHost(
 suspend fun SnackbarHostState.showUndoSnackbar(
     message: String,
     undoLabel: String,
+    duration: SnackbarDuration = SnackbarDuration.Long,
 ): SnackbarResult {
     currentSnackbarData?.dismiss()
     return showSnackbar(
         message = message,
         actionLabel = undoLabel,
-        duration = SnackbarDuration.Short,
+        duration = duration,
     )
 }
 
