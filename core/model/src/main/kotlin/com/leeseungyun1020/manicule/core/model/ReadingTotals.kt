@@ -1,9 +1,6 @@
 package com.leeseungyun1020.manicule.core.model
 
-import kotlinx.datetime.LocalDate
-
-data class DailyReading(
-    val date: LocalDate,
+data class ReadingTotals(
     val pagesRead: Int,
     val bookCount: Int,
 )
