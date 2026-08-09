@@ -17,7 +17,7 @@
 | V1 | 검색 | 없음 | ⏳ 실행 가능 | 기존 검색 Data/Domain → 화면/ViewModel → Paging·Undo 테스트 |
 | V2 | 스캔 | 없음 | ⏳ 실행 가능 | Scanner core → 조회 UseCase → 권한·인식 UI → 성공/실패/회전 테스트 |
 | V3 | 설정 | 없음 | ⏳ 실행 가능 | Notifications → 알림 UseCase → 설정 UI → 스케줄·테마 테스트 |
-| V4 | 책 상세 | 없음 | ⏳ 실행 가능 | 기록·상태 Repository/UseCase → 상세/내 기록 UI → CRUD·자동 상태 전환 테스트 |
+| V4 | 책 상세 | 없음 | 🚧 책 정보 조회·기본 탭 완료 | 독서 상태 변경 API와 내 기록 상태 UI |
 | V5 | 서재 | 상태 변경은 V4 상태 API | 🚧 목록·정렬 실행 가능 | 정렬 쿼리/UseCase → 서재 UI → 정렬·삭제·Undo 테스트 |
 | V6 | 홈 | V5 서재 조회 계약; V7 공유 집계 | ⏳ 대기 | 공유 집계 재사용 → 홈 UseCase/UI → 첫 사용자·읽는 중 없음·요약 이동 테스트 |
 | V7 | 통계 | 없음 | ⏳ 실행 가능 | 공유 집계 계약 → 통계 UseCase/UI → 기간·날짜·스크롤 테스트 |
