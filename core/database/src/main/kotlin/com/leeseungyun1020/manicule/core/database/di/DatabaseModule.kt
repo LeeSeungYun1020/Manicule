@@ -6,6 +6,7 @@ import com.leeseungyun1020.manicule.core.database.ManiculeDatabase
 import com.leeseungyun1020.manicule.core.database.dao.BookDao
 import com.leeseungyun1020.manicule.core.database.dao.BookEntryDao
 import com.leeseungyun1020.manicule.core.database.dao.ReadingRecordDao
+import com.leeseungyun1020.manicule.core.database.dao.ReadingRecordStatsDao
 import com.leeseungyun1020.manicule.core.database.dao.RecentQueryDao
 import dagger.Module
 import dagger.Provides
@@ -37,6 +38,9 @@ object DatabaseModule {
 
     @Provides
     fun provideReadingRecordDao(database: ManiculeDatabase): ReadingRecordDao = database.readingRecordDao()
+
+    @Provides
+    fun provideReadingRecordStatsDao(database: ManiculeDatabase): ReadingRecordStatsDao = database.readingRecordStatsDao()
 
     @Provides
     fun provideRecentQueryDao(database: ManiculeDatabase): RecentQueryDao = database.recentQueryDao()
