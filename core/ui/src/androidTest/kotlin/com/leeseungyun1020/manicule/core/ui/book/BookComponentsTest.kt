@@ -1,6 +1,7 @@
 package com.leeseungyun1020.manicule.core.ui.book
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertHeightIsEqualTo
@@ -70,5 +71,23 @@ class BookComponentsTest {
         }
 
         composeTestRule.onNodeWithText("100%").assertIsDisplayed()
+    }
+
+    @Test
+    fun bookListItem_rendersTrailingContentWhenProvided() {
+        composeTestRule.setContent {
+            ManiculeTheme {
+                BookListItem(
+                    title = "Test Book",
+                    author = "Test Author",
+                    publisher = "Test Publisher",
+                    pubDate = "2026.01.01",
+                    imageUrl = null,
+                    trailingContent = { Text("120p") },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("120p").assertIsDisplayed()
     }
 }

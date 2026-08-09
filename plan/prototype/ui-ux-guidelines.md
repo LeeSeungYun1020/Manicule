@@ -172,7 +172,7 @@
 | **6f** 롱프레스 메뉴 | 서재 | `ManiculeBottomSheet` · M3 `ListItem`(삭제) · M3 `ListItem`×2(상태 변경) — 전 항목 `onSurface`, 강조색 없음 |
 | **7a** 4주 탭 | 통계 | `ManiculeTopAppBar` · `ManiculeSegmentedButton`(기간 4) · `ManiculeCard` · `ReadingCalendarGrid` · `ReadingCalendarLegend` · `ManiculeStatTile`×3 · `ReadingChart`(f) |
 | **7b** 1년 탭 | 통계 | 7a (가로 스크롤 + 좌우 축 고정) |
-| **7c** 오늘 탭 | 통계 | 7a 요약부 + `BookListItem`(소형, trailing=횟수·쪽수)×n |
+| **7c** 오늘 탭 | 통계 | 7a 요약부 + `BookListItem`(소형, trailing=쪽수)×n |
 | **7d** 기간 설정 시트 | 통계 | `ManiculeBottomSheet` · M3 `ListItem`×2(시작/종료일) · M3 `DatePickerDialog` · `ManiculeButton` |
 | **7e** 날짜 탭 시트 | 통계 | `ManiculeBottomSheet` · `BookListItem`(소형)×n |
 | **8a** 설정 | 설정 | `ManiculeTopAppBar` · `ManiculeSectionHeader`×3 · `ManiculeSegmentedButton`(테마 3) · M3 `ListItem`(trailing=Switch) · M3 `ListItem`(시간·라이선스·버전) · M3 `TimePickerDialog` |

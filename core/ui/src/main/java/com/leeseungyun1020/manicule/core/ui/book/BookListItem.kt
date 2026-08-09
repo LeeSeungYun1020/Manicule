@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
@@ -31,6 +32,7 @@ fun BookListItem(
     imageUrl: String?,
     modifier: Modifier = Modifier,
     placeholder: Painter? = null,
+    trailingContent: (@Composable () -> Unit)? = null,
 ) {
     Row(
         modifier =
@@ -38,6 +40,7 @@ fun BookListItem(
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface)
                 .padding(MaterialTheme.spacing.lg),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         BookCover(
             imageUrl = imageUrl,
@@ -83,6 +86,10 @@ fun BookListItem(
                     )
                 }
         }
+        if (trailingContent != null) {
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.md))
+            trailingContent()
+        }
     }
 }
 
@@ -105,5 +112,28 @@ private fun BookListItemPreview() {
                 )
             }
         }
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun BookListItemWithTrailingPreview() {
+    val book = BookPreviewParameterProvider().values.first()
+    ManiculeTheme {
+        BookListItem(
+            title = book.title,
+            author = book.author,
+            publisher = book.publisher,
+            pubDate = book.publishedDate?.toString().orEmpty(),
+            imageUrl = book.coverUrl,
+            placeholder = painterResource(id = R.drawable.sample_book_cover),
+            trailingContent = {
+                Text(
+                    text = "120p",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            },
+        )
     }
 }
