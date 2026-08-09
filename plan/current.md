@@ -16,7 +16,7 @@
 |---|---|---|---|
 | C1 | ReadingRecord 시간·시작/끝 페이지와 `pagesRead` 단일 계산, Entity/Converter, `currentPage` 쿼리, Mapper/Repository 명칭 | 없음 | ✅ 완료 |
 | C2 | 모듈 스캐폴딩, feature 소유 route 타입과 navigation 확장 함수 계약 | 없음 | ✅ 완료 |
-| C3 | 다중 feature 공용 Composable 계약·구현·크기·Preview; feature 전용 UI 제외 | 없음 | 🚧 PR 1 완료 — 상단·탐색, PR 2·3 대기 |
+| C3 | 다중 feature 공용 Composable 계약·구현·크기·Preview; feature 전용 UI 제외 | 없음 | 🚧 PR 1·2 완료 — 상단·탐색, 피드백·상태; PR 3 대기 |
 
 ## 버티컬 레인
 

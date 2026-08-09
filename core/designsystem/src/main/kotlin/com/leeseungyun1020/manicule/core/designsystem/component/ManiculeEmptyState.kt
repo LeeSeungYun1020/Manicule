@@ -3,6 +3,8 @@ package com.leeseungyun1020.manicule.core.designsystem.component
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,17 +26,15 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 /**
  * 데이터가 비어있을 때 표시하는 공통 빈 상태 컴포넌트.
  *
- * @param actionLabel null 이 아니면 클릭 가능한 안내 텍스트로 [onActionClick] 을 트리거.
- *                     예: "지금 책을 추가해 보세요." → 검색창 포커스
+ * @param actions 빈 상태에서 제공할 선택적 동작. 한두 개의 버튼을 배치할 때 사용한다.
  */
 @Composable
 fun ManiculeEmptyState(
     title: String,
     modifier: Modifier = Modifier,
     description: String? = null,
-    actionLabel: String? = null,
-    onActionClick: (() -> Unit)? = null,
     icon: (@Composable () -> Unit)? = null,
+    actions: (@Composable FlowRowScope.() -> Unit)? = null,
 ) {
     ManiculeDashedCard(
         modifier = modifier.fillMaxWidth(),
@@ -66,9 +66,13 @@ fun ManiculeEmptyState(
                     textAlign = TextAlign.Center,
                 )
             }
-            if (actionLabel != null && onActionClick != null) {
+            if (actions != null) {
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.md))
-                ManiculeButton(onClick = onActionClick, text = actionLabel)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm, Alignment.CenterHorizontally),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+                    content = actions,
+                )
             }
         }
     }
@@ -76,14 +80,25 @@ fun ManiculeEmptyState(
 
 @ManiculePreview
 @Composable
-private fun ManiculeEmptyStatePreview() {
+private fun ManiculeEmptyStateWithoutActionPreview() {
+    ManiculeTheme {
+        Box(Modifier.padding(MaterialTheme.spacing.lg)) {
+            ManiculeEmptyState(
+                title = "기록이 없어요",
+                description = "책을 읽고 첫 기록을 남겨 보세요",
+            )
+        }
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun ManiculeEmptyStateWithActionPreview() {
     ManiculeTheme {
         Box(Modifier.padding(MaterialTheme.spacing.lg)) {
             ManiculeEmptyState(
                 title = "서재가 비어 있어요",
                 description = "책을 검색하거나 스캔해 보세요",
-                actionLabel = "검색",
-                onActionClick = {},
                 icon = {
                     Icon(
                         imageVector = ManiculeIcons.Tab.LibraryFilled,
@@ -91,6 +106,26 @@ private fun ManiculeEmptyStatePreview() {
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(ManiculeSize.iconEmptyState),
                     )
+                },
+                actions = {
+                    ManiculeButton(onClick = {}, text = "검색")
+                },
+            )
+        }
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun ManiculeEmptyStateWithTwoActionsPreview() {
+    ManiculeTheme {
+        Box(Modifier.padding(MaterialTheme.spacing.lg)) {
+            ManiculeEmptyState(
+                title = "카메라 권한이 필요해요",
+                description = "권한을 허용하거나 책을 직접 검색해 보세요",
+                actions = {
+                    ManiculeButton(onClick = {}, text = "카메라 사용")
+                    ManiculeOutlinedButton(onClick = {}, text = "검색")
                 },
             )
         }
