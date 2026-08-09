@@ -6,6 +6,8 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -32,7 +34,9 @@ class SearchScreenTest {
         )
 
         composeTestRule.onNodeWithText("What book are you looking for?").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Search by title, author, or ISBN").assertIsFocused()
+        composeTestRule
+            .onNode(hasText("Search by title, author, or ISBN") and hasSetTextAction())
+            .assertIsFocused()
         composeTestRule.onNodeWithContentDescription("Navigate back").performClick()
 
         assertThat(navigatedBack).isTrue()
