@@ -27,9 +27,10 @@ fun BookProgressBar(
     totalPages: Int,
     modifier: Modifier = Modifier,
 ) {
+    if (totalPages <= 0) return
+
     val safeCurrentPage = currentPage.coerceAtLeast(0)
-    val safeTotalPage = totalPages.coerceAtLeast(1)
-    val progress = (safeCurrentPage.toDouble() / safeTotalPage).coerceIn(0.0, 1.0)
+    val progress = (safeCurrentPage.toDouble() / totalPages).coerceIn(0.0, 1.0)
     val percentage = (progress * 100).roundToInt()
 
     Column(modifier = modifier) {
@@ -46,7 +47,7 @@ fun BookProgressBar(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = stringResource(id = R.string.book_progress_text, safeCurrentPage, safeTotalPage),
+                text = stringResource(id = R.string.book_progress_text, safeCurrentPage, totalPages),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -67,7 +68,6 @@ private fun BookProgressBarPreview() {
             modifier = Modifier.padding(ManiculeSpacing.lg),
             verticalArrangement = Arrangement.spacedBy(ManiculeSpacing.lg),
         ) {
-            BookProgressBar(currentPage = 0, totalPages = 0)
             BookProgressBar(currentPage = 132, totalPages = 320)
             BookProgressBar(currentPage = 400, totalPages = 320)
         }

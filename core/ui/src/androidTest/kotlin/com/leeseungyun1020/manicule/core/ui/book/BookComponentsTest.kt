@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -71,6 +73,21 @@ class BookComponentsTest {
         }
 
         composeTestRule.onNodeWithText("100%").assertIsDisplayed()
+    }
+
+    @Test
+    fun bookProgressBar_doesNotRenderWhenTotalPagesIsUnknown() {
+        composeTestRule.setContent {
+            ManiculeTheme {
+                BookProgressBar(
+                    currentPage = 120,
+                    totalPages = 0,
+                    modifier = Modifier.testTag("unknown-total-progress"),
+                )
+            }
+        }
+
+        composeTestRule.onAllNodesWithTag("unknown-total-progress").assertCountEquals(0)
     }
 
     @Test
