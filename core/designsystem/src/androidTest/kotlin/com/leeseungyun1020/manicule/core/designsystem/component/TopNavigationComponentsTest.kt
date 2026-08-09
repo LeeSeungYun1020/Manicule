@@ -2,10 +2,18 @@ package com.leeseungyun1020.manicule.core.designsystem.component
 
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
@@ -42,13 +50,13 @@ class TopNavigationComponentsTest {
     }
 
     @Test
-    fun searchBar_requestsFocusWhenAutoFocusIsEnabled() {
+    fun searchBar_requestsInitialFocus() {
         composeTestRule.setContent {
             ManiculeTheme {
                 ManiculeSearchBar(
                     state = rememberTextFieldState(),
                     onSearch = {},
-                    autoFocus = true,
+                    requestInitialFocus = true,
                 )
             }
         }
@@ -57,41 +65,30 @@ class TopNavigationComponentsTest {
     }
 
     @Test
-    fun readOnlySearchBar_triggersOnlyReadOnlyClick() {
+    fun searchEntry_invokesClick() {
         val clickCount = mutableIntStateOf(0)
         composeTestRule.setContent {
             ManiculeTheme {
-                ManiculeSearchBar(
-                    state = rememberTextFieldState(),
-                    onSearch = {},
+                ManiculeSearchEntry(
+                    onClick = { clickCount.intValue++ },
                     placeholder = "Find a book",
-                    readOnly = true,
-                    onReadOnlyClick = { clickCount.intValue++ },
                 )
             }
         }
 
-        composeTestRule.onNodeWithText("Find a book").performClick()
+        val searchEntry = composeTestRule.onNodeWithContentDescription("Find a book")
+        searchEntry
+            .assertHasClickAction()
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.Role,
+                    Role.Button,
+                ),
+            )
+        composeTestRule.onAllNodes(hasSetTextAction()).assertCountEquals(0)
+        searchEntry.performClick()
 
         composeTestRule.runOnIdle { assertEquals(1, clickCount.intValue) }
-    }
-
-    @Test
-    fun editableSearchBar_doesNotTriggerReadOnlyClick() {
-        val clickCount = mutableIntStateOf(0)
-        composeTestRule.setContent {
-            ManiculeTheme {
-                ManiculeSearchBar(
-                    state = rememberTextFieldState(),
-                    onSearch = {},
-                    onReadOnlyClick = { clickCount.intValue++ },
-                )
-            }
-        }
-
-        composeTestRule.onNode(hasSetTextAction()).performClick()
-
-        composeTestRule.runOnIdle { assertEquals(0, clickCount.intValue) }
     }
 
     @Test
@@ -101,8 +98,11 @@ class TopNavigationComponentsTest {
             ManiculeTheme {
                 ManiculeSectionHeader(
                     title = "Recent searches",
-                    actionLabel = "Clear all",
-                    onActionClick = { clickCount.intValue++ },
+                    action =
+                        ManiculeSectionHeaderAction(
+                            label = "Clear all",
+                            onClick = { clickCount.intValue++ },
+                        ),
                 )
             }
         }
@@ -128,5 +128,36 @@ class TopNavigationComponentsTest {
         composeTestRule.onNodeWithText("My records").performClick()
 
         composeTestRule.runOnIdle { assertEquals(1, selectedTabIndex.intValue) }
+    }
+
+    @Test
+    fun tabRow_withEmptyTabs_rendersNothing() {
+        composeTestRule.setContent {
+            ManiculeTheme {
+                ManiculeTabRow(
+                    tabs = emptyList<String>(),
+                    selectedTabIndex = 0,
+                    onTabSelected = {},
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+    }
+
+    @Test
+    fun tabRow_withInvalidSelectedIndex_rendersNothing() {
+        composeTestRule.setContent {
+            ManiculeTheme {
+                ManiculeTabRow(
+                    tabs = listOf("Book information", "My records"),
+                    selectedTabIndex = 2,
+                    onTabSelected = {},
+                )
+            }
+        }
+
+        composeTestRule.onAllNodes(hasText("Book information")).assertCountEquals(0)
+        composeTestRule.onAllNodes(hasText("My records")).assertCountEquals(0)
     }
 }

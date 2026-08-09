@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.size
-import com.leeseungyun1020.manicule.core.model.ContributionDay
+import com.leeseungyun1020.manicule.core.model.ReadingCalendarDay
 import com.leeseungyun1020.manicule.core.ui.R
 import com.leeseungyun1020.manicule.core.ui.preview.ReadingCalendarPreviewParameterProvider
 import kotlinx.datetime.Clock
@@ -48,7 +48,7 @@ private data class ReadingCalendarSelectionEvent(
 
 @Composable
 fun ReadingCalendarGrid(
-    days: List<ContributionDay>,
+    days: List<ReadingCalendarDay>,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
@@ -69,7 +69,7 @@ fun ReadingCalendarGrid(
     val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
     var selectionEvent by remember { mutableStateOf<ReadingCalendarSelectionEvent?>(null) }
 
-    fun selectDay(day: ContributionDay) {
+    fun selectDay(day: ReadingCalendarDay) {
         selectionEvent =
             ReadingCalendarSelectionEvent(
                 date = day.date,
@@ -129,7 +129,7 @@ private fun LazyGridItemInfo.contains(position: Offset): Boolean =
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ReadingCalendarDayItem(
-    day: ContributionDay,
+    day: ReadingCalendarDay,
     isToday: Boolean,
     selectionEvent: ReadingCalendarSelectionEvent?,
     contentDescription: String,

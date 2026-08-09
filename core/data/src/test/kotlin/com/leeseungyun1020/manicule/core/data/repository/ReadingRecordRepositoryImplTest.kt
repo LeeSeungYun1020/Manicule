@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import org.junit.Before
 import org.junit.Test
 
@@ -32,19 +33,21 @@ class ReadingRecordRepositoryImplTest {
                     id = 0L,
                     isbn = "123",
                     date = LocalDate(2024, 4, 12),
-                    cumulativePage = 50,
+                    time = LocalTime(10, 0),
+                    startPage = 1,
+                    endPage = 50,
                 )
             val id = repository.saveRecord(record)
 
             assertThat(fakeDao.records).hasSize(1)
             assertThat(fakeDao.records[0].isbn).isEqualTo("123")
-            assertThat(fakeDao.records[0].cumulativePage).isEqualTo(50)
+            assertThat(fakeDao.records[0].endPage).isEqualTo(50)
         }
 
     @Test
     fun removeRecord_removes_from_dao() =
         runTest {
-            fakeDao.records.add(ReadingRecordEntity(1L, "123", LocalDate(2024, 4, 12), 50))
+            fakeDao.records.add(recordEntity(id = 1L, endPage = 50))
             repository.removeRecord(1L)
             assertThat(fakeDao.records).isEmpty()
         }
@@ -52,8 +55,8 @@ class ReadingRecordRepositoryImplTest {
     @Test
     fun observeRecordsByIsbn_returns_mapped_flow() =
         runTest {
-            fakeDao.records.add(ReadingRecordEntity(1L, "123", LocalDate(2024, 4, 12), 50))
-            fakeDao.records.add(ReadingRecordEntity(2L, "123", LocalDate(2024, 4, 13), 100))
+            fakeDao.records.add(recordEntity(id = 1L, endPage = 50))
+            fakeDao.records.add(recordEntity(id = 2L, endPage = 100))
 
             val records = repository.observeRecordsByIsbn("123").first()
             assertThat(records).hasSize(2)
@@ -61,20 +64,32 @@ class ReadingRecordRepositoryImplTest {
         }
 
     @Test
-    fun getLatestCumulativePage_returns_value_from_dao() =
+    fun getMaxEndPage_returns_value_from_dao() =
         runTest {
-            fakeDao.records.add(ReadingRecordEntity(1L, "123", LocalDate(2024, 4, 12), 50))
-            fakeDao.records.add(ReadingRecordEntity(2L, "123", LocalDate(2024, 4, 13), 100))
+            fakeDao.records.add(recordEntity(id = 1L, endPage = 100))
+            fakeDao.records.add(recordEntity(id = 2L, endPage = 50))
 
-            val latest = repository.getLatestCumulativePage("123")
-            assertThat(latest).isEqualTo(100)
+            val maxEndPage = repository.getMaxEndPage("123")
+            assertThat(maxEndPage).isEqualTo(100)
         }
 }
+
+private fun recordEntity(
+    id: Long,
+    endPage: Int,
+) = ReadingRecordEntity(
+    id = id,
+    isbn = "123",
+    date = LocalDate(2024, 4, 12),
+    time = LocalTime(10, 0),
+    startPage = 1,
+    endPage = endPage,
+)
 
 class FakeReadingRecordDao : ReadingRecordDao {
     val records = mutableListOf<ReadingRecordEntity>()
 
-    override suspend fun upsertInternal(record: ReadingRecordEntity): Long {
+    override suspend fun upsert(record: ReadingRecordEntity): Long {
         if (record.id == 0L) {
             val newId = (records.maxOfOrNull { it.id } ?: 0L) + 1L
             records.add(record.copy(id = newId))
@@ -89,11 +104,6 @@ class FakeReadingRecordDao : ReadingRecordDao {
             return record.id
         }
     }
-
-    override suspend fun getId(
-        isbn: String,
-        date: LocalDate,
-    ): Long? = records.find { it.isbn == isbn && it.date == date }?.id
 
     override suspend fun delete(id: Long) {
         records.removeIf { it.id == id }
@@ -111,6 +121,5 @@ class FakeReadingRecordDao : ReadingRecordDao {
             },
         )
 
-    override suspend fun latestCumulativeFor(isbn: String): Int? =
-        records.filter { it.isbn == isbn }.maxByOrNull { it.date }?.cumulativePage
+    override suspend fun getMaxEndPage(isbn: String): Int? = records.filter { it.isbn == isbn }.maxOfOrNull(ReadingRecordEntity::endPage)
 }

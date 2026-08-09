@@ -16,5 +16,5 @@ interface ReadingRecordRepository {
         end: LocalDate,
     ): Flow<List<ReadingRecord>>
 
-    suspend fun getLatestCumulativePage(isbn: String): Int?
+    suspend fun getMaxEndPage(isbn: String): Int?
 }

@@ -50,3 +50,6 @@
 - [4bea968](4bea968.md) — docs: 버티컬 슬라이스 병렬 작업 계획 개편
 - [d804e5e](d804e5e.md) — feat: 상단·탐색 공용 컴포넌트 추가
 - [f2caed9](f2caed9.md) — feat: 피드백·상태 공용 컴포넌트 추가
+- [13daace](13daace.md) — refactor: 검색 진입과 입력 컴포넌트 분리
+- [26bce83](26bce83.md) — refactor: 독서 기록 세션 계약 적용
+- [a542480](a542480.md) — refactor: feature navigation 경계 적용
