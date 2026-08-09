@@ -510,11 +510,13 @@ core/scanner/
 └── src/main/kotlin/com/leeseungyun1020/manicule/core/scanner/
     ├── di/
     │   └── ScannerModule.kt
-    ├── BarcodeScanner.kt                   # interface — Flow<ScanResult>
-    ├── MlKitBarcodeScanner.kt              # BarcodeScanner 구현체, ImageAnalysis UseCase 제공
-    ├── IsbnValidator.kt                    # ISBN-10/13 체크섬
-    └── ScanResult.kt                       # Recognized(isbn) / Failed / Idle
+    ├── BarcodeAnalyzerFactory.kt           # CameraX 분석 세션 생성
+    ├── BarcodeAnalyzerSession.kt           # ImageAnalysis.Analyzer 제공 및 detector 수명 관리
+    ├── MlKitBarcodeAnalyzerFactory.kt      # MlKitAnalyzer 기반 구현
+    └── ScanResult.kt                       # Success(rawValue) / Failure
 ```
+
+`core:scanner`는 ML Kit의 첫 non-null `Barcode.rawValue`를 변경 없이 전달한다. ISBN 체크섬·접두사·정규화와 바코드 포맷 제한은 두지 않으며, 값의 도서 조회 성공 여부는 후속 Domain 흐름이 결정한다.
 
 ### 4.11 `core:notifications`
 
@@ -627,7 +629,7 @@ dependencies {
 | `core:database`      | Room in-memory DAO 테스트 (instrumented)                              |
 | `core:datastore`     | TestDataStore 기반 UserPreferences 읽기/쓰기 테스트                         |
 | `core:network`       | MockWebServer 기반 NlkApi 테스트                                        |
-| `core:scanner`       | ISBN 유효성 검증 알고리즘 및 스캔 결과 가공 테스트                                    |
+| `core:scanner`       | rawValue 원문 전달, 중복 억제, detector 오류·해제 테스트                           |
 | `core:notifications` | WorkManager 기반 알림 예약 및 스케줄링 검증                                     |
 | `core:designsystem`  | 공통 컴포넌트(Button, Dialog 등) Compose UI 테스트(`createComposeRule`) |
 | `core:ui`            | BookCover, BookListItem, BookProgressBar, ReadingCalendarGrid Compose UI 테스트 |

@@ -125,16 +125,16 @@
 
 | 계층 | 범위 |
 |---|---|
-| Data | `core:scanner`에 CameraX ImageAnalysis, ML Kit 바코드 인식, ISBN-10/13 검증과 `ScanResult`를 구현한다. |
-| Domain | 스캔한 ISBN으로 책을 조회하는 UseCase를 구현하고 기존 Book Repository에 연결한다. |
+| Data | `core:scanner`에 CameraX ImageAnalysis, ML Kit 바코드 인식과 `ScanResult`를 구현한다. 첫 non-null `Barcode.rawValue`를 변경 없이 전달하며 동일 세션의 후속 결과만 억제한다. ISBN 체크섬·접두사·정규화와 바코드 포맷 제한은 적용하지 않는다. |
+| Domain | 스캔한 원문 값을 기존 Book Repository 조회에 전달하는 UseCase를 구현한다. 조회 결과 없음은 기존 scanner 실패 흐름으로 처리한다. |
 | UI | 권한 요청·거부, 카메라 인식, 성공 시 책 상세 이동, 실패 시 검색 이동 화면과 ViewModel을 구현한다. |
-| 검증 | ISBN 체크섬, 성공/실패, 권한 상태, 중복 인식 억제, 회전 시 `targetRotation` 갱신 테스트를 작성한다. |
+| 검증 | rawValue 원문 전달, 성공/오류, 권한 상태, 중복 인식 억제, detector 해제와 회전 시 `targetRotation` 갱신 테스트를 작성한다. |
 
 권장 PR 순서:
 
-1. Scanner core와 ISBN 검증(독립 플랫폼 기반 PR)
+1. CameraX–ML Kit Scanner core와 원문 결과 전달(독립 플랫폼 기반 PR)
 2. 카메라 권한과 Preview·회전 처리
-3. ISBN 인식·도서 조회·책 상세 이동과 실패 시 검색 이동
+3. 바코드 인식·도서 조회·책 상세 이동과 실패 시 검색 이동
 
 ### V3 — 설정
 
@@ -260,7 +260,7 @@
 | 기능 | 계약 | 버티컬 레인 | 완료 조건 |
 |---|---|---|---|
 | 검색 | C2, C3 | V1 | Data/Domain/UI/Paging·Undo 테스트 |
-| 스캔 | C2, C3 | V2 | Scanner core/조회/UI/권한·회전 테스트 |
+| 스캔 | C2, C3 | V2 | CameraX–ML Kit Scanner core/조회/UI/권한·회전 테스트 |
 | 설정·알림 | C2, C3 | V3 | Notifications/UseCase/UI/스케줄·테마 테스트 |
 | 책 상세·독서 기록 | C1, C2, C3 | V4 | Repository/UseCase/UI/CRUD·상태 테스트 |
 | 서재 | C1, C2, C3 | V5 | 정렬·상태 Data/Domain/UI/Undo 테스트 |
