@@ -10,8 +10,10 @@ import com.leeseungyun1020.manicule.core.data.mapper.asEntity
 import com.leeseungyun1020.manicule.core.data.mapper.asExternalModel
 import com.leeseungyun1020.manicule.core.data.paging.NlkBookPagingSource
 import com.leeseungyun1020.manicule.core.model.Book
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.supervisorScope
 import javax.inject.Inject
 
 class BookRepositoryImpl
@@ -28,7 +30,28 @@ class BookRepositoryImpl
                 val response = bookRemoteDataSource.searchBooks(isbn = isbn)
                 val dto = response.docs.firstOrNull() ?: throw NoSuchElementException("API에서 해당 ISBN의 책을 찾을 수 없습니다.")
 
-                val book = dto.asExternalModel()
+                val mappedBook = dto.asExternalModel()
+                val book =
+                    supervisorScope {
+                        val introduction =
+                            async {
+                                mappedBook.introduction
+                                    ?: mappedBook.introductionUrl?.let { url ->
+                                        runCatching { bookRemoteDataSource.fetchNlkContent(url) }.getOrNull()
+                                    }
+                            }
+                        val tableOfContents =
+                            async {
+                                mappedBook.tableOfContents
+                                    ?: mappedBook.tableOfContentsUrl?.let { url ->
+                                        runCatching { bookRemoteDataSource.fetchNlkContent(url) }.getOrNull()
+                                    }
+                            }
+                        mappedBook.copy(
+                            introduction = introduction.await(),
+                            tableOfContents = tableOfContents.await(),
+                        )
+                    }
                 bookLocalDataSource.save(book.asEntity())
             }.onFailure {
                 Log.e("BookRepository", "Failed to sync book with ISBN $isbn", it)

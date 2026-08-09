@@ -59,6 +59,8 @@ class BookMapperTest {
                 bookTbCntUrl = "",
                 bookIntroductionUrl = "",
                 bookSummaryUrl = "",
+                bookIntroduction = "소개",
+                bookTbCnt = "목차",
             )
 
         // when
@@ -74,6 +76,8 @@ class BookMapperTest {
         assertThat(book.price).isEqualTo(22000)
         assertThat(book.category).isEqualTo("3")
         assertThat(book.coverUrl).isNull()
+        assertThat(book.introduction).isEqualTo("소개")
+        assertThat(book.tableOfContents).isEqualTo("목차")
     }
 
     @Test
