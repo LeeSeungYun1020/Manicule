@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
@@ -53,7 +53,7 @@ fun BookListItem(
         Column(
             modifier =
                 Modifier
-                    .height(BookCoverSize.Small.height)
+                    .heightIn(BookCoverSize.Small.height)
                     .weight(1f),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -118,22 +118,28 @@ private fun BookListItemPreview() {
 @ManiculePreview
 @Composable
 private fun BookListItemWithTrailingPreview() {
-    val book = BookPreviewParameterProvider().values.first()
+    val books = BookPreviewParameterProvider().values.toList()
     ManiculeTheme {
-        BookListItem(
-            title = book.title,
-            author = book.author,
-            publisher = book.publisher,
-            pubDate = book.publishedDate?.toString().orEmpty(),
-            imageUrl = book.coverUrl,
-            placeholder = painterResource(id = R.drawable.sample_book_cover),
-            trailingContent = {
-                Text(
-                    text = "120p",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
+        Column(
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+        ) {
+            books.forEach { book ->
+                BookListItem(
+                    title = book.title,
+                    author = book.author,
+                    publisher = book.publisher,
+                    pubDate = book.publishedDate?.toString().orEmpty(),
+                    imageUrl = book.coverUrl,
+                    placeholder = painterResource(id = R.drawable.sample_book_cover),
+                    trailingContent = {
+                        Text(
+                            text = "${book.totalPages?.let { it / 4 } ?: 300}p",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    },
                 )
-            },
-        )
+            }
+        }
     }
 }
