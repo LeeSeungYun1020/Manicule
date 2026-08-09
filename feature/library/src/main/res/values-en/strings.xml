@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="library_stub_label">Library\n(stub — implemented in a later phase)</string>
+    <string name="library_title">Library</string>
+    <string name="library_tab_want">Want to read</string>
+    <string name="library_tab_reading">Reading</string>
+    <string name="library_tab_finished">Finished</string>
+    <string name="library_empty_title">Your library is empty</string>
+    <string name="library_empty_description">Search or scan a book to add it to your library</string>
+    <string name="library_search">Search</string>
+    <string name="library_scan">Scan</string>
+    <string name="library_error_title">Couldn’t load your library</string>
+    <string name="library_error_description">Please try again in a moment</string>
+    <string name="library_retry">Retry</string>
 </resources>

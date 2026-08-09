@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="library_stub_label">서재\n(stub — 후속 단계에서 구현)</string>
+    <string name="library_title">서재</string>
+    <string name="library_tab_want">읽고 싶음</string>
+    <string name="library_tab_reading">읽는 중</string>
+    <string name="library_tab_finished">다 읽음</string>
+    <string name="library_empty_title">서재가 비어 있어요</string>
+    <string name="library_empty_description">책을 검색하거나 스캔해 서재에 담아 보세요</string>
+    <string name="library_search">검색</string>
+    <string name="library_scan">스캔</string>
+    <string name="library_error_title">서재를 불러오지 못했어요</string>
+    <string name="library_error_description">잠시 후 다시 시도해 주세요</string>
+    <string name="library_retry">다시 시도</string>
 </resources>
