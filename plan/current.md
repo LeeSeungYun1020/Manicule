@@ -7,6 +7,7 @@
 
 - `ReadingCalendar` UI 명칭과 그리드 터치·날짜별 툴팁
 - 최근 검색어 조회·저장·전체 삭제·개별 삭제 Repository와 UseCase
+- 검색 화면 진입용 `ManiculeSearchEntry`와 입력용 `ManiculeSearchBar` 역할 분리
 - `ReadingRecord` 시간·시작/끝 페이지 세션 계약과 `MAX(endPage)` 기반 현재 페이지 조회
 
 ## 선행 계약
@@ -15,7 +16,7 @@
 |---|---|---|---|
 | C1 | ReadingRecord 시간·시작/끝 페이지와 `pagesRead` 단일 계산, Entity/Converter, `currentPage` 쿼리, Mapper/Repository 명칭 | 없음 | ✅ 완료 |
 | C2 | 모듈 스캐폴딩, feature 소유 route 타입과 navigation 확장 함수 계약 | 없음 | ✅ 완료 |
-| C3 | 다중 feature 공용 Composable 계약·구현·크기·Preview; feature 전용 UI 제외 | 없음 | ⏳ 실행 가능 |
+| C3 | 다중 feature 공용 Composable 계약·구현·크기·Preview; feature 전용 UI 제외 | 없음 | 🚧 PR 1 완료 — 상단·탐색, PR 2·3 대기 |
 
 ## 버티컬 레인
 
