@@ -159,7 +159,7 @@
 | **4a** 카메라 스캔 | 스캔 | `BarcodeScannerOverlay`(f, `colorScheme.scrim` + 알파) — 앱바 없음, 카메라 위 떠 있는 뒤로가기 |
 | **4b** 인식 실패 | 스캔 | `ManiculeTopAppBar` · `ManiculeEmptyState`(`actions`=검색) |
 | **4c** 권한 거부 | 스캔 | `ManiculeTopAppBar` · `ManiculeEmptyState`(`actions`=카메라 사용·검색, Filled+Outlined **2개**) |
-| **5a** 책 정보 탭 | 책 정보 | `ManiculeTopAppBar` + `ManiculeTabRow`(앱바 밖) · `BookCover`(대형) · 정보 행 Text 나열 · `BookDetailExpandableText`(f)×2 |
+| **5a** 책 정보 탭 | 책 정보 | `ManiculeTopAppBar` + `ManiculeTabRow`(앱바 밖) · `BookCover`(중형) · 정보 행 Text 나열 · `BookDetailExpandableText`(f)×2 |
 | **5b** 내 기록 · 있음 | 책 정보 | `ManiculeTabRow` · `ManiculeSegmentedButton`(상태 3) · `BookDetailRatingBar`(f) · `ManiculeTextField`(`maxLines`) · `BookProgressBar` · `ManiculeSectionHeader`(추가) · M3 `ListItem`(기록 행)×n |
 | **5c** 내 기록 · 없음 | 책 정보 | 5b + `ManiculeDashedCard`(리뷰 유도, `BookDetailRatingBar` 0점) + `ManiculeEmptyState`(기록 없음) |
 | **5d** 기록 추가 시트 | 책 정보 | `ManiculeBottomSheet` · `ManiculeSegmentedButton`×2(날짜/시간) · `ManiculeTextField`(`keyboardType = Number`)×2 · `ManiculeButton` · M3 `DatePickerDialog`/`TimePickerDialog`('직접 선택' 시) |
@@ -173,7 +173,7 @@
 | **6f** 롱프레스 메뉴 | 서재 | `ManiculeBottomSheet` · M3 `ListItem`(삭제) · M3 `ListItem`×2(상태 변경) — 전 항목 `onSurface`, 강조색 없음 |
 | **7a** 4주 탭 | 통계 | `ManiculeTopAppBar` · `ManiculeSegmentedButton`(기간 4) · `ManiculeCard` · `ReadingCalendarGrid` · `ReadingCalendarLegend` · `ManiculeStatTile`×3 · `ReadingChart`(f) |
 | **7b** 1년 탭 | 통계 | 7a (가로 스크롤 + 좌우 축 고정) |
-| **7c** 오늘 탭 | 통계 | 7a 요약부 + `BookListItem`(소형, trailing=횟수·쪽수)×n |
+| **7c** 오늘 탭 | 통계 | 7a 요약부 + `BookListItem`(소형, trailing=쪽수)×n |
 | **7d** 기간 설정 시트 | 통계 | `ManiculeBottomSheet` · M3 `ListItem`×2(시작/종료일) · M3 `DatePickerDialog` · `ManiculeButton` |
 | **7e** 날짜 탭 시트 | 통계 | `ManiculeBottomSheet` · `BookListItem`(소형)×n |
 | **8a** 설정 | 설정 | `ManiculeTopAppBar` · `ManiculeSectionHeader`×3 · `ManiculeSegmentedButton`(테마 3) · M3 `ListItem`(trailing=Switch) · M3 `ListItem`(시간·라이선스·버전) · M3 `TimePickerDialog` |
