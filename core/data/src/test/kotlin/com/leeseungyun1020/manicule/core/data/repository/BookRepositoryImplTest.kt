@@ -7,6 +7,7 @@ import com.leeseungyun1020.manicule.core.database.dao.BookDao
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.network.nlk.NlkApi
+import com.leeseungyun1020.manicule.core.network.nlk.NlkContentFetcher
 import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkBookDto
 import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkSearchResponseDto
 import kotlinx.coroutines.flow.Flow
@@ -25,15 +26,17 @@ class BookRepositoryImplTest {
     private lateinit var bookRepository: BookRepositoryImpl
     private lateinit var fakeBookDao: FakeBookDao
     private lateinit var fakeNlkApi: FakeNlkApi
+    private lateinit var fakeContentFetcher: FakeNlkContentFetcher
 
     @Before
     fun setup() {
         fakeBookDao = FakeBookDao()
         fakeNlkApi = FakeNlkApi()
+        fakeContentFetcher = FakeNlkContentFetcher()
         bookRepository =
             BookRepositoryImpl(
                 RoomBookLocalDataSource(fakeBookDao),
-                RetrofitBookRemoteDataSource(fakeNlkApi),
+                RetrofitBookRemoteDataSource(fakeNlkApi, fakeContentFetcher),
             )
     }
 
@@ -198,6 +201,60 @@ class BookRepositoryImplTest {
 
             job.cancel()
         }
+
+    @Test
+    fun syncBook_prefersInlineContent_withoutFetchingUrls() =
+        runTest {
+            fakeNlkApi.mockResponse =
+                NlkSearchResponseDto(
+                    docs =
+                        listOf(
+                            NlkBookDto(
+                                isbn = "123",
+                                title = "Book",
+                                bookIntroduction = "Inline introduction",
+                                bookIntroductionUrl = "https://www.nl.go.kr/introduction.txt",
+                                bookTbCnt = "Inline contents",
+                                bookTbCntUrl = "https://www.nl.go.kr/contents.txt",
+                            ),
+                        ),
+                )
+
+            assertThat(bookRepository.syncBook("123").isSuccess).isTrue()
+
+            val book = fakeBookDao.getByIsbn("123")
+            assertThat(book?.introduction).isEqualTo("Inline introduction")
+            assertThat(book?.tableOfContents).isEqualTo("Inline contents")
+            assertThat(fakeContentFetcher.requestedUrls).isEmpty()
+        }
+
+    @Test
+    fun syncBook_fetchesMissingContent_andKeepsPartialSuccess() =
+        runTest {
+            val introductionUrl = "https://www.nl.go.kr/introduction.txt"
+            val contentsUrl = "https://nl.go.kr/contents.txt"
+            fakeNlkApi.mockResponse =
+                NlkSearchResponseDto(
+                    docs =
+                        listOf(
+                            NlkBookDto(
+                                isbn = "123",
+                                title = "Book",
+                                bookIntroductionUrl = introductionUrl,
+                                bookTbCntUrl = contentsUrl,
+                            ),
+                        ),
+                )
+            fakeContentFetcher.responses[introductionUrl] = Result.success("Fetched introduction")
+            fakeContentFetcher.responses[contentsUrl] = Result.failure(IllegalStateException("unavailable"))
+
+            assertThat(bookRepository.syncBook("123").isSuccess).isTrue()
+
+            val book = fakeBookDao.getByIsbn("123")
+            assertThat(book?.introduction).isEqualTo("Fetched introduction")
+            assertThat(book?.tableOfContents).isNull()
+            assertThat(fakeContentFetcher.requestedUrls).containsExactly(introductionUrl, contentsUrl)
+        }
 }
 
 class FakeBookDao : BookDao {
@@ -223,4 +280,14 @@ class FakeNlkApi : NlkApi {
         author: String?,
         isbn: String?,
     ): NlkSearchResponseDto = mockResponse
+}
+
+class FakeNlkContentFetcher : NlkContentFetcher {
+    val responses = mutableMapOf<String, Result<String?>>()
+    val requestedUrls = mutableListOf<String>()
+
+    override suspend fun fetch(url: String): String? {
+        requestedUrls += url
+        return responses[url]?.getOrThrow()
+    }
 }

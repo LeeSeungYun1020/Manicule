@@ -16,4 +16,6 @@ interface BookRemoteDataSource {
         page: Int,
         size: Int,
     ): NlkSearchResponseDto
+
+    suspend fun fetchNlkContent(url: String): String? = null
 }

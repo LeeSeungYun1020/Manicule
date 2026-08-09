@@ -2,6 +2,9 @@ package com.leeseungyun1020.manicule.core.network.di
 
 import com.leeseungyun1020.manicule.core.network.nlk.NlkApi
 import com.leeseungyun1020.manicule.core.network.nlk.NlkAuthInterceptor
+import com.leeseungyun1020.manicule.core.network.nlk.NlkContentFetcher
+import com.leeseungyun1020.manicule.core.network.nlk.OkHttpNlkContentFetcher
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,6 +16,14 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class NetworkBindingsModule {
+    @Binds
+    @Singleton
+    abstract fun bindNlkContentFetcher(fetcher: OkHttpNlkContentFetcher): NlkContentFetcher
+}
 
 @Module
 @InstallIn(SingletonComponent::class)

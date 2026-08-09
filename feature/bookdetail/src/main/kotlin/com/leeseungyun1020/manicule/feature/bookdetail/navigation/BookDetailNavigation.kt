@@ -1,33 +1,22 @@
 package com.leeseungyun1020.manicule.feature.bookdetail.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.leeseungyun1020.manicule.feature.bookdetail.R
-import kotlinx.serialization.Serializable
+import com.leeseungyun1020.manicule.feature.bookdetail.BookDetailScreen
+import com.leeseungyun1020.manicule.feature.bookdetail.BookDetailViewModel
 
-@Serializable
-data class BookDetailRoute(
-    val isbn: String,
-)
+typealias BookDetailRoute = com.leeseungyun1020.manicule.feature.bookdetail.BookDetailRoute
 
-fun NavGraphBuilder.bookDetailScreen() {
-    composable<BookDetailRoute> { BookDetailStubScreen() }
-}
-
-@Composable
-private fun BookDetailStubScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(
-            text = stringResource(R.string.book_detail_stub_label),
-            style = MaterialTheme.typography.titleMedium,
+fun NavGraphBuilder.bookDetailScreen(onNavigateBack: () -> Unit = {}) {
+    composable<BookDetailRoute> {
+        val viewModel: BookDetailViewModel = hiltViewModel()
+        BookDetailScreen(
+            uiState = viewModel.uiState.collectAsStateWithLifecycle().value,
+            onNavigateBack = onNavigateBack,
+            onTabSelected = viewModel::selectTab,
+            onRetry = viewModel::retry,
         )
     }
 }
