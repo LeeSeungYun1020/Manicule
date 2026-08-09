@@ -54,3 +54,4 @@
 - [13daace](13daace.md) — refactor: 검색 진입과 입력 컴포넌트 분리
 - [26bce83](26bce83.md) — refactor: 독서 기록 세션 계약 적용
 - [a542480](a542480.md) — refactor: feature navigation 경계 적용
+- [2a89a8f](2a89a8f.md) — feat: 검색 진입과 최근 검색어 화면 구현
