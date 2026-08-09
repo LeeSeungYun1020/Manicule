@@ -13,12 +13,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
-import com.leeseungyun1020.manicule.core.model.Book
+import com.leeseungyun1020.manicule.core.ui.R
 import com.leeseungyun1020.manicule.core.ui.preview.BookPreviewParameterProvider
 
 @Composable
@@ -29,6 +30,7 @@ fun BookListItem(
     pubDate: String,
     imageUrl: String?,
     modifier: Modifier = Modifier,
+    placeholder: Painter? = null,
 ) {
     Row(
         modifier =
@@ -42,6 +44,7 @@ fun BookListItem(
             size = BookCoverSize.Small,
             contentDescription = title,
             showBorder = true,
+            placeholder = placeholder,
         )
         Spacer(modifier = Modifier.width(MaterialTheme.spacing.lg))
         Column(
@@ -65,29 +68,42 @@ fun BookListItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
-                text = "$publisher · $pubDate",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            listOfNotNull(
+                publisher.takeIf { it.isNotBlank() },
+                pubDate.takeIf { it.isNotBlank() },
+            ).joinToString(" · ")
+                .takeIf { it.isNotBlank() }
+                ?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
         }
     }
 }
 
 @ManiculePreview
 @Composable
-private fun BookListItemPreview(
-    @PreviewParameter(BookPreviewParameterProvider::class) book: Book,
-) {
+private fun BookListItemPreview() {
+    val books = BookPreviewParameterProvider().values.toList()
     ManiculeTheme {
-        BookListItem(
-            title = book.title,
-            author = book.author,
-            publisher = book.publisher,
-            pubDate = book.publishedDate?.toString().orEmpty(),
-            imageUrl = book.coverUrl,
-        )
+        Column(
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+        ) {
+            books.forEach { book ->
+                BookListItem(
+                    title = book.title,
+                    author = book.author,
+                    publisher = book.publisher,
+                    pubDate = book.publishedDate?.toString().orEmpty(),
+                    imageUrl = book.coverUrl,
+                    placeholder = painterResource(id = R.drawable.sample_book_cover),
+                )
+            }
+        }
     }
 }
