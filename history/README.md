@@ -55,3 +55,4 @@
 - [26bce83](26bce83.md) — refactor: 독서 기록 세션 계약 적용
 - [a542480](a542480.md) — refactor: feature navigation 경계 적용
 - [f4b4b3d](f4b4b3d.md) — feat: CameraX 바코드 분석 기반 구현
+- [adeafd2](adeafd2.md) — refactor: 바코드 분석 suspend API 적용

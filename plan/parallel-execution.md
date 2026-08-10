@@ -97,23 +97,23 @@ fun NavGraphBuilder.searchScreen(
 
 - `core:scanner`, 해당 테스트, `camera-mlkit-vision` version catalog 항목만 소유한다.
 - CameraX `ImageAnalysis`와 ML Kit Barcode Scanner를 `MlKitAnalyzer`로 연결한다.
-- ML Kit의 첫 non-null `Barcode.rawValue`를 변경 없이 전달하고, 후속 프레임의 중복 결과를 세션 단위로 억제한다.
+- `getBarcodes()` 호출 후 최초로 predicate와 일치한 프레임의 모든 non-null `Barcode.rawValue`를 변경 없이 전달한다.
 - 특정 바코드 포맷을 제한하지 않고 `BarcodeScanning.getClient()` 기본 설정을 사용한다.
 
 ```kotlin
-sealed interface ScanResult {
-    data class Success(val rawValue: String) : ScanResult
-    data class Failure(val cause: Throwable) : ScanResult
-}
-
 interface BarcodeAnalyzerSession : AutoCloseable {
     val analyzer: ImageAnalysis.Analyzer
+
+    suspend fun getBarcodes(
+        predicate: (String) -> Boolean = { true },
+    ): List<String>
 }
 ```
 
-- factory는 결과 callback과 executor를 받아 `BarcodeAnalyzerSession`을 생성한다.
-- `MlKitAnalyzer.COORDINATE_SYSTEM_ORIGINAL`을 사용하고 session `close()`에서 ML Kit detector를 해제한다.
-- `rawValue == null`은 무시하고 분석을 계속한다. 성공 후 재시도는 기존 session을 닫고 새 session을 생성한다.
+- factory는 executor를 받아 `BarcodeAnalyzerSession`을 생성한다.
+- detector 오류는 `BarcodeAnalysisException`으로 전파한다.
+- `MlKitAnalyzer.COORDINATE_SYSTEM_ORIGINAL`을 사용하고 session `close()`에서 대기 중 호출을 취소하고 ML Kit detector를 한 번만 해제한다.
+- `getBarcodes()` 호출 전 결과와 `rawValue == null`은 무시한다. 다시 스캔할 때는 같은 session에서 `getBarcodes()`를 다시 호출한다.
 
 ### 명시적 제외
 
@@ -122,11 +122,11 @@ interface BarcodeAnalyzerSession : AutoCloseable {
 - Repository·UseCase·네트워크 도서 조회와 별도 ISBN 없음 상태
 - `feature:scanner` UI, 권한, Preview, 회전과 Navigation
 
-도서 조회 PR은 `Success.rawValue`를 그대로 기존 조회 경로에 전달한다. 조회 결과가 없으면 기존 scanner 실패 화면과 검색 이동 흐름을 사용한다.
+도서 조회 PR은 `getBarcodes()`가 반환한 원문 값 목록을 기존 조회 경로에 전달한다. 조회 결과가 없으면 기존 scanner 실패 화면과 검색 이동 흐름을 사용한다.
 
 ### 검증과 커밋
 
-- 원문 보존, null 무시, 첫 성공 뒤 중복 억제, 새 session 재방출, detector 오류, close 자원 해제와 여러 결과 중 첫 non-null 선택을 fake로 검증한다.
+- 동일 프레임 원문 목록 보존, null·호출 전 결과 무시, predicate 필터, detector 오류 전파와 close 자원 해제를 fake로 검증한다.
 - Truth와 명시적 JUnit runner를 사용하고 `ImageProxy`를 Mockito로 모킹하지 않는다.
 - `:core:scanner:testDebugUnitTest`, `:core:scanner:lintDebug`, `ktlintCheck`, 전체 `check`를 통과한다.
 - 이 PR은 카메라 bind와 기기 회전을 포함하지 않으므로 emulator 검증을 Ready 조건으로 두지 않는다.
@@ -336,4 +336,3 @@ data class PeriodSummary(
 - 실패한 check가 없고, 실행 대기 중인 remote check는 PR 상태에 명시되어 있다.
 - V5와 V7 PR은 각각 V6가 소비할 공개 계약을 PR 본문에 표시한다.
 - V2 PR은 CameraX 유지, ML Kit `rawValue` 원문 전달, ISBN 검증과 포맷 제한 제외를 명시한다.
-

@@ -9,6 +9,7 @@
 - C1 독서 기록·공유 쿼리 계약
 - C2 feature 모듈·Navigation 경계 계약
 - C3 상단·탐색, 피드백·상태, 통계·도서 표시 공용 UI 계약
+- V2 Scanner core suspend API 및 rendezvous Channel 기반 최종 리팩토링
 
 ## 버티컬 레인
 

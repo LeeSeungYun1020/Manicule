@@ -510,13 +510,13 @@ core/scanner/
 └── src/main/kotlin/com/leeseungyun1020/manicule/core/scanner/
     ├── di/
     │   └── ScannerModule.kt
+    ├── BarcodeAnalysisException.kt         # detector 분석 실패
     ├── BarcodeAnalyzerFactory.kt           # CameraX 분석 세션 생성
-    ├── BarcodeAnalyzerSession.kt           # ImageAnalysis.Analyzer 제공 및 detector 수명 관리
-    ├── MlKitBarcodeAnalyzerFactory.kt      # MlKitAnalyzer 기반 구현
-    └── ScanResult.kt                       # Success(rawValue) / Failure
+    ├── BarcodeAnalyzerSession.kt           # suspend 인식 API 및 detector 수명 관리
+    └── MlKitBarcodeAnalyzerFactory.kt      # MlKitAnalyzer 기반 구현
 ```
 
-`core:scanner`는 ML Kit의 첫 non-null `Barcode.rawValue`를 변경 없이 전달한다. ISBN 체크섬·접두사·정규화와 바코드 포맷 제한은 두지 않으며, 값의 도서 조회 성공 여부는 후속 Domain 흐름이 결정한다.
+`core:scanner`는 `getBarcodes()` 호출 후 최초 일치 프레임의 모든 non-null `Barcode.rawValue`를 변경 없이 전달한다. ISBN 체크섬·접두사·정규화와 바코드 포맷 제한은 두지 않으며, 값의 도서 조회 성공 여부는 후속 Domain 흐름이 결정한다.
 
 ### 4.11 `core:notifications`
 
