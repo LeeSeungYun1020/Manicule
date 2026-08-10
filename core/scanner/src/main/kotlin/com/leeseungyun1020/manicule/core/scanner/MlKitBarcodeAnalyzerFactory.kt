@@ -4,6 +4,9 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.mlkit.vision.MlKitAnalyzer
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScanning
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
 import java.util.concurrent.Executor
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -12,40 +15,26 @@ class MlKitBarcodeAnalyzerFactory internal constructor(
 ) : BarcodeAnalyzerFactory {
     constructor() : this(engineFactory = ::MlKitBarcodeAnalysisEngine)
 
-    override fun create(
-        executor: Executor,
-        onResult: (ScanResult) -> Unit,
-    ): BarcodeAnalyzerSession =
+    override fun create(executor: Executor): BarcodeAnalyzerSession =
         MlKitBarcodeAnalyzerSession(
             engine = engineFactory(),
             executor = executor,
-            onResult = onResult,
         )
 }
 
 private class MlKitBarcodeAnalyzerSession(
     private val engine: BarcodeAnalysisEngine,
     executor: Executor,
-    private val onResult: (ScanResult) -> Unit,
 ) : BarcodeAnalyzerSession {
     private val closed = AtomicBoolean(false)
-    private val successDelivered = AtomicBoolean(false)
+    override val analyzer: ImageAnalysis.Analyzer = engine.createAnalyzer(executor)
 
-    override val analyzer: ImageAnalysis.Analyzer =
-        engine.createAnalyzer(executor) { event ->
-            if (closed.get() || successDelivered.get()) return@createAnalyzer
-
-            when (event) {
-                is BarcodeAnalysisEvent.Detected -> {
-                    val rawValue = event.rawValues.firstNotNullOfOrNull { it }
-                    if (rawValue != null && successDelivered.compareAndSet(false, true)) {
-                        onResult(ScanResult.Success(rawValue))
-                    }
-                }
-
-                is BarcodeAnalysisEvent.Failed -> onResult(ScanResult.Failure(event.cause))
-            }
+    override suspend fun getBarcodes(predicate: (String) -> Boolean): List<String> {
+        while (true) {
+            val barcodes = engine.results.receive().getOrThrow().filter(predicate)
+            if (barcodes.isNotEmpty()) return barcodes
         }
+    }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
@@ -54,48 +43,36 @@ private class MlKitBarcodeAnalyzerSession(
     }
 }
 
-internal sealed interface BarcodeAnalysisEvent {
-    data class Detected(
-        val rawValues: List<String?>,
-    ) : BarcodeAnalysisEvent
-
-    data class Failed(
-        val cause: Throwable,
-    ) : BarcodeAnalysisEvent
-}
-
 internal interface BarcodeAnalysisEngine : AutoCloseable {
-    fun createAnalyzer(
-        executor: Executor,
-        onEvent: (BarcodeAnalysisEvent) -> Unit,
-    ): ImageAnalysis.Analyzer
+    val results: ReceiveChannel<Result<List<String>>>
+
+    fun createAnalyzer(executor: Executor): ImageAnalysis.Analyzer
 }
 
 private class MlKitBarcodeAnalysisEngine(
     private val scanner: BarcodeScanner = BarcodeScanning.getClient(),
 ) : BarcodeAnalysisEngine {
-    override fun createAnalyzer(
-        executor: Executor,
-        onEvent: (BarcodeAnalysisEvent) -> Unit,
-    ): ImageAnalysis.Analyzer =
+    private val _results = Channel<Result<List<String>>>(capacity = Channel.RENDEZVOUS)
+    override val results: ReceiveChannel<Result<List<String>>> = _results
+
+    override fun createAnalyzer(executor: Executor): ImageAnalysis.Analyzer =
         MlKitAnalyzer(
             listOf(scanner),
             ImageAnalysis.COORDINATE_SYSTEM_ORIGINAL,
             executor,
         ) { result ->
             val cause = result.getThrowable(scanner)
-            if (cause != null) {
-                onEvent(BarcodeAnalysisEvent.Failed(cause))
-            } else {
-                onEvent(
-                    BarcodeAnalysisEvent.Detected(
-                        result.getValue(scanner).orEmpty().map { it.rawValue },
-                    ),
-                )
-            }
+            val analysisResult =
+                if (cause != null) {
+                    Result.failure(BarcodeAnalysisException(cause))
+                } else {
+                    Result.success(result.getValue(scanner).orEmpty().mapNotNull { it.rawValue })
+                }
+            _results.trySend(analysisResult)
         }
 
     override fun close() {
+        _results.cancel(CancellationException("Barcode analyzer closed"))
         scanner.close()
     }
 }
