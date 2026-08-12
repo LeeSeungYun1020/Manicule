@@ -1,6 +1,6 @@
 # Manicule — 진행 현황
 
-> 참고: [plan.md](plan.md) 기획 · [structure.md](structure.md) 모듈/파일 구조 · [order.md](order.md) 선행 계약/버티컬 레인 · [parallel-execution.md](parallel-execution.md) 6개 Agent 실행 계획 · [history/](../history/README.md) 커밋별 의사결정
+> 참고: [plan.md](plan.md) 기획 · [structure.md](structure.md) 모듈/파일 구조 · [order.md](order.md) 선행 계약/버티컬 레인 · [history/](../history/README.md) 커밋별 의사결정
 > 새 세션은 **"다음 실행 가능 작업"**부터 진행.
 
 ## 완료
@@ -9,7 +9,6 @@
 - C1 독서 기록·공유 쿼리 계약
 - C2 feature 모듈·Navigation 경계 계약
 - C3 상단·탐색, 피드백·상태, 통계·도서 표시 공용 UI 계약
-- V2 Scanner core suspend API 및 rendezvous Channel 기반 최종 리팩토링
 
 ## 버티컬 레인
 
@@ -31,8 +30,8 @@
 
 ## 다음 실행 가능 작업
 
-1. [6개 Agent 병렬 실행 계획](parallel-execution.md)에 따라 V1·V2·V3·V4·V5·V7의 첫 Ready PR을 독립 worktree에서 시작한다.
-2. V2는 CameraX를 유지하고 ML Kit `rawValue`를 그대로 전달한다. ISBN 검증·정규화·접두사와 포맷 제한은 구현하지 않는다.
+1. V7 공유 집계 PR과 V5 서재 목록·정렬 PR을 시작해 V6의 남은 의존성을 먼저 해소한다.
+2. V1·V3·V4는 서로 독립적으로 시작할 수 있다.
 3. V5 상태 변경은 V4의 상태 API가 머지된 뒤 연결한다.
 4. V5 서재 조회와 V7 공유 집계가 머지되면 V6를 시작한다. V7 UI 완료는 기다리지 않는다.
 5. I1은 각 V navigation PR이 머지되는 즉시 해당 destination을 조립한다.
