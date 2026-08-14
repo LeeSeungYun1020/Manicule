@@ -15,7 +15,7 @@
 | 레인 | 기능 | `depends_on` | 상태 | 다음 범위 |
 |---|---|---|---|---|
 | V1 | 검색 | 없음 | ⏳ 실행 가능 | 기존 검색 Data/Domain → 화면/ViewModel → Paging·Undo 테스트 |
-| V2 | 스캔 | 없음 | ✅ Scanner core 완료 | 조회 UseCase → 권한·인식 UI → 성공/실패/회전 테스트 |
+| V2 | 스캔 | 없음 | ✅ 수요 기반 Scanner core 완료 | BarcodeReader lifecycle bind → 조회 UseCase → 권한·인식 UI → 성공/실패/회전 테스트 |
 | V3 | 설정 | 없음 | ⏳ 실행 가능 | Notifications → 알림 UseCase → 설정 UI → 스케줄·테마 테스트 |
 | V4 | 책 상세 | 없음 | ⏳ 실행 가능 | 기록·상태 Repository/UseCase → 상세/내 기록 UI → CRUD·자동 상태 전환 테스트 |
 | V5 | 서재 | 상태 변경은 V4 상태 API | 🚧 목록·정렬 실행 가능 | 정렬 쿼리/UseCase → 서재 UI → 정렬·삭제·Undo 테스트 |

@@ -56,3 +56,4 @@
 - [a542480](a542480.md) — refactor: feature navigation 경계 적용
 - [f4b4b3d](f4b4b3d.md) — feat: CameraX 바코드 분석 기반 구현
 - [adeafd2](adeafd2.md) — refactor: 바코드 분석 suspend API 적용
+- [fc1010c](fc1010c.md) — refactor: 바코드 리더가 필요할 때만 동작하도록 변경

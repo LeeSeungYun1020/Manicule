@@ -125,10 +125,10 @@
 
 | 계층 | 범위 |
 |---|---|
-| Data | `core:scanner`에 CameraX ImageAnalysis와 ML Kit 바코드 인식을 구현한다. `getBarcodes()` 호출 후 최초로 predicate와 일치한 프레임의 모든 `Barcode.rawValue`를 변경 없이 전달하고 detector 오류는 예외로 전파한다. ISBN 체크섬·접두사·정규화와 바코드 포맷 제한은 적용하지 않는다. |
+| Data | `core:scanner`의 `BarcodeReader`가 `ImageAnalysis`를 소유하고 `getBarcodes()` 대기자가 생길 때만 analyzer를 연결한다. 동시 대기자는 같은 프레임을 공유하고 마지막 대기자가 사라지면 분석을 중단한다. 최초 predicate 일치 프레임의 `Barcode.rawValue`를 변경 없이 전달하고 detector 오류는 예외로 전파한다. ISBN 체크섬·접두사·정규화와 바코드 포맷 제한은 적용하지 않는다. |
 | Domain | 스캔한 원문 값 목록을 기존 Book Repository 조회에 전달하는 UseCase를 구현한다. 조회 결과 없음은 기존 scanner 실패 흐름으로 처리한다. |
 | UI | 권한 요청·거부, 카메라 인식, 성공 시 책 상세 이동, 실패 시 검색 이동 화면과 ViewModel을 구현한다. |
-| 검증 | 동일 프레임 rawValue 원문 목록 전달, predicate 필터, 성공/오류, 권한 상태, 호출 전 결과 무시, detector 해제와 회전 시 `targetRotation` 갱신 테스트를 작성한다. |
+| 검증 | 동일 프레임 rawValue 원문 목록 전달, predicate 필터, 동시 호출 broadcast, 마지막 호출 반환·실패·취소 시 분석 중단, 다음 호출 재시작, `close()` 멱등성, 권한 상태와 회전 시 `targetRotation` 갱신을 테스트한다. |
 
 권장 PR 순서:
 
