@@ -61,20 +61,6 @@ class SearchScreenTest {
     }
 
     @Test
-    fun errorState_retries() {
-        var retried = false
-        composeTestRule.setSearchContent(
-            uiState = SearchUiState.Error,
-            onRetry = { retried = true },
-        )
-
-        composeTestRule.onNodeWithText("Couldn't load recent searches").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Try again").performClick()
-
-        assertThat(retried).isTrue()
-    }
-
-    @Test
     fun content_isDisplayedAtCompactWidth() {
         composeTestRule.setSearchContent(
             uiState = SearchUiState.Content(listOf("Compact")),
@@ -98,7 +84,6 @@ class SearchScreenTest {
 private fun androidx.compose.ui.test.junit4.ComposeContentTestRule.setSearchContent(
     uiState: SearchUiState,
     onNavigateBack: () -> Unit = {},
-    onRetry: () -> Unit = {},
     width: Int? = null,
 ) {
     setContent {
@@ -108,7 +93,6 @@ private fun androidx.compose.ui.test.junit4.ComposeContentTestRule.setSearchCont
                     uiState = uiState,
                     searchFieldState = rememberTextFieldState(),
                     onNavigateBack = onNavigateBack,
-                    onRetry = onRetry,
                 )
             }
         }

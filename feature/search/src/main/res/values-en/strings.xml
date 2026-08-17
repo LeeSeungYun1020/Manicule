@@ -6,7 +6,4 @@
     <string name="search_empty_title">What book are you looking for?</string>
     <string name="search_empty_description">Search by title, author, or ISBN</string>
     <string name="search_recent_title">Recent searches</string>
-    <string name="search_error_title">Couldn\'t load recent searches</string>
-    <string name="search_error_description">Please try again in a moment</string>
-    <string name="search_retry">Try again</string>
 </resources>

@@ -9,6 +9,4 @@ sealed interface SearchUiState {
     data class Content(
         val recentQueries: List<String>,
     ) : SearchUiState
-
-    data object Error : SearchUiState
 }

@@ -19,7 +19,6 @@ fun SearchRoute(
         uiState = uiState.value,
         searchFieldState = searchFieldState,
         onNavigateBack = onNavigateBack,
-        onRetry = viewModel::retry,
         modifier = modifier,
     )
 }

@@ -28,7 +28,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeEmptyState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeIconButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
@@ -43,7 +42,6 @@ fun SearchScreen(
     uiState: SearchUiState,
     searchFieldState: TextFieldState,
     onNavigateBack: () -> Unit,
-    onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -75,7 +73,6 @@ fun SearchScreen(
         when (uiState) {
             SearchUiState.Loading -> SearchLoading()
             is SearchUiState.Content -> SearchContent(recentQueries = uiState.recentQueries)
-            SearchUiState.Error -> SearchError(onRetry = onRetry)
         }
     }
 }
@@ -134,25 +131,6 @@ private fun SearchContent(recentQueries: List<String>) {
     }
 }
 
-@Composable
-private fun SearchError(onRetry: () -> Unit) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        ManiculeEmptyState(
-            title = stringResource(R.string.search_error_title),
-            description = stringResource(R.string.search_error_description),
-            actions = {
-                ManiculeButton(
-                    onClick = onRetry,
-                    text = stringResource(R.string.search_retry),
-                )
-            },
-        )
-    }
-}
-
 @ManiculePreview
 @Preview(name = "Foldable", widthDp = 673, heightDp = 900, showBackground = true)
 @Preview(name = "Tablet", widthDp = 1200, heightDp = 900, showBackground = true)
@@ -163,7 +141,6 @@ private fun EmptySearchScreenPreview() {
             uiState = SearchUiState.Content(emptyList()),
             searchFieldState = rememberTextFieldState(),
             onNavigateBack = {},
-            onRetry = {},
         )
     }
 }
@@ -183,7 +160,6 @@ private fun RecentSearchScreenPreview() {
                 ),
             searchFieldState = rememberTextFieldState(),
             onNavigateBack = {},
-            onRetry = {},
         )
     }
 }
@@ -196,20 +172,6 @@ private fun LoadingSearchScreenPreview() {
             uiState = SearchUiState.Loading,
             searchFieldState = rememberTextFieldState(),
             onNavigateBack = {},
-            onRetry = {},
-        )
-    }
-}
-
-@ManiculePreview
-@Composable
-private fun ErrorSearchScreenPreview() {
-    ManiculeTheme {
-        SearchScreen(
-            uiState = SearchUiState.Error,
-            searchFieldState = rememberTextFieldState(),
-            onNavigateBack = {},
-            onRetry = {},
         )
     }
 }

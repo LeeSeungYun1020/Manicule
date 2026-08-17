@@ -79,27 +79,17 @@ class SearchViewModelTest {
         }
 
     @Test
-    fun retry_restartsRecentQueryCollectionAfterError() =
+    fun uiState_fallsBackToEmptyContentWhenRecentQueryLoadFails() =
         runTest(testDispatcher) {
-            var attempts = 0
             val repository =
                 FakeSearchHistoryRepository {
-                    attempts += 1
-                    if (attempts == 1) {
-                        flow { throw IllegalStateException("database unavailable") }
-                    } else {
-                        flowOf(listOf(searchQuery("Retry success")))
-                    }
+                    flow { throw IllegalStateException("database unavailable") }
                 }
             val viewModel = SearchViewModel(GetRecentQueriesUseCase(repository))
 
             viewModel.uiState.test {
                 assertThat(awaitItem()).isEqualTo(SearchUiState.Loading)
-                assertThat(awaitItem()).isEqualTo(SearchUiState.Error)
-                viewModel.retry()
-                assertThat(awaitItem()).isEqualTo(SearchUiState.Loading)
-                assertThat(awaitItem()).isEqualTo(SearchUiState.Content(listOf("Retry success")))
-                assertThat(attempts).isEqualTo(2)
+                assertThat(awaitItem()).isEqualTo(SearchUiState.Content(emptyList()))
                 cancelAndIgnoreRemainingEvents()
             }
         }

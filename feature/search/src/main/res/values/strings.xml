@@ -6,7 +6,4 @@
     <string name="search_empty_title">어떤 책을 찾고 있나요?</string>
     <string name="search_empty_description">제목, 저자 또는 ISBN으로 검색해 보세요</string>
     <string name="search_recent_title">최근 검색어</string>
-    <string name="search_error_title">최근 검색어를 불러오지 못했어요</string>
-    <string name="search_error_description">잠시 후 다시 시도해 주세요</string>
-    <string name="search_retry">다시 시도</string>
 </resources>
