@@ -54,13 +54,20 @@ fun ManiculeOutlinedButton(
     text: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    leadingIcon: (@Composable () -> Unit)? = null,
 ) {
     OutlinedButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
     ) {
-        Text(text = text)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (leadingIcon != null) {
+                leadingIcon()
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.sm))
+            }
+            Text(text = text)
+        }
     }
 }
 
@@ -116,7 +123,16 @@ private fun ManiculeButtonPreview() {
             )
             ManiculeButton(onClick = {}, text = "일반 버튼")
             ManiculeButton(onClick = {}, text = "비활성화 버튼", enabled = false)
-            ManiculeOutlinedButton(onClick = {}, text = "아웃라인 버튼")
+            ManiculeOutlinedButton(
+                onClick = {},
+                text = "아웃라인 버튼",
+                leadingIcon = {
+                    Icon(
+                        imageVector = ManiculeIcons.ScanBarcode,
+                        contentDescription = null,
+                    )
+                },
+            )
             ManiculeTextButton(onClick = {}, text = "텍스트 버튼")
             ManiculeIconButton(
                 onClick = {},
