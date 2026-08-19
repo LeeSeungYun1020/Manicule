@@ -58,12 +58,9 @@ fun LibraryScreen(
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    val tabLabels =
-        listOf(
-            stringResource(R.string.library_tab_want),
-            stringResource(R.string.library_tab_reading),
-            stringResource(R.string.library_tab_finished),
-        )
+    val wantTabLabel = stringResource(R.string.library_tab_want)
+    val readingTabLabel = stringResource(R.string.library_tab_reading)
+    val finishedTabLabel = stringResource(R.string.library_tab_finished)
     Scaffold(
         modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -76,7 +73,13 @@ fun LibraryScreen(
                     tabs = libraryStatuses,
                     selectedTabIndex = libraryStatuses.indexOf(uiState.selectedStatus),
                     onTabSelected = { onStatusSelected(libraryStatuses[it]) },
-                    tabLabel = { status -> tabLabels[libraryStatuses.indexOf(status)] },
+                    tabLabel = { status ->
+                        when (status) {
+                            ReadingStatus.WANT -> wantTabLabel
+                            ReadingStatus.READING -> readingTabLabel
+                            ReadingStatus.FINISHED -> finishedTabLabel
+                        }
+                    },
                 )
                 LibraryActionRow(onSearch = onSearch)
             }

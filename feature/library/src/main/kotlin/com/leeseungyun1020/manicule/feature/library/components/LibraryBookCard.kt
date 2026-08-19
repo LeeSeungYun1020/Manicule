@@ -9,7 +9,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeCard
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
@@ -29,7 +28,6 @@ fun LibraryBookCard(
         modifier =
             modifier
                 .fillMaxWidth()
-                .semantics(mergeDescendants = true) {}
                 .clickable(onClick = onClick),
     ) {
         Column(
