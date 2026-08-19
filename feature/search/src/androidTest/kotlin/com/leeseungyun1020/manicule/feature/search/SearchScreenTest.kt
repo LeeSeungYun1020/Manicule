@@ -61,6 +61,16 @@ class SearchScreenTest {
     }
 
     @Test
+    fun unavailableState_displaysEmptyStateAndKeepsSearchFocused() {
+        composeTestRule.setSearchContent(uiState = SearchUiState.Unavailable)
+
+        composeTestRule.onNodeWithText("What book are you looking for?").assertIsDisplayed()
+        composeTestRule
+            .onNode(hasText("Search by title, author, or ISBN") and hasSetTextAction())
+            .assertIsFocused()
+    }
+
+    @Test
     fun content_isDisplayedAtCompactWidth() {
         composeTestRule.setSearchContent(
             uiState = SearchUiState.Content(listOf("Compact")),

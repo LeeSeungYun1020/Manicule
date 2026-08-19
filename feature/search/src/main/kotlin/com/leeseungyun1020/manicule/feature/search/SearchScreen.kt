@@ -68,6 +68,7 @@ fun SearchScreen(
 
         when (uiState) {
             SearchUiState.Loading -> SearchLoading()
+            SearchUiState.Unavailable -> SearchEmpty()
             is SearchUiState.Content -> SearchContent(recentQueries = uiState.recentQueries)
         }
     }
@@ -87,15 +88,7 @@ private fun SearchLoading() {
 @Composable
 private fun SearchContent(recentQueries: List<String>) {
     if (recentQueries.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            ManiculeEmptyState(
-                title = stringResource(R.string.search_empty_title),
-                description = stringResource(R.string.search_empty_description),
-            )
-        }
+        SearchEmpty()
         return
     }
 
@@ -127,6 +120,19 @@ private fun SearchContent(recentQueries: List<String>) {
     }
 }
 
+@Composable
+private fun SearchEmpty() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        ManiculeEmptyState(
+            title = stringResource(R.string.search_empty_title),
+            description = stringResource(R.string.search_empty_description),
+        )
+    }
+}
+
 @ManiculePreview
 @Preview(name = "Foldable", widthDp = 673, heightDp = 900, showBackground = true)
 @Preview(name = "Tablet", widthDp = 1200, heightDp = 900, showBackground = true)
@@ -135,6 +141,18 @@ private fun EmptySearchScreenPreview() {
     ManiculeTheme {
         SearchScreen(
             uiState = SearchUiState.Content(emptyList()),
+            searchFieldState = rememberTextFieldState(),
+            onNavigateBack = {},
+        )
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun UnavailableSearchScreenPreview() {
+    ManiculeTheme {
+        SearchScreen(
+            uiState = SearchUiState.Unavailable,
             searchFieldState = rememberTextFieldState(),
             onNavigateBack = {},
         )

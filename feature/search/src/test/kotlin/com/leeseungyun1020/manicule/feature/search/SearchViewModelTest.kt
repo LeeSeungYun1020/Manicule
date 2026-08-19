@@ -12,7 +12,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.Instant
@@ -51,12 +53,20 @@ class SearchViewModelTest {
     @Test
     fun uiState_emitsEmptyContent() =
         runTest(testDispatcher) {
-            val repository = FakeSearchHistoryRepository { flowOf(emptyList()) }
+            var collectionCount = 0
+            val repository =
+                FakeSearchHistoryRepository {
+                    flow {
+                        collectionCount += 1
+                        emit(emptyList())
+                    }
+                }
             val viewModel = SearchViewModel(GetRecentQueriesUseCase(repository))
 
             viewModel.uiState.test {
                 assertThat(awaitItem()).isEqualTo(SearchUiState.Loading)
                 assertThat(awaitItem()).isEqualTo(SearchUiState.Content(emptyList()))
+                assertThat(collectionCount).isEqualTo(1)
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -79,17 +89,62 @@ class SearchViewModelTest {
         }
 
     @Test
-    fun uiState_fallsBackToEmptyContentWhenRecentQueryLoadFails() =
+    fun uiState_retriesOnceAfter500MillisAndRecovers() =
         runTest(testDispatcher) {
+            var collectionCount = 0
             val repository =
                 FakeSearchHistoryRepository {
-                    flow { throw IllegalStateException("database unavailable") }
+                    flow {
+                        collectionCount += 1
+                        if (collectionCount == 1) {
+                            throw IllegalStateException("database unavailable")
+                        }
+                        emit(listOf(searchQuery("Compose")))
+                    }
                 }
             val viewModel = SearchViewModel(GetRecentQueriesUseCase(repository))
 
             viewModel.uiState.test {
                 assertThat(awaitItem()).isEqualTo(SearchUiState.Loading)
-                assertThat(awaitItem()).isEqualTo(SearchUiState.Content(emptyList()))
+                runCurrent()
+                assertThat(collectionCount).isEqualTo(1)
+
+                advanceTimeBy(499)
+                runCurrent()
+                expectNoEvents()
+                assertThat(collectionCount).isEqualTo(1)
+
+                advanceTimeBy(1)
+                runCurrent()
+                assertThat(awaitItem()).isEqualTo(SearchUiState.Content(listOf("Compose")))
+                assertThat(collectionCount).isEqualTo(2)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun uiState_emitsUnavailableAfterRetryAlsoFails() =
+        runTest(testDispatcher) {
+            var collectionCount = 0
+            val repository =
+                FakeSearchHistoryRepository {
+                    flow<List<SearchQuery>> {
+                        collectionCount += 1
+                        throw IllegalStateException("database unavailable")
+                    }
+                }
+            val viewModel = SearchViewModel(GetRecentQueriesUseCase(repository))
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState.Loading)
+                runCurrent()
+                assertThat(collectionCount).isEqualTo(1)
+
+                advanceTimeBy(500)
+                runCurrent()
+                assertThat(awaitItem()).isEqualTo(SearchUiState.Unavailable)
+                assertThat(collectionCount).isEqualTo(2)
+                expectNoEvents()
                 cancelAndIgnoreRemainingEvents()
             }
         }

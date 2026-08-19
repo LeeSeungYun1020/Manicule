@@ -6,6 +6,8 @@ import androidx.compose.runtime.Immutable
 sealed interface SearchUiState {
     data object Loading : SearchUiState
 
+    data object Unavailable : SearchUiState
+
     data class Content(
         val recentQueries: List<String>,
     ) : SearchUiState
