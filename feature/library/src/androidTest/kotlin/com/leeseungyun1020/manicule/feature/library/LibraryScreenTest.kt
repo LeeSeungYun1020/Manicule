@@ -1,8 +1,12 @@
 package com.leeseungyun1020.manicule.feature.library
 
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -84,12 +88,54 @@ class LibraryScreenTest {
             }
         }
 
+        composeRule.onNodeWithTag("library_empty_icon", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag("library_search_icon", useUnmergedTree = true).assertIsDisplayed()
+        composeRule.onNodeWithTag("library_scan_icon", useUnmergedTree = true).assertIsDisplayed()
         composeRule.onNodeWithText(context.getString(R.string.library_search)).performClick()
         composeRule.onNodeWithText(context.getString(R.string.library_scan)).performClick()
         composeRule.runOnIdle {
             assertThat(searched).isTrue()
             assertThat(scanned).isTrue()
         }
+    }
+
+    @Test
+    fun addButton_isAlwaysDisplayedAndCallsSearch() {
+        var searched = false
+        lateinit var updateUiState: (LibraryUiState) -> Unit
+        composeRule.setContent {
+            val uiState = remember { mutableStateOf<LibraryUiState>(LibraryUiState.Loading(ReadingStatus.READING)) }
+            updateUiState = { uiState.value = it }
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState = uiState.value,
+                    onStatusSelected = {},
+                    onBookSelected = {},
+                    onSearch = { searched = true },
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        val addButton =
+            composeRule.onNodeWithContentDescription(context.getString(R.string.library_add_book))
+        addButton.assertIsDisplayed()
+
+        composeRule.runOnIdle { updateUiState(LibraryUiState.Error(ReadingStatus.READING)) }
+        addButton.assertIsDisplayed()
+
+        composeRule.runOnIdle {
+            updateUiState(LibraryUiState.Content(ReadingStatus.WANT, emptyList()))
+        }
+        addButton.assertIsDisplayed()
+
+        composeRule.runOnIdle {
+            updateUiState(LibraryUiState.Content(ReadingStatus.READING, listOf(entry())))
+        }
+        addButton.assertIsDisplayed()
+        addButton.performClick()
+        composeRule.runOnIdle { assertThat(searched).isTrue() }
     }
 
     @Test

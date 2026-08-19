@@ -11,4 +11,5 @@
     <string name="library_error_title">서재를 불러오지 못했어요</string>
     <string name="library_error_description">잠시 후 다시 시도해 주세요</string>
     <string name="library_retry">다시 시도</string>
+    <string name="library_add_book">책 추가</string>
 </resources>
