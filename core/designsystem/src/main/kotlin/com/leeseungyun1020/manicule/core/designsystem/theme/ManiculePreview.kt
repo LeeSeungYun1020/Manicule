@@ -2,6 +2,10 @@ package com.leeseungyun1020.manicule.core.designsystem.theme
 
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 
 @Retention(AnnotationRetention.BINARY)
@@ -10,3 +14,17 @@ import androidx.compose.ui.tooling.preview.Preview
 @Preview(name = "2. Dark", uiMode = UI_MODE_NIGHT_YES, showBackground = true, backgroundColor = PAPER_DARK_ARGB)
 @Preview(name = "3. Font 1.5x", fontScale = 1.5f, showBackground = true)
 annotation class ManiculePreview
+
+@Composable
+internal fun ManiculePreviewTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit,
+) {
+    ManiculeTheme(darkTheme = darkTheme) {
+        Surface(
+            color = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.onBackground,
+            content = content,
+        )
+    }
+}
