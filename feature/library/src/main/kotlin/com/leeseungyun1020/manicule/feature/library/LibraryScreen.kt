@@ -43,6 +43,7 @@ import com.leeseungyun1020.manicule.feature.library.components.LibraryBookCard
 import kotlinx.datetime.Instant
 
 private val libraryStatuses = listOf(ReadingStatus.WANT, ReadingStatus.READING, ReadingStatus.FINISHED)
+private const val LIBRARY_COLUMN_COUNT = 3
 private const val LIBRARY_BOOK_CONTENT_TYPE = "library_book"
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,7 +82,9 @@ fun LibraryScreen(
                         }
                     },
                 )
-                LibraryActionRow(onSearch = onSearch)
+                if (uiState is LibraryUiState.Content && uiState.books.isNotEmpty()) {
+                    LibraryActionRow(onSearch = onSearch)
+                }
             }
         },
     ) { contentPadding ->
@@ -121,7 +124,7 @@ private fun LibraryGrid(
     onBookSelected: (String) -> Unit,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(ManiculeSize.coverMediumWidth + ManiculeSpacing.xl),
+        columns = GridCells.Fixed(LIBRARY_COLUMN_COUNT),
         modifier = Modifier.fillMaxSize().padding(scaffoldPadding),
         contentPadding = ManiculeSpacing.screenContent,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),

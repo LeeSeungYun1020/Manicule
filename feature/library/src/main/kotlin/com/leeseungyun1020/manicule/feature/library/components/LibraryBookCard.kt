@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeCard
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
@@ -24,31 +23,27 @@ fun LibraryBookCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    ManiculeCard(
+    Column(
         modifier =
             modifier
                 .fillMaxWidth()
                 .clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.md),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            BookCover(
-                imageUrl = book.coverUrl,
-                contentDescription = null,
-                size = BookCoverSize.Medium,
-                showBorder = true,
-            )
-            Text(
-                text = book.title,
-                modifier = Modifier.padding(top = MaterialTheme.spacing.sm),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+        BookCover(
+            imageUrl = book.coverUrl,
+            contentDescription = null,
+            size = BookCoverSize.Medium,
+            showBorder = true,
+        )
+        Text(
+            text = book.title,
+            modifier = Modifier.padding(top = MaterialTheme.spacing.sm),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
