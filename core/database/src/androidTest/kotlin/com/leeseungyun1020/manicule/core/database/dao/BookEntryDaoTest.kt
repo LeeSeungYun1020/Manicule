@@ -104,4 +104,56 @@ class BookEntryDaoTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
+
+    @Test
+    fun observeAll_ordersByUpdatedAtDescendingThenIsbnAscending_andReemits() =
+        runTest {
+            insertEntry("9783", ReadingStatus.WANT, updatedAt = 10)
+            insertEntry("9782", ReadingStatus.READING, updatedAt = 20)
+            insertEntry("9781", ReadingStatus.FINISHED, updatedAt = 20)
+
+            dao.observeAll().test {
+                assertThat(awaitItem().map { it.entry.isbn }).containsExactly("9781", "9782", "9783").inOrder()
+
+                dao.upsert(entry("9783", ReadingStatus.WANT, updatedAt = 30))
+                assertThat(awaitItem().map { it.entry.isbn }).containsExactly("9783", "9781", "9782").inOrder()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun observeByStatus_filtersAndUsesDeterministicOrder() =
+        runTest {
+            insertEntry("9783", ReadingStatus.READING, updatedAt = 10)
+            insertEntry("9782", ReadingStatus.WANT, updatedAt = 20)
+            insertEntry("9781", ReadingStatus.WANT, updatedAt = 20)
+
+            dao.observeByStatus(ReadingStatus.WANT).test {
+                assertThat(awaitItem().map { it.entry.isbn }).containsExactly("9781", "9782").inOrder()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    private suspend fun insertEntry(
+        isbn: String,
+        status: ReadingStatus,
+        updatedAt: Long,
+    ) {
+        bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+        dao.upsert(entry(isbn, status, updatedAt))
+    }
+
+    private fun entry(
+        isbn: String,
+        status: ReadingStatus,
+        updatedAt: Long,
+    ) = BookEntryEntity(
+        isbn = isbn,
+        status = status,
+        rating = null,
+        memo = null,
+        addedAt = Instant.fromEpochMilliseconds(0),
+        updatedAt = Instant.fromEpochMilliseconds(updatedAt),
+        finishedAt = null,
+    )
 }

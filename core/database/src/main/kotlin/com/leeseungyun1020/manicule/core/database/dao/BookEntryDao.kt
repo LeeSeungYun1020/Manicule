@@ -36,6 +36,7 @@ interface BookEntryDao {
             (SELECT MAX(endPage) FROM reading_records WHERE isbn = book_entries.isbn) AS currentPage
             FROM book_entries 
             WHERE status = :status
+            ORDER BY updatedAt DESC, isbn ASC
         """,
     )
     fun observeByStatus(status: ReadingStatus): Flow<List<BookEntryWithCurrentPage>>
@@ -46,6 +47,7 @@ interface BookEntryDao {
             SELECT *, 
             (SELECT MAX(endPage) FROM reading_records WHERE isbn = book_entries.isbn) AS currentPage
             FROM book_entries
+            ORDER BY updatedAt DESC, isbn ASC
         """,
     )
     fun observeAll(): Flow<List<BookEntryWithCurrentPage>>

@@ -11,11 +11,6 @@ class GetLibraryBooksUseCase
     constructor(
         private val libraryRepository: LibraryRepository,
     ) {
-        /**
-         * 서재 도서 목록 조회. status null이면 전체.
-         * TODO: 3단계 Slice 3에서 정렬 로직 추가
-         */
-        operator fun invoke(status: ReadingStatus? = null): Flow<List<BookEntry>> {
-            TODO("3단계 Slice 3에서 구현")
-        }
+        operator fun invoke(status: ReadingStatus? = null): Flow<List<BookEntry>> =
+            status?.let(libraryRepository::observeByStatus) ?: libraryRepository.observeAll()
     }

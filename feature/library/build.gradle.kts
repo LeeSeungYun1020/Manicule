@@ -7,3 +7,10 @@ plugins {
 android {
     namespace = "com.leeseungyun1020.manicule.feature.library"
 }
+
+dependencies {
+    implementation(libs.kotlinx.datetime)
+    testImplementation(projects.core.data)
+    androidTestImplementation(libs.androidx.compose.ui.test)
+    androidTestImplementation(libs.truth)
+}

@@ -54,3 +54,5 @@
 - [13daace](13daace.md) — refactor: 검색 진입과 입력 컴포넌트 분리
 - [26bce83](26bce83.md) — refactor: 독서 기록 세션 계약 적용
 - [a542480](a542480.md) — refactor: feature navigation 경계 적용
+- [1de11c7](1de11c7.md) — feat: 서재 상태별 목록 구현
+- [da474e6](da474e6.md) — feat: 서재 검색 진입 아이콘 보강
