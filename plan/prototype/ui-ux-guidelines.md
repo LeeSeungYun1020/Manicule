@@ -57,7 +57,7 @@
 
 ## 4. Material 3 가이드라인
 
-- **테마 래퍼**: Screen / Preview 최상위에서 반드시 `ManiculeTheme`으로 래핑. `ManiculeTheme`이 `MaterialTheme` + `LocalManiculeColors` 등 프로젝트 CompositionLocal을 제공
+- **테마 래퍼**: 앱 최상위 루트(`MainActivity`)에서 `ManiculeTheme`으로 래핑하여 테마와 CompositionLocal을 제공(개별 Screen/컴포넌트는 중복 래핑 금지). 모든 `@Preview` 함수는 `ManiculePreviewTheme`으로 래핑하여 루트 `Surface`와 콘텐츠 색상 환경을 제공.
 - **토큰 접근**: 컴포넌트 내부에서 `MaterialTheme.colorScheme` / `.typography` / `.shapes` 및 `MaterialTheme.spacing`/`size`/`border` 토큰을 통해 접근. 달력 레벨 색상은 `MaterialTheme.maniculeColors.calendarLevels` 사용. 하드코딩 색상(`Color(0xFF...)`) 금지
 - **확장 색상 추가 기준**: `ManiculeExtendedColors` 에 필드를 추가하려면 **세 조건을 모두** 만족해야 한다. 하나라도 어긋나면 `colorScheme` 표준 역할이나 컴포넌트 내 `private const` 를 쓴다
     1. `colorScheme` 36개 역할 중 의미가 맞는 것이 없다
