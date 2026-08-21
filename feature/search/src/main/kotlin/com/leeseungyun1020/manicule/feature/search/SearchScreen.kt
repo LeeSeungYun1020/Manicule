@@ -32,7 +32,7 @@ import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSearchBar
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSectionHeader
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
 @Composable
@@ -138,7 +138,7 @@ private fun SearchEmpty() {
 @Preview(name = "Tablet", widthDp = 1200, heightDp = 900, showBackground = true)
 @Composable
 private fun EmptySearchScreenPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         SearchScreen(
             uiState = SearchUiState.Content(emptyList()),
             searchFieldState = rememberTextFieldState(),
@@ -150,7 +150,7 @@ private fun EmptySearchScreenPreview() {
 @ManiculePreview
 @Composable
 private fun UnavailableSearchScreenPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         SearchScreen(
             uiState = SearchUiState.Unavailable,
             searchFieldState = rememberTextFieldState(),
@@ -162,7 +162,7 @@ private fun UnavailableSearchScreenPreview() {
 @ManiculePreview
 @Composable
 private fun RecentSearchScreenPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         SearchScreen(
             uiState =
                 SearchUiState.Content(
@@ -181,7 +181,7 @@ private fun RecentSearchScreenPreview() {
 @ManiculePreview
 @Composable
 private fun LoadingSearchScreenPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         SearchScreen(
             uiState = SearchUiState.Loading,
             searchFieldState = rememberTextFieldState(),

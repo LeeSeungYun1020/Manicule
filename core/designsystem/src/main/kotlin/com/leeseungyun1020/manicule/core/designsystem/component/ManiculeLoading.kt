@@ -8,8 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 
 @Composable
 fun ManiculeLoading(modifier: Modifier = Modifier) {
@@ -24,7 +24,7 @@ fun ManiculeLoading(modifier: Modifier = Modifier) {
 @ManiculePreview
 @Composable
 private fun ManiculeLoadingFullSizePreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Box(modifier = Modifier.size(ManiculeSize.chartHeight)) {
             ManiculeLoading(modifier = Modifier.fillMaxSize())
         }
@@ -34,7 +34,7 @@ private fun ManiculeLoadingFullSizePreview() {
 @ManiculePreview
 @Composable
 private fun ManiculeLoadingPagingPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         ManiculeLoading(modifier = Modifier.size(ManiculeSize.touchTargetMin))
     }
 }

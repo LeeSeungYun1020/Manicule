@@ -21,8 +21,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,7 +69,7 @@ fun ManiculeSearchEntry(
 @ManiculePreview
 @Composable
 private fun ManiculeSearchEntryPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         ManiculeSearchEntry(
             onClick = {},
             modifier = Modifier.fillMaxWidth().padding(ManiculeSpacing.lg),

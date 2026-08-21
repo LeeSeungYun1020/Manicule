@@ -57,7 +57,7 @@
 
 ## 4. Material 3 가이드라인
 
-- **테마 래퍼**: Screen / Preview 최상위에서 반드시 `ManiculeTheme`으로 래핑. `ManiculeTheme`이 `MaterialTheme` + `LocalManiculeColors` 등 프로젝트 CompositionLocal을 제공
+- **테마 래퍼**: 앱 최상위 루트(`MainActivity`)에서 `ManiculeTheme`으로 래핑하여 테마와 CompositionLocal을 제공(개별 Screen/컴포넌트는 중복 래핑 금지). 모든 `@Preview` 함수는 `ManiculePreviewTheme`으로 래핑하여 루트 `Surface`와 콘텐츠 색상 환경을 제공.
 - **토큰 접근**: 컴포넌트 내부에서 `MaterialTheme.colorScheme` / `.typography` / `.shapes` 및 `MaterialTheme.spacing`/`size`/`border` 토큰을 통해 접근. 달력 레벨 색상은 `MaterialTheme.maniculeColors.calendarLevels` 사용. 하드코딩 색상(`Color(0xFF...)`) 금지
 - **확장 색상 추가 기준**: `ManiculeExtendedColors` 에 필드를 추가하려면 **세 조건을 모두** 만족해야 한다. 하나라도 어긋나면 `colorScheme` 표준 역할이나 컴포넌트 내 `private const` 를 쓴다
     1. `colorScheme` 36개 역할 중 의미가 맞는 것이 없다
@@ -105,7 +105,7 @@
   @Preview(name = "Font 1.5x", fontScale = 1.5f, showBackground = true)
   annotation class ManiculePreview
   ```
-- **Preview 내 테마**: Preview 함수 본문에서 반드시 `ManiculeTheme { ... }` 으로 래핑.
+- **Preview 내 테마**: Preview 함수 본문에서 반드시 `ManiculePreviewTheme { ... }` 으로 래핑해 앱 루트와 동일한 `background`/`onBackground` Surface 환경을 제공.
 - **PreviewParameterProvider**: 다양한 상태를 하나의 Preview 함수로 렌더링할 때 활용.
 
 ---
@@ -218,4 +218,4 @@ AI는 UI 구현을 마치고 사용자에게 보고하기 전, 반드시 아래 
 - [ ] **문자열 리소스**: 하드코딩된 한글/영문 텍스트 없이 모두 `stringResource`로 추출되었는가?
 - [ ] **리스트 최적화**: `LazyColumn/Row` 사용 시 항목 성능을 위해 `key`와 `contentType`을 명시했는가?
 - [ ] **네트워크 이미지**: Coil `AsyncImage` 사용 시 네트워크 지연/실패에 대비한 `placeholder`와 `error` 처리가 구현되었는가?
-- [ ] **Preview 완결성**: Light/Dark 모드 및 다중 상태 Preview로 작성되었고, 최상위가 `ManiculeTheme`으로 래핑되었는가?
+- [ ] **Preview 완결성**: Light/Dark 모드 및 다중 상태 Preview로 작성되었고, 최상위가 `ManiculePreviewTheme`으로 래핑되었는가?
