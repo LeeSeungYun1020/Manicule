@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.ui.R
 import com.leeseungyun1020.manicule.core.ui.preview.BookPreviewParameterProvider
@@ -97,7 +97,7 @@ fun BookListItem(
 @Composable
 private fun BookListItemPreview() {
     val books = BookPreviewParameterProvider().values.toList()
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Column(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
         ) {
@@ -119,7 +119,7 @@ private fun BookListItemPreview() {
 @Composable
 private fun BookListItemWithTrailingPreview() {
     val books = BookPreviewParameterProvider().values.toList()
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Column(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
         ) {

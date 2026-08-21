@@ -16,7 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 annotation class ManiculePreview
 
 @Composable
-internal fun ManiculePreviewTheme(
+fun ManiculePreviewTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
