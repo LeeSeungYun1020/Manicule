@@ -15,9 +15,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeBorder
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.maniculeColors
 import com.leeseungyun1020.manicule.core.designsystem.theme.size
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
@@ -69,7 +69,7 @@ fun ReadingCalendarCell(
 @ManiculePreview
 @Composable
 private fun ReadingCalendarCellPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Box(modifier = Modifier.padding(ManiculeSpacing.lg)) {
             ReadingCalendarCell(intensity = 3, isToday = true)
         }

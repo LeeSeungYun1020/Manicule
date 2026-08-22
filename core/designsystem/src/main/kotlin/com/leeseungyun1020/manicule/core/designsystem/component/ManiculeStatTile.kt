@@ -16,8 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
 /**
@@ -66,7 +66,7 @@ fun ManiculeStatTile(
 @ManiculePreview
 @Composable
 private fun ManiculeStatTilePreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         ManiculeStatTile(
             value = "12일",
             label = "연속 기록",
@@ -86,7 +86,7 @@ private fun ManiculeStatTilePreview() {
 @ManiculePreview
 @Composable
 private fun ManiculeStatTileWithoutIconPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         ManiculeStatTile(
             value = "1,248p",
             label = "읽은 페이지",
