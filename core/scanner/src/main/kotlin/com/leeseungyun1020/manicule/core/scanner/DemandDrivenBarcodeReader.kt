@@ -3,14 +3,14 @@ package com.leeseungyun1020.manicule.core.scanner
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.job
 
 internal sealed interface BarcodeDetectionEvent {
     data class Frame(
@@ -44,35 +44,42 @@ internal class DemandDrivenBarcodeReader(
                 replay = 0,
             )
 
-    suspend fun getBarcodes(predicate: (String) -> Boolean = { true }): List<String> {
-        val requestJob = currentCoroutineContext().job
-        synchronized(lock) {
-            check(!closed) { "BarcodeReader is closed" }
-            requestJobs += requestJob
-        }
+    suspend fun getBarcodes(predicate: (String) -> Boolean = { true }): List<String> =
+        coroutineScope {
+            val request =
+                async {
+                    detections
+                        .map { event ->
+                            when (event) {
+                                is BarcodeDetectionEvent.Frame -> event.values.filter(predicate)
+                                is BarcodeDetectionEvent.Failure -> throw BarcodeAnalysisException(event.cause)
+                            }
+                        }.first { it.isNotEmpty() }
+                }
 
-        val result =
+            synchronized(lock) {
+                if (closed) {
+                    request.cancel()
+                    throw IllegalStateException("BarcodeReader is closed")
+                }
+                requestJobs += request
+            }
+
             try {
-                detections
-                    .map { event ->
-                        when (event) {
-                            is BarcodeDetectionEvent.Frame -> event.values.filter(predicate)
-                            is BarcodeDetectionEvent.Failure -> throw BarcodeAnalysisException(event.cause)
-                        }
-                    }.first { it.isNotEmpty() }
-            } finally {
+                val result = request.await()
                 synchronized(lock) {
-                    requestJobs -= requestJob
+                    if (closed) {
+                        throw CancellationException("BarcodeReader is closed")
+                    }
+                    result
+                }
+            } finally {
+                request.cancel()
+                synchronized(lock) {
+                    requestJobs -= request
                 }
             }
-
-        return synchronized(lock) {
-            if (closed) {
-                throw CancellationException("BarcodeReader is closed")
-            }
-            result
         }
-    }
 
     override fun close() {
         val jobs =

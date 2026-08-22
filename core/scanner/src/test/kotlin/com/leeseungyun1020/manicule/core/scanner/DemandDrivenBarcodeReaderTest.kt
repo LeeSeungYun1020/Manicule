@@ -1,14 +1,17 @@
 package com.leeseungyun1020.manicule.core.scanner
 
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
@@ -197,8 +200,40 @@ class DemandDrivenBarcodeReaderTest {
             runCurrent()
 
             val exception = runCatching { result.await() }.exceptionOrNull()
-            assertThat(exception).isInstanceOf(kotlinx.coroutines.CancellationException::class.java)
+            assertThat(exception).isInstanceOf(CancellationException::class.java)
             assertThat(exception?.message).isEqualTo("BarcodeReader is closed")
+        }
+
+    @Test
+    fun closeCancelsOnlyPendingRequestAndPreservesCallerScopeAndSiblings() =
+        runTest {
+            val source = FakeBarcodeDetectionSource()
+            val fixture = createFixture(source)
+            var siblingCompleted = false
+            var afterSuspend = false
+            var caughtException: Throwable? = null
+
+            val job =
+                launch(UnconfinedTestDispatcher(testScheduler)) {
+                    launch {
+                        delay(100)
+                        siblingCompleted = true
+                    }
+
+                    caughtException = runCatching { fixture.reader.getBarcodes() }.exceptionOrNull()
+                    afterSuspend = true
+                    delay(10)
+                }
+
+            runCurrent()
+            fixture.reader.close()
+
+            testScheduler.advanceTimeBy(100)
+            runCurrent()
+
+            assertThat(caughtException).isInstanceOf(CancellationException::class.java)
+            assertThat(afterSuspend).isTrue()
+            assertThat(siblingCompleted).isTrue()
         }
 
     private fun kotlinx.coroutines.test.TestScope.createFixture(source: FakeBarcodeDetectionSource): ReaderFixture {
