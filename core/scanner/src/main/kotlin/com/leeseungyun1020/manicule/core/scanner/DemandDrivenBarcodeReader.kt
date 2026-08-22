@@ -51,18 +51,26 @@ internal class DemandDrivenBarcodeReader(
             requestJobs += requestJob
         }
 
-        return try {
-            detections
-                .map { event ->
-                    when (event) {
-                        is BarcodeDetectionEvent.Frame -> event.values.filter(predicate)
-                        is BarcodeDetectionEvent.Failure -> throw BarcodeAnalysisException(event.cause)
-                    }
-                }.first { it.isNotEmpty() }
-        } finally {
-            synchronized(lock) {
-                requestJobs -= requestJob
+        val result =
+            try {
+                detections
+                    .map { event ->
+                        when (event) {
+                            is BarcodeDetectionEvent.Frame -> event.values.filter(predicate)
+                            is BarcodeDetectionEvent.Failure -> throw BarcodeAnalysisException(event.cause)
+                        }
+                    }.first { it.isNotEmpty() }
+            } finally {
+                synchronized(lock) {
+                    requestJobs -= requestJob
+                }
             }
+
+        return synchronized(lock) {
+            if (closed) {
+                throw CancellationException("BarcodeReader is closed")
+            }
+            result
         }
     }
 

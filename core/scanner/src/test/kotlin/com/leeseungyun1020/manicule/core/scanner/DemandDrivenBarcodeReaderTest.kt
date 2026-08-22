@@ -178,6 +178,29 @@ class DemandDrivenBarcodeReaderTest {
             assertThat(exception).isInstanceOf(IllegalStateException::class.java)
         }
 
+    @Test
+    fun closeDuringResultReturnThrowsCancellationException() =
+        runTest {
+            val source = FakeBarcodeDetectionSource()
+            val fixture = createFixture(source)
+
+            val result =
+                async(UnconfinedTestDispatcher(testScheduler)) {
+                    fixture.reader.getBarcodes {
+                        fixture.reader.close()
+                        true
+                    }
+                }
+
+            runCurrent()
+            source.emitFrame("978-race")
+            runCurrent()
+
+            val exception = runCatching { result.await() }.exceptionOrNull()
+            assertThat(exception).isInstanceOf(kotlinx.coroutines.CancellationException::class.java)
+            assertThat(exception?.message).isEqualTo("BarcodeReader is closed")
+        }
+
     private fun kotlinx.coroutines.test.TestScope.createFixture(source: FakeBarcodeDetectionSource): ReaderFixture {
         val release = FakeRelease()
         val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler))
