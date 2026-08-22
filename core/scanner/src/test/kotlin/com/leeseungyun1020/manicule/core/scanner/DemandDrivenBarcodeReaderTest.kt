@@ -254,6 +254,21 @@ class DemandDrivenBarcodeReaderTest {
             assertThat(siblingCompleted).isTrue()
         }
 
+    @Test
+    fun immediateFrameEmissionDoesNotLeakCompletedJobs() =
+        runTest {
+            val source = BarcodeDetectionSource {
+                kotlinx.coroutines.flow.flowOf(BarcodeDetectionEvent.Frame(listOf("978-immediate")))
+            }
+            val release = FakeRelease()
+            val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler))
+            val reader = DemandDrivenBarcodeReader(source, scope, release::invoke)
+
+            assertThat(reader.getBarcodes()).containsExactly("978-immediate")
+            assertThat(reader.getBarcodes()).containsExactly("978-immediate")
+            reader.close()
+        }
+
     private fun kotlinx.coroutines.test.TestScope.createFixture(source: FakeBarcodeDetectionSource): ReaderFixture {
         val release = FakeRelease()
         val scope = CoroutineScope(SupervisorJob() + UnconfinedTestDispatcher(testScheduler))

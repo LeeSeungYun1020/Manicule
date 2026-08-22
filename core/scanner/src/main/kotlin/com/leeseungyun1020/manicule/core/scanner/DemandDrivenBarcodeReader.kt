@@ -73,7 +73,9 @@ internal class DemandDrivenBarcodeReader(
                     continuation.cancel(CancellationException("BarcodeReader is closed"))
                     return@suspendCancellableCoroutine
                 }
-                requestJobs += request
+                if (request.isActive) {
+                    requestJobs += request
+                }
             }
 
             continuation.invokeOnCancellation {
