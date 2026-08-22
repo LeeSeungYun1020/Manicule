@@ -2,6 +2,7 @@ package com.leeseungyun1020.manicule.core.scanner
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
@@ -47,7 +48,7 @@ internal class DemandDrivenBarcodeReader(
     suspend fun getBarcodes(predicate: (String) -> Boolean = { true }): List<String> =
         coroutineScope {
             val request =
-                async {
+                async(start = CoroutineStart.UNDISPATCHED) {
                     detections
                         .map { event ->
                             when (event) {

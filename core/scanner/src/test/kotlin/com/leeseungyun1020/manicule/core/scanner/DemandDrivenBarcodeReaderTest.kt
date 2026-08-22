@@ -77,6 +77,24 @@ class DemandDrivenBarcodeReaderTest {
         }
 
     @Test
+    fun concurrentRequestsWithQueuedDispatcherSubscribeImmediatelyAndShareSameFrame() =
+        runTest {
+            val source = FakeBarcodeDetectionSource()
+            val fixture = createFixture(source)
+            val queuedDispatcher = kotlinx.coroutines.test.StandardTestDispatcher(testScheduler)
+
+            val first = async(queuedDispatcher) { fixture.reader.getBarcodes { it.startsWith("978") } }
+            val second = async(queuedDispatcher) { fixture.reader.getBarcodes { it.startsWith("978") } }
+
+            runCurrent()
+            source.emitFrame("978-shared")
+
+            assertThat(first.await()).containsExactly("978-shared")
+            assertThat(second.await()).containsExactly("978-shared")
+            fixture.reader.close()
+        }
+
+    @Test
     fun cancellingLastRequestStopsAnalysis() =
         runTest {
             val source = FakeBarcodeDetectionSource()
