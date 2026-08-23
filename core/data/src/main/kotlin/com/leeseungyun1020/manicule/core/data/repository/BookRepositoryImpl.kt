@@ -8,6 +8,7 @@ import com.leeseungyun1020.manicule.core.data.datasource.BookLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.BookRemoteDataSource
 import com.leeseungyun1020.manicule.core.data.mapper.asEntity
 import com.leeseungyun1020.manicule.core.data.mapper.asExternalModel
+import com.leeseungyun1020.manicule.core.data.mapper.asExternalModelOrNull
 import com.leeseungyun1020.manicule.core.data.paging.NlkBookPagingSource
 import com.leeseungyun1020.manicule.core.model.Book
 import kotlinx.coroutines.async
@@ -28,10 +29,11 @@ class BookRepositoryImpl
         override suspend fun syncBook(isbn: String): Result<Unit> =
             runCatching {
                 val response = bookRemoteDataSource.searchBooks(isbn = isbn)
-                val dto = response.docs.firstOrNull() ?: throw NoSuchElementException("API에서 해당 ISBN의 책을 찾을 수 없습니다.")
+                val mappedBook =
+                    response.docs.firstNotNullOfOrNull { it.asExternalModelOrNull() }
+                        ?: throw NoSuchElementException("API에서 유효한 책 정보를 찾을 수 없습니다.")
 
                 val cached = bookLocalDataSource.getByIsbn(isbn)
-                val mappedBook = dto.asExternalModel()
                 val book =
                     supervisorScope {
                         val introduction =

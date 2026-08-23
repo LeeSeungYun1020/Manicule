@@ -41,6 +41,10 @@ fun NlkBookDto.asExternalModel(): Book =
         tableOfContents = bookTbCnt.ifBlank { null },
     )
 
+internal fun NlkBookDto.asExternalModelOrNull(): Book? =
+    takeIf { it.isbn.isNotBlank() && it.title.isNotBlank() }
+        ?.asExternalModel()
+
 internal fun parseNlkDate(dateString: String): LocalDate? {
     if (dateString.length != 8) return null
     return runCatching {

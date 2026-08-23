@@ -86,6 +86,7 @@ class BookMapperTest {
         val dto =
             NlkBookDto(
                 isbn = "123",
+                title = "Book",
                 titleUrl = "",
                 bookTbCntUrl = "  ",
                 bookIntroductionUrl = "",
@@ -100,6 +101,12 @@ class BookMapperTest {
         assertThat(book.tableOfContentsUrl).isNull()
         assertThat(book.introductionUrl).isNull()
         assertThat(book.summaryUrl).isNull()
+    }
+
+    @Test
+    fun nlkBookDto_withBlankRequiredFields_mapsToNull() {
+        assertThat(NlkBookDto(isbn = " ", title = "Book").asExternalModelOrNull()).isNull()
+        assertThat(NlkBookDto(isbn = "123", title = " ").asExternalModelOrNull()).isNull()
     }
 
     @Test

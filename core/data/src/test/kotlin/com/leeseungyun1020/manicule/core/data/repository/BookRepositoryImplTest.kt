@@ -203,6 +203,51 @@ class BookRepositoryImplTest {
         }
 
     @Test
+    fun syncBook_blankRequiredFields_failsWithoutChangingCache() =
+        runTest {
+            val cached =
+                BookEntity(
+                    isbn = "123",
+                    title = "Cached Book",
+                    author = "Author",
+                    publisher = "Publisher",
+                    publishedDate = null,
+                    coverUrl = null,
+                    totalPages = null,
+                    price = null,
+                    category = null,
+                    tableOfContentsUrl = null,
+                    introductionUrl = null,
+                    summaryUrl = null,
+                )
+            fakeBookDao.upsert(cached)
+            val initialUpsertCallCount = fakeBookDao.upsertCallCount
+            fakeNlkApi.mockResponse =
+                NlkSearchResponseDto(
+                    docs =
+                        listOf(
+                            NlkBookDto(
+                                isbn = " ",
+                                title = "Book",
+                                bookIntroductionUrl = "https://www.nl.go.kr/introduction.txt",
+                            ),
+                            NlkBookDto(
+                                isbn = "123",
+                                title = " ",
+                                bookTbCntUrl = "https://www.nl.go.kr/contents.txt",
+                            ),
+                        ),
+                )
+
+            val result = bookRepository.syncBook("123")
+
+            assertThat(result.isFailure).isTrue()
+            assertThat(fakeBookDao.upsertCallCount).isEqualTo(initialUpsertCallCount)
+            assertThat(fakeBookDao.getByIsbn("123")).isEqualTo(cached)
+            assertThat(fakeContentFetcher.requestedUrls).isEmpty()
+        }
+
+    @Test
     fun syncBook_prefersInlineContent_withoutFetchingUrls() =
         runTest {
             fakeNlkApi.mockResponse =
@@ -330,12 +375,15 @@ class BookRepositoryImplTest {
 
 class FakeBookDao : BookDao {
     private val booksFlow = MutableStateFlow<Map<String, BookEntity>>(emptyMap())
+    var upsertCallCount = 0
+        private set
 
     override suspend fun getByIsbn(isbn: String): BookEntity? = booksFlow.value[isbn]
 
     override fun observeByIsbn(isbn: String): Flow<BookEntity?> = booksFlow.map { it[isbn] }
 
     override suspend fun upsert(book: BookEntity) {
+        upsertCallCount++
         booksFlow.update { it + (book.isbn to book) }
     }
 }

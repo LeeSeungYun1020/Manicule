@@ -3,7 +3,7 @@ package com.leeseungyun1020.manicule.core.data.paging
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.leeseungyun1020.manicule.core.data.datasource.BookRemoteDataSource
-import com.leeseungyun1020.manicule.core.data.mapper.asExternalModel
+import com.leeseungyun1020.manicule.core.data.mapper.asExternalModelOrNull
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkSearchResponseDto
 import kotlinx.coroutines.async
@@ -49,7 +49,11 @@ class NlkBookPagingSource(
                             ?.let { ceil(it / params.loadSize).toInt() } ?: 0
                 }
             }
-            val books = resultList.flatMap { it.docs }.distinctBy { it.isbn }.map { it.asExternalModel() }
+            val books =
+                resultList
+                    .flatMap { it.docs }
+                    .mapNotNull { it.asExternalModelOrNull() }
+                    .distinctBy { it.isbn }
             LoadResult.Page(
                 data = books,
                 prevKey = (page - 1).takeIf { it > 0 },
