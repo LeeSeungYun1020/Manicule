@@ -1,7 +1,6 @@
 package com.leeseungyun1020.manicule.feature.search
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,7 +20,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -50,7 +48,8 @@ fun SearchScreen(
             modifier
                 .fillMaxSize()
                 .imePadding()
-                .padding(horizontal = MaterialTheme.spacing.screenHorizontal),
+                .padding(horizontal = MaterialTheme.spacing.screenHorizontal)
+                .padding(top = MaterialTheme.spacing.sm, bottom = MaterialTheme.spacing.xl),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
     ) {
         ManiculeSearchBar(
@@ -125,24 +124,19 @@ private fun SearchContent(recentQueries: List<String>) {
 
 @Composable
 private fun SearchEmpty() {
-    Box(
+    ManiculeEmptyState(
+        title = stringResource(R.string.search_empty_title),
+        description = stringResource(R.string.search_empty_description),
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        ManiculeEmptyState(
-            title = stringResource(R.string.search_empty_title),
-            description = stringResource(R.string.search_empty_description),
-            modifier = Modifier.fillMaxSize(),
-            icon = {
-                Icon(
-                    imageVector = ManiculeIcons.Search,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(MaterialTheme.size.iconEmptyState),
-                )
-            },
-        )
-    }
+        icon = {
+            Icon(
+                imageVector = ManiculeIcons.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(MaterialTheme.size.iconEmptyState),
+            )
+        },
+    )
 }
 
 @ManiculePreview
