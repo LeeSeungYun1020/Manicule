@@ -22,7 +22,7 @@ import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTabRow
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTopAppBar
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.feature.bookdetail.components.BookInfoTabContent
@@ -113,7 +113,7 @@ private val previewBook =
 @Preview(name = "Tablet", device = Devices.TABLET)
 @Composable
 private fun BookDetailScreenPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         BookDetailScreen(
             uiState = BookDetailUiState(book = previewBook, isLoading = false),
             onNavigateBack = {},
@@ -126,7 +126,7 @@ private fun BookDetailScreenPreview() {
 @ManiculePreview
 @Composable
 private fun BookDetailLoadingPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         BookDetailScreen(
             uiState = BookDetailUiState(),
             onNavigateBack = {},
@@ -139,7 +139,7 @@ private fun BookDetailLoadingPreview() {
 @ManiculePreview
 @Composable
 private fun BookDetailErrorPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         BookDetailScreen(
             uiState = BookDetailUiState(isLoading = false, isFatalError = true),
             onNavigateBack = {},
@@ -152,7 +152,7 @@ private fun BookDetailErrorPreview() {
 @ManiculePreview
 @Composable
 private fun BookDetailRecordsStubPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         BookDetailScreen(
             uiState =
                 BookDetailUiState(

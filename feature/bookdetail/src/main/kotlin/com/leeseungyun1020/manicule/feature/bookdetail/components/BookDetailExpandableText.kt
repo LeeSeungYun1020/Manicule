@@ -16,7 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTextButton
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.size
 import com.leeseungyun1020.manicule.feature.bookdetail.R
 
@@ -53,7 +53,7 @@ private const val COLLAPSED_LINES = 4
 @ManiculePreview
 @Composable
 private fun BookDetailExpandableTextPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         BookDetailExpandableText(
             title = "책 소개",
             text = "긴 책 소개를 펼치고 접을 수 있습니다. ".repeat(20),
