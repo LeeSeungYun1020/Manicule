@@ -10,10 +10,7 @@ class GetBookDetailUseCase
     constructor(
         private val bookRepository: BookRepository,
     ) {
-        /**
-         * ISBN으로 도서 상세 조회 (DB 우선, 없으면 네트워크 fetch).
-         */
-        operator fun invoke(isbn: String): Flow<Book?> {
-            TODO("3단계 Slice 2에서 구현")
-        }
+        operator fun invoke(isbn: String): Flow<Book?> = bookRepository.observeBook(isbn)
+
+        suspend fun refresh(isbn: String): Result<Unit> = bookRepository.syncBook(isbn)
     }

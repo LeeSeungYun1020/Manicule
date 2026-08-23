@@ -1,4 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="book_detail_stub_label">Book details\n(stub — implemented in a later phase)</string>
+    <string name="book_detail_title">Book information</string>
+    <string name="book_detail_tab_information">Book information</string>
+    <string name="book_detail_tab_my_records">My records</string>
+    <string name="book_detail_error_title">Couldn’t load book information</string>
+    <string name="book_detail_error_description">Check your connection and try again</string>
+    <string name="book_detail_refresh_error">Couldn’t get the latest information</string>
+    <string name="book_detail_retry">Retry</string>
+    <string name="book_detail_records_stub">My records will be available in the next step</string>
+    <string name="book_detail_cover_description">Cover of %1$s</string>
+    <string name="book_detail_publication_info">Publication information</string>
+    <string name="book_detail_isbn">ISBN</string>
+    <string name="book_detail_published_date">Published</string>
+    <string name="book_detail_pages">Pages</string>
+    <string name="book_detail_pages_value">%1$d pages</string>
+    <string name="book_detail_price">Price</string>
+    <string name="book_detail_price_value">₩%1$s</string>
+    <string name="book_detail_category">Category</string>
+    <string name="book_detail_introduction">Introduction</string>
+    <string name="book_detail_contents">Contents</string>
+    <string name="book_detail_content_empty">No information provided</string>
+    <string name="book_detail_expand">More</string>
+    <string name="book_detail_collapse">Less</string>
 </resources>

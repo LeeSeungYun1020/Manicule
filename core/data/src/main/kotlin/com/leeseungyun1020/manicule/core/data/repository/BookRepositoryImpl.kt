@@ -8,10 +8,13 @@ import com.leeseungyun1020.manicule.core.data.datasource.BookLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.BookRemoteDataSource
 import com.leeseungyun1020.manicule.core.data.mapper.asEntity
 import com.leeseungyun1020.manicule.core.data.mapper.asExternalModel
+import com.leeseungyun1020.manicule.core.data.mapper.asExternalModelOrNull
 import com.leeseungyun1020.manicule.core.data.paging.NlkBookPagingSource
 import com.leeseungyun1020.manicule.core.model.Book
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.supervisorScope
 import javax.inject.Inject
 
 class BookRepositoryImpl
@@ -26,9 +29,32 @@ class BookRepositoryImpl
         override suspend fun syncBook(isbn: String): Result<Unit> =
             runCatching {
                 val response = bookRemoteDataSource.searchBooks(isbn = isbn)
-                val dto = response.docs.firstOrNull() ?: throw NoSuchElementException("API에서 해당 ISBN의 책을 찾을 수 없습니다.")
+                val mappedBook =
+                    response.docs.firstNotNullOfOrNull { it.asExternalModelOrNull() }
+                        ?: throw NoSuchElementException("API에서 유효한 책 정보를 찾을 수 없습니다.")
 
-                val book = dto.asExternalModel()
+                val cached = bookLocalDataSource.getByIsbn(isbn)
+                val book =
+                    supervisorScope {
+                        val introduction =
+                            async {
+                                mappedBook.introduction
+                                    ?: (mappedBook.introductionUrl ?: mappedBook.summaryUrl)?.let { url ->
+                                        runCatching { bookRemoteDataSource.fetchNlkContent(url) }.getOrNull()
+                                    } ?: cached?.introduction
+                            }
+                        val tableOfContents =
+                            async {
+                                mappedBook.tableOfContents
+                                    ?: mappedBook.tableOfContentsUrl?.let { url ->
+                                        runCatching { bookRemoteDataSource.fetchNlkContent(url) }.getOrNull()
+                                    } ?: cached?.tableOfContents
+                            }
+                        mappedBook.copy(
+                            introduction = introduction.await(),
+                            tableOfContents = tableOfContents.await(),
+                        )
+                    }
                 bookLocalDataSource.save(book.asEntity())
             }.onFailure {
                 Log.e("BookRepository", "Failed to sync book with ISBN $isbn", it)
