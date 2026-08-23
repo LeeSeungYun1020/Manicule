@@ -69,22 +69,45 @@ class ReminderUseCasesTest {
         }
 
     @Test
-    fun reminderContent_usesMostRecentlyUpdatedReadingBook() =
+    fun reminderContent_returnsFiveMostRecentlyUpdatedReadingBooks() =
         runTest {
-            val older = bookEntry("Older", Instant.parse("2026-08-01T00:00:00Z"))
-            val newer = bookEntry("Newer", Instant.parse("2026-08-02T00:00:00Z"))
+            val entries =
+                (1..6).map { day ->
+                    bookEntry("Book $day", Instant.parse("2026-08-0${day}T00:00:00Z"))
+                }
 
-            val content = GetReminderContentUseCase(FakeLibraryRepository(listOf(older, newer)))()
+            val content = GetReminderContentUseCase(FakeLibraryRepository(entries))()
 
-            assertThat(content).isEqualTo(ReminderContent.Book("Newer"))
+            assertThat(content)
+                .containsExactly(
+                    ReminderContent.Book("Book 6"),
+                    ReminderContent.Book("Book 5"),
+                    ReminderContent.Book("Book 4"),
+                    ReminderContent.Book("Book 3"),
+                    ReminderContent.Book("Book 2"),
+                ).inOrder()
         }
 
     @Test
-    fun reminderContent_fallsBackWhenNoReadingBookExists() =
+    fun reminderContent_returnsEmptyListWhenNoReadingBookExists() =
         runTest {
             val content = GetReminderContentUseCase(FakeLibraryRepository(emptyList()))()
 
-            assertThat(content).isEqualTo(ReminderContent.Generic)
+            assertThat(content).isEmpty()
+        }
+
+    @Test
+    fun reminderContent_excludesBlankTitles() =
+        runTest {
+            val entries =
+                listOf(
+                    bookEntry("", Instant.parse("2026-08-02T00:00:00Z")),
+                    bookEntry("Book", Instant.parse("2026-08-01T00:00:00Z")),
+                )
+
+            val content = GetReminderContentUseCase(FakeLibraryRepository(entries))()
+
+            assertThat(content).containsExactly(ReminderContent.Book("Book"))
         }
 }
 
@@ -127,6 +150,16 @@ private class FakeLibraryRepository(
     override fun observeAll(): Flow<List<BookEntry>> = flowOf(entries)
 
     override fun observeByStatus(status: ReadingStatus): Flow<List<BookEntry>> = flowOf(entries.filter { it.status == status })
+
+    override suspend fun getRecentBooksByStatus(
+        status: ReadingStatus,
+        limit: Int,
+    ): List<Book> =
+        entries
+            .filter { it.status == status }
+            .sortedWith(compareByDescending<BookEntry> { it.updatedAt }.thenBy { it.book.isbn })
+            .take(limit)
+            .map(BookEntry::book)
 
     override fun observeBookEntry(isbn: String): Flow<BookEntry?> = flowOf(entries.firstOrNull { it.book.isbn == isbn })
 

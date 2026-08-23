@@ -2,7 +2,6 @@ package com.leeseungyun1020.manicule.core.domain.settings
 
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
-import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 class GetReminderContentUseCase
@@ -10,16 +9,14 @@ class GetReminderContentUseCase
     constructor(
         private val libraryRepository: LibraryRepository,
     ) {
-        suspend operator fun invoke(): ReminderContent {
-            val title =
-                libraryRepository
-                    .observeByStatus(ReadingStatus.READING)
-                    .first()
-                    .maxByOrNull { it.updatedAt }
-                    ?.book
-                    ?.title
-                    ?.takeIf(String::isNotBlank)
+        suspend operator fun invoke(): List<ReminderContent.Book> =
+            libraryRepository
+                .getRecentBooksByStatus(ReadingStatus.READING, RECENT_BOOK_LIMIT)
+                .mapNotNull { book ->
+                    book.title.takeIf(String::isNotBlank)?.let(ReminderContent::Book)
+                }
 
-            return title?.let(ReminderContent::Book) ?: ReminderContent.Generic
+        private companion object {
+            const val RECENT_BOOK_LIMIT = 5
         }
     }

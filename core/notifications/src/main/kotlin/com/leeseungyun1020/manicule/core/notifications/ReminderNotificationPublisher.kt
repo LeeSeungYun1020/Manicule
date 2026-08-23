@@ -16,7 +16,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 interface ReminderNotificationPublisher {
-    fun publish(content: ReminderContent)
+    fun publish(books: List<ReminderContent.Book>)
 }
 
 class AndroidReminderNotificationPublisher
@@ -25,9 +25,11 @@ class AndroidReminderNotificationPublisher
         @param:ApplicationContext private val context: Context,
         private val notificationChannel: ReminderNotificationChannel,
     ) : ReminderNotificationPublisher {
-        override fun publish(content: ReminderContent) {
+        override fun publish(books: List<ReminderContent.Book>) {
             notificationChannel.ensureCreated()
             if (!canPostNotification()) return
+
+            val content = books.firstOrNull() ?: ReminderContent.Generic
 
             val notification =
                 NotificationCompat.Builder(context, ReminderNotificationChannel.ID)

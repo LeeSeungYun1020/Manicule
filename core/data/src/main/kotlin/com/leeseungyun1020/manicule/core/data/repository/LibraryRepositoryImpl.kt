@@ -4,6 +4,7 @@ import com.leeseungyun1020.manicule.core.data.datasource.BookEntryLocalDataSourc
 import com.leeseungyun1020.manicule.core.data.datasource.BookLocalDataSource
 import com.leeseungyun1020.manicule.core.data.mapper.asEntity
 import com.leeseungyun1020.manicule.core.data.mapper.asExternalModel
+import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.coroutines.flow.Flow
@@ -26,6 +27,14 @@ class LibraryRepositoryImpl
             bookEntryLocalDataSource.observeByStatus(status).map { list ->
                 list.map { it.asExternalModel() }
             }
+
+        override suspend fun getRecentBooksByStatus(
+            status: ReadingStatus,
+            limit: Int,
+        ): List<Book> {
+            require(limit > 0) { "limit must be positive, was $limit" }
+            return bookEntryLocalDataSource.getRecentBooksByStatus(status, limit).map { it.asExternalModel() }
+        }
 
         override fun observeBookEntry(isbn: String): Flow<BookEntry?> =
             bookEntryLocalDataSource.observeByIsbn(isbn).map { it?.asExternalModel() }

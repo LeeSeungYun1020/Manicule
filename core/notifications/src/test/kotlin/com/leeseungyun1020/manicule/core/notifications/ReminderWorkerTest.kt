@@ -10,19 +10,20 @@ class ReminderWorkerTest {
     @Test
     fun successfulContent_isPublishedAndCompletes() =
         runTest {
-            var published: ReminderContent? = null
+            val books = listOf(ReminderContent.Book("Book 1"), ReminderContent.Book("Book 2"))
+            var published: List<ReminderContent.Book>? = null
 
             val completed =
                 runReminder(
                     timeZones = SAME_TIME_ZONES,
                     getActiveTime = { ACTIVE_TIME },
-                    getContent = { ReminderContent.Book("Book") },
+                    getContent = { books },
                     scheduleNext = {},
                     publish = { published = it },
                 )
 
             assertThat(completed).isTrue()
-            assertThat(published).isEqualTo(ReminderContent.Book("Book"))
+            assertThat(published).isEqualTo(books)
         }
 
     @Test
@@ -47,7 +48,7 @@ class ReminderWorkerTest {
                 runReminder(
                     timeZones = SAME_TIME_ZONES,
                     getActiveTime = { ACTIVE_TIME },
-                    getContent = { ReminderContent.Generic },
+                    getContent = { emptyList() },
                     scheduleNext = {},
                     publish = { error("notifications unavailable") },
                 )
@@ -104,7 +105,7 @@ class ReminderWorkerTest {
                 runReminder(
                     timeZones = SAME_TIME_ZONES,
                     getActiveTime = { ACTIVE_TIME },
-                    getContent = { ReminderContent.Generic },
+                    getContent = { emptyList() },
                     scheduleNext = { error("temporary") },
                     publish = { published = true },
                 )

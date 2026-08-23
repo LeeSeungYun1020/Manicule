@@ -65,9 +65,9 @@ internal data class ReminderTimeZones(
 internal suspend fun runReminder(
     timeZones: ReminderTimeZones,
     getActiveTime: suspend () -> LocalTime?,
-    getContent: suspend () -> ReminderContent,
+    getContent: suspend () -> List<ReminderContent.Book>,
     scheduleNext: suspend (LocalTime) -> Unit,
-    publish: (ReminderContent) -> Unit,
+    publish: (List<ReminderContent.Book>) -> Unit,
 ): Boolean {
     val activeTime = runCatching { getActiveTime() }.getOrElse { return false } ?: return true
 
