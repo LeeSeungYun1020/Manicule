@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -89,11 +90,10 @@ class BookDetailViewModel
         private fun resolveInitialTab() {
             if (initialTabResolved) return
             viewModelScope.launch {
-                observeBookEntry(isbn).collect { entry ->
-                    if (!initialTabResolved) {
-                        initialTabResolved = true
-                        if (entry != null) selectTab(BookDetailTab.MyRecords)
-                    }
+                val entry = observeBookEntry(isbn).firstOrNull()
+                if (!initialTabResolved) {
+                    initialTabResolved = true
+                    if (entry != null) selectTab(BookDetailTab.MyRecords)
                 }
             }
         }
