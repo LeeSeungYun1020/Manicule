@@ -7,3 +7,13 @@ plugins {
 android {
     namespace = "com.leeseungyun1020.manicule.feature.search"
 }
+
+dependencies {
+    implementation(libs.androidx.compose.material.iconsExtended)
+
+    testImplementation(projects.core.data)
+    testImplementation(libs.kotlinx.datetime)
+
+    androidTestImplementation(libs.androidx.compose.ui.test)
+    androidTestImplementation(libs.truth)
+}

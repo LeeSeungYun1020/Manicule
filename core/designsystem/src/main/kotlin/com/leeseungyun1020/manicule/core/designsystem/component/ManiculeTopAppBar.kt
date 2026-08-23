@@ -15,7 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.leeseungyun1020.manicule.core.designsystem.R
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +53,7 @@ fun ManiculeTopAppBar(
 @ManiculePreview
 @Composable
 private fun ManiculeTopAppBarPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         ManiculeTopAppBar(
             title = "A long book title that is truncated in the app bar",
             onNavigateBack = {},

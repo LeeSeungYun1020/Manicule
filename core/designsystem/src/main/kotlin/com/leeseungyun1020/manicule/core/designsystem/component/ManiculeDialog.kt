@@ -19,8 +19,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.Dialog
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
 /**
@@ -97,7 +97,7 @@ fun ManiculeDialog(
 @ManiculePreview
 @Composable
 private fun ManiculeDialogPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background,
@@ -118,7 +118,7 @@ private fun ManiculeDialogPreview() {
 @ManiculePreview
 @Composable
 private fun ManiculeIconDialogPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background,
@@ -147,7 +147,7 @@ private fun ManiculeIconDialogPreview() {
 @ManiculePreview
 @Composable
 private fun ManiculeSingleButtonDialogPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background,

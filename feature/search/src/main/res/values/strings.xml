@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="search_stub_label">검색\n(stub — 후속 단계에서 구현)</string>
+    <string name="search_hint">책 제목, 저자, ISBN 검색</string>
+    <string name="search_back">뒤로가기</string>
+    <string name="search_loading">최근 검색어 불러오는 중</string>
+    <string name="search_empty_title">어떤 책을 찾고 있나요?</string>
+    <string name="search_empty_description">제목, 저자 또는 ISBN으로 검색해 보세요</string>
+    <string name="search_recent_title">최근 검색어</string>
 </resources>
