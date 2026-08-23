@@ -30,6 +30,7 @@ class BookRepositoryImpl
                 val response = bookRemoteDataSource.searchBooks(isbn = isbn)
                 val dto = response.docs.firstOrNull() ?: throw NoSuchElementException("API에서 해당 ISBN의 책을 찾을 수 없습니다.")
 
+                val cached = bookLocalDataSource.getByIsbn(isbn)
                 val mappedBook = dto.asExternalModel()
                 val book =
                     supervisorScope {
@@ -38,14 +39,14 @@ class BookRepositoryImpl
                                 mappedBook.introduction
                                     ?: mappedBook.introductionUrl?.let { url ->
                                         runCatching { bookRemoteDataSource.fetchNlkContent(url) }.getOrNull()
-                                    }
+                                    } ?: cached?.introduction
                             }
                         val tableOfContents =
                             async {
                                 mappedBook.tableOfContents
                                     ?: mappedBook.tableOfContentsUrl?.let { url ->
                                         runCatching { bookRemoteDataSource.fetchNlkContent(url) }.getOrNull()
-                                    }
+                                    } ?: cached?.tableOfContents
                             }
                         mappedBook.copy(
                             introduction = introduction.await(),

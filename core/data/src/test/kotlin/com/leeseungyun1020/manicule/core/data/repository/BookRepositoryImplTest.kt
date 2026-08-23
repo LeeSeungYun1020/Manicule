@@ -255,6 +255,53 @@ class BookRepositoryImplTest {
             assertThat(book?.tableOfContents).isNull()
             assertThat(fakeContentFetcher.requestedUrls).containsExactly(introductionUrl, contentsUrl)
         }
+
+    @Test
+    fun syncBook_preservesCachedContent_whenAuxiliaryRefreshesFail() =
+        runTest {
+            val initialEntity =
+                BookEntity(
+                    isbn = "123",
+                    title = "Old Book",
+                    author = "Author",
+                    publisher = "Publisher",
+                    publishedDate = null,
+                    coverUrl = null,
+                    totalPages = null,
+                    price = null,
+                    category = null,
+                    tableOfContentsUrl = null,
+                    introductionUrl = null,
+                    summaryUrl = null,
+                    introduction = "Cached introduction",
+                    tableOfContents = "Cached contents",
+                )
+            fakeBookDao.upsert(initialEntity)
+
+            val introductionUrl = "https://www.nl.go.kr/introduction.txt"
+            val contentsUrl = "https://nl.go.kr/contents.txt"
+            fakeNlkApi.mockResponse =
+                NlkSearchResponseDto(
+                    docs =
+                        listOf(
+                            NlkBookDto(
+                                isbn = "123",
+                                title = "New Book",
+                                bookIntroductionUrl = introductionUrl,
+                                bookTbCntUrl = contentsUrl,
+                            ),
+                        ),
+                )
+            fakeContentFetcher.responses[introductionUrl] = Result.failure(IllegalStateException("failed"))
+            fakeContentFetcher.responses[contentsUrl] = Result.failure(IllegalStateException("failed"))
+
+            assertThat(bookRepository.syncBook("123").isSuccess).isTrue()
+
+            val book = fakeBookDao.getByIsbn("123")
+            assertThat(book?.title).isEqualTo("New Book")
+            assertThat(book?.introduction).isEqualTo("Cached introduction")
+            assertThat(book?.tableOfContents).isEqualTo("Cached contents")
+        }
 }
 
 class FakeBookDao : BookDao {
