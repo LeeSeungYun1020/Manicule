@@ -26,9 +26,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.border
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
@@ -93,7 +93,7 @@ fun <T> ManiculeSegmentedButton(
 @ManiculePreview
 @Composable
 private fun ManiculeSegmentedButtonPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Column(
             modifier = Modifier.padding(ManiculeSpacing.lg),
             verticalArrangement = Arrangement.spacedBy(ManiculeSpacing.lg),

@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 
 @Composable
 fun ManiculeTextField(
@@ -46,7 +46,7 @@ fun ManiculeTextField(
 @ManiculePreview
 @Composable
 private fun ManiculeTextFieldPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Column {
             ManiculeTextField(value = "", onValueChange = {}, placeholder = "Empty")
             ManiculeTextField(value = "Input text", onValueChange = {})

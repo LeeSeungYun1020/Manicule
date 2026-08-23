@@ -18,8 +18,8 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeBorder
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
 @Composable
@@ -64,7 +64,7 @@ fun ManiculeDashedCard(
 @ManiculePreview
 @Composable
 private fun ManiculeCardPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Column(
             modifier = Modifier.padding(ManiculeSpacing.lg),
             verticalArrangement = Arrangement.spacedBy(ManiculeSpacing.lg),

@@ -508,13 +508,14 @@ core/network/
 ```
 core/scanner/
 └── src/main/kotlin/com/leeseungyun1020/manicule/core/scanner/
-    ├── di/
-    │   └── ScannerModule.kt
-    ├── BarcodeScanner.kt                   # interface — Flow<ScanResult>
-    ├── MlKitBarcodeScanner.kt              # BarcodeScanner 구현체, ImageAnalysis UseCase 제공
-    ├── IsbnValidator.kt                    # ISBN-10/13 체크섬
-    └── ScanResult.kt                       # Recognized(isbn) / Failed / Idle
+    ├── BarcodeAnalysisException.kt         # detector 분석 실패
+    ├── BarcodeReader.kt                    # ImageAnalysis와 suspend 인식 API
+    ├── BarcodeReaderFactory.kt             # Reader 생성 계약
+    ├── DemandDrivenBarcodeReader.kt        # 대기 호출 기반 공유·중단
+    └── MlKitBarcodeReaderFactory.kt        # CameraX–ML Kit 구현
 ```
+
+`core:scanner`의 `BarcodeReader`는 `ImageAnalysis`를 소유한다. 첫 `getBarcodes()` 대기자가 생기면 analyzer를 연결하고, 마지막 대기자가 반환·실패·취소되면 `clearAnalyzer()`로 분석을 중단한다. 동시 호출은 같은 프레임을 공유하여 각 predicate로 평가하고, 과거 결과를 replay하지 않으며 다음 호출에서 분석을 재시작한다. 최초 일치 프레임의 non-null `Barcode.rawValue`를 변경 없이 전달하고, ISBN 체크섬·접두사·정규화와 바코드 포맷 제한은 두지 않는다. 값의 도서 조회 성공 여부는 후속 Domain 흐름이 결정한다.
 
 ### 4.11 `core:notifications`
 
@@ -540,7 +541,7 @@ core/notifications/
 |--------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | 홈      | `feature:home`       | GetLibraryBooksUseCase(읽는 중), GetTodaySummaryUseCase, GetReadingStreakUseCase, GetReadingCalendarUseCase                                                      |
 | 검색     | `feature:search`     | SearchBooksUseCase, GetRecentQueriesUseCase, SaveRecentQueryUseCase                                                                                           |
-| 바코드 스캔 | `feature:scanner`    | GetBookByScanUseCase (BarcodeScanner 인터페이스는 core:scanner, core:domain이 의존)                                                                                    |
+| 바코드 스캔 | `feature:scanner`    | GetBookByScanUseCase (BarcodeReader 계약은 core:scanner, core:domain이 의존)                                                                                          |
 | 책 상세   | `feature:bookdetail` | GetBookDetailUseCase, ObserveBookEntryUseCase, ChangeReadingStatusUseCase, UpdateRatingMemoUseCase, AddReadingRecordUseCase, EditReadingRecordUseCase, DeleteReadingRecordUseCase, ObserveBookRecordsUseCase |
 | 서재     | `feature:library`    | GetLibraryBooksUseCase, DeleteBookEntryUseCase                                                                                                                |
 | 통계     | `feature:stats`      | GetPeriodSummaryUseCase, GetReadingCalendarUseCase                                                                                                            |
@@ -627,7 +628,7 @@ dependencies {
 | `core:database`      | Room in-memory DAO 테스트 (instrumented)                              |
 | `core:datastore`     | TestDataStore 기반 UserPreferences 읽기/쓰기 테스트                         |
 | `core:network`       | MockWebServer 기반 NlkApi 테스트                                        |
-| `core:scanner`       | ISBN 유효성 검증 알고리즘 및 스캔 결과 가공 테스트                                    |
+| `core:scanner`       | rawValue·predicate, 동시 호출 공유, 호출 수 기반 시작·중단·재시작, 오류·close 테스트       |
 | `core:notifications` | WorkManager 기반 알림 예약 및 스케줄링 검증                                     |
 | `core:designsystem`  | 공통 컴포넌트(Button, Dialog 등) Compose UI 테스트(`createComposeRule`) |
 | `core:ui`            | BookCover, BookListItem, BookProgressBar, ReadingCalendarGrid Compose UI 테스트 |

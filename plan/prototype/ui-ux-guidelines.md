@@ -50,14 +50,14 @@
 - **타이포그래피 계층**: M3 15종 텍스트 스타일 (Display / Headline / Title / Body / Label × L/M/S) 준수. 프로젝트는 Noto Sans KR + 한국어 line-height 튜닝 적용 (
   `Type.kt`)
 - **색상 명암비**: 일반 텍스트 4.5:1 이상, 대형 텍스트(24sp+) 및 아이콘 3.0:1 이상 (WCAG AA)
-- **상태별 UI**: 모든 화면에서 로딩 / 에러 / 빈 상태를 처리. 빈 상태는 `ManiculeEmptyState` 활용
+- **상태별 UI**: 핵심 콘텐츠는 로딩 / 오류 / 빈 상태를 구분하고, 실패 시 사용자가 인지할 수 있는 오류 UI와 재시도·복구 동작을 제공한다. 보조 콘텐츠 실패는 핵심 흐름을 유지하도록 숨기거나 빈 상태와 동일하게 표현할 수 있지만, 상태 모델에서는 성공한 빈 결과와 오류를 구분하고 자동 재시도 / 수동 재시도 / 화면 재진입 시 재구독 중 하나 이상의 복구 경로를 둔다. `ManiculeEmptyState`는 성공적으로 조회된 빈 결과에 활용한다
 - **내비게이션**: 하단 탭 3\~5개. 시스템 뒤로가기 지원. Type-safe Navigation 사용
 
 ---
 
 ## 4. Material 3 가이드라인
 
-- **테마 래퍼**: Screen / Preview 최상위에서 반드시 `ManiculeTheme`으로 래핑. `ManiculeTheme`이 `MaterialTheme` + `LocalManiculeColors` 등 프로젝트 CompositionLocal을 제공
+- **테마 래퍼**: 앱 최상위 루트(`MainActivity`)에서 `ManiculeTheme`으로 래핑하여 테마와 CompositionLocal을 제공(개별 Screen/컴포넌트는 중복 래핑 금지). 모든 `@Preview` 함수는 `ManiculePreviewTheme`으로 래핑하여 루트 `Surface`와 콘텐츠 색상 환경을 제공.
 - **토큰 접근**: 컴포넌트 내부에서 `MaterialTheme.colorScheme` / `.typography` / `.shapes` 및 `MaterialTheme.spacing`/`size`/`border` 토큰을 통해 접근. 달력 레벨 색상은 `MaterialTheme.maniculeColors.calendarLevels` 사용. 하드코딩 색상(`Color(0xFF...)`) 금지
 - **확장 색상 추가 기준**: `ManiculeExtendedColors` 에 필드를 추가하려면 **세 조건을 모두** 만족해야 한다. 하나라도 어긋나면 `colorScheme` 표준 역할이나 컴포넌트 내 `private const` 를 쓴다
     1. `colorScheme` 36개 역할 중 의미가 맞는 것이 없다
@@ -105,7 +105,7 @@
   @Preview(name = "Font 1.5x", fontScale = 1.5f, showBackground = true)
   annotation class ManiculePreview
   ```
-- **Preview 내 테마**: Preview 함수 본문에서 반드시 `ManiculeTheme { ... }` 으로 래핑.
+- **Preview 내 테마**: Preview 함수 본문에서 반드시 `ManiculePreviewTheme { ... }` 으로 래핑해 앱 루트와 동일한 `background`/`onBackground` Surface 환경을 제공.
 - **PreviewParameterProvider**: 다양한 상태를 하나의 Preview 함수로 렌더링할 때 활용.
 
 ---
@@ -206,7 +206,7 @@ AI는 UI 구현을 마치고 사용자에게 보고하기 전, 반드시 아래 
 
 ### 8.2. UI/UX 및 접근성 (A11y)
 - [ ] **터치 타겟**: 클릭 가능한 모든 요소가 최소 `48x48dp` 크기를 보장하는가?
-- [ ] **상태(State) 대응**: 정상 상태뿐만 아니라 로딩, 에러, 빈 상태(`ManiculeEmptyState`)가 모두 구현되었는가?
+- [ ] **상태(State) 대응**: 핵심 콘텐츠의 정상 / 로딩 / 오류 / 빈 상태와 오류 UI·재시도 동작이 구현되었는가? 보조 콘텐츠 실패 시 핵심 흐름을 유지하고, 성공한 빈 결과와 오류를 상태 모델에서 구분하며, 하나 이상의 복구 경로가 제공되는가?
 - [ ] **접근성 제공**: 의미 있는 인터랙티브 요소에 `contentDescription`이 제공되었는가? (순수 장식만 `null`)
 - [ ] **Edge-to-Edge**: 화면 상하단 인셋(`statusBarsPadding`, `navigationBarsPadding`, `imePadding`)이 겹치지 않게 처리되었는가?
 
@@ -218,4 +218,4 @@ AI는 UI 구현을 마치고 사용자에게 보고하기 전, 반드시 아래 
 - [ ] **문자열 리소스**: 하드코딩된 한글/영문 텍스트 없이 모두 `stringResource`로 추출되었는가?
 - [ ] **리스트 최적화**: `LazyColumn/Row` 사용 시 항목 성능을 위해 `key`와 `contentType`을 명시했는가?
 - [ ] **네트워크 이미지**: Coil `AsyncImage` 사용 시 네트워크 지연/실패에 대비한 `placeholder`와 `error` 처리가 구현되었는가?
-- [ ] **Preview 완결성**: Light/Dark 모드 및 다중 상태 Preview로 작성되었고, 최상위가 `ManiculeTheme`으로 래핑되었는가?
+- [ ] **Preview 완결성**: Light/Dark 모드 및 다중 상태 Preview로 작성되었고, 최상위가 `ManiculePreviewTheme`으로 래핑되었는가?

@@ -10,8 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +47,7 @@ fun <T> ManiculeTabRow(
 @ManiculePreview
 @Composable
 private fun ManiculeTabRowPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Column(
             modifier = Modifier.padding(vertical = ManiculeSpacing.lg),
         ) {

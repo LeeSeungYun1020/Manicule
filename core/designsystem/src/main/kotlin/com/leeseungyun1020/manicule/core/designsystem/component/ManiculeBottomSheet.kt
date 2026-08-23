@@ -19,7 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
 /**
@@ -57,7 +57,7 @@ fun ManiculeBottomSheet(
 @ManiculePreview
 @Composable
 private fun ManiculeBottomSheetPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
