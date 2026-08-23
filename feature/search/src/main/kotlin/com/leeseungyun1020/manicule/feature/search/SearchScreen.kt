@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.TextFieldState
@@ -31,8 +32,10 @@ import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeIconButt
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSearchBar
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSectionHeader
+import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.size
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
 @Composable
@@ -129,6 +132,15 @@ private fun SearchEmpty() {
         ManiculeEmptyState(
             title = stringResource(R.string.search_empty_title),
             description = stringResource(R.string.search_empty_description),
+            modifier = Modifier.fillMaxSize(),
+            icon = {
+                Icon(
+                    imageVector = ManiculeIcons.Search,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(MaterialTheme.size.iconEmptyState),
+                )
+            },
         )
     }
 }
