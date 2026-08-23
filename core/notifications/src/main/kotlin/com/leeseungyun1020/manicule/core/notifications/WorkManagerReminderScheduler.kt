@@ -3,6 +3,7 @@ package com.leeseungyun1020.manicule.core.notifications
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.await
 import androidx.work.workDataOf
 import com.leeseungyun1020.manicule.core.common.time.Clock
 import com.leeseungyun1020.manicule.core.domain.settings.ReminderScheduler
@@ -37,7 +38,7 @@ class WorkManagerReminderScheduler
             workManager.cancelUniqueWork(UNIQUE_WORK_NAME)
         }
 
-        private fun enqueue(
+        private suspend fun enqueue(
             time: LocalTime,
             policy: ExistingWorkPolicy,
         ) {
@@ -55,7 +56,7 @@ class WorkManagerReminderScheduler
                 UNIQUE_WORK_NAME,
                 policy,
                 request,
-            )
+            ).await()
         }
 
         companion object {
