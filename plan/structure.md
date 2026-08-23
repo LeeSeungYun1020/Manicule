@@ -526,6 +526,7 @@ core/notifications/
     │   └── NotificationsModule.kt
     ├── WorkManagerReminderScheduler.kt     # domain ReminderScheduler 구현
     ├── ReminderWorker.kt                   # GetReminderContentUseCase로 발송 시점 메시지 조회
+    ├── TimeZoneChangedReceiver.kt          # 시간대 변경 시 활성 리마인더 즉시 재예약
     └── NotificationChannels.kt
 ```
 
