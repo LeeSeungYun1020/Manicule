@@ -31,7 +31,7 @@ class AndroidReminderNotificationPublisher
 
             val notification =
                 NotificationCompat.Builder(context, ReminderNotificationChannel.ID)
-                    .setSmallIcon(context.applicationInfo.icon)
+                    .setSmallIcon(R.drawable.ic_notification_reminder)
                     .setContentTitle(context.getString(R.string.reminder_notification_title))
                     .setContentText(content.message())
                     .setCategory(NotificationCompat.CATEGORY_REMINDER)
