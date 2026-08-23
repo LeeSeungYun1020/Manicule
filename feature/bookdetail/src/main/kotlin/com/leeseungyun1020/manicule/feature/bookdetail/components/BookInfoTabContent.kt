@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -13,11 +14,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.ui.book.BookCover
 import com.leeseungyun1020.manicule.core.ui.book.BookCoverSize
 import com.leeseungyun1020.manicule.feature.bookdetail.R
+import kotlinx.datetime.LocalDate
 import java.text.NumberFormat
 
 @Composable
@@ -128,5 +132,78 @@ private fun PublicationRow(
             modifier = Modifier.weight(1f),
         )
         Text(text = value, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(2f))
+    }
+}
+
+private val sampleBook =
+    Book(
+        isbn = "9791161759692",
+        title = "Kotlin in Action 2/e",
+        author = "세바스티안 아이그너 외",
+        publisher = "에이콘출판사",
+        publishedDate = LocalDate(2025, 2, 27),
+        coverUrl = null,
+        totalPages = 803,
+        price = 48_000,
+        category = "프로그래밍",
+        tableOfContentsUrl = null,
+        introductionUrl = null,
+        summaryUrl = null,
+        introduction = "코틀린 언어와 실전 개발 패턴을 소개합니다. ".repeat(8),
+        tableOfContents = "1장 코틀린이란 무엇이며 왜 필요한가\n2장 코틀린 기초",
+    )
+
+@ManiculePreview
+@Composable
+private fun BookInfoTabContentPreview() {
+    ManiculePreviewTheme {
+        BookInfoTabContent(
+            book = sampleBook,
+            refreshFailed = false,
+            onRetry = {},
+        )
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun BookInfoTabContentErrorPreview() {
+    ManiculePreviewTheme {
+        BookInfoTabContent(
+            book = sampleBook,
+            refreshFailed = true,
+            onRetry = {},
+        )
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun BookHeaderPreview() {
+    ManiculePreviewTheme {
+        BookHeader(book = sampleBook)
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun BookPublicationInfoPreview() {
+    ManiculePreviewTheme {
+        BookPublicationInfo(book = sampleBook)
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun PublicationRowPreview() {
+    ManiculePreviewTheme {
+        Column(
+            modifier = Modifier.padding(MaterialTheme.spacing.md),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+        ) {
+            PublicationRow(label = "ISBN", value = "9791161759692")
+            PublicationRow(label = "출간일", value = "2025-02-27")
+            PublicationRow(label = "긴 설명 항목", value = "두 줄 이상으로 길게 이어지는 상세 정보 예시 텍스트입니다.")
+        }
     }
 }
