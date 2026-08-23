@@ -35,7 +35,7 @@ class WorkManagerReminderScheduler
         }
 
         override suspend fun cancel() {
-            workManager.cancelUniqueWork(UNIQUE_WORK_NAME)
+            workManager.cancelUniqueWork(UNIQUE_WORK_NAME).await()
         }
 
         private suspend fun enqueue(

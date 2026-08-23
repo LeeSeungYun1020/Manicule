@@ -33,6 +33,20 @@ class ReminderUseCasesTest {
         }
 
     @Test
+    fun enabledReminder_restoresPreviousConfigWhenSchedulingFails() =
+        runTest {
+            val preferences = FakeUserPreferencesRepository()
+            val expectedFailure = IllegalStateException("Scheduling failed")
+            val scheduler = FakeReminderScheduler(scheduleFailure = expectedFailure)
+            val config = ReminderConfig(enabled = true, time = LocalTime(8, 30))
+
+            val result = runCatching { SetReminderUseCase(preferences, scheduler)(config) }
+
+            assertThat(result.exceptionOrNull()).isSameInstanceAs(expectedFailure)
+            assertThat(preferences.savedReminder).isEqualTo(ReminderConfig.Default)
+        }
+
+    @Test
     fun disabledReminder_isSavedAndCancelled() =
         runTest {
             val preferences = FakeUserPreferencesRepository()
@@ -111,11 +125,14 @@ class ReminderUseCasesTest {
         }
 }
 
-private class FakeReminderScheduler : ReminderScheduler {
+private class FakeReminderScheduler(
+    private val scheduleFailure: Exception? = null,
+) : ReminderScheduler {
     var scheduledTime: LocalTime? = null
     var cancelled = false
 
     override suspend fun schedule(time: LocalTime) {
+        scheduleFailure?.let { throw it }
         scheduledTime = time
     }
 
