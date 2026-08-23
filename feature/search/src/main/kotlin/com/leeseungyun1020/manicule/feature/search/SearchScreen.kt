@@ -1,12 +1,12 @@
 package com.leeseungyun1020.manicule.feature.search
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.TextFieldState
@@ -20,7 +20,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -31,8 +30,10 @@ import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeIconButt
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSearchBar
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSectionHeader
+import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.size
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
 @Composable
@@ -47,7 +48,8 @@ fun SearchScreen(
             modifier
                 .fillMaxSize()
                 .imePadding()
-                .padding(horizontal = MaterialTheme.spacing.screenHorizontal),
+                .padding(horizontal = MaterialTheme.spacing.screenHorizontal)
+                .padding(top = MaterialTheme.spacing.sm, bottom = MaterialTheme.spacing.xl),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
     ) {
         ManiculeSearchBar(
@@ -122,15 +124,19 @@ private fun SearchContent(recentQueries: List<String>) {
 
 @Composable
 private fun SearchEmpty() {
-    Box(
+    ManiculeEmptyState(
+        title = stringResource(R.string.search_empty_title),
+        description = stringResource(R.string.search_empty_description),
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        ManiculeEmptyState(
-            title = stringResource(R.string.search_empty_title),
-            description = stringResource(R.string.search_empty_description),
-        )
-    }
+        icon = {
+            Icon(
+                imageVector = ManiculeIcons.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(MaterialTheme.size.iconEmptyState),
+            )
+        },
+    )
 }
 
 @ManiculePreview

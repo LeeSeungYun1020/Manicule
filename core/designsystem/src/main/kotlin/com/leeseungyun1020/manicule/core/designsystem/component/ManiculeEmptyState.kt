@@ -38,6 +38,7 @@ fun ManiculeEmptyState(
 ) {
     ManiculeDashedCard(
         modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.Center,
     ) {
         Column(
             modifier =
