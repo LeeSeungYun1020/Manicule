@@ -1,7 +1,6 @@
 package com.leeseungyun1020.manicule.core.notifications
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -9,6 +8,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -44,8 +44,12 @@ class AndroidReminderNotificationPublisher
             runCatching { postNotification(notification) }
         }
 
-        @SuppressLint("MissingPermission")
         private fun postNotification(notification: Notification) {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                return
+            }
             NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
         }
 
@@ -79,7 +83,8 @@ class AndroidReminderNotificationPublisher
                     context
                         .getSystemService(NotificationManager::class.java)
                         .getNotificationChannel(CHANNEL_ID)
-                        ?.importance != NotificationManager.IMPORTANCE_NONE
+                        ?.let { it.importance != NotificationManager.IMPORTANCE_NONE }
+                        ?: false
                 } else {
                     true
                 }
