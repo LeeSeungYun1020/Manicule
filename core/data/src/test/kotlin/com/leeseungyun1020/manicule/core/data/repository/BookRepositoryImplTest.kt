@@ -302,6 +302,30 @@ class BookRepositoryImplTest {
             assertThat(book?.introduction).isEqualTo("Cached introduction")
             assertThat(book?.tableOfContents).isEqualTo("Cached contents")
         }
+
+    @Test
+    fun syncBook_usesSummaryUrl_whenIntroductionUrlIsAbsent() =
+        runTest {
+            val summaryUrl = "https://www.nl.go.kr/summary.txt"
+            fakeNlkApi.mockResponse =
+                NlkSearchResponseDto(
+                    docs =
+                        listOf(
+                            NlkBookDto(
+                                isbn = "123",
+                                title = "Book",
+                                bookSummaryUrl = summaryUrl,
+                            ),
+                        ),
+                )
+            fakeContentFetcher.responses[summaryUrl] = Result.success("Fetched summary as introduction")
+
+            assertThat(bookRepository.syncBook("123").isSuccess).isTrue()
+
+            val book = fakeBookDao.getByIsbn("123")
+            assertThat(book?.introduction).isEqualTo("Fetched summary as introduction")
+            assertThat(fakeContentFetcher.requestedUrls).containsExactly(summaryUrl)
+        }
 }
 
 class FakeBookDao : BookDao {

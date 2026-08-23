@@ -37,7 +37,7 @@ class BookRepositoryImpl
                         val introduction =
                             async {
                                 mappedBook.introduction
-                                    ?: mappedBook.introductionUrl?.let { url ->
+                                    ?: (mappedBook.introductionUrl ?: mappedBook.summaryUrl)?.let { url ->
                                         runCatching { bookRemoteDataSource.fetchNlkContent(url) }.getOrNull()
                                     } ?: cached?.introduction
                             }
