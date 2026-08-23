@@ -43,6 +43,7 @@ fun ManiculeEmptyState(
             modifier =
                 Modifier
                     .fillMaxWidth()
+                    .weight(1f, fill = false)
                     .padding(horizontal = MaterialTheme.spacing.lg, vertical = MaterialTheme.spacing.xl),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
