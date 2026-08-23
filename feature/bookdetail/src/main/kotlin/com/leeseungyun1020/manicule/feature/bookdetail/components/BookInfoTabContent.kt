@@ -10,10 +10,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
@@ -27,8 +25,6 @@ import java.text.NumberFormat
 @Composable
 fun BookInfoTabContent(
     book: Book,
-    refreshFailed: Boolean,
-    onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -36,23 +32,6 @@ fun BookInfoTabContent(
         contentPadding = MaterialTheme.spacing.screenContent,
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sectionGap),
     ) {
-        if (refreshFailed) {
-            item(key = "refresh_error", contentType = "notice") {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text(
-                        text = stringResource(R.string.book_detail_refresh_error),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.weight(1f),
-                    )
-                    ManiculeButton(onClick = onRetry, text = stringResource(R.string.book_detail_retry))
-                }
-            }
-        }
         item(key = "header", contentType = "header") { BookHeader(book) }
         item(key = "publication", contentType = "section") { BookPublicationInfo(book) }
         item(key = "introduction", contentType = "section") {
@@ -159,20 +138,6 @@ private fun BookInfoTabContentPreview() {
     ManiculePreviewTheme {
         BookInfoTabContent(
             book = sampleBook,
-            refreshFailed = false,
-            onRetry = {},
-        )
-    }
-}
-
-@ManiculePreview
-@Composable
-private fun BookInfoTabContentErrorPreview() {
-    ManiculePreviewTheme {
-        BookInfoTabContent(
-            book = sampleBook,
-            refreshFailed = true,
-            onRetry = {},
         )
     }
 }

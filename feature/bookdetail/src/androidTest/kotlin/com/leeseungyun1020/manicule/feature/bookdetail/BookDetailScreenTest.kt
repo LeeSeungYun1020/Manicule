@@ -60,6 +60,26 @@ class BookDetailScreenTest {
         assertThat(retried).isTrue()
     }
 
+    @Test
+    fun refreshError_displaysSnackbarWithRetry() {
+        var retried = false
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = BookDetailUiState(book = testBook, isLoading = false, isRefreshError = true),
+                    onNavigateBack = {},
+                    onTabSelected = {},
+                    onRetry = { retried = true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_refresh_error)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+
+        assertThat(retried).isTrue()
+    }
+
     private companion object {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val testBook =
