@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -94,6 +95,7 @@ private fun BookHeader(book: Book) {
 
 @Composable
 private fun BookPublicationInfo(book: Book) {
+    val priceFormatter = remember { NumberFormat.getIntegerInstance() }
     Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
         Text(text = stringResource(R.string.book_detail_publication_info), style = MaterialTheme.typography.titleMedium)
         PublicationRow(stringResource(R.string.book_detail_isbn), book.isbn)
@@ -106,7 +108,7 @@ private fun BookPublicationInfo(book: Book) {
         )
         PublicationRow(
             stringResource(R.string.book_detail_price),
-            book.price?.let { stringResource(R.string.book_detail_price_value, NumberFormat.getIntegerInstance().format(it)) },
+            book.price?.let { stringResource(R.string.book_detail_price_value, priceFormatter.format(it)) },
         )
         PublicationRow(stringResource(R.string.book_detail_category), book.category)
     }
