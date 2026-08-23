@@ -1,5 +1,6 @@
 package com.leeseungyun1020.manicule.core.notifications
 
+import android.app.NotificationManager
 import android.content.Context
 import androidx.work.Configuration
 import androidx.work.WorkInfo
@@ -22,20 +23,36 @@ import java.util.concurrent.TimeUnit
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class WorkManagerReminderSchedulerTest {
+    private lateinit var context: Context
     private lateinit var workManager: WorkManager
     private lateinit var scheduler: WorkManagerReminderScheduler
 
     @Before
     fun setUp() {
-        val context: Context = RuntimeEnvironment.getApplication()
+        context = RuntimeEnvironment.getApplication()
         WorkManagerTestInitHelper.initializeTestWorkManager(context, Configuration.Builder().build())
         workManager = WorkManager.getInstance(context)
         scheduler =
             WorkManagerReminderScheduler(
                 workManager = workManager,
                 clock = FakeClock(Instant.parse("2026-08-09T10:00:00Z"), TimeZone.UTC),
+                notificationChannel = ReminderNotificationChannel(context),
             )
     }
+
+    @Test
+    fun schedule_createsReminderNotificationChannel() =
+        runTest {
+            val manager = context.getSystemService(NotificationManager::class.java)
+            manager.deleteNotificationChannel(ReminderNotificationChannel.ID)
+
+            scheduler.schedule(LocalTime(11, 0))
+
+            val channel = manager.getNotificationChannel(ReminderNotificationChannel.ID)
+            assertThat(channel.name).isEqualTo(context.getString(R.string.reminder_channel_name))
+            assertThat(channel.description).isEqualTo(context.getString(R.string.reminder_channel_description))
+            assertThat(channel.importance).isEqualTo(NotificationManager.IMPORTANCE_DEFAULT)
+        }
 
     @Test
     fun schedule_registersSingleUniquePeriodicWorkAndUpdatesIt() =

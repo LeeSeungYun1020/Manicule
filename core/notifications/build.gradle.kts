@@ -5,6 +5,10 @@ plugins {
 
 android {
     namespace = "com.leeseungyun1020.manicule.core.notifications"
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {

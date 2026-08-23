@@ -18,11 +18,14 @@ import javax.inject.Inject
 
 class WorkManagerReminderScheduler
     @Inject
-    constructor(
+    internal constructor(
         private val workManager: WorkManager,
         private val clock: Clock,
+        private val notificationChannel: ReminderNotificationChannel,
     ) : ReminderScheduler {
         override suspend fun schedule(time: LocalTime) {
+            notificationChannel.ensureCreated()
+
             val request =
                 PeriodicWorkRequestBuilder<ReminderWorker>(REPEAT_INTERVAL_HOURS, TimeUnit.HOURS)
                     .setInitialDelay(

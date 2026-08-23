@@ -2,7 +2,6 @@ package com.leeseungyun1020.manicule.core.notifications
 
 import android.Manifest
 import android.app.Notification
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
@@ -22,15 +21,16 @@ interface ReminderNotificationPublisher {
 
 class AndroidReminderNotificationPublisher
     @Inject
-    constructor(
+    internal constructor(
         @param:ApplicationContext private val context: Context,
+        private val notificationChannel: ReminderNotificationChannel,
     ) : ReminderNotificationPublisher {
         override fun publish(content: ReminderContent) {
-            createChannel()
+            notificationChannel.ensureCreated()
             if (!canPostNotification()) return
 
             val notification =
-                NotificationCompat.Builder(context, CHANNEL_ID)
+                NotificationCompat.Builder(context, ReminderNotificationChannel.ID)
                     .setSmallIcon(context.applicationInfo.icon)
                     .setContentTitle(context.getString(R.string.reminder_notification_title))
                     .setContentText(content.message())
@@ -59,19 +59,6 @@ class AndroidReminderNotificationPublisher
                 ReminderContent.Generic -> context.getString(R.string.reminder_notification_generic_message)
             }
 
-        private fun createChannel() {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-            val channel =
-                NotificationChannel(
-                    CHANNEL_ID,
-                    context.getString(R.string.reminder_channel_name),
-                    NotificationManager.IMPORTANCE_DEFAULT,
-                ).apply {
-                    description = context.getString(R.string.reminder_channel_description)
-                }
-            context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-        }
-
         private fun canPostNotification(): Boolean {
             val hasPermission =
                 Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
@@ -82,7 +69,7 @@ class AndroidReminderNotificationPublisher
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     context
                         .getSystemService(NotificationManager::class.java)
-                        .getNotificationChannel(CHANNEL_ID)
+                        .getNotificationChannel(ReminderNotificationChannel.ID)
                         ?.let { it.importance != NotificationManager.IMPORTANCE_NONE }
                         ?: false
                 } else {
@@ -102,7 +89,6 @@ class AndroidReminderNotificationPublisher
             }
 
         companion object {
-            const val CHANNEL_ID = "reading_reminders"
             const val NOTIFICATION_ID = 1001
         }
     }
