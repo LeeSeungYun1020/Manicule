@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -28,8 +30,10 @@ import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSnackbarHost
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTabRow
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTopAppBar
+import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.size
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.feature.bookdetail.components.BookInfoTabContent
@@ -128,7 +132,15 @@ private fun BookDetailBody(
                 ManiculeEmptyState(
                     title = stringResource(R.string.book_detail_error_title),
                     description = stringResource(R.string.book_detail_error_description),
-                    modifier = Modifier.padding(MaterialTheme.spacing.lg),
+                    modifier = Modifier.fillMaxSize().padding(MaterialTheme.spacing.lg),
+                    icon = {
+                        Icon(
+                            imageVector = ManiculeIcons.NetworkError,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(MaterialTheme.size.iconEmptyState),
+                        )
+                    },
                     actions = { ManiculeButton(onClick = onRetry, text = stringResource(R.string.book_detail_retry)) },
                 )
             uiState.selectedTab == BookDetailTab.Information ->
