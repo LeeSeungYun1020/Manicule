@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="reminder_channel_name">독서 리마인더</string>
-    <string name="reminder_channel_description">매일 선택한 시간에 독서를 알려줍니다.</string>
-    <string name="reminder_notification_title">읽을 시간이에요</string>
+    <string name="reminder_channel_description">매일 선택한 시간에 독서 알림을 보내드려요.</string>
+    <string name="reminder_notification_title">책 읽을 시간이에요</string>
     <string name="reminder_notification_book_message">%1$s, 오늘도 이어서 읽어볼까요?</string>
+    <string name="reminder_notification_books_message">%1$s, %2$s 어느 책을 읽을까요?</string>
     <string name="reminder_notification_generic_message">오늘도 잠시 책을 펼쳐보세요.</string>
 </resources>

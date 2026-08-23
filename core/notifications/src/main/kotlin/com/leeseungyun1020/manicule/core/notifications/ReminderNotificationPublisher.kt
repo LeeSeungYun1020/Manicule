@@ -29,13 +29,13 @@ class AndroidReminderNotificationPublisher
             notificationChannel.ensureCreated()
             if (!canPostNotification()) return
 
-            val content = books.firstOrNull() ?: ReminderContent.Generic
-
+            val message = books.message()
             val notification =
                 NotificationCompat.Builder(context, ReminderNotificationChannel.ID)
                     .setSmallIcon(R.drawable.ic_notification_reminder)
                     .setContentTitle(context.getString(R.string.reminder_notification_title))
-                    .setContentText(content.message())
+                    .setContentText(message)
+                    .setStyle(NotificationCompat.BigTextStyle().bigText(message))
                     .setCategory(NotificationCompat.CATEGORY_REMINDER)
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setAutoCancel(true)
@@ -55,10 +55,12 @@ class AndroidReminderNotificationPublisher
             NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
         }
 
-        private fun ReminderContent.message(): String =
-            when (this) {
-                is ReminderContent.Book -> context.getString(R.string.reminder_notification_book_message, title)
-                ReminderContent.Generic -> context.getString(R.string.reminder_notification_generic_message)
+        private fun List<ReminderContent.Book>.message(): String =
+            when (size) {
+                0 -> context.getString(R.string.reminder_notification_generic_message)
+                1 -> context.getString(R.string.reminder_notification_book_message, first().title)
+                2 -> let { context.getString(R.string.reminder_notification_books_message, it[0].title, it[1].title) }
+                else -> shuffled().take(2).let { context.getString(R.string.reminder_notification_books_message, it[0].title, it[1].title) }
             }
 
         private fun canPostNotification(): Boolean {
