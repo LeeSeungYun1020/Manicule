@@ -54,6 +54,9 @@
 - [13daace](13daace.md) — refactor: 검색 진입과 입력 컴포넌트 분리
 - [26bce83](26bce83.md) — refactor: 독서 기록 세션 계약 적용
 - [a542480](a542480.md) — refactor: feature navigation 경계 적용
+- [f4b4b3d](f4b4b3d.md) — feat: CameraX 바코드 분석 기반 구현
+- [adeafd2](adeafd2.md) — refactor: 바코드 분석 suspend API 적용
+- [fc1010c](fc1010c.md) — refactor: 바코드 리더가 필요할 때만 동작하도록 변경
 - [d4fa50b](d4fa50b.md) — fix: 다크 모드 프리뷰 콘텐츠 색상 적용
 - [2a89a8f](2a89a8f.md) — feat: 검색 진입과 최근 검색어 화면 구현
 - [e13dafa](e13dafa.md) — fix: 최근 검색어 조회 실패 복구
