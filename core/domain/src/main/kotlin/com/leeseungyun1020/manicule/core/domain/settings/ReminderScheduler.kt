@@ -10,5 +10,10 @@ interface ReminderScheduler {
      */
     suspend fun schedule(time: LocalTime)
 
+    /**
+     * 현재 실행 중인 리마인더 뒤에 다음 로컬 [time] 작업을 연결한다.
+     */
+    suspend fun scheduleNext(time: LocalTime)
+
     suspend fun cancel()
 }

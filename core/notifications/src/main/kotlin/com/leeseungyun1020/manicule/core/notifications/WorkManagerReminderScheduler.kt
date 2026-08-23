@@ -1,8 +1,9 @@
 package com.leeseungyun1020.manicule.core.notifications
 
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.leeseungyun1020.manicule.core.common.time.Clock
 import com.leeseungyun1020.manicule.core.domain.settings.ReminderScheduler
 import kotlinx.datetime.DateTimeUnit
@@ -25,28 +26,40 @@ class WorkManagerReminderScheduler
     ) : ReminderScheduler {
         override suspend fun schedule(time: LocalTime) {
             notificationChannel.ensureCreated()
+            enqueue(time, ExistingWorkPolicy.REPLACE)
+        }
 
-            val request =
-                PeriodicWorkRequestBuilder<ReminderWorker>(REPEAT_INTERVAL_HOURS, TimeUnit.HOURS)
-                    .setInitialDelay(
-                        calculateInitialDelayMillis(clock.now(), clock.timeZone(), time),
-                        TimeUnit.MILLISECONDS,
-                    ).build()
-
-            workManager.enqueueUniquePeriodicWork(
-                UNIQUE_WORK_NAME,
-                ExistingPeriodicWorkPolicy.UPDATE,
-                request,
-            )
+        override suspend fun scheduleNext(time: LocalTime) {
+            enqueue(time, ExistingWorkPolicy.APPEND_OR_REPLACE)
         }
 
         override suspend fun cancel() {
             workManager.cancelUniqueWork(UNIQUE_WORK_NAME)
         }
 
+        private fun enqueue(
+            time: LocalTime,
+            policy: ExistingWorkPolicy,
+        ) {
+            val timeZone = clock.timeZone()
+            val request =
+                OneTimeWorkRequestBuilder<ReminderWorker>()
+                    .setInitialDelay(
+                        calculateInitialDelayMillis(clock.now(), timeZone, time),
+                        TimeUnit.MILLISECONDS,
+                    ).setInputData(
+                        workDataOf(ReminderWorker.SCHEDULED_TIME_ZONE_ID to timeZone.id),
+                    ).build()
+
+            workManager.enqueueUniqueWork(
+                UNIQUE_WORK_NAME,
+                policy,
+                request,
+            )
+        }
+
         companion object {
             const val UNIQUE_WORK_NAME = "daily-reading-reminder"
-            private const val REPEAT_INTERVAL_HOURS = 24L
         }
     }
 

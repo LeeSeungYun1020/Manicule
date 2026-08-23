@@ -47,6 +47,28 @@ class ReminderUseCasesTest {
         }
 
     @Test
+    fun activeReminderTime_returnsEnabledReminderTime() =
+        runTest {
+            val preferences = FakeUserPreferencesRepository()
+            val config = ReminderConfig(enabled = true, time = LocalTime(8, 30))
+            preferences.setReminderConfig(config)
+
+            val time = GetActiveReminderTimeUseCase(preferences)()
+
+            assertThat(time).isEqualTo(config.time)
+        }
+
+    @Test
+    fun activeReminderTime_returnsNullWhenReminderIsDisabled() =
+        runTest {
+            val preferences = FakeUserPreferencesRepository()
+
+            val time = GetActiveReminderTimeUseCase(preferences)()
+
+            assertThat(time).isNull()
+        }
+
+    @Test
     fun reminderContent_usesMostRecentlyUpdatedReadingBook() =
         runTest {
             val older = bookEntry("Older", Instant.parse("2026-08-01T00:00:00Z"))
@@ -71,6 +93,10 @@ private class FakeReminderScheduler : ReminderScheduler {
     var cancelled = false
 
     override suspend fun schedule(time: LocalTime) {
+        scheduledTime = time
+    }
+
+    override suspend fun scheduleNext(time: LocalTime) {
         scheduledTime = time
     }
 

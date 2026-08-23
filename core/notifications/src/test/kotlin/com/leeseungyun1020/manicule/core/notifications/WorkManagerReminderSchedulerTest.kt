@@ -55,15 +55,40 @@ class WorkManagerReminderSchedulerTest {
         }
 
     @Test
-    fun schedule_registersSingleUniquePeriodicWorkAndUpdatesIt() =
+    fun schedule_replacesExistingWorkToResetInitialDelay() =
         runTest {
             scheduler.schedule(LocalTime(11, 0))
-            scheduler.schedule(LocalTime(12, 0))
+            val firstWork =
+                workManager
+                    .getWorkInfosForUniqueWork(WorkManagerReminderScheduler.UNIQUE_WORK_NAME)
+                    .get()
+                    .single { it.state == WorkInfo.State.ENQUEUED }
 
+            scheduler.schedule(LocalTime(12, 0))
+            val currentWork =
+                workManager
+                    .getWorkInfosForUniqueWork(WorkManagerReminderScheduler.UNIQUE_WORK_NAME)
+                    .get()
+                    .single { it.state == WorkInfo.State.ENQUEUED }
+
+            assertThat(currentWork.id).isNotEqualTo(firstWork.id)
+        }
+
+    @Test
+    fun scheduleNext_appendsWorkAfterCurrentReminder() =
+        runTest {
+            scheduler.schedule(LocalTime(11, 0))
+            val currentWork =
+                workManager
+                    .getWorkInfosForUniqueWork(WorkManagerReminderScheduler.UNIQUE_WORK_NAME)
+                    .get()
+                    .single()
+
+            scheduler.scheduleNext(LocalTime(12, 0))
             val work = workManager.getWorkInfosForUniqueWork(WorkManagerReminderScheduler.UNIQUE_WORK_NAME).get()
 
-            assertThat(work).hasSize(1)
-            assertThat(work.single().state).isEqualTo(WorkInfo.State.ENQUEUED)
+            assertThat(work.single { it.id == currentWork.id }.state).isEqualTo(WorkInfo.State.ENQUEUED)
+            assertThat(work.single { it.id != currentWork.id }.state).isEqualTo(WorkInfo.State.BLOCKED)
         }
 
     @Test
@@ -123,6 +148,18 @@ class WorkManagerReminderSchedulerTest {
             )
 
         assertThat(delay).isEqualTo(TimeUnit.MINUTES.toMillis(30))
+    }
+
+    @Test
+    fun initialDelay_acrossDaylightSavingStart_targetsSameLocalTime() {
+        val delay =
+            calculateInitialDelayMillis(
+                now = Instant.parse("2026-03-08T01:00:00Z"),
+                timeZone = TimeZone.of("America/New_York"),
+                scheduledTime = LocalTime(20, 0),
+            )
+
+        assertThat(delay).isEqualTo(TimeUnit.HOURS.toMillis(23))
     }
 }
 
