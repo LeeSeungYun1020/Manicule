@@ -49,6 +49,8 @@ class BookDetailViewModel
         }
 
         fun retry() {
+            refreshFinished = false
+            refreshFailed = false
             _uiState.update { it.copy(isLoading = it.book == null, isFatalError = false, isRefreshError = false) }
             viewModelScope.launch {
                 val result = getBookDetail.refresh(isbn)

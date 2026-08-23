@@ -67,6 +67,24 @@ class BookDetailViewModelTest {
         }
 
     @Test
+    fun retry_clearsPreviousErrors_andUpdatesStateOnSuccess() =
+        runTest(dispatcher) {
+            bookRepository.refreshResult = Result.failure(NoSuchElementException())
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+            assertThat(viewModel.uiState.value.isFatalError).isTrue()
+
+            bookRepository.refreshResult = Result.success(Unit)
+            bookRepository.books.value = testBook
+            viewModel.retry()
+            advanceUntilIdle()
+
+            assertThat(viewModel.uiState.value.book).isEqualTo(testBook)
+            assertThat(viewModel.uiState.value.isFatalError).isFalse()
+            assertThat(viewModel.uiState.value.isRefreshError).isFalse()
+        }
+
+    @Test
     fun libraryEntry_selectsRecordsInitially_butDoesNotOverrideUserSelection() =
         runTest(dispatcher) {
             bookRepository.books.value = testBook
