@@ -11,6 +11,7 @@ import com.leeseungyun1020.manicule.core.domain.settings.ReminderContent
 import com.leeseungyun1020.manicule.core.domain.settings.ReminderScheduler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.LocalTime
 import javax.inject.Inject
 
@@ -69,14 +70,28 @@ internal suspend fun runReminder(
     scheduleNext: suspend (LocalTime) -> Unit,
     publish: (List<ReminderContent.Book>) -> Unit,
 ): Boolean {
-    val activeTime = runCatching { getActiveTime() }.getOrElse { return false } ?: return true
+    val activeTime =
+        runCatching { getActiveTime() }
+            .onFailure { if (it is CancellationException) throw it }
+            .getOrElse { return false } ?: return true
 
     if (timeZones.scheduled != timeZones.current) {
-        return runCatching { scheduleNext(activeTime) }.isSuccess
+        return runCatching { scheduleNext(activeTime) }
+            .onFailure { if (it is CancellationException) throw it }
+            .isSuccess
     }
 
-    val content = runCatching { getContent() }.getOrElse { return false }
-    if (runCatching { scheduleNext(activeTime) }.isFailure) return false
+    val content =
+        runCatching { getContent() }
+            .onFailure { if (it is CancellationException) throw it }
+            .getOrElse { return false }
+    if (
+        runCatching { scheduleNext(activeTime) }
+            .onFailure { if (it is CancellationException) throw it }
+            .isFailure
+    ) {
+        return false
+    }
 
     runCatching { publish(content) }
     return true

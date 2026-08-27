@@ -2,6 +2,7 @@ package com.leeseungyun1020.manicule.core.notifications
 
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.domain.settings.ReminderContent
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalTime
 import org.junit.Test
@@ -112,6 +113,47 @@ class ReminderWorkerTest {
 
             assertThat(completed).isFalse()
             assertThat(published).isFalse()
+        }
+
+    @Test
+    fun cancellationFromSuspendingDependencies_isPropagated() =
+        runTest {
+            val invocations: List<suspend () -> Boolean> =
+                listOf(
+                    {
+                        runReminder(
+                            timeZones = SAME_TIME_ZONES,
+                            getActiveTime = { throw CancellationException("active time") },
+                            getContent = { emptyList() },
+                            scheduleNext = {},
+                            publish = {},
+                        )
+                    },
+                    {
+                        runReminder(
+                            timeZones = SAME_TIME_ZONES,
+                            getActiveTime = { ACTIVE_TIME },
+                            getContent = { throw CancellationException("content") },
+                            scheduleNext = {},
+                            publish = {},
+                        )
+                    },
+                    {
+                        runReminder(
+                            timeZones = SAME_TIME_ZONES,
+                            getActiveTime = { ACTIVE_TIME },
+                            getContent = { emptyList() },
+                            scheduleNext = { throw CancellationException("schedule") },
+                            publish = {},
+                        )
+                    },
+                )
+
+            invocations.forEach { invoke ->
+                val failure = runCatching { invoke() }.exceptionOrNull()
+
+                assertThat(failure).isInstanceOf(CancellationException::class.java)
+            }
         }
 
     private companion object {
