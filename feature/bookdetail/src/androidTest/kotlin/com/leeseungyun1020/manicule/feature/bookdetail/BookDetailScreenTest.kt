@@ -1,7 +1,12 @@
 package com.leeseungyun1020.manicule.feature.bookdetail
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -9,6 +14,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.model.Book
+import com.leeseungyun1020.manicule.core.model.BookDetail
 import org.junit.Rule
 import org.junit.Test
 import com.leeseungyun1020.manicule.core.designsystem.R as DesignSystemR
@@ -24,7 +30,7 @@ class BookDetailScreenTest {
         composeRule.setContent {
             ManiculeTheme {
                 BookDetailScreen(
-                    uiState = BookDetailUiState(book = testBook, isLoading = false),
+                    uiState = contentState(),
                     onNavigateBack = { navigatedBack = true },
                     onTabSelected = { selectedTab = it },
                     onRetry = {},
@@ -47,7 +53,7 @@ class BookDetailScreenTest {
         composeRule.setContent {
             ManiculeTheme {
                 BookDetailScreen(
-                    uiState = BookDetailUiState(isLoading = false, isFatalError = true),
+                    uiState = BookDetailUiState.Error,
                     onNavigateBack = {},
                     onTabSelected = {},
                     onRetry = { retried = true },
@@ -61,23 +67,31 @@ class BookDetailScreenTest {
     }
 
     @Test
-    fun refreshError_displaysSnackbarWithRetry() {
+    fun refreshFailure_keepsContent_andRetryDismissesSnackbar() {
         var retried = false
+        var uiState by mutableStateOf(contentState(refreshStatus = RefreshStatus.Failed))
         composeRule.setContent {
             ManiculeTheme {
                 BookDetailScreen(
-                    uiState = BookDetailUiState(book = testBook, isLoading = false, isRefreshError = true),
+                    uiState = uiState,
                     onNavigateBack = {},
                     onTabSelected = {},
-                    onRetry = { retried = true },
+                    onRetry = {
+                        retried = true
+                        uiState = uiState.copy(refreshStatus = RefreshStatus.Refreshing)
+                    },
                 )
             }
         }
 
-        composeRule.onNodeWithText(context.getString(R.string.book_detail_refresh_error)).assertIsDisplayed()
+        val refreshError = context.getString(R.string.book_detail_refresh_error)
+        composeRule.onNodeWithText("Author").assertIsDisplayed()
+        composeRule.onNodeWithText(refreshError).assertIsDisplayed()
         composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
 
         assertThat(retried).isTrue()
+        composeRule.onAllNodesWithText(refreshError).assertCountEquals(0)
+        composeRule.onNodeWithText("Author").assertIsDisplayed()
     }
 
     private companion object {
@@ -98,6 +112,13 @@ class BookDetailScreenTest {
                 summaryUrl = null,
                 introduction = "Introduction",
                 tableOfContents = "Contents",
+            )
+
+        fun contentState(refreshStatus: RefreshStatus = RefreshStatus.Idle) =
+            BookDetailUiState.Content(
+                bookDetail = BookDetail(testBook, entry = null),
+                selectedTab = BookDetailTab.Information,
+                refreshStatus = refreshStatus,
             )
     }
 }

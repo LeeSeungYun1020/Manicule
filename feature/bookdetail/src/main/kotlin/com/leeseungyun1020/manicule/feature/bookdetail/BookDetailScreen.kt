@@ -14,7 +14,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -36,7 +35,11 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.size
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.Book
+import com.leeseungyun1020.manicule.core.model.BookDetail
+import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.feature.bookdetail.components.BookInfoTabContent
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,8 +56,9 @@ fun BookDetailScreen(
     val errorMessage = stringResource(R.string.book_detail_refresh_error)
     val retryActionLabel = stringResource(R.string.book_detail_retry)
 
-    LaunchedEffect(uiState.isRefreshError) {
-        if (uiState.isRefreshError) {
+    val refreshStatus = (uiState as? BookDetailUiState.Content)?.refreshStatus
+    LaunchedEffect(refreshStatus) {
+        if (refreshStatus == RefreshStatus.Failed) {
             val result =
                 snackbarHostState.showSnackbar(
                     message = errorMessage,
@@ -70,50 +74,48 @@ fun BookDetailScreen(
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            BookDetailTopBar(
-                title = uiState.book?.title ?: stringResource(R.string.book_detail_title),
-                selectedTab = uiState.selectedTab,
-                onNavigateBack = onNavigateBack,
-                onTabSelected = onTabSelected,
-                scrollBehavior = scrollBehavior,
-            )
+            Column {
+                ManiculeTopAppBar(
+                    title = if (uiState is BookDetailUiState.Content) uiState.bookDetail.book.title else "",
+                    onNavigateBack = onNavigateBack,
+                    scrollBehavior = scrollBehavior,
+                )
+                if (uiState is BookDetailUiState.Content) {
+                    BookDetailTab(
+                        selectedTab = uiState.selectedTab,
+                        onTabSelected = onTabSelected,
+                    )
+                }
+            }
         },
         snackbarHost = { ManiculeSnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         BookDetailBody(
             uiState = uiState,
             onRetry = onRetry,
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
         )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun BookDetailTopBar(
-    title: String,
+private fun BookDetailTab(
     selectedTab: BookDetailTab,
-    onNavigateBack: () -> Unit,
     onTabSelected: (BookDetailTab) -> Unit,
-    scrollBehavior: TopAppBarScrollBehavior,
 ) {
     val tabs =
         listOf(
             stringResource(R.string.book_detail_tab_information),
             stringResource(R.string.book_detail_tab_my_records),
         )
-    Column {
-        ManiculeTopAppBar(
-            title = title,
-            onNavigateBack = onNavigateBack,
-            scrollBehavior = scrollBehavior,
-        )
-        ManiculeTabRow(
-            tabs = tabs,
-            selectedTabIndex = selectedTab.ordinal,
-            onTabSelected = { index -> onTabSelected(BookDetailTab.entries[index]) },
-        )
-    }
+    ManiculeTabRow(
+        tabs = tabs,
+        selectedTabIndex = selectedTab.ordinal,
+        onTabSelected = { index -> onTabSelected(BookDetailTab.entries[index]) },
+    )
 }
 
 @Composable
@@ -126,13 +128,15 @@ private fun BookDetailBody(
         modifier = modifier,
         contentAlignment = Alignment.Center,
     ) {
-        when {
-            uiState.isLoading -> ManiculeLoading(modifier = Modifier.fillMaxSize())
-            uiState.isFatalError || uiState.book == null ->
+        when (uiState) {
+            is BookDetailUiState.Loading -> ManiculeLoading(modifier = Modifier.fillMaxSize())
+            is BookDetailUiState.Error ->
                 ManiculeEmptyState(
                     title = stringResource(R.string.book_detail_error_title),
                     description = stringResource(R.string.book_detail_error_description),
-                    modifier = Modifier.fillMaxSize().padding(MaterialTheme.spacing.lg),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(MaterialTheme.spacing.lg),
                     icon = {
                         Icon(
                             imageVector = ManiculeIcons.NetworkError,
@@ -143,13 +147,19 @@ private fun BookDetailBody(
                     },
                     actions = { ManiculeButton(onClick = onRetry, text = stringResource(R.string.book_detail_retry)) },
                 )
-            uiState.selectedTab == BookDetailTab.Information ->
-                BookInfoTabContent(book = uiState.book)
-            else ->
-                Text(
-                    text = stringResource(R.string.book_detail_records_stub),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+
+            is BookDetailUiState.Content -> {
+                when (uiState.selectedTab) {
+                    BookDetailTab.Information ->
+                        BookInfoTabContent(book = uiState.bookDetail.book)
+
+                    BookDetailTab.MyRecords ->
+                        Text(
+                            text = stringResource(R.string.book_detail_records_stub),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                }
+            }
         }
     }
 }
@@ -172,6 +182,16 @@ private val previewBook =
         tableOfContents = "1장 코틀린이란 무엇이며 왜 필요한가\n2장 코틀린 기초",
     )
 
+private val previewReviewOnlyEntry =
+    BookEntry(
+        book = previewBook,
+        status = ReadingStatus.UNSET,
+        rating = 4,
+        memo = "독서 상태를 정하지 않고 남긴 리뷰",
+        addedAt = Instant.fromEpochMilliseconds(1),
+        updatedAt = Instant.fromEpochMilliseconds(1),
+    )
+
 @ManiculePreview
 @Preview(name = "Phone", device = Devices.PHONE)
 @Preview(name = "Foldable", device = Devices.FOLDABLE)
@@ -180,7 +200,11 @@ private val previewBook =
 private fun BookDetailScreenPreview() {
     ManiculePreviewTheme {
         BookDetailScreen(
-            uiState = BookDetailUiState(book = previewBook, isLoading = false),
+            uiState =
+                BookDetailUiState.Content(
+                    bookDetail = BookDetail(previewBook, entry = null),
+                    selectedTab = BookDetailTab.Information,
+                ),
             onNavigateBack = {},
             onTabSelected = {},
             onRetry = {},
@@ -193,7 +217,7 @@ private fun BookDetailScreenPreview() {
 private fun BookDetailLoadingPreview() {
     ManiculePreviewTheme {
         BookDetailScreen(
-            uiState = BookDetailUiState(),
+            uiState = BookDetailUiState.Loading,
             onNavigateBack = {},
             onTabSelected = {},
             onRetry = {},
@@ -206,7 +230,7 @@ private fun BookDetailLoadingPreview() {
 private fun BookDetailErrorPreview() {
     ManiculePreviewTheme {
         BookDetailScreen(
-            uiState = BookDetailUiState(isLoading = false, isFatalError = true),
+            uiState = BookDetailUiState.Error,
             onNavigateBack = {},
             onTabSelected = {},
             onRetry = {},
@@ -219,7 +243,30 @@ private fun BookDetailErrorPreview() {
 private fun BookDetailRefreshErrorPreview() {
     ManiculePreviewTheme {
         BookDetailScreen(
-            uiState = BookDetailUiState(book = previewBook, isLoading = false, isRefreshError = true),
+            uiState =
+                BookDetailUiState.Content(
+                    bookDetail = BookDetail(previewBook, entry = null),
+                    selectedTab = BookDetailTab.Information,
+                    refreshStatus = RefreshStatus.Failed,
+                ),
+            onNavigateBack = {},
+            onTabSelected = {},
+            onRetry = {},
+        )
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun BookDetailRefreshingPreview() {
+    ManiculePreviewTheme {
+        BookDetailScreen(
+            uiState =
+                BookDetailUiState.Content(
+                    bookDetail = BookDetail(previewBook, entry = null),
+                    selectedTab = BookDetailTab.Information,
+                    refreshStatus = RefreshStatus.Refreshing,
+                ),
             onNavigateBack = {},
             onTabSelected = {},
             onRetry = {},
@@ -233,9 +280,8 @@ private fun BookDetailRecordsStubPreview() {
     ManiculePreviewTheme {
         BookDetailScreen(
             uiState =
-                BookDetailUiState(
-                    book = previewBook,
-                    isLoading = false,
+                BookDetailUiState.Content(
+                    bookDetail = BookDetail(previewBook, entry = previewReviewOnlyEntry),
                     selectedTab = BookDetailTab.MyRecords,
                 ),
             onNavigateBack = {},
