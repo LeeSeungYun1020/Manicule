@@ -6,17 +6,20 @@ import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
 import com.leeseungyun1020.manicule.core.domain.book.GetBookDetailUseCase
-import com.leeseungyun1020.manicule.core.domain.library.ObserveBookEntryUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.Instant
@@ -50,9 +53,10 @@ class BookDetailViewModelTest {
             val viewModel = createViewModel()
             advanceUntilIdle()
 
-            assertThat(viewModel.uiState.value.book).isEqualTo(testBook)
-            assertThat(viewModel.uiState.value.isFatalError).isFalse()
-            assertThat(viewModel.uiState.value.isRefreshError).isTrue()
+            val content = contentState(viewModel)
+            assertThat(content.bookDetail.book).isEqualTo(testBook)
+            assertThat(content.bookDetail.entry).isNull()
+            assertThat(content.refreshStatus).isEqualTo(RefreshStatus.Failed)
         }
 
     @Test
@@ -63,25 +67,78 @@ class BookDetailViewModelTest {
             val viewModel = createViewModel()
             advanceUntilIdle()
 
-            assertThat(viewModel.uiState.value.isFatalError).isTrue()
+            assertThat(viewModel.uiState.value).isEqualTo(BookDetailUiState.Error)
         }
 
     @Test
-    fun retry_clearsPreviousErrors_andUpdatesStateOnSuccess() =
+    fun databaseUpdateBeforeRefreshSuccess_keepsLatestContent_andEndsIdle() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            bookRepository.refreshGate = CompletableDeferred()
+
+            val viewModel = createViewModel()
+            runCurrent()
+
+            var content = contentState(viewModel)
+            assertThat(content.bookDetail.book).isEqualTo(testBook)
+            assertThat(content.refreshStatus).isEqualTo(RefreshStatus.Refreshing)
+
+            val updatedBook = testBook.copy(title = "Updated Book")
+            bookRepository.books.value = updatedBook
+            runCurrent()
+
+            content = contentState(viewModel)
+            assertThat(content.bookDetail.book).isEqualTo(updatedBook)
+            assertThat(content.refreshStatus).isEqualTo(RefreshStatus.Refreshing)
+
+            bookRepository.refreshGate?.complete(Unit)
+            advanceUntilIdle()
+
+            content = contentState(viewModel)
+            assertThat(content.bookDetail.book).isEqualTo(updatedBook)
+            assertThat(content.refreshStatus).isEqualTo(RefreshStatus.Idle)
+        }
+
+    @Test
+    fun retryFromError_updatesContent_andEndsIdleOnSuccess() =
         runTest(dispatcher) {
             bookRepository.refreshResult = Result.failure(NoSuchElementException())
             val viewModel = createViewModel()
             advanceUntilIdle()
-            assertThat(viewModel.uiState.value.isFatalError).isTrue()
+            assertThat(viewModel.uiState.value).isEqualTo(BookDetailUiState.Error)
 
             bookRepository.refreshResult = Result.success(Unit)
             bookRepository.books.value = testBook
             viewModel.retry()
             advanceUntilIdle()
 
-            assertThat(viewModel.uiState.value.book).isEqualTo(testBook)
-            assertThat(viewModel.uiState.value.isFatalError).isFalse()
-            assertThat(viewModel.uiState.value.isRefreshError).isFalse()
+            val content = contentState(viewModel)
+            assertThat(content.bookDetail.book).isEqualTo(testBook)
+            assertThat(content.refreshStatus).isEqualTo(RefreshStatus.Idle)
+        }
+
+    @Test
+    fun retryAfterObservationFailure_resubscribesAndUpdatesContent() =
+        runTest(dispatcher) {
+            bookRepository.bookFlow =
+                flow { throw IllegalStateException("Database observation failed") }
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            assertThat(viewModel.uiState.value).isEqualTo(BookDetailUiState.Error)
+            assertThat(bookRepository.observationCount).isEqualTo(1)
+
+            bookRepository.bookFlow = bookRepository.books
+            bookRepository.books.value = testBook
+
+            viewModel.retry()
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.bookDetail.book).isEqualTo(testBook)
+            assertThat(content.refreshStatus).isEqualTo(RefreshStatus.Idle)
+            assertThat(bookRepository.observationCount).isEqualTo(2)
         }
 
     @Test
@@ -89,54 +146,109 @@ class BookDetailViewModelTest {
         runTest(dispatcher) {
             bookRepository.books.value = testBook
             libraryRepository.entry.value = testEntry
-            val viewModel = createViewModel()
+            val savedStateHandle = createSavedStateHandle()
+            val viewModel = createViewModel(savedStateHandle)
             advanceUntilIdle()
-            assertThat(viewModel.uiState.value.selectedTab).isEqualTo(BookDetailTab.MyRecords)
+            assertThat(contentState(viewModel).selectedTab).isEqualTo(BookDetailTab.MyRecords)
 
             viewModel.selectTab(BookDetailTab.Information)
             libraryRepository.entry.value = null
             libraryRepository.entry.value = testEntry
             advanceUntilIdle()
 
-            assertThat(viewModel.uiState.value.selectedTab).isEqualTo(BookDetailTab.Information)
+            assertThat(contentState(viewModel).selectedTab).isEqualTo(BookDetailTab.Information)
+            assertThat(savedStateHandle.get<String>("bookDetailSelectedTab")).isEqualTo(BookDetailTab.Information.name)
         }
 
     @Test
-    fun explicitAndRestoredTab_areApplied() =
+    fun reviewOnlyEntry_selectsRecordsInitially_whenStatusIsUnset() =
         runTest(dispatcher) {
-            val explicit = createViewModel(openMyRecords = true)
-            advanceUntilIdle()
-            assertThat(explicit.uiState.value.selectedTab).isEqualTo(BookDetailTab.MyRecords)
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value =
+                testEntry.copy(
+                    status = ReadingStatus.UNSET,
+                    rating = 4,
+                    memo = "Review only",
+                )
 
-            val restored = createViewModel(savedTab = BookDetailTab.Information)
+            val viewModel = createViewModel()
             advanceUntilIdle()
-            assertThat(restored.uiState.value.selectedTab).isEqualTo(BookDetailTab.Information)
+
+            val content = contentState(viewModel)
+            assertThat(content.bookDetail.entry?.status).isEqualTo(ReadingStatus.UNSET)
+            assertThat(content.selectedTab).isEqualTo(BookDetailTab.MyRecords)
         }
 
-    private fun createViewModel(
+    @Test
+    fun openMyRecords_selectsRecordsTab() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+
+            val viewModel = createViewModel(createSavedStateHandle(openMyRecords = true))
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).selectedTab).isEqualTo(BookDetailTab.MyRecords)
+        }
+
+    @Test
+    fun restoredTab_takesPriorityOverOpenMyRecords() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+
+            val viewModel =
+                createViewModel(
+                    createSavedStateHandle(
+                        openMyRecords = true,
+                        savedTab = BookDetailTab.Information,
+                    ),
+                )
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).selectedTab).isEqualTo(BookDetailTab.Information)
+        }
+
+    private fun createSavedStateHandle(
         openMyRecords: Boolean = false,
         savedTab: BookDetailTab? = null,
-    ): BookDetailViewModel {
+    ): SavedStateHandle {
         val state =
             mutableMapOf<String, Any?>(
                 "isbn" to "123",
                 "openMyRecords" to openMyRecords,
             )
         savedTab?.let { state["bookDetailSelectedTab"] = it.name }
-        return BookDetailViewModel(
-            getBookDetail = GetBookDetailUseCase(bookRepository),
-            observeBookEntry = ObserveBookEntryUseCase(libraryRepository),
-            savedStateHandle = SavedStateHandle(state),
+        return SavedStateHandle(state)
+    }
+
+    private fun createViewModel(savedStateHandle: SavedStateHandle = createSavedStateHandle()): BookDetailViewModel =
+        BookDetailViewModel(
+            getBookDetail = GetBookDetailUseCase(bookRepository, libraryRepository),
+            savedStateHandle = savedStateHandle,
         )
+
+    private fun contentState(viewModel: BookDetailViewModel): BookDetailUiState.Content {
+        val state = viewModel.uiState.value
+        assertThat(state).isInstanceOf(BookDetailUiState.Content::class.java)
+        return state as BookDetailUiState.Content
     }
 
     private class FakeBookRepository : BookRepository {
         val books = MutableStateFlow<Book?>(null)
+        var bookFlow: Flow<Book?> = books
+        var observationCount = 0
         var refreshResult: Result<Unit> = Result.success(Unit)
+        var refreshGate: CompletableDeferred<Unit>? = null
 
-        override fun observeBook(isbn: String): Flow<Book?> = books
+        override fun observeBook(isbn: String): Flow<Book?> =
+            flow {
+                observationCount++
+                emitAll(bookFlow)
+            }
 
-        override suspend fun syncBook(isbn: String): Result<Unit> = refreshResult
+        override suspend fun syncBook(isbn: String): Result<Unit> {
+            refreshGate?.await()
+            return refreshResult
+        }
 
         override fun searchBooks(query: String): Flow<PagingData<Book>> = emptyFlow()
     }

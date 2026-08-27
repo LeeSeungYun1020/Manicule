@@ -4,13 +4,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.leeseungyun1020.manicule.core.domain.book.GetBookDetailUseCase
-import com.leeseungyun1020.manicule.core.domain.library.ObserveBookEntryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,83 +19,86 @@ class BookDetailViewModel
     @Inject
     constructor(
         private val getBookDetail: GetBookDetailUseCase,
-        private val observeBookEntry: ObserveBookEntryUseCase,
         private val savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
         private val isbn: String = checkNotNull(savedStateHandle[ISBN_KEY])
         private val openMyRecords: Boolean = savedStateHandle[OPEN_MY_RECORDS_KEY] ?: false
-        private val _uiState =
-            MutableStateFlow(
-                BookDetailUiState(
-                    selectedTab = restoredTab() ?: if (openMyRecords) BookDetailTab.MyRecords else BookDetailTab.Information,
-                ),
-            )
+        private var selectedTab: BookDetailTab? =
+            restoredTab() ?: if (openMyRecords) BookDetailTab.MyRecords else null
+        private var refreshStatus: RefreshStatus = RefreshStatus.Idle
+        private var observationJob: Job? = null
+        private val _uiState = MutableStateFlow<BookDetailUiState>(BookDetailUiState.Loading)
         val uiState: StateFlow<BookDetailUiState> = _uiState.asStateFlow()
 
-        private var refreshFinished = false
-        private var refreshFailed = false
-        private var initialTabResolved = restoredTab() != null || openMyRecords
-
         init {
-            observeBook()
-            resolveInitialTab()
             retry()
         }
 
         fun selectTab(tab: BookDetailTab) {
-            initialTabResolved = true
+            selectedTab = tab
             savedStateHandle[SELECTED_TAB_KEY] = tab.name
-            _uiState.update { it.copy(selectedTab = tab) }
+            _uiState.update { state ->
+                if (state is BookDetailUiState.Content) {
+                    state.copy(selectedTab = tab)
+                } else {
+                    state
+                }
+            }
         }
 
         fun retry() {
-            refreshFinished = false
-            refreshFailed = false
-            _uiState.update { it.copy(isLoading = it.book == null, isFatalError = false, isRefreshError = false) }
+            observeBookDetail()
+
+            if (refreshStatus == RefreshStatus.Refreshing) return
+
+            updateRefreshStatus(RefreshStatus.Refreshing)
             viewModelScope.launch {
-                val result = getBookDetail.refresh(isbn)
-                refreshFinished = true
-                refreshFailed = result.isFailure
-                _uiState.update { state ->
-                    state.copy(
-                        isLoading = false,
-                        isFatalError = result.isFailure && state.book == null,
-                        isRefreshError = result.isFailure && state.book != null,
-                    )
-                }
+                getBookDetail
+                    .refresh(isbn)
+                    .onSuccess { updateRefreshStatus(RefreshStatus.Idle) }
+                    .onFailure { updateRefreshStatus(RefreshStatus.Failed) }
             }
         }
 
-        private fun observeBook() {
-            viewModelScope.launch {
-                getBookDetail(isbn)
-                    .catch {
-                        refreshFinished = true
-                        refreshFailed = true
-                        _uiState.update { state -> state.copy(isLoading = false, isFatalError = state.book == null) }
-                    }.collect { book ->
-                        _uiState.update { state ->
-                            state.copy(
-                                book = book,
-                                isLoading = book == null && !refreshFinished,
-                                isFatalError = book == null && refreshFinished && refreshFailed,
-                                isRefreshError = book != null && refreshFinished && refreshFailed,
-                            )
+        private fun observeBookDetail() {
+            if (observationJob?.isActive == true) return
+
+            observationJob =
+                viewModelScope.launch {
+                    getBookDetail(isbn)
+                        .catch { _uiState.value = BookDetailUiState.Error }
+                        .collect { bookDetail ->
+                            _uiState.update { state ->
+                                if (bookDetail != null) {
+                                    val tab = selectedTab ?: initialTab(bookDetail.entry != null)
+                                    selectedTab = tab
+                                    BookDetailUiState.Content(
+                                        bookDetail = bookDetail,
+                                        selectedTab = tab,
+                                        refreshStatus = refreshStatus,
+                                    )
+                                } else {
+                                    state
+                                }
+                            }
                         }
-                    }
-            }
+                }
         }
 
-        private fun resolveInitialTab() {
-            if (initialTabResolved) return
-            viewModelScope.launch {
-                val entry = observeBookEntry(isbn).firstOrNull()
-                if (!initialTabResolved) {
-                    initialTabResolved = true
-                    if (entry != null) selectTab(BookDetailTab.MyRecords)
+        private fun updateRefreshStatus(status: RefreshStatus) {
+            refreshStatus = status
+            _uiState.update { state ->
+                when {
+                    state is BookDetailUiState.Content -> state.copy(refreshStatus = status)
+                    status == RefreshStatus.Failed -> BookDetailUiState.Error
+                    status == RefreshStatus.Refreshing -> BookDetailUiState.Loading
+                    else -> state
                 }
             }
         }
+
+        private fun initialTab(isRegistered: Boolean): BookDetailTab =
+            if (isRegistered) BookDetailTab.MyRecords else BookDetailTab.Information
 
         private fun restoredTab(): BookDetailTab? =
             savedStateHandle.get<String>(SELECTED_TAB_KEY)?.let { saved ->

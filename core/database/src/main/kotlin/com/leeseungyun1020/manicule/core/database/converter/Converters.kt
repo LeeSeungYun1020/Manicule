@@ -26,8 +26,8 @@ class Converters {
     fun toInstant(value: Long?): Instant? = value?.let { Instant.fromEpochMilliseconds(it) }
 
     @TypeConverter
-    fun fromReadingStatus(value: ReadingStatus?): String? = value?.name
+    fun fromReadingStatus(value: ReadingStatus): String = value.name
 
     @TypeConverter
-    fun toReadingStatus(value: String?): ReadingStatus? = ReadingStatus.fromOrNull(value)
+    fun toReadingStatus(value: String): ReadingStatus = ReadingStatus.valueOf(value)
 }

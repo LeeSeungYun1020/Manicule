@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "897de8cf2dea616985b732b6dde6dad0",
+    "identityHash": "ba153dcfa75aaab4af6feb77d810e8e5",
     "entities": [
       {
         "tableName": "books",
@@ -92,7 +92,7 @@
       },
       {
         "tableName": "book_entries",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`isbn` TEXT NOT NULL, `status` TEXT NOT NULL, `rating` INTEGER, `memo` TEXT, `addedAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `finishedAt` TEXT, PRIMARY KEY(`isbn`), FOREIGN KEY(`isbn`) REFERENCES `books`(`isbn`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`isbn` TEXT NOT NULL, `status` TEXT NOT NULL, `rating` INTEGER NOT NULL, `memo` TEXT, `addedAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `finishedAt` TEXT, PRIMARY KEY(`isbn`), FOREIGN KEY(`isbn`) REFERENCES `books`(`isbn`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "isbn",
@@ -109,7 +109,8 @@
           {
             "fieldPath": "rating",
             "columnName": "rating",
-            "affinity": "INTEGER"
+            "affinity": "INTEGER",
+            "notNull": true
           },
           {
             "fieldPath": "memo",
@@ -262,7 +263,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '897de8cf2dea616985b732b6dde6dad0')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ba153dcfa75aaab4af6feb77d810e8e5')"
     ]
   }
 }
