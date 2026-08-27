@@ -7,6 +7,7 @@ import com.leeseungyun1020.manicule.core.common.di.ApplicationScope
 import com.leeseungyun1020.manicule.core.domain.settings.GetActiveReminderTimeUseCase
 import com.leeseungyun1020.manicule.core.domain.settings.ReminderScheduler
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalTime
@@ -29,13 +30,21 @@ class TimeZoneChangedReceiver : BroadcastReceiver() {
 
         val pendingResult = goAsync()
         applicationScope.launch {
-            try {
-                runner.run()
-            } finally {
-                pendingResult.finish()
-            }
+            runTimeChangeBroadcast(
+                run = runner::run,
+                finish = pendingResult::finish,
+            )
         }
     }
+}
+
+internal suspend fun runTimeChangeBroadcast(
+    run: suspend () -> Unit,
+    finish: () -> Unit,
+) {
+    runCatching { run() }
+        .also { finish() }
+        .onFailure { if (it is CancellationException) throw it }
 }
 
 internal class TimeZoneChangedReceiverRunner

@@ -32,4 +32,17 @@ class TimeZoneChangedReceiverTest {
 
             assertThat(scheduled).isFalse()
         }
+
+    @Test
+    fun reschedulingFailure_isConsumedAndFinishesBroadcast() =
+        runTest {
+            var finished = false
+
+            runTimeChangeBroadcast(
+                run = { error("rescheduling failed") },
+                finish = { finished = true },
+            )
+
+            assertThat(finished).isTrue()
+        }
 }
