@@ -1,11 +1,19 @@
 package com.leeseungyun1020.manicule.core.notifications
 
+import android.content.Intent
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalTime
 import org.junit.Test
 
 class TimeZoneChangedReceiverTest {
+    @Test
+    fun timeChangeActions_areHandled() {
+        assertThat(isTimeChangeAction(Intent.ACTION_TIMEZONE_CHANGED)).isTrue()
+        assertThat(isTimeChangeAction(Intent.ACTION_TIME_CHANGED)).isTrue()
+        assertThat(isTimeChangeAction("unrelated")).isFalse()
+    }
+
     @Test
     fun enabledReminder_reschedulesAtActiveTime() =
         runTest {

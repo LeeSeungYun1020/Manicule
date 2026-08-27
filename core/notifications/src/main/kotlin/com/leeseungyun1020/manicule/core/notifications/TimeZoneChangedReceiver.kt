@@ -26,7 +26,7 @@ class TimeZoneChangedReceiver : BroadcastReceiver() {
         context: Context,
         intent: Intent,
     ) {
-        if (intent.action != Intent.ACTION_TIMEZONE_CHANGED) return
+        if (!isTimeChangeAction(intent.action)) return
 
         val pendingResult = goAsync()
         applicationScope.launch {
@@ -37,6 +37,8 @@ class TimeZoneChangedReceiver : BroadcastReceiver() {
         }
     }
 }
+
+internal fun isTimeChangeAction(action: String?): Boolean = action == Intent.ACTION_TIMEZONE_CHANGED || action == Intent.ACTION_TIME_CHANGED
 
 internal suspend fun runTimeChangeBroadcast(
     run: suspend () -> Unit,
