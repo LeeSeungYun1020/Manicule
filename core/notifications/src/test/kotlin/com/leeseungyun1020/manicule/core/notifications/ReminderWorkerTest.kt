@@ -19,7 +19,7 @@ class ReminderWorkerTest {
                     timeZones = SAME_TIME_ZONES,
                     getActiveTime = { ACTIVE_TIME },
                     getContent = { books },
-                    scheduleNext = {},
+                    actions = ReminderScheduleActions(schedule = {}, scheduleNext = {}),
                     publish = { published = it },
                 )
 
@@ -35,7 +35,7 @@ class ReminderWorkerTest {
                     timeZones = SAME_TIME_ZONES,
                     getActiveTime = { ACTIVE_TIME },
                     getContent = { error("temporary") },
-                    scheduleNext = {},
+                    actions = ReminderScheduleActions(schedule = {}, scheduleNext = {}),
                     publish = {},
                 )
 
@@ -50,7 +50,7 @@ class ReminderWorkerTest {
                     timeZones = SAME_TIME_ZONES,
                     getActiveTime = { ACTIVE_TIME },
                     getContent = { emptyList() },
-                    scheduleNext = {},
+                    actions = ReminderScheduleActions(schedule = {}, scheduleNext = {}),
                     publish = { error("notifications unavailable") },
                 )
 
@@ -68,7 +68,7 @@ class ReminderWorkerTest {
                     timeZones = ReminderTimeZones(TIME_ZONE_ID, "America/New_York"),
                     getActiveTime = { ACTIVE_TIME },
                     getContent = { error("content must not be loaded") },
-                    scheduleNext = { scheduledTime = it },
+                    actions = ReminderScheduleActions(schedule = { scheduledTime = it }, scheduleNext = {}),
                     publish = { published = true },
                 )
 
@@ -88,7 +88,7 @@ class ReminderWorkerTest {
                     timeZones = SAME_TIME_ZONES,
                     getActiveTime = { null },
                     getContent = { error("content must not be loaded") },
-                    scheduleNext = { scheduled = true },
+                    actions = ReminderScheduleActions(schedule = { scheduled = true }, scheduleNext = { scheduled = true }),
                     publish = { published = true },
                 )
 
@@ -107,7 +107,7 @@ class ReminderWorkerTest {
                     timeZones = SAME_TIME_ZONES,
                     getActiveTime = { ACTIVE_TIME },
                     getContent = { emptyList() },
-                    scheduleNext = { error("temporary") },
+                    actions = ReminderScheduleActions(schedule = {}, scheduleNext = { error("temporary") }),
                     publish = { published = true },
                 )
 
@@ -125,7 +125,7 @@ class ReminderWorkerTest {
                             timeZones = SAME_TIME_ZONES,
                             getActiveTime = { throw CancellationException("active time") },
                             getContent = { emptyList() },
-                            scheduleNext = {},
+                            actions = ReminderScheduleActions(schedule = {}, scheduleNext = {}),
                             publish = {},
                         )
                     },
@@ -134,7 +134,16 @@ class ReminderWorkerTest {
                             timeZones = SAME_TIME_ZONES,
                             getActiveTime = { ACTIVE_TIME },
                             getContent = { throw CancellationException("content") },
-                            scheduleNext = {},
+                            actions = ReminderScheduleActions(schedule = {}, scheduleNext = {}),
+                            publish = {},
+                        )
+                    },
+                    {
+                        runReminder(
+                            timeZones = ReminderTimeZones(TIME_ZONE_ID, "America/New_York"),
+                            getActiveTime = { ACTIVE_TIME },
+                            getContent = { emptyList() },
+                            actions = ReminderScheduleActions(schedule = { throw CancellationException("schedule") }, scheduleNext = {}),
                             publish = {},
                         )
                     },
@@ -143,7 +152,8 @@ class ReminderWorkerTest {
                             timeZones = SAME_TIME_ZONES,
                             getActiveTime = { ACTIVE_TIME },
                             getContent = { emptyList() },
-                            scheduleNext = { throw CancellationException("schedule") },
+                            actions = ReminderScheduleActions(schedule = {
+                            }, scheduleNext = { throw CancellationException("scheduleNext") }),
                             publish = {},
                         )
                     },

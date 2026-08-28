@@ -53,7 +53,11 @@ class ReminderWorkerRunner
                     ),
                 getActiveTime = { getActiveReminderTime() },
                 getContent = { getReminderContent() },
-                scheduleNext = reminderScheduler::scheduleNext,
+                actions =
+                    ReminderScheduleActions(
+                        schedule = reminderScheduler::schedule,
+                        scheduleNext = reminderScheduler::scheduleNext,
+                    ),
                 publish = notificationPublisher::publish,
             )
     }
@@ -63,11 +67,16 @@ internal data class ReminderTimeZones(
     val current: String,
 )
 
+internal class ReminderScheduleActions(
+    val schedule: suspend (LocalTime) -> Unit,
+    val scheduleNext: suspend (LocalTime) -> Unit,
+)
+
 internal suspend fun runReminder(
     timeZones: ReminderTimeZones,
     getActiveTime: suspend () -> LocalTime?,
     getContent: suspend () -> List<ReminderContent.Book>,
-    scheduleNext: suspend (LocalTime) -> Unit,
+    actions: ReminderScheduleActions,
     publish: (List<ReminderContent.Book>) -> Unit,
 ): Boolean {
     val activeTime =
@@ -76,7 +85,7 @@ internal suspend fun runReminder(
             .getOrElse { return false } ?: return true
 
     if (timeZones.scheduled != timeZones.current) {
-        return runCatching { scheduleNext(activeTime) }
+        return runCatching { actions.schedule(activeTime) }
             .onFailure { if (it is CancellationException) throw it }
             .isSuccess
     }
@@ -86,7 +95,7 @@ internal suspend fun runReminder(
             .onFailure { if (it is CancellationException) throw it }
             .getOrElse { return false }
     if (
-        runCatching { scheduleNext(activeTime) }
+        runCatching { actions.scheduleNext(activeTime) }
             .onFailure { if (it is CancellationException) throw it }
             .isFailure
     ) {

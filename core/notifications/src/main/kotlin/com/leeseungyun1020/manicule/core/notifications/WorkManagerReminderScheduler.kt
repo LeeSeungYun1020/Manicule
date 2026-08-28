@@ -2,11 +2,13 @@ package com.leeseungyun1020.manicule.core.notifications
 
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.await
 import androidx.work.workDataOf
 import com.leeseungyun1020.manicule.core.common.time.Clock
 import com.leeseungyun1020.manicule.core.domain.settings.ReminderScheduler
+import kotlinx.coroutines.flow.first
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
@@ -31,6 +33,8 @@ class WorkManagerReminderScheduler
         }
 
         override suspend fun scheduleNext(time: LocalTime) {
+            val existingWork = workManager.getWorkInfosForUniqueWorkFlow(UNIQUE_WORK_NAME).first()
+            if (existingWork.any { it.state == WorkInfo.State.BLOCKED }) return
             enqueue(time, ExistingWorkPolicy.APPEND_OR_REPLACE)
         }
 

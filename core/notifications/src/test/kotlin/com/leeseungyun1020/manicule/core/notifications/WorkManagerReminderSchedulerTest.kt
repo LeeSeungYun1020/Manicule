@@ -92,6 +92,18 @@ class WorkManagerReminderSchedulerTest {
         }
 
     @Test
+    fun scheduleNext_isIdempotentWhenCalledMultipleTimes() =
+        runTest {
+            scheduler.schedule(LocalTime(11, 0))
+            scheduler.scheduleNext(LocalTime(12, 0))
+            scheduler.scheduleNext(LocalTime(12, 0))
+
+            val work = workManager.getWorkInfosForUniqueWork(WorkManagerReminderScheduler.UNIQUE_WORK_NAME).get()
+            assertThat(work).hasSize(2)
+            assertThat(work.count { it.state == WorkInfo.State.BLOCKED }).isEqualTo(1)
+        }
+
+    @Test
     fun cancel_cancelsUniqueWork() =
         runTest {
             scheduler.schedule(LocalTime(11, 0))
