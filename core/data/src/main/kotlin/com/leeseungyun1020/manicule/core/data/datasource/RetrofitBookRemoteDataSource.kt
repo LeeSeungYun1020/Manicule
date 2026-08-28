@@ -1,6 +1,7 @@
 package com.leeseungyun1020.manicule.core.data.datasource
 
 import com.leeseungyun1020.manicule.core.network.nlk.NlkApi
+import com.leeseungyun1020.manicule.core.network.nlk.NlkContentFetchResult
 import com.leeseungyun1020.manicule.core.network.nlk.NlkContentFetcher
 import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkSearchResponseDto
 import javax.inject.Inject
@@ -25,5 +26,5 @@ class RetrofitBookRemoteDataSource
             size: Int,
         ): NlkSearchResponseDto = nlkApi.searchBooks(pageNo = page, pageSize = size, author = query)
 
-        override suspend fun fetchNlkContent(url: String): String? = contentFetcher.fetch(url)
+        override suspend fun fetchNlkContent(url: String): NlkContentFetchResult = contentFetcher.fetch(url)
     }

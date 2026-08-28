@@ -12,6 +12,7 @@ import com.leeseungyun1020.manicule.core.data.mapper.asExternalModelOrNull
 import com.leeseungyun1020.manicule.core.data.paging.NlkBookPagingSource
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
+import com.leeseungyun1020.manicule.core.network.nlk.NlkContentFetchResult
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -95,11 +96,28 @@ class BookRepositoryImpl
                 )
             }
 
-            val result = runCatching { bookRemoteDataSource.fetchNlkContent(url) }
-            return AuxiliaryContent(
-                value = result.getOrNull() ?: cached,
-                fetchFailed = result.isFailure,
-            )
+            val fetchResult =
+                runCatching { bookRemoteDataSource.fetchNlkContent(url) }
+                    .getOrDefault(NlkContentFetchResult.RetryableFailure)
+            return when (fetchResult) {
+                is NlkContentFetchResult.Success ->
+                    AuxiliaryContent(
+                        value = fetchResult.content,
+                        fetchFailed = false,
+                    )
+
+                NlkContentFetchResult.Unavailable ->
+                    AuxiliaryContent(
+                        value = cached,
+                        fetchFailed = false,
+                    )
+
+                NlkContentFetchResult.RetryableFailure ->
+                    AuxiliaryContent(
+                        value = cached,
+                        fetchFailed = true,
+                    )
+            }
         }
 
         private data class AuxiliaryBookContent(
