@@ -3,6 +3,7 @@ package com.leeseungyun1020.manicule.core.domain.book
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
 import com.leeseungyun1020.manicule.core.model.BookDetail
+import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
@@ -23,5 +24,5 @@ class GetBookDetailUseCase
                 }
             }
 
-        suspend fun refresh(isbn: String): Result<Unit> = bookRepository.syncBook(isbn)
+        suspend fun refresh(isbn: String): Result<BookSyncStatus> = bookRepository.syncBook(isbn)
     }

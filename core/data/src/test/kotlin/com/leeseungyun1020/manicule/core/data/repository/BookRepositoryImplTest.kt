@@ -6,6 +6,7 @@ import com.leeseungyun1020.manicule.core.data.datasource.RoomBookLocalDataSource
 import com.leeseungyun1020.manicule.core.database.dao.BookDao
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.model.Book
+import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import com.leeseungyun1020.manicule.core.network.nlk.NlkApi
 import com.leeseungyun1020.manicule.core.network.nlk.NlkContentFetcher
 import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkBookDto
@@ -265,7 +266,7 @@ class BookRepositoryImplTest {
                         ),
                 )
 
-            assertThat(bookRepository.syncBook("123").isSuccess).isTrue()
+            assertThat(bookRepository.syncBook("123").getOrThrow()).isEqualTo(BookSyncStatus.COMPLETE)
 
             val book = fakeBookDao.getByIsbn("123")
             assertThat(book?.introduction).isEqualTo("Inline introduction")
@@ -274,7 +275,7 @@ class BookRepositoryImplTest {
         }
 
     @Test
-    fun syncBook_fetchesMissingContent_andKeepsPartialSuccess() =
+    fun syncBook_fetchesMissingContent_andReportsPartialFailure() =
         runTest {
             val introductionUrl = "https://www.nl.go.kr/introduction.txt"
             val contentsUrl = "https://nl.go.kr/contents.txt"
@@ -293,7 +294,8 @@ class BookRepositoryImplTest {
             fakeContentFetcher.responses[introductionUrl] = Result.success("Fetched introduction")
             fakeContentFetcher.responses[contentsUrl] = Result.failure(IllegalStateException("unavailable"))
 
-            assertThat(bookRepository.syncBook("123").isSuccess).isTrue()
+            assertThat(bookRepository.syncBook("123").getOrThrow())
+                .isEqualTo(BookSyncStatus.AUXILIARY_CONTENT_FAILED)
 
             val book = fakeBookDao.getByIsbn("123")
             assertThat(book?.introduction).isEqualTo("Fetched introduction")
@@ -340,7 +342,8 @@ class BookRepositoryImplTest {
             fakeContentFetcher.responses[introductionUrl] = Result.failure(IllegalStateException("failed"))
             fakeContentFetcher.responses[contentsUrl] = Result.failure(IllegalStateException("failed"))
 
-            assertThat(bookRepository.syncBook("123").isSuccess).isTrue()
+            assertThat(bookRepository.syncBook("123").getOrThrow())
+                .isEqualTo(BookSyncStatus.AUXILIARY_CONTENT_FAILED)
 
             val book = fakeBookDao.getByIsbn("123")
             assertThat(book?.title).isEqualTo("New Book")
