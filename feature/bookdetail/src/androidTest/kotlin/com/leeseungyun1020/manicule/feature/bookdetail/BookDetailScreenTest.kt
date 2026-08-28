@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -15,6 +16,7 @@ import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookDetail
+import com.leeseungyun1020.manicule.feature.bookdetail.components.BookDetailExpandableText
 import org.junit.Rule
 import org.junit.Test
 import com.leeseungyun1020.manicule.core.designsystem.R as DesignSystemR
@@ -92,6 +94,24 @@ class BookDetailScreenTest {
         assertThat(retried).isTrue()
         composeRule.onAllNodesWithText(refreshError).assertCountEquals(0)
         composeRule.onNodeWithText("Author").assertIsDisplayed()
+    }
+
+    @Test
+    fun expandableText_preservesExpandedStateAfterRestoration() {
+        val restorationTester = StateRestorationTester(composeRule)
+        restorationTester.setContent {
+            ManiculeTheme {
+                BookDetailExpandableText(
+                    title = "Introduction",
+                    text = "Long content ".repeat(100),
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_expand)).performClick()
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_collapse)).assertIsDisplayed()
     }
 
     private companion object {

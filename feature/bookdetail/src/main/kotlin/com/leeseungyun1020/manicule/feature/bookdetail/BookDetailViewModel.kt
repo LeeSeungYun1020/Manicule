@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.leeseungyun1020.manicule.core.domain.book.GetBookDetailUseCase
+import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -55,8 +56,22 @@ class BookDetailViewModel
             viewModelScope.launch {
                 getBookDetail
                     .refresh(isbn)
-                    .onSuccess { updateRefreshStatus(RefreshStatus.Idle) }
-                    .onFailure { updateRefreshStatus(RefreshStatus.Failed) }
+                    .onSuccess { syncStatus ->
+                        updateRefreshStatus(
+                            status =
+                                if (syncStatus == BookSyncStatus.COMPLETE) {
+                                    RefreshStatus.Idle
+                                } else {
+                                    RefreshStatus.Failed
+                                },
+                            isFatalFailure = false,
+                        )
+                    }.onFailure {
+                        updateRefreshStatus(
+                            status = RefreshStatus.Failed,
+                            isFatalFailure = true,
+                        )
+                    }
             }
         }
 
@@ -85,12 +100,15 @@ class BookDetailViewModel
                 }
         }
 
-        private fun updateRefreshStatus(status: RefreshStatus) {
+        private fun updateRefreshStatus(
+            status: RefreshStatus,
+            isFatalFailure: Boolean = false,
+        ) {
             refreshStatus = status
             _uiState.update { state ->
                 when {
                     state is BookDetailUiState.Content -> state.copy(refreshStatus = status)
-                    status == RefreshStatus.Failed -> BookDetailUiState.Error
+                    status == RefreshStatus.Failed && isFatalFailure -> BookDetailUiState.Error
                     status == RefreshStatus.Refreshing -> BookDetailUiState.Loading
                     else -> state
                 }
