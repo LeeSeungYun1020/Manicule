@@ -9,7 +9,7 @@ import com.leeseungyun1020.manicule.feature.bookdetail.BookDetailViewModel
 
 typealias BookDetailRoute = com.leeseungyun1020.manicule.feature.bookdetail.BookDetailRoute
 
-fun NavGraphBuilder.bookDetailScreen(onNavigateBack: () -> Unit = {}) {
+fun NavGraphBuilder.bookDetailScreen(onNavigateBack: () -> Unit) {
     composable<BookDetailRoute> {
         val viewModel: BookDetailViewModel = hiltViewModel()
         BookDetailScreen(
