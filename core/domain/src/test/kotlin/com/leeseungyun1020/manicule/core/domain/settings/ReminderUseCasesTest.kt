@@ -9,6 +9,7 @@ import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReminderConfig
 import com.leeseungyun1020.manicule.core.model.ThemeMode
 import com.leeseungyun1020.manicule.core.model.UserPreferences
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -44,6 +45,23 @@ class ReminderUseCasesTest {
 
             assertThat(result.exceptionOrNull()).isSameInstanceAs(expectedFailure)
             assertThat(preferences.savedReminder).isEqualTo(ReminderConfig.Default)
+        }
+
+    @Test
+    fun enabledReminder_restoresPreviousStateWhenSchedulingIsCancelled() =
+        runTest {
+            val previousConfig = ReminderConfig(enabled = true, time = LocalTime(7, 0))
+            val preferences = FakeUserPreferencesRepository()
+            preferences.setReminderConfig(previousConfig)
+            val expectedCancellation = CancellationException("scheduling cancelled")
+            val scheduler = FakeReminderScheduler(scheduleFailure = expectedCancellation)
+            val newConfig = ReminderConfig(enabled = true, time = LocalTime(8, 30))
+
+            val result = runCatching { SetReminderUseCase(preferences, scheduler)(newConfig) }
+
+            assertThat(result.exceptionOrNull()).isSameInstanceAs(expectedCancellation)
+            assertThat(preferences.savedReminder).isEqualTo(previousConfig)
+            assertThat(scheduler.scheduledTime).isEqualTo(previousConfig.time)
         }
 
     @Test
@@ -126,13 +144,16 @@ class ReminderUseCasesTest {
 }
 
 private class FakeReminderScheduler(
-    private val scheduleFailure: Exception? = null,
+    private var scheduleFailure: Exception? = null,
 ) : ReminderScheduler {
     var scheduledTime: LocalTime? = null
     var cancelled = false
 
     override suspend fun schedule(time: LocalTime) {
-        scheduleFailure?.let { throw it }
+        scheduleFailure?.let {
+            scheduleFailure = null
+            throw it
+        }
         scheduledTime = time
     }
 

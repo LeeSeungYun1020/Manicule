@@ -29,6 +29,11 @@ class SetReminderUseCase
                 withContext(NonCancellable) {
                     runCatching {
                         userPreferencesRepository.setReminderConfig(previousConfig)
+                        if (previousConfig.enabled) {
+                            reminderScheduler.schedule(previousConfig.time)
+                        } else {
+                            reminderScheduler.cancel()
+                        }
                     }.exceptionOrNull()?.let(failure::addSuppressed)
                 }
                 throw failure
