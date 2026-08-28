@@ -38,6 +38,7 @@ class AndroidReminderNotificationPublisher
                     .setStyle(NotificationCompat.BigTextStyle().bigText(message))
                     .setCategory(NotificationCompat.CATEGORY_REMINDER)
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setOnlyAlertOnce(true)
                     .setAutoCancel(true)
                     .apply {
                         launchPendingIntent()?.let(::setContentIntent)
