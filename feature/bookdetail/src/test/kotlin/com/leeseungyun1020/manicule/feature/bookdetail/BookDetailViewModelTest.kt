@@ -5,6 +5,7 @@ import androidx.paging.PagingData
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
+import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.domain.book.GetBookDetailUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
@@ -279,7 +280,7 @@ class BookDetailViewModelTest {
 
         override fun observeBookEntry(isbn: String): Flow<BookEntry?> = entry
 
-        override suspend fun saveBookEntry(entry: BookEntry) = Unit
+        override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = SaveBookEntryResult.Saved
 
         override suspend fun removeBookEntry(isbn: String) = Unit
     }
