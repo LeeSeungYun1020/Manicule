@@ -1,6 +1,6 @@
 package com.leeseungyun1020.manicule.core.network.nlk
 
-import com.leeseungyun1020.manicule.core.network.di.NLKOkHttpClient
+import com.leeseungyun1020.manicule.core.network.di.NLKContentOkHttpClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -15,7 +15,7 @@ interface NlkContentFetcher {
 class OkHttpNlkContentFetcher
     @Inject
     constructor(
-        @param:NLKOkHttpClient private val client: OkHttpClient,
+        @param:NLKContentOkHttpClient private val client: OkHttpClient,
     ) : NlkContentFetcher {
         override suspend fun fetch(url: String): String? =
             withContext(Dispatchers.IO) {

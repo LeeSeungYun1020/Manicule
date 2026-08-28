@@ -6,4 +6,8 @@ import javax.inject.Qualifier
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
-annotation class NLKOkHttpClient
+annotation class NLKApiOkHttpClient
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class NLKContentOkHttpClient
