@@ -9,7 +9,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 
 @Composable
 fun ManiculeSnackbarHost(
@@ -38,7 +38,7 @@ suspend fun SnackbarHostState.showUndoSnackbar(
 @ManiculePreview
 @Composable
 private fun ManiculeSnackbarHostPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         val hostState = remember { SnackbarHostState() }
         LaunchedEffect(hostState) {
             hostState.showUndoSnackbar(

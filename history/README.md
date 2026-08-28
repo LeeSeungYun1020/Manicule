@@ -7,6 +7,7 @@
 - 이유만 간결하게 적는다 — 그 결정을 내린 이유, 검토했던 대안, 여러 대안 중 선택한 경우 트레이드 오프.
 - 자신, 협업자, AI가 작업 결정을 이 파일로 확인할 수 있도록 키워드 중심으로 간단히 작성
 - 의사결정이 없거나 순수 tooling/format 류 커밋은 history 만들지 않는다.
+- 리뷰 반영 건은 해당 리뷰와 코멘트로 기록되므로 history 만들지 않는다.
 
 ## 형식
 
@@ -54,5 +55,11 @@
 - [13daace](13daace.md) — refactor: 검색 진입과 입력 컴포넌트 분리
 - [26bce83](26bce83.md) — refactor: 독서 기록 세션 계약 적용
 - [a542480](a542480.md) — refactor: feature navigation 경계 적용
+- [f4b4b3d](f4b4b3d.md) — feat: CameraX 바코드 분석 기반 구현
+- [adeafd2](adeafd2.md) — refactor: 바코드 분석 suspend API 적용
+- [fc1010c](fc1010c.md) — refactor: 바코드 리더가 필요할 때만 동작하도록 변경
+- [d4fa50b](d4fa50b.md) — fix: 다크 모드 프리뷰 콘텐츠 색상 적용
+- [2a89a8f](2a89a8f.md) — feat: 검색 진입과 최근 검색어 화면 구현
+- [e13dafa](e13dafa.md) — fix: 최근 검색어 조회 실패 복구
 - [1de11c7](1de11c7.md) — feat: 서재 상태별 목록 구현
 - [da474e6](da474e6.md) — feat: 서재 검색 진입 아이콘 보강

@@ -13,8 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 
 @Immutable
 class ManiculeSectionHeaderAction(
@@ -51,7 +51,7 @@ fun ManiculeSectionHeader(
 @ManiculePreview
 @Composable
 private fun ManiculeSectionHeaderPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         ManiculeSectionHeader(
             title = "Recently searched",
             modifier = Modifier.padding(horizontal = ManiculeSpacing.lg),
@@ -67,7 +67,7 @@ private fun ManiculeSectionHeaderPreview() {
 @ManiculePreview
 @Composable
 private fun ManiculeSectionHeaderWithoutActionPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         ManiculeSectionHeader(
             title = "Settings",
             modifier = Modifier.padding(horizontal = ManiculeSpacing.lg),

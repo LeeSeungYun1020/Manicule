@@ -16,8 +16,8 @@
 
 | 레인 | 기능 | `depends_on` | 상태 | 다음 범위 |
 |---|---|---|---|---|
-| V1 | 검색 | 없음 | ⏳ 실행 가능 | 기존 검색 Data/Domain → 화면/ViewModel → Paging·Undo 테스트 |
-| V2 | 스캔 | 없음 | ⏳ 실행 가능 | Scanner core → 조회 UseCase → 권한·인식 UI → 성공/실패/회전 테스트 |
+| V1 | 검색 | 없음 | 🚧 진입·최근 검색어·오류 자동 재시도·폴백 완료 | 입력 디바운스·로컬 필터·검색 실행 |
+| V2 | 스캔 | 없음 | ✅ 수요 기반 Scanner core 완료 | BarcodeReader lifecycle bind → 조회 UseCase → 권한·인식 UI → 성공/실패/회전 테스트 |
 | V3 | 설정 | 없음 | ⏳ 실행 가능 | Notifications → 알림 UseCase → 설정 UI → 스케줄·테마 테스트 |
 | V4 | 책 상세 | 없음 | ⏳ 실행 가능 | 기록·상태 Repository/UseCase → 상세/내 기록 UI → CRUD·자동 상태 전환 테스트 |
 | V5 | 서재 | 상태 변경은 V4 상태 API | ✅ 상태별 목록 완료 | `LibrarySort` 쿼리·UseCase → 정렬 UI·테스트 |
@@ -33,7 +33,7 @@
 ## 다음 실행 가능 작업
 
 1. V7 공유 집계 PR과 V5 서재 정렬 PR을 시작해 V6의 남은 의존성을 먼저 해소한다.
-2. V1·V2·V3·V4는 서로 독립적으로 시작할 수 있다.
+2. V1·V3·V4는 서로 독립적으로 시작할 수 있다.
 3. V5 상태 변경은 V4의 상태 API가 머지된 뒤 연결한다.
 4. V5 서재 조회와 V7 공유 집계가 머지되면 V6를 시작한다. V7 UI 완료는 기다리지 않는다.
 5. I1은 각 V navigation PR이 머지되는 즉시 해당 destination을 조립한다.
