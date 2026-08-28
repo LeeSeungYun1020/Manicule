@@ -5,9 +5,11 @@ import androidx.paging.PagingData
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
+import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.domain.book.GetBookDetailUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -71,6 +73,20 @@ class BookDetailViewModelTest {
         }
 
     @Test
+    fun missingBookAndAuxiliaryContentFailure_showsContentWithRetry() =
+        runTest(dispatcher) {
+            bookRepository.refreshResult = Result.success(BookSyncStatus.AUXILIARY_CONTENT_FAILED)
+            bookRepository.bookAfterSync = testBook
+
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.bookDetail.book).isEqualTo(testBook)
+            assertThat(content.refreshStatus).isEqualTo(RefreshStatus.Failed)
+        }
+
+    @Test
     fun databaseUpdateBeforeRefreshSuccess_keepsLatestContent_andEndsIdle() =
         runTest(dispatcher) {
             bookRepository.books.value = testBook
@@ -107,7 +123,7 @@ class BookDetailViewModelTest {
             advanceUntilIdle()
             assertThat(viewModel.uiState.value).isEqualTo(BookDetailUiState.Error)
 
-            bookRepository.refreshResult = Result.success(Unit)
+            bookRepository.refreshResult = Result.success(BookSyncStatus.COMPLETE)
             bookRepository.books.value = testBook
             viewModel.retry()
             advanceUntilIdle()
@@ -236,8 +252,9 @@ class BookDetailViewModelTest {
         val books = MutableStateFlow<Book?>(null)
         var bookFlow: Flow<Book?> = books
         var observationCount = 0
-        var refreshResult: Result<Unit> = Result.success(Unit)
+        var refreshResult: Result<BookSyncStatus> = Result.success(BookSyncStatus.COMPLETE)
         var refreshGate: CompletableDeferred<Unit>? = null
+        var bookAfterSync: Book? = null
 
         override fun observeBook(isbn: String): Flow<Book?> =
             flow {
@@ -245,8 +262,9 @@ class BookDetailViewModelTest {
                 emitAll(bookFlow)
             }
 
-        override suspend fun syncBook(isbn: String): Result<Unit> {
+        override suspend fun syncBook(isbn: String): Result<BookSyncStatus> {
             refreshGate?.await()
+            bookAfterSync?.let { books.value = it }
             return refreshResult
         }
 
@@ -267,7 +285,7 @@ class BookDetailViewModelTest {
 
         override fun observeBookEntry(isbn: String): Flow<BookEntry?> = entry
 
-        override suspend fun saveBookEntry(entry: BookEntry) = Unit
+        override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = SaveBookEntryResult.Saved
 
         override suspend fun removeBookEntry(isbn: String) = Unit
     }

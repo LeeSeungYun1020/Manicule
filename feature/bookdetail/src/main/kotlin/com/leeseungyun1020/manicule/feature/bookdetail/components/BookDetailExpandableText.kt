@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,7 +27,7 @@ fun BookDetailExpandableText(
     text: String?,
     modifier: Modifier = Modifier,
 ) {
-    var expanded by remember(text) { mutableStateOf(false) }
+    var expanded by rememberSaveable(text) { mutableStateOf(false) }
     var hasOverflow by remember(text) { mutableStateOf(false) }
     Column(modifier = modifier.fillMaxWidth().animateContentSize()) {
         Text(text = title, style = MaterialTheme.typography.titleMedium)

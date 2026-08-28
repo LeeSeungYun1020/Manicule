@@ -5,9 +5,11 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
+import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookDetail
 import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,12 +49,12 @@ class GetBookDetailUseCaseTest {
 
     private class FakeBookRepository : BookRepository {
         val books = MutableStateFlow<Book?>(null)
-        var refreshResult: Result<Unit> = Result.success(Unit)
+        var refreshResult: Result<BookSyncStatus> = Result.success(BookSyncStatus.COMPLETE)
         var refreshedIsbn: String? = null
 
         override fun observeBook(isbn: String): Flow<Book?> = books
 
-        override suspend fun syncBook(isbn: String): Result<Unit> {
+        override suspend fun syncBook(isbn: String): Result<BookSyncStatus> {
             refreshedIsbn = isbn
             return refreshResult
         }
@@ -74,7 +76,7 @@ class GetBookDetailUseCaseTest {
 
         override fun observeBookEntry(isbn: String): Flow<BookEntry?> = entry
 
-        override suspend fun saveBookEntry(entry: BookEntry) = Unit
+        override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = SaveBookEntryResult.Saved
 
         override suspend fun removeBookEntry(isbn: String) = Unit
     }

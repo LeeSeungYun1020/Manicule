@@ -11,6 +11,8 @@ import com.leeseungyun1020.manicule.core.data.mapper.asExternalModel
 import com.leeseungyun1020.manicule.core.data.mapper.asExternalModelOrNull
 import com.leeseungyun1020.manicule.core.data.paging.NlkBookPagingSource
 import com.leeseungyun1020.manicule.core.model.Book
+import com.leeseungyun1020.manicule.core.model.BookSyncStatus
+import com.leeseungyun1020.manicule.core.network.nlk.NlkContentFetchResult
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -26,7 +28,7 @@ class BookRepositoryImpl
 
         override fun observeBook(isbn: String): Flow<Book?> = bookLocalDataSource.observeByIsbn(isbn).map { it?.asExternalModel() }
 
-        override suspend fun syncBook(isbn: String): Result<Unit> =
+        override suspend fun syncBook(isbn: String): Result<BookSyncStatus> =
             runCatching {
                 val response = bookRemoteDataSource.searchBooks(isbn = isbn)
                 val mappedBook =
@@ -34,28 +36,40 @@ class BookRepositoryImpl
                         ?: throw NoSuchElementException("API에서 유효한 책 정보를 찾을 수 없습니다.")
 
                 val cached = bookLocalDataSource.getByIsbn(isbn)
-                val book =
+                val auxiliaryContent =
                     supervisorScope {
                         val introduction =
                             async {
-                                mappedBook.introduction
-                                    ?: (mappedBook.introductionUrl ?: mappedBook.summaryUrl)?.let { url ->
-                                        runCatching { bookRemoteDataSource.fetchNlkContent(url) }.getOrNull()
-                                    } ?: cached?.introduction
+                                resolveAuxiliaryContent(
+                                    inline = mappedBook.introduction,
+                                    url = mappedBook.introductionUrl ?: mappedBook.summaryUrl,
+                                    cached = cached?.introduction,
+                                )
                             }
                         val tableOfContents =
                             async {
-                                mappedBook.tableOfContents
-                                    ?: mappedBook.tableOfContentsUrl?.let { url ->
-                                        runCatching { bookRemoteDataSource.fetchNlkContent(url) }.getOrNull()
-                                    } ?: cached?.tableOfContents
+                                resolveAuxiliaryContent(
+                                    inline = mappedBook.tableOfContents,
+                                    url = mappedBook.tableOfContentsUrl,
+                                    cached = cached?.tableOfContents,
+                                )
                             }
-                        mappedBook.copy(
+                        AuxiliaryBookContent(
                             introduction = introduction.await(),
                             tableOfContents = tableOfContents.await(),
                         )
                     }
+                val book =
+                    mappedBook.copy(
+                        introduction = auxiliaryContent.introduction.value,
+                        tableOfContents = auxiliaryContent.tableOfContents.value,
+                    )
                 bookLocalDataSource.save(book.asEntity())
+                if (auxiliaryContent.hasFetchFailure) {
+                    BookSyncStatus.AUXILIARY_CONTENT_FAILED
+                } else {
+                    BookSyncStatus.COMPLETE
+                }
             }.onFailure {
                 Log.e("BookRepository", "Failed to sync book with ISBN $isbn", it)
             }
@@ -69,6 +83,55 @@ class BookRepositoryImpl
                     ),
                 pagingSourceFactory = { NlkBookPagingSource(bookRemoteDataSource, query) },
             ).flow
+
+        private suspend fun resolveAuxiliaryContent(
+            inline: String?,
+            url: String?,
+            cached: String?,
+        ): AuxiliaryContent {
+            if (inline != null || url == null) {
+                return AuxiliaryContent(
+                    value = inline ?: cached,
+                    fetchFailed = false,
+                )
+            }
+
+            val fetchResult =
+                runCatching { bookRemoteDataSource.fetchNlkContent(url) }
+                    .getOrDefault(NlkContentFetchResult.RetryableFailure)
+            return when (fetchResult) {
+                is NlkContentFetchResult.Success ->
+                    AuxiliaryContent(
+                        value = fetchResult.content,
+                        fetchFailed = false,
+                    )
+
+                NlkContentFetchResult.Unavailable ->
+                    AuxiliaryContent(
+                        value = cached,
+                        fetchFailed = false,
+                    )
+
+                NlkContentFetchResult.RetryableFailure ->
+                    AuxiliaryContent(
+                        value = cached,
+                        fetchFailed = true,
+                    )
+            }
+        }
+
+        private data class AuxiliaryBookContent(
+            val introduction: AuxiliaryContent,
+            val tableOfContents: AuxiliaryContent,
+        ) {
+            val hasFetchFailure: Boolean
+                get() = introduction.fetchFailed || tableOfContents.fetchFailed
+        }
+
+        private data class AuxiliaryContent(
+            val value: String?,
+            val fetchFailed: Boolean,
+        )
 
         companion object {
             private const val NETWORK_PAGE_SIZE = 10

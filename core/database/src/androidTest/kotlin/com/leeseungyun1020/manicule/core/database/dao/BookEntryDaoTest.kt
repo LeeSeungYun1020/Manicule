@@ -47,7 +47,7 @@ class BookEntryDaoTest {
                 BookEntryEntity(
                     isbn,
                     ReadingStatus.READING,
-                    null,
+                    0,
                     null,
                     Instant.fromEpochMilliseconds(0),
                     Instant.fromEpochMilliseconds(0),
@@ -90,7 +90,7 @@ class BookEntryDaoTest {
                 BookEntryEntity(
                     isbn,
                     ReadingStatus.READING,
-                    null,
+                    0,
                     null,
                     Instant.fromEpochMilliseconds(0),
                     Instant.fromEpochMilliseconds(0),

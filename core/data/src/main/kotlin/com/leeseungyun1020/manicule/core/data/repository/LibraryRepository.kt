@@ -5,6 +5,14 @@ import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.coroutines.flow.Flow
 
+sealed interface SaveBookEntryResult {
+    data object Saved : SaveBookEntryResult
+
+    data class InvalidRating(
+        val rating: Int,
+    ) : SaveBookEntryResult
+}
+
 interface LibraryRepository {
     fun observeAll(): Flow<List<BookEntry>>
 
@@ -17,7 +25,7 @@ interface LibraryRepository {
 
     fun observeBookEntry(isbn: String): Flow<BookEntry?>
 
-    suspend fun saveBookEntry(entry: BookEntry)
+    suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult
 
     suspend fun removeBookEntry(isbn: String)
 }

@@ -1,5 +1,6 @@
 package com.leeseungyun1020.manicule.core.data.datasource
 
+import com.leeseungyun1020.manicule.core.network.nlk.NlkContentFetchResult
 import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkSearchResponseDto
 
 interface BookRemoteDataSource {
@@ -17,5 +18,5 @@ interface BookRemoteDataSource {
         size: Int,
     ): NlkSearchResponseDto
 
-    suspend fun fetchNlkContent(url: String): String? = null
+    suspend fun fetchNlkContent(url: String): NlkContentFetchResult = NlkContentFetchResult.Unavailable
 }

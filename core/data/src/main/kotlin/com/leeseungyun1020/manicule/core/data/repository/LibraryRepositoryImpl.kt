@@ -39,9 +39,14 @@ class LibraryRepositoryImpl
         override fun observeBookEntry(isbn: String): Flow<BookEntry?> =
             bookEntryLocalDataSource.observeByIsbn(isbn).map { it?.asExternalModel() }
 
-        override suspend fun saveBookEntry(entry: BookEntry) {
+        override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult {
+            if (entry.rating !in 0..5) {
+                return SaveBookEntryResult.InvalidRating(entry.rating)
+            }
+
             bookLocalDataSource.save(entry.book.asEntity())
             bookEntryLocalDataSource.save(entry.asEntity())
+            return SaveBookEntryResult.Saved
         }
 
         override suspend fun removeBookEntry(isbn: String) {
