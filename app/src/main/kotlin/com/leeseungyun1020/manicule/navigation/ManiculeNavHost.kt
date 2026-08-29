@@ -41,7 +41,11 @@ fun ManiculeNavHost(
                 .consumeWindowInsets(paddingValues),
     ) {
         homeScreen()
-        searchScreen()
+        searchScreen(
+            onNavigateBack = {
+                appState.navController.popBackStack()
+            },
+        )
         scannerScreen()
         bookDetailScreen()
         libraryScreen(
