@@ -1,11 +1,11 @@
 package com.leeseungyun1020.manicule.core.domain.stats
 
 import com.google.common.truth.Truth.assertThat
-import com.leeseungyun1020.manicule.core.model.DailyReading
-import com.leeseungyun1020.manicule.core.model.ReadingTotals
+import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import org.junit.Test
 
 class GetPeriodSummaryUseCaseTest {
@@ -13,13 +13,13 @@ class GetPeriodSummaryUseCaseTest {
     fun summarizes_inclusive_range_with_period_longest_streak() =
         runTest {
             val repository = FakeStatsRepository()
-            repository.daily.value =
+            repository.records.value =
                 listOf(
-                    DailyReading(LocalDate(2024, 2, 28), 10, 1),
-                    DailyReading(LocalDate(2024, 2, 29), 20, 1),
-                    DailyReading(LocalDate(2024, 3, 2), 30, 2),
+                    record(1, "a", LocalDate(2024, 2, 28), 1, 10),
+                    record(2, "a", LocalDate(2024, 2, 29), 11, 30),
+                    record(3, "a", LocalDate(2024, 3, 2), 31, 40),
+                    record(4, "b", LocalDate(2024, 3, 2), 1, 20),
                 )
-            repository.totals.value = ReadingTotals(pagesRead = 60, bookCount = 2)
             val start = LocalDate(2024, 2, 28)
             val end = LocalDate(2024, 3, 2)
 
@@ -52,4 +52,19 @@ class GetPeriodSummaryUseCaseTest {
             runCatching { useCase(LocalDate(2024, 1, 2), LocalDate(2024, 1, 1)) }.exceptionOrNull(),
         ).isInstanceOf(IllegalArgumentException::class.java)
     }
+
+    private fun record(
+        id: Long,
+        isbn: String,
+        date: LocalDate,
+        startPage: Int,
+        endPage: Int,
+    ) = ReadingRecord(
+        id = id,
+        isbn = isbn,
+        date = date,
+        time = LocalTime(12, 0),
+        startPage = startPage,
+        endPage = endPage,
+    )
 }
