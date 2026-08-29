@@ -20,10 +20,11 @@ class GetPeriodSummaryUseCase
                 "start must be on or before end, was start=$start end=$end"
             }
             return statsRepository.observeRecordsBetween(start, end).map { records ->
+                val readingDates = records.map { it.date }.distinct().sorted()
                 PeriodSummary(
                     rangeStart = start,
                     rangeEnd = end,
-                    longestStreak = longestStreak(records.map { it.date }),
+                    longestStreak = longestStreak(readingDates),
                     pagesRead = records.sumOf { it.pagesRead },
                     bookCount = records.distinctBy { it.isbn }.size,
                 )

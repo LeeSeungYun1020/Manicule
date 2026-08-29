@@ -5,12 +5,12 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 
-internal fun longestStreak(dates: Collection<LocalDate>): Int {
+internal fun longestStreak(sortedDates: List<LocalDate>): Int {
     var longest = 0
     var current = 0
     var previous: LocalDate? = null
 
-    dates.distinct().sorted().forEach { date ->
+    sortedDates.forEach { date ->
         current =
             if (previous == null || date == previous.plus(DatePeriod(days = 1))) {
                 current + 1
@@ -24,10 +24,9 @@ internal fun longestStreak(dates: Collection<LocalDate>): Int {
 }
 
 internal fun currentStreak(
-    dates: Collection<LocalDate>,
+    sortedDates: List<LocalDate>,
     today: LocalDate,
 ): Int {
-    val sortedDates = dates.filter { it <= today }.distinct().sorted()
     val lastDate = sortedDates.lastOrNull() ?: return 0
     val yesterday = today.minus(DatePeriod(days = 1))
     if (lastDate != today && lastDate != yesterday) return 0
