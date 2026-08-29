@@ -57,3 +57,12 @@ internal class FixedClock(
 
     override fun timeZone(): TimeZone = zone
 }
+
+internal class MutableClock(
+    var instant: Instant,
+    private val zone: TimeZone,
+) : Clock {
+    override fun now(): Instant = instant
+
+    override fun timeZone(): TimeZone = zone
+}

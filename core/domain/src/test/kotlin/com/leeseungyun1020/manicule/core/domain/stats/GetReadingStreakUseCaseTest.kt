@@ -1,7 +1,11 @@
 package com.leeseungyun1020.manicule.core.domain.stats
 
+import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.leeseungyun1020.manicule.core.model.ReadingStreak
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -56,5 +60,25 @@ class GetReadingStreakUseCaseTest {
         runTest {
             assertThat(GetReadingStreakUseCase(FakeStatsRepository(), clock)().first())
                 .isEqualTo(com.leeseungyun1020.manicule.core.model.ReadingStreak.Empty)
+        }
+
+    @Test
+    fun reobserves_dates_with_the_new_cutoff_after_midnight() =
+        runTest {
+            val repository = FakeStatsRepository()
+            repository.dates.value = listOf(LocalDate(2024, 3, 1))
+            val clock = MutableClock(Instant.parse("2024-03-01T23:59:59Z"), TimeZone.UTC)
+
+            GetReadingStreakUseCase(repository, clock)().test {
+                assertThat(awaitItem()).isEqualTo(ReadingStreak(1, 1, LocalDate(2024, 3, 1)))
+
+                clock.instant = Instant.parse("2024-03-02T00:00:00Z")
+                advanceTimeBy(1_000)
+                runCurrent()
+
+                assertThat(awaitItem()).isEqualTo(ReadingStreak(1, 1, LocalDate(2024, 3, 1)))
+                assertThat(repository.datesEnd).isEqualTo(LocalDate(2024, 3, 2))
+                cancelAndIgnoreRemainingEvents()
+            }
         }
 }
