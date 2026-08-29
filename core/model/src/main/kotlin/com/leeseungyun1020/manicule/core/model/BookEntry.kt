@@ -7,8 +7,8 @@ import kotlinx.datetime.LocalDate
  * 사용자의 서재에 등록된 책 한 권의 상태 정보.
  *
  * @property book          기본 서지정보
- * @property status        독서 상태(WANT/READING/FINISHED)
- * @property rating        별점 (1..5, 미입력 시 null)
+ * @property status        독서 상태(UNSET/WANT/READING/FINISHED)
+ * @property rating        별점 (0..5, 미입력 시 0)
  * @property memo          한 줄 메모
  * @property addedAt       서재에 처음 추가된 시각
  * @property updatedAt     마지막 수정 시각 (정렬에 사용)
@@ -18,16 +18,10 @@ import kotlinx.datetime.LocalDate
 data class BookEntry(
     val book: Book,
     val status: ReadingStatus,
-    val rating: Int? = null,
+    val rating: Int = 0,
     val memo: String? = null,
     val addedAt: Instant,
     val updatedAt: Instant,
     val finishedAt: LocalDate? = null,
     val currentPage: Int? = null,
-) {
-    init {
-        require(rating == null || rating in 1..5) {
-            "rating must be in 1..5, was $rating"
-        }
-    }
-}
+)

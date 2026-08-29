@@ -77,6 +77,50 @@ class NlkBookPagingSourceTest {
         }
 
     @Test
+    fun load_excludesBooksWithBlankRequiredFields() =
+        runTest {
+            val mixedDataSource =
+                object : BookRemoteDataSource {
+                    override suspend fun searchBooks(isbn: String): NlkSearchResponseDto = TODO("Not needed")
+
+                    override suspend fun searchBooksByTitle(
+                        query: String,
+                        page: Int,
+                        size: Int,
+                    ): NlkSearchResponseDto =
+                        NlkSearchResponseDto(
+                            totalCount = "3",
+                            docs =
+                                listOf(
+                                    NlkBookDto(isbn = "123", title = "Valid Book"),
+                                    NlkBookDto(isbn = " ", title = "Blank ISBN"),
+                                    NlkBookDto(isbn = "456", title = " "),
+                                ),
+                        )
+
+                    override suspend fun searchBooksByAuthor(
+                        query: String,
+                        page: Int,
+                        size: Int,
+                    ): NlkSearchResponseDto = NlkSearchResponseDto(totalCount = "0")
+                }
+            val pagingSource = NlkBookPagingSource(mixedDataSource, "Book")
+
+            val result =
+                pagingSource.load(
+                    PagingSource.LoadParams.Refresh(
+                        key = 1,
+                        loadSize = 10,
+                        placeholdersEnabled = false,
+                    ),
+                )
+
+            assertThat(result).isInstanceOf(PagingSource.LoadResult.Page::class.java)
+            val pageResult = result as PagingSource.LoadResult.Page<Int, com.leeseungyun1020.manicule.core.model.Book>
+            assertThat(pageResult.data.map { it.isbn }).containsExactly("123")
+        }
+
+    @Test
     fun load_ends_paging_when_both_sources_are_empty() =
         runTest {
             val pagingSource = NlkBookPagingSource(fakeBookRemoteDataSource, "Kotlin")

@@ -377,7 +377,8 @@ core/common/
 core/model/
 └── src/main/kotlin/com/leeseungyun1020/manicule/core/model/
     ├── Book.kt                             # isbn(EA_ISBN), title, author, publisher, pubDate(PUBLISH_PREDATE), coverUrl(TITLE_URL), totalPages(PAGE), price(PRE_PRICE), category(SUBJECT), tableOfContentsUrl(BOOK_TB_CNT_URL), introductionUrl(BOOK_INTRODUCTION_URL), summaryUrl(BOOK_SUMMARY_URL)
-    ├── ReadingStatus.kt                    # WANT / READING / FINISHED
+    ├── BookDetail.kt                       # Book + nullable BookEntry. 미등록은 null, 리뷰-only 등록은 BookEntry.status=UNSET
+    ├── ReadingStatus.kt                    # UNSET / WANT / READING / FINISHED
     ├── BookEntry.kt                        # Book + Status + rating + memo + finishedAt
     ├── ReadingRecord.kt                    # id, isbn, date, time, startPage, endPage, 파생 pagesRead
     ├── DailyReading.kt                     # 통계용 (date, pages)
@@ -396,7 +397,7 @@ core/domain/
     ├── di/
     │   └── DomainModule.kt
     ├── book/
-    │   └── GetBookDetailUseCase.kt          # ISBN → Book 조회 (DB 우선, 없으면 네트워크 fetch)
+    │   └── GetBookDetailUseCase.kt          # ISBN → BookDetail 관찰, 책 정보 refresh
     ├── search/
     │   ├── SearchBooksUseCase.kt           # Flow<PagingData<Book>> 반환 (Paging 3 통합)
     │   ├── GetRecentQueriesUseCase.kt
@@ -526,6 +527,7 @@ core/notifications/
     │   └── NotificationsModule.kt
     ├── WorkManagerReminderScheduler.kt     # domain ReminderScheduler 구현
     ├── ReminderWorker.kt                   # GetReminderContentUseCase로 발송 시점 메시지 조회
+    ├── TimeZoneChangedReceiver.kt          # 시간대 변경 시 활성 리마인더 즉시 재예약
     └── NotificationChannels.kt
 ```
 

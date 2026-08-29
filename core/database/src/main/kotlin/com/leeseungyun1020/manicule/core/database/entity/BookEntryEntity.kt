@@ -21,7 +21,7 @@ import kotlinx.datetime.LocalDate
 data class BookEntryEntity(
     @PrimaryKey val isbn: String,
     val status: ReadingStatus,
-    val rating: Int?,
+    val rating: Int,
     val memo: String?,
     val addedAt: Instant,
     val updatedAt: Instant,

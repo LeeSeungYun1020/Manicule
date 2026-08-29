@@ -4,6 +4,7 @@ import androidx.paging.PagingData
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
 import com.leeseungyun1020.manicule.core.model.Book
+import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -15,7 +16,7 @@ class SearchBooksUseCaseTest {
         object : BookRepository {
             override fun observeBook(isbn: String): Flow<Book?> = TODO("Not needed for test")
 
-            override suspend fun syncBook(isbn: String): Result<Unit> = TODO("Not needed for test")
+            override suspend fun syncBook(isbn: String): Result<BookSyncStatus> = TODO("Not needed for test")
 
             override fun searchBooks(query: String): Flow<PagingData<Book>> {
                 val dummyBook =

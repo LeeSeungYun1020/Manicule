@@ -69,6 +69,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.work.ktx)
+    implementation(libs.androidx.hilt.work)
     implementation(libs.androidx.compose.material3.windowSizeClass)
     implementation(libs.androidx.window)
     implementation(libs.material)

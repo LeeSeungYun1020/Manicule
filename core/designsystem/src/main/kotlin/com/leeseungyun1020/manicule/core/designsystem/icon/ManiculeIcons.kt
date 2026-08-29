@@ -6,6 +6,7 @@ import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
@@ -45,4 +46,6 @@ object ManiculeIcons {
         val SettingsFilled: ImageVector = Icons.Filled.Settings
         val SettingsOutlined: ImageVector = Icons.Outlined.Settings
     }
+
+    val NetworkError: ImageVector = Icons.Default.CloudOff
 }

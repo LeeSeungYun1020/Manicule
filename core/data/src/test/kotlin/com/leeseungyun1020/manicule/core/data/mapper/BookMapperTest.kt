@@ -59,6 +59,8 @@ class BookMapperTest {
                 bookTbCntUrl = "",
                 bookIntroductionUrl = "",
                 bookSummaryUrl = "",
+                bookIntroduction = "소개",
+                bookTbCnt = "목차",
             )
 
         // when
@@ -74,6 +76,8 @@ class BookMapperTest {
         assertThat(book.price).isEqualTo(22000)
         assertThat(book.category).isEqualTo("3")
         assertThat(book.coverUrl).isNull()
+        assertThat(book.introduction).isEqualTo("소개")
+        assertThat(book.tableOfContents).isEqualTo("목차")
     }
 
     @Test
@@ -82,6 +86,7 @@ class BookMapperTest {
         val dto =
             NlkBookDto(
                 isbn = "123",
+                title = "Book",
                 titleUrl = "",
                 bookTbCntUrl = "  ",
                 bookIntroductionUrl = "",
@@ -96,6 +101,12 @@ class BookMapperTest {
         assertThat(book.tableOfContentsUrl).isNull()
         assertThat(book.introductionUrl).isNull()
         assertThat(book.summaryUrl).isNull()
+    }
+
+    @Test
+    fun nlkBookDto_withBlankRequiredFields_mapsToNull() {
+        assertThat(NlkBookDto(isbn = " ", title = "Book").asExternalModelOrNull()).isNull()
+        assertThat(NlkBookDto(isbn = "123", title = " ").asExternalModelOrNull()).isNull()
     }
 
     @Test

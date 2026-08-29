@@ -19,6 +19,8 @@ fun BookEntity.asExternalModel() =
         tableOfContentsUrl = tableOfContentsUrl,
         introductionUrl = introductionUrl,
         summaryUrl = summaryUrl,
+        introduction = introduction,
+        tableOfContents = tableOfContents,
     )
 
 fun NlkBookDto.asExternalModel(): Book =
@@ -35,7 +37,13 @@ fun NlkBookDto.asExternalModel(): Book =
         tableOfContentsUrl = bookTbCntUrl.ifBlank { null },
         introductionUrl = bookIntroductionUrl.ifBlank { null },
         summaryUrl = bookSummaryUrl.ifBlank { null },
+        introduction = bookIntroduction.ifBlank { bookSummary }.ifBlank { null },
+        tableOfContents = bookTbCnt.ifBlank { null },
     )
+
+internal fun NlkBookDto.asExternalModelOrNull(): Book? =
+    takeIf { it.isbn.isNotBlank() && it.title.isNotBlank() }
+        ?.asExternalModel()
 
 internal fun parseNlkDate(dateString: String): LocalDate? {
     if (dateString.length != 8) return null
@@ -61,4 +69,6 @@ fun Book.asEntity() =
         tableOfContentsUrl = tableOfContentsUrl,
         introductionUrl = introductionUrl,
         summaryUrl = summaryUrl,
+        introduction = introduction,
+        tableOfContents = tableOfContents,
     )
