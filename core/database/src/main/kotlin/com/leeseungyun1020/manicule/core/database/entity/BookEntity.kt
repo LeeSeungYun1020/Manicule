@@ -18,4 +18,6 @@ data class BookEntity(
     val tableOfContentsUrl: String?,
     val introductionUrl: String?,
     val summaryUrl: String?,
+    val introduction: String? = null,
+    val tableOfContents: String? = null,
 )

@@ -47,7 +47,7 @@ class BookEntryDaoTest {
                 BookEntryEntity(
                     isbn,
                     ReadingStatus.READING,
-                    null,
+                    0,
                     null,
                     Instant.fromEpochMilliseconds(0),
                     Instant.fromEpochMilliseconds(0),
@@ -90,7 +90,7 @@ class BookEntryDaoTest {
                 BookEntryEntity(
                     isbn,
                     ReadingStatus.READING,
-                    null,
+                    0,
                     null,
                     Instant.fromEpochMilliseconds(0),
                     Instant.fromEpochMilliseconds(0),
@@ -104,4 +104,61 @@ class BookEntryDaoTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
+
+    @Test
+    fun getRecentBooksByStatus_returnsFiveMostRecentlyUpdatedMatchingBooks() =
+        runTest {
+            (1..6).forEach { index ->
+                saveBookEntry(
+                    isbn = "reading-$index",
+                    status = ReadingStatus.READING,
+                    updatedAt = Instant.fromEpochMilliseconds(index.toLong()),
+                )
+            }
+            saveBookEntry(
+                isbn = "finished",
+                status = ReadingStatus.FINISHED,
+                updatedAt = Instant.fromEpochMilliseconds(100),
+            )
+
+            val books = dao.getRecentBooksByStatus(ReadingStatus.READING, limit = 5)
+
+            assertThat(books.map { it.isbn })
+                .containsExactly("reading-6", "reading-5", "reading-4", "reading-3", "reading-2")
+                .inOrder()
+        }
+
+    private suspend fun saveBookEntry(
+        isbn: String,
+        status: ReadingStatus,
+        updatedAt: Instant,
+    ) {
+        bookDao.upsert(
+            BookEntity(
+                isbn = isbn,
+                title = isbn,
+                author = "Author",
+                publisher = "Publisher",
+                publishedDate = null,
+                coverUrl = null,
+                totalPages = null,
+                price = null,
+                category = null,
+                tableOfContentsUrl = null,
+                introductionUrl = null,
+                summaryUrl = null,
+            ),
+        )
+        dao.upsert(
+            BookEntryEntity(
+                isbn = isbn,
+                status = status,
+                rating = null,
+                memo = null,
+                addedAt = updatedAt,
+                updatedAt = updatedAt,
+                finishedAt = null,
+            ),
+        )
+    }
 }

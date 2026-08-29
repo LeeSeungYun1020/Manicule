@@ -1,19 +1,28 @@
 package com.leeseungyun1020.manicule.core.domain.book
 
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
-import com.leeseungyun1020.manicule.core.model.Book
+import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
+import com.leeseungyun1020.manicule.core.model.BookDetail
+import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
 
 class GetBookDetailUseCase
     @Inject
     constructor(
         private val bookRepository: BookRepository,
+        private val libraryRepository: LibraryRepository,
     ) {
-        /**
-         * ISBN으로 도서 상세 조회 (DB 우선, 없으면 네트워크 fetch).
-         */
-        operator fun invoke(isbn: String): Flow<Book?> {
-            TODO("3단계 Slice 2에서 구현")
-        }
+        operator fun invoke(isbn: String): Flow<BookDetail?> =
+            bookRepository.observeBook(isbn).combine(libraryRepository.observeBookEntry(isbn)) { book, entry ->
+                book?.let {
+                    BookDetail(
+                        book = it,
+                        entry = entry?.copy(book = it),
+                    )
+                }
+            }
+
+        suspend fun refresh(isbn: String): Result<BookSyncStatus> = bookRepository.syncBook(isbn)
     }

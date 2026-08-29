@@ -1,6 +1,7 @@
 package com.leeseungyun1020.manicule.navigation
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -33,12 +34,15 @@ fun ManiculeNavHost(
         modifier =
             modifier
                 .fillMaxSize()
-                .padding(paddingValues),
+                .padding(paddingValues)
+                .consumeWindowInsets(paddingValues),
     ) {
         homeScreen()
         searchScreen()
         scannerScreen()
-        bookDetailScreen()
+        bookDetailScreen(
+            onNavigateBack = { appState.navController.popBackStack() },
+        )
         libraryScreen()
         statsScreen()
         settingsScreen()

@@ -33,4 +33,8 @@ data class Book(
     val introductionUrl: String?,
     /** BOOK_SUMMARY_URL — 요약이 담긴 URL */
     val summaryUrl: String?,
+    /** API 본문 또는 국립중앙도서관 URL에서 조회한 책 소개 */
+    val introduction: String? = null,
+    /** API 본문 또는 국립중앙도서관 URL에서 조회한 목차 */
+    val tableOfContents: String? = null,
 )

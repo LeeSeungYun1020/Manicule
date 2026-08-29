@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "f2815468e09f8a2fb32b00eb2c1df8b3",
+    "identityHash": "ba153dcfa75aaab4af6feb77d810e8e5",
     "entities": [
       {
         "tableName": "books",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`isbn` TEXT NOT NULL, `title` TEXT NOT NULL, `author` TEXT NOT NULL, `publisher` TEXT NOT NULL, `publishedDate` TEXT, `coverUrl` TEXT, `totalPages` INTEGER, `price` INTEGER, `category` TEXT, `tableOfContentsUrl` TEXT, `introductionUrl` TEXT, `summaryUrl` TEXT, PRIMARY KEY(`isbn`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`isbn` TEXT NOT NULL, `title` TEXT NOT NULL, `author` TEXT NOT NULL, `publisher` TEXT NOT NULL, `publishedDate` TEXT, `coverUrl` TEXT, `totalPages` INTEGER, `price` INTEGER, `category` TEXT, `tableOfContentsUrl` TEXT, `introductionUrl` TEXT, `summaryUrl` TEXT, `introduction` TEXT, `tableOfContents` TEXT, PRIMARY KEY(`isbn`))",
         "fields": [
           {
             "fieldPath": "isbn",
@@ -71,6 +71,16 @@
             "fieldPath": "summaryUrl",
             "columnName": "summaryUrl",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "introduction",
+            "columnName": "introduction",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "tableOfContents",
+            "columnName": "tableOfContents",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -82,7 +92,7 @@
       },
       {
         "tableName": "book_entries",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`isbn` TEXT NOT NULL, `status` TEXT NOT NULL, `rating` INTEGER, `memo` TEXT, `addedAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `finishedAt` TEXT, PRIMARY KEY(`isbn`), FOREIGN KEY(`isbn`) REFERENCES `books`(`isbn`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`isbn` TEXT NOT NULL, `status` TEXT NOT NULL, `rating` INTEGER NOT NULL, `memo` TEXT, `addedAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `finishedAt` TEXT, PRIMARY KEY(`isbn`), FOREIGN KEY(`isbn`) REFERENCES `books`(`isbn`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "isbn",
@@ -99,7 +109,8 @@
           {
             "fieldPath": "rating",
             "columnName": "rating",
-            "affinity": "INTEGER"
+            "affinity": "INTEGER",
+            "notNull": true
           },
           {
             "fieldPath": "memo",
@@ -252,7 +263,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f2815468e09f8a2fb32b00eb2c1df8b3')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ba153dcfa75aaab4af6feb77d810e8e5')"
     ]
   }
 }
