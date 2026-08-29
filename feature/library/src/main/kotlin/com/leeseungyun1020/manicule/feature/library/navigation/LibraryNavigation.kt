@@ -9,9 +9,9 @@ import kotlinx.serialization.Serializable
 object LibraryRoute
 
 fun NavGraphBuilder.libraryScreen(
-    onNavigateToBookDetail: (isbn: String) -> Unit = {},
-    onNavigateToSearch: () -> Unit = {},
-    onNavigateToScanner: () -> Unit = {},
+    onNavigateToBookDetail: (isbn: String) -> Unit,
+    onNavigateToSearch: () -> Unit,
+    onNavigateToScanner: () -> Unit,
 ) {
     composable<LibraryRoute> {
         LibraryRoute(
