@@ -3,7 +3,9 @@ package com.leeseungyun1020.manicule.feature.library
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
+import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.domain.library.GetLibraryBooksUseCase
+import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.coroutines.flow.Flow
@@ -83,7 +85,12 @@ private class ControllableLibraryRepository : LibraryRepository {
 
     override fun observeBookEntry(isbn: String): Flow<BookEntry?> = flow { emit(null) }
 
-    override suspend fun saveBookEntry(entry: BookEntry) = Unit
+    override suspend fun getRecentBooksByStatus(
+        status: ReadingStatus,
+        limit: Int,
+    ): List<Book> = emptyList()
+
+    override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = SaveBookEntryResult.Saved
 
     override suspend fun removeBookEntry(isbn: String) = Unit
 }

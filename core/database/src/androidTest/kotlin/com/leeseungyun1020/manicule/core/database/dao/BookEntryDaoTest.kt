@@ -47,7 +47,7 @@ class BookEntryDaoTest {
                 BookEntryEntity(
                     isbn,
                     ReadingStatus.READING,
-                    null,
+                    0,
                     null,
                     Instant.fromEpochMilliseconds(0),
                     Instant.fromEpochMilliseconds(0),
@@ -90,7 +90,7 @@ class BookEntryDaoTest {
                 BookEntryEntity(
                     isbn,
                     ReadingStatus.READING,
-                    null,
+                    0,
                     null,
                     Instant.fromEpochMilliseconds(0),
                     Instant.fromEpochMilliseconds(0),
@@ -106,54 +106,72 @@ class BookEntryDaoTest {
         }
 
     @Test
-    fun observeAll_ordersByUpdatedAtDescendingThenIsbnAscending_andReemits() =
+    fun getRecentBooksByStatus_returnsFiveMostRecentlyUpdatedMatchingBooks() =
         runTest {
-            insertEntry("9783", ReadingStatus.WANT, updatedAt = 10)
-            insertEntry("9782", ReadingStatus.READING, updatedAt = 20)
-            insertEntry("9781", ReadingStatus.FINISHED, updatedAt = 20)
-
-            dao.observeAll().test {
-                assertThat(awaitItem().map { it.entry.isbn }).containsExactly("9781", "9782", "9783").inOrder()
-
-                dao.upsert(entry("9783", ReadingStatus.WANT, updatedAt = 30))
-                assertThat(awaitItem().map { it.entry.isbn }).containsExactly("9783", "9781", "9782").inOrder()
-                cancelAndIgnoreRemainingEvents()
+            (1..6).forEach { index ->
+                saveBookEntry(
+                    isbn = "reading-$index",
+                    status = ReadingStatus.READING,
+                    updatedAt = Instant.fromEpochMilliseconds(index.toLong()),
+                )
             }
+            saveBookEntry(
+                isbn = "finished",
+                status = ReadingStatus.FINISHED,
+                updatedAt = Instant.fromEpochMilliseconds(100),
+            )
+
+            val books = dao.getRecentBooksByStatus(ReadingStatus.READING, limit = 5)
+
+            assertThat(books.map { it.isbn })
+                .containsExactly("reading-6", "reading-5", "reading-4", "reading-3", "reading-2")
+                .inOrder()
         }
+
+    private suspend fun saveBookEntry(
+        isbn: String,
+        status: ReadingStatus,
+        updatedAt: Instant,
+    ) {
+        bookDao.upsert(
+            BookEntity(
+                isbn = isbn,
+                title = isbn,
+                author = "Author",
+                publisher = "Publisher",
+                publishedDate = null,
+                coverUrl = null,
+                totalPages = null,
+                price = null,
+                category = null,
+                tableOfContentsUrl = null,
+                introductionUrl = null,
+                summaryUrl = null,
+            ),
+        )
+        dao.upsert(
+            BookEntryEntity(
+                isbn = isbn,
+                status = status,
+                rating = null,
+                memo = null,
+                addedAt = updatedAt,
+                updatedAt = updatedAt,
+                finishedAt = null,
+            ),
+        )
+    }
 
     @Test
     fun observeByStatus_filtersAndUsesDeterministicOrder() =
         runTest {
-            insertEntry("9783", ReadingStatus.READING, updatedAt = 10)
-            insertEntry("9782", ReadingStatus.WANT, updatedAt = 20)
-            insertEntry("9781", ReadingStatus.WANT, updatedAt = 20)
+            saveBookEntry("9783", ReadingStatus.READING, Instant.fromEpochMilliseconds(10))
+            saveBookEntry("9782", ReadingStatus.WANT, Instant.fromEpochMilliseconds(20))
+            saveBookEntry("9781", ReadingStatus.WANT, Instant.fromEpochMilliseconds(20))
 
             dao.observeByStatus(ReadingStatus.WANT).test {
                 assertThat(awaitItem().map { it.entry.isbn }).containsExactly("9781", "9782").inOrder()
                 cancelAndIgnoreRemainingEvents()
             }
         }
-
-    private suspend fun insertEntry(
-        isbn: String,
-        status: ReadingStatus,
-        updatedAt: Long,
-    ) {
-        bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
-        dao.upsert(entry(isbn, status, updatedAt))
-    }
-
-    private fun entry(
-        isbn: String,
-        status: ReadingStatus,
-        updatedAt: Long,
-    ) = BookEntryEntity(
-        isbn = isbn,
-        status = status,
-        rating = null,
-        memo = null,
-        addedAt = Instant.fromEpochMilliseconds(0),
-        updatedAt = Instant.fromEpochMilliseconds(updatedAt),
-        finishedAt = null,
-    )
 }

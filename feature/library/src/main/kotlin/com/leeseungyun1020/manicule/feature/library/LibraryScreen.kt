@@ -77,6 +77,7 @@ fun LibraryScreen(
                             ReadingStatus.WANT -> wantTabLabel
                             ReadingStatus.READING -> readingTabLabel
                             ReadingStatus.FINISHED -> finishedTabLabel
+                            ReadingStatus.UNSET -> ""
                         }
                     },
                 )

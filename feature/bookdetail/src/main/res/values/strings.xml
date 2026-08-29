@@ -1,4 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="book_detail_stub_label">책 상세\n(stub — 후속 단계에서 구현)</string>
+    <string name="book_detail_title">책 정보</string>
+    <string name="book_detail_tab_information">책 정보</string>
+    <string name="book_detail_tab_my_records">내 기록</string>
+    <string name="book_detail_error_title">책 정보를 불러오지 못했어요</string>
+    <string name="book_detail_error_description">네트워크 연결을 확인하고 다시 시도해 주세요</string>
+    <string name="book_detail_refresh_error">최신 정보를 가져오지 못했어요</string>
+    <string name="book_detail_retry">다시 시도</string>
+    <string name="book_detail_records_stub">내 기록 기능은 다음 단계에서 제공됩니다</string>
+    <string name="book_detail_cover_description">%1$s 표지</string>
+    <string name="book_detail_publication_info">서지 정보</string>
+    <string name="book_detail_isbn">ISBN</string>
+    <string name="book_detail_published_date">발행일</string>
+    <string name="book_detail_pages">페이지</string>
+    <string name="book_detail_pages_value">%1$d쪽</string>
+    <string name="book_detail_price">가격</string>
+    <string name="book_detail_price_value">%1$s원</string>
+    <string name="book_detail_category">분류</string>
+    <string name="book_detail_introduction">책 소개</string>
+    <string name="book_detail_contents">목차</string>
+    <string name="book_detail_content_empty">제공된 정보가 없어요</string>
+    <string name="book_detail_expand">더보기</string>
+    <string name="book_detail_collapse">접기</string>
 </resources>
