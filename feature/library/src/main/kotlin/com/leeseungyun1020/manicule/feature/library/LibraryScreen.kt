@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeEmptyState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeIconButton
@@ -41,7 +42,6 @@ import com.leeseungyun1020.manicule.feature.library.components.LibraryBookCard
 import kotlinx.datetime.Instant
 
 private val libraryStatuses = listOf(ReadingStatus.WANT, ReadingStatus.READING, ReadingStatus.FINISHED)
-private const val LIBRARY_COLUMN_COUNT = 3
 private const val LIBRARY_BOOK_CONTENT_TYPE = "library_book"
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -122,7 +122,7 @@ private fun LibraryGrid(
     onBookSelected: (String) -> Unit,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(LIBRARY_COLUMN_COUNT),
+        columns = GridCells.Adaptive(ManiculeSize.coverMediumWidth),
         modifier = Modifier.fillMaxSize().padding(scaffoldPadding),
         contentPadding = ManiculeSpacing.screenContent,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
@@ -202,6 +202,8 @@ private fun LibraryError(
 }
 
 @ManiculePreview
+@Preview(name = "Foldable", widthDp = 673, heightDp = 900, showBackground = true)
+@Preview(name = "Tablet", widthDp = 1200, heightDp = 900, showBackground = true)
 @Composable
 private fun LibraryContentPreview() {
     ManiculePreviewTheme {
@@ -262,25 +264,29 @@ private fun LibraryErrorPreview() {
 }
 
 private val previewEntries =
-    listOf(
-        BookEntry(
-            book =
-                Book(
-                    isbn = "9780000000001",
-                    title = "긴 책 제목도 두 줄 안에서 읽을 수 있는 서재 카드",
-                    author = "작가",
-                    publisher = "출판사",
-                    publishedDate = null,
-                    coverUrl = null,
-                    totalPages = 320,
-                    price = null,
-                    category = null,
-                    tableOfContentsUrl = null,
-                    introductionUrl = null,
-                    summaryUrl = null,
+    buildList {
+        repeat(7) {
+            add(
+                BookEntry(
+                    book =
+                        Book(
+                            isbn = "978000000000$it",
+                            title = "긴 책 제목도 두 줄 안에서 읽을 수 있는 서재 카드",
+                            author = "작가",
+                            publisher = "출판사",
+                            publishedDate = null,
+                            coverUrl = null,
+                            totalPages = 320,
+                            price = null,
+                            category = null,
+                            tableOfContentsUrl = null,
+                            introductionUrl = null,
+                            summaryUrl = null,
+                        ),
+                    status = ReadingStatus.READING,
+                    addedAt = Instant.fromEpochMilliseconds(0),
+                    updatedAt = Instant.fromEpochMilliseconds(1),
                 ),
-            status = ReadingStatus.READING,
-            addedAt = Instant.fromEpochMilliseconds(0),
-            updatedAt = Instant.fromEpochMilliseconds(1),
-        ),
-    )
+            )
+        }
+    }

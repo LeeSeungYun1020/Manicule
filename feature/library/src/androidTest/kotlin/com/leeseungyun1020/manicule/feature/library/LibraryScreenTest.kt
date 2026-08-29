@@ -1,7 +1,10 @@
 package com.leeseungyun1020.manicule.feature.library
 
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsSelected
@@ -11,6 +14,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
@@ -102,7 +106,7 @@ class LibraryScreenTest {
     }
 
     @Test
-    fun content_placesThreeBooksOnFirstRow() {
+    fun content_placesThreeBooksOnFirstRowAtPhoneWidth() {
         composeRule.setContent {
             ManiculeTheme {
                 LibraryScreen(
@@ -121,6 +125,7 @@ class LibraryScreenTest {
                     onSearch = {},
                     onScan = {},
                     onRetry = {},
+                    modifier = Modifier.width(360.dp),
                 )
             }
         }
@@ -129,6 +134,35 @@ class LibraryScreenTest {
         assertThat(composeRule.onNodeWithText("두 번째 책").getUnclippedBoundsInRoot().top).isEqualTo(firstRowTop)
         assertThat(composeRule.onNodeWithText("세 번째 책").getUnclippedBoundsInRoot().top).isEqualTo(firstRowTop)
         assertThat(composeRule.onNodeWithText("네 번째 책").getUnclippedBoundsInRoot().top).isGreaterThan(firstRowTop)
+    }
+
+    @Test
+    fun content_placesAtLeastFourBooksOnFirstRowAtExpandedWidth() {
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState =
+                        LibraryUiState.Content(
+                            ReadingStatus.WANT,
+                            listOf(
+                                entry(isbn = "9780000000001", title = "첫 번째 책"),
+                                entry(isbn = "9780000000002", title = "두 번째 책"),
+                                entry(isbn = "9780000000003", title = "세 번째 책"),
+                                entry(isbn = "9780000000004", title = "네 번째 책"),
+                            ),
+                        ),
+                    onStatusSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                    modifier = Modifier.requiredWidth(600.dp),
+                )
+            }
+        }
+
+        val firstRowTop = composeRule.onNodeWithText("첫 번째 책").getUnclippedBoundsInRoot().top
+        assertThat(composeRule.onNodeWithText("네 번째 책").getUnclippedBoundsInRoot().top).isEqualTo(firstRowTop)
     }
 
     @Test
