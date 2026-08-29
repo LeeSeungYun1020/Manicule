@@ -31,7 +31,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.size
 import com.leeseungyun1020.manicule.core.model.ReadingCalendarDay
 import com.leeseungyun1020.manicule.core.ui.R
@@ -173,7 +173,7 @@ private fun ReadingCalendarDayItem(
 @ManiculePreview
 @Composable
 private fun ReadingCalendarGridPreviewSingle() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         ReadingCalendarGrid(
             days = ReadingCalendarPreviewParameterProvider().values.first().take(1),
             modifier = Modifier.height(100.dp),
@@ -184,7 +184,7 @@ private fun ReadingCalendarGridPreviewSingle() {
 @ManiculePreview
 @Composable
 private fun ReadingCalendarGridPreviewSome() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         ReadingCalendarGrid(
             days = ReadingCalendarPreviewParameterProvider().values.first().take(5),
             modifier = Modifier.height(100.dp),
@@ -195,7 +195,7 @@ private fun ReadingCalendarGridPreviewSome() {
 @ManiculePreview
 @Composable
 private fun ReadingCalendarGridPreviewMulti() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         ReadingCalendarGrid(
             days = ReadingCalendarPreviewParameterProvider().values.first(),
             modifier = Modifier.height(100.dp),

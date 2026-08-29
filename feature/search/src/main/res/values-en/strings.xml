@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="search_stub_label">Search\n(stub — implemented in a later phase)</string>
+    <string name="search_hint">Search by title, author, or ISBN</string>
+    <string name="search_back">Navigate back</string>
+    <string name="search_loading">Loading recent searches</string>
+    <string name="search_empty_title">What book are you looking for?</string>
+    <string name="search_empty_description">Search by title, author, or ISBN</string>
+    <string name="search_recent_title">Recent searches</string>
 </resources>

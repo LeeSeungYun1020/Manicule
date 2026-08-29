@@ -19,8 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
 /**
@@ -38,6 +38,7 @@ fun ManiculeEmptyState(
 ) {
     ManiculeDashedCard(
         modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.Center,
     ) {
         Column(
             modifier =
@@ -81,7 +82,7 @@ fun ManiculeEmptyState(
 @ManiculePreview
 @Composable
 private fun ManiculeEmptyStateWithoutActionPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Box(Modifier.padding(MaterialTheme.spacing.lg)) {
             ManiculeEmptyState(
                 title = "기록이 없어요",
@@ -94,7 +95,7 @@ private fun ManiculeEmptyStateWithoutActionPreview() {
 @ManiculePreview
 @Composable
 private fun ManiculeEmptyStateWithActionPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Box(Modifier.padding(MaterialTheme.spacing.lg)) {
             ManiculeEmptyState(
                 title = "서재가 비어 있어요",
@@ -118,7 +119,7 @@ private fun ManiculeEmptyStateWithActionPreview() {
 @ManiculePreview
 @Composable
 private fun ManiculeEmptyStateWithTwoActionsPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Box(Modifier.padding(MaterialTheme.spacing.lg)) {
             ManiculeEmptyState(
                 title = "카메라 권한이 필요해요",

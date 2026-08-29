@@ -31,5 +31,5 @@
 	- kotlin Documentation(https://kotlinlang.org/docs/coding-conventions.html) 준수
 - 코드, 주석, git commit message를 포함한 모든 텍스트는 간결하고 이해하기 쉽게 작성. 필요하지 않은 부차적인 내용과 미사여구 삭제.
 - 파일 수정 도구(`write_to_file`, `replace_file_content`, `multi_replace_file_content`, `Write`, `Edit` 등) 호출 전 변경 계획과 실제 코드(markdown)를 채팅 텍스트로 반드시 출력
-- 각 파일마다 수정 계획과 코드 변경 사항 출력(다른 내용을 +- 형태로 알기 쉽게 표시) 후에 사용자 피드백(승인, 수정 지시)을 받아야 파일 수정 도구를 호출 가능
+- 각 파일마다 수정 계획과 코드 변경 사항 출력(다른 내용을 강조하여 알기 쉽게 표시) 후에 사용자 피드백(승인, 수정 지시)을 받아야 파일 수정 도구를 호출 가능
 - 사용자의 수정 인가는 설명 받은 내용과 변경 사항에 한정되며, 다른 파일에 추가 수정이 필요한 경우 중단하고 사용자에 내용 출력.

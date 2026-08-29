@@ -10,6 +10,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
@@ -18,8 +19,8 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeBorder
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
 @Composable
@@ -42,6 +43,8 @@ fun ManiculeCard(
 fun ManiculeDashedCard(
     modifier: Modifier = Modifier,
     borderColor: Color = MaterialTheme.colorScheme.outline,
+    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
+    horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
@@ -57,6 +60,8 @@ fun ManiculeDashedCard(
                         cornerRadius = CornerRadius(MaterialTheme.spacing.lg.toPx()),
                     )
                 }.background(Color.Transparent, MaterialTheme.shapes.large),
+        verticalArrangement = verticalArrangement,
+        horizontalAlignment = horizontalAlignment,
         content = content,
     )
 }
@@ -64,7 +69,7 @@ fun ManiculeDashedCard(
 @ManiculePreview
 @Composable
 private fun ManiculeCardPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         Column(
             modifier = Modifier.padding(ManiculeSpacing.lg),
             verticalArrangement = Arrangement.spacedBy(ManiculeSpacing.lg),
