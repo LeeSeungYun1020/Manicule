@@ -1,7 +1,6 @@
 package com.leeseungyun1020.manicule.feature.library
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
@@ -32,9 +30,9 @@ import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTabRow
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTopAppBar
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
@@ -149,47 +147,43 @@ private fun EmptyLibrary(
     onSearch: () -> Unit,
     onScan: () -> Unit,
 ) {
-    Box(
+    ManiculeEmptyState(
+        title = stringResource(R.string.library_empty_title),
+        description = stringResource(R.string.library_empty_description),
         modifier = Modifier.fillMaxSize().padding(scaffoldPadding).padding(ManiculeSpacing.screenContent),
-        contentAlignment = Alignment.Center,
-    ) {
-        ManiculeEmptyState(
-            title = stringResource(R.string.library_empty_title),
-            description = stringResource(R.string.library_empty_description),
-            icon = {
-                Icon(
-                    imageVector = ManiculeIcons.Tab.LibraryFilled,
-                    contentDescription = null,
-                    modifier = Modifier.size(ManiculeSize.iconEmptyState).testTag("library_empty_icon"),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            },
-            actions = {
-                ManiculeButton(
-                    onClick = onSearch,
-                    text = stringResource(R.string.library_search),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = ManiculeIcons.Search,
-                            contentDescription = null,
-                            modifier = Modifier.testTag("library_search_icon"),
-                        )
-                    },
-                )
-                ManiculeOutlinedButton(
-                    onClick = onScan,
-                    text = stringResource(R.string.library_scan),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = ManiculeIcons.ScanBarcode,
-                            contentDescription = null,
-                            modifier = Modifier.testTag("library_scan_icon"),
-                        )
-                    },
-                )
-            },
-        )
-    }
+        icon = {
+            Icon(
+                imageVector = ManiculeIcons.Tab.LibraryFilled,
+                contentDescription = null,
+                modifier = Modifier.size(ManiculeSize.iconEmptyState).testTag("library_empty_icon"),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        },
+        actions = {
+            ManiculeButton(
+                onClick = onSearch,
+                text = stringResource(R.string.library_search),
+                leadingIcon = {
+                    Icon(
+                        imageVector = ManiculeIcons.Search,
+                        contentDescription = null,
+                        modifier = Modifier.testTag("library_search_icon"),
+                    )
+                },
+            )
+            ManiculeOutlinedButton(
+                onClick = onScan,
+                text = stringResource(R.string.library_scan),
+                leadingIcon = {
+                    Icon(
+                        imageVector = ManiculeIcons.ScanBarcode,
+                        contentDescription = null,
+                        modifier = Modifier.testTag("library_scan_icon"),
+                    )
+                },
+            )
+        },
+    )
 }
 
 @Composable
@@ -197,24 +191,20 @@ private fun LibraryError(
     scaffoldPadding: PaddingValues,
     onRetry: () -> Unit,
 ) {
-    Box(
+    ManiculeEmptyState(
+        title = stringResource(R.string.library_error_title),
+        description = stringResource(R.string.library_error_description),
         modifier = Modifier.fillMaxSize().padding(scaffoldPadding).padding(ManiculeSpacing.screenContent),
-        contentAlignment = Alignment.Center,
-    ) {
-        ManiculeEmptyState(
-            title = stringResource(R.string.library_error_title),
-            description = stringResource(R.string.library_error_description),
-            actions = {
-                ManiculeButton(onClick = onRetry, text = stringResource(R.string.library_retry))
-            },
-        )
-    }
+        actions = {
+            ManiculeButton(onClick = onRetry, text = stringResource(R.string.library_retry))
+        },
+    )
 }
 
 @ManiculePreview
 @Composable
 private fun LibraryContentPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         LibraryScreen(
             uiState = LibraryUiState.Content(ReadingStatus.READING, previewEntries),
             onStatusSelected = {},
@@ -229,7 +219,7 @@ private fun LibraryContentPreview() {
 @ManiculePreview
 @Composable
 private fun LibraryEmptyPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         LibraryScreen(
             uiState = LibraryUiState.Content(ReadingStatus.WANT, emptyList()),
             onStatusSelected = {},
@@ -244,7 +234,7 @@ private fun LibraryEmptyPreview() {
 @ManiculePreview
 @Composable
 private fun LibraryLoadingPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         LibraryScreen(
             uiState = LibraryUiState.Loading(ReadingStatus.READING),
             onStatusSelected = {},
@@ -259,7 +249,7 @@ private fun LibraryLoadingPreview() {
 @ManiculePreview
 @Composable
 private fun LibraryErrorPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         LibraryScreen(
             uiState = LibraryUiState.Error(ReadingStatus.FINISHED),
             onStatusSelected = {},

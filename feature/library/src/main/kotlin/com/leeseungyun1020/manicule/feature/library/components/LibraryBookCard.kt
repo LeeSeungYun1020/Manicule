@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.ui.book.BookCover
@@ -50,7 +50,7 @@ fun LibraryBookCard(
 @ManiculePreview
 @Composable
 private fun LibraryBookCardPreview() {
-    ManiculeTheme {
+    ManiculePreviewTheme {
         LibraryBookCard(
             book =
                 Book(
