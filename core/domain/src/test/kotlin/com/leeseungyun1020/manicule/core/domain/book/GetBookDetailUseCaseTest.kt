@@ -69,6 +69,11 @@ class GetBookDetailUseCaseTest {
 
         override fun observeByStatus(status: ReadingStatus): Flow<List<BookEntry>> = emptyFlow()
 
+        override suspend fun getRecentBooksByStatus(
+            status: ReadingStatus,
+            limit: Int,
+        ): List<Book> = emptyList()
+
         override fun observeBookEntry(isbn: String): Flow<BookEntry?> = entry
 
         override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = SaveBookEntryResult.Saved
