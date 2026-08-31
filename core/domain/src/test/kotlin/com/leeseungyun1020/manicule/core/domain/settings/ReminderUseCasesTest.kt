@@ -2,6 +2,7 @@ package com.leeseungyun1020.manicule.core.domain.settings
 
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
+import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.data.repository.UserPreferencesRepository
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
@@ -201,7 +202,7 @@ private class FakeLibraryRepository(
 
     override fun observeBookEntry(isbn: String): Flow<BookEntry?> = flowOf(entries.firstOrNull { it.book.isbn == isbn })
 
-    override suspend fun saveBookEntry(entry: BookEntry) = Unit
+    override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = SaveBookEntryResult.Saved
 
     override suspend fun removeBookEntry(isbn: String) = Unit
 }

@@ -161,4 +161,17 @@ class BookEntryDaoTest {
             ),
         )
     }
+
+    @Test
+    fun observeByStatus_filtersAndUsesDeterministicOrder() =
+        runTest {
+            saveBookEntry("9783", ReadingStatus.READING, Instant.fromEpochMilliseconds(10))
+            saveBookEntry("9782", ReadingStatus.WANT, Instant.fromEpochMilliseconds(20))
+            saveBookEntry("9781", ReadingStatus.WANT, Instant.fromEpochMilliseconds(20))
+
+            dao.observeByStatus(ReadingStatus.WANT).test {
+                assertThat(awaitItem().map { it.entry.isbn }).containsExactly("9781", "9782").inOrder()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 }
