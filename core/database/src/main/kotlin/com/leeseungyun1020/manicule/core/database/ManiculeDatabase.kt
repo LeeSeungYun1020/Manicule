@@ -7,6 +7,7 @@ import com.leeseungyun1020.manicule.core.database.converter.Converters
 import com.leeseungyun1020.manicule.core.database.dao.BookDao
 import com.leeseungyun1020.manicule.core.database.dao.BookEntryDao
 import com.leeseungyun1020.manicule.core.database.dao.ReadingRecordDao
+import com.leeseungyun1020.manicule.core.database.dao.ReadingRecordStatsDao
 import com.leeseungyun1020.manicule.core.database.dao.RecentQueryDao
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
@@ -30,6 +31,8 @@ abstract class ManiculeDatabase : RoomDatabase() {
     abstract fun bookEntryDao(): BookEntryDao
 
     abstract fun readingRecordDao(): ReadingRecordDao
+
+    abstract fun readingRecordStatsDao(): ReadingRecordStatsDao
 
     abstract fun recentQueryDao(): RecentQueryDao
 }

@@ -3,26 +3,18 @@ package com.leeseungyun1020.manicule.core.model
 import kotlinx.datetime.LocalDate
 
 /**
- * 통계 화면의 기간 단위.
- */
-enum class StatsPeriod {
-    THIS_MONTH,
-    THIS_YEAR,
-}
-
-/**
- * 통계 요약 정보.
+ * 포함 기간의 독서 요약.
  *
- * @property period             요약이 가리키는 기간
- * @property rangeStart         포함 시작 일자
- * @property rangeEnd           포함 종료 일자 (포함)
- * @property finishedBookCount  해당 기간에 완독한 책의 권 수
- * @property pagesRead          해당 기간에 읽은 총 페이지 수
+ * @property rangeStart 집계 시작 날짜
+ * @property rangeEnd 집계 종료 날짜
+ * @property longestStreak 기간 내 최장 연속 기록 일수
+ * @property pagesRead 기간 내 읽은 총 페이지 수
+ * @property bookCount 기간 내 읽은 고유 도서 수
  */
 data class PeriodSummary(
-    val period: StatsPeriod,
     val rangeStart: LocalDate,
     val rangeEnd: LocalDate,
-    val finishedBookCount: Int,
+    val longestStreak: Int,
     val pagesRead: Int,
+    val bookCount: Int,
 )

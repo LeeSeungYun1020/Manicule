@@ -1,16 +1,32 @@
 package com.leeseungyun1020.manicule.core.domain.stats
 
+import com.leeseungyun1020.manicule.core.common.time.Clock
 import com.leeseungyun1020.manicule.core.data.repository.StatsRepository
 import com.leeseungyun1020.manicule.core.model.ReadingStreak
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class GetReadingStreakUseCase
     @Inject
     constructor(
         private val statsRepository: StatsRepository,
+        private val clock: Clock,
     ) {
-        operator fun invoke(): Flow<ReadingStreak> {
-            TODO("3단계 Slice 4에서 구현")
-        }
+        operator fun invoke(): Flow<ReadingStreak> =
+            clock.observeToday().flatMapLatest { today ->
+                statsRepository.observeReadingDatesThrough(today).map { dates ->
+                    val validDates = dates.filter { it <= today }.distinct().sorted()
+                    if (validDates.isEmpty()) {
+                        ReadingStreak.Empty
+                    } else {
+                        ReadingStreak(
+                            current = currentStreak(validDates, today),
+                            longest = longestStreak(validDates),
+                            lastDate = validDates.last(),
+                        )
+                    }
+                }
+            }
     }

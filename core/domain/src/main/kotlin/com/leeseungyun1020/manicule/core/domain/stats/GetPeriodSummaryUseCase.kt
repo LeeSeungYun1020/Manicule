@@ -1,19 +1,33 @@
 package com.leeseungyun1020.manicule.core.domain.stats
 
-import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
 import com.leeseungyun1020.manicule.core.data.repository.StatsRepository
 import com.leeseungyun1020.manicule.core.model.PeriodSummary
-import com.leeseungyun1020.manicule.core.model.StatsPeriod
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 
 class GetPeriodSummaryUseCase
     @Inject
     constructor(
         private val statsRepository: StatsRepository,
-        private val libraryRepository: LibraryRepository,
     ) {
-        operator fun invoke(period: StatsPeriod): Flow<PeriodSummary> {
-            TODO("3단계 Slice 4에서 구현")
+        operator fun invoke(
+            start: LocalDate,
+            end: LocalDate,
+        ): Flow<PeriodSummary> {
+            require(start <= end) {
+                "start must be on or before end, was start=$start end=$end"
+            }
+            return statsRepository.observeRecordsBetween(start, end).map { records ->
+                val readingDates = records.map { it.date }.distinct().sorted()
+                PeriodSummary(
+                    rangeStart = start,
+                    rangeEnd = end,
+                    longestStreak = longestStreak(readingDates),
+                    pagesRead = records.sumOf { it.pagesRead },
+                    bookCount = records.distinctBy { it.isbn }.size,
+                )
+            }
         }
     }
