@@ -1,0 +1,20 @@
+name: 문서 작업 (Documentation)
+description: 기획, 아키텍처, 의사결정 히스토리 등 문서 추가 및 수정을 요청합니다.
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: textarea
+    id: target-docs
+    attributes:
+      label: 대상 문서
+      description: |
+        작업할 파일 경로를 적어주세요. (예: `plan/plan.md`, `history/`, `README.md`)
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: 추가·수정할 내용
+      description: 어떤 내용을 수정할지 설명해 주세요.
+    validations:
+      required: true

@@ -1,0 +1,46 @@
+name: 버그 리포트 (Bug Report)
+description: 앱 오작동, 크래시, UI 결함 등 문제를 보고합니다.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        버그를 명확히 파악할 수 있도록 다음 내용을 작성해 주세요.
+  - type: textarea
+    id: description
+    attributes:
+      label: 버그 설명
+      description: 어떤 문제가 발생했나요?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 재현 경로
+      description: 언제, 어떻게 재현되나요?
+      placeholder: |
+        1. '...' 화면으로 이동
+        2. '...' 버튼 탭
+        3. 오류 발생하여 앱이 꺼짐
+    validations:
+      required: true
+  - type: textarea
+    id: expected-vs-actual
+    attributes:
+      label: 기대 동작 vs 실제 동작
+      placeholder: |
+        - 기대 동작: 정상적으로 목록이 로딩되어야 함
+        - 실제 동작: 화면이 멈추거나 크래시 발생
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 환경 정보
+      placeholder: "예: Pixel 7 (Android 14), Galaxy S26 (Android 16)"
+  - type: textarea
+    id: logs-screenshots
+    attributes:
+      label: 스크린샷 / 로그 (선택)
+      description: 스크린샷이나 Logcat 에러 로그가 있다면 첨부해 주세요. 토큰·개인정보 등 민감정보는 제거 후 올려주세요.
