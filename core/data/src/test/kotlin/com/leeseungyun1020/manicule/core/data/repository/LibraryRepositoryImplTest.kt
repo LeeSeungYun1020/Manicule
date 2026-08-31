@@ -99,6 +99,11 @@ class LibraryRepositoryImplTest {
 
         override fun observeByStatus(status: ReadingStatus): Flow<List<BookEntryWithCurrentPage>> = emptyFlow()
 
+        override suspend fun getRecentBooksByStatus(
+            status: ReadingStatus,
+            limit: Int,
+        ): List<BookEntity> = emptyList()
+
         override fun observeAll(): Flow<List<BookEntryWithCurrentPage>> = emptyFlow()
     }
 }
