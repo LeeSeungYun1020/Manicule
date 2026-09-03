@@ -1,10 +1,11 @@
 # 코드 수정
 
+- 이 문서는 `work.md`의 실행 단계에서 사용하는 파일 수정·검증·commit 세부 절차이며, 독립 작업 절차로 사용하지 않는다.
 - 단계를 제약 사항에 맞추어 실행.
 
 ## 실행 단계
 
-1. 계획 또는 지시한 내용에 따라 코드 구현.
+1. `work.md`에서 확정한 PR 작업과 변경 소유 범위에 따라 코드 구현.
 2. android, kotlin 가이드 준수 여부 확인.
 3. 빌드 가능 여부 확인.
 4. 검증 단계 실행.
@@ -21,12 +22,15 @@
 
 ## 검증 단계
 
-1. `./gradlew ktlintFormat`
-2. `./gradlew check`
+1. 변경 파일을 확인하여 코드 변경 여부와 영향 모듈을 결정.
+2. Kotlin 또는 Gradle 스크립트 변경이 있으면 `./gradlew ktlintFormat` 실행. Kotlin, Android 리소스, Manifest 또는 Gradle 변경이 있으면 영향 모듈 테스트·빌드와 `./gradlew check` 수행.
+3. Markdown, GitHub 설정, `plan`, `history`, `skills`만 변경한 경우 Gradle 검증을 생략하고 `git diff --check`와 문서 링크·표 형식을 확인.
+4. 코드와 문서가 함께 변경된 경우 코드 변경 기준으로 Gradle 검증 수행.
+5. 검증 과정에서 `work.md` 준비 단계에서 확정한 변경 소유 범위 밖 파일이 변경되면 해당 변경을 포함하지 않고 원인을 확인.
 
 ## 제약 사항
 
-- android 가이드와 kotlin 가이드를 준수해야 함.
+- Android 또는 Kotlin 코드를 변경할 때 android 가이드와 kotlin 가이드를 준수해야 함.
 	- android-cli 스킬 활용. android 가이드 확인 후 계획에 반영
 	- kotlin Documentation(https://kotlinlang.org/docs/coding-conventions.html) 준수
 - 코드, 주석, git commit message를 포함한 모든 텍스트는 간결하고 이해하기 쉽게 작성. 필요하지 않은 부차적인 내용과 미사여구 삭제.
