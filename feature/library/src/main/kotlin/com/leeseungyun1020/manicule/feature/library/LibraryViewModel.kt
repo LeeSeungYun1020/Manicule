@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.leeseungyun1020.manicule.core.domain.library.GetLibraryBooksUseCase
 import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -24,16 +25,17 @@ class LibraryViewModel
         getLibraryBooks: GetLibraryBooksUseCase,
     ) : ViewModel() {
         private val selectedStatus = MutableStateFlow(ReadingStatus.READING)
+        private val selectedSort = MutableStateFlow(LibrarySort.Default)
         private val retries = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
         val uiState =
-            combine(selectedStatus, retries.onStart { emit(Unit) }) { status, _ -> status }
-                .flatMapLatest { status ->
-                    getLibraryBooks(status)
+            combine(selectedStatus, selectedSort, retries.onStart { emit(Unit) }) { status, sort, _ -> status to sort }
+                .flatMapLatest { (status, sort) ->
+                    getLibraryBooks(status, sort)
                         .map<List<BookEntry>, LibraryUiState> { books ->
-                            LibraryUiState.Content(status, books)
-                        }.onStart { emit(LibraryUiState.Loading(status)) }
-                        .catch { emit(LibraryUiState.Error(status)) }
+                            LibraryUiState.Content(status, books, sort)
+                        }.onStart { emit(LibraryUiState.Loading(status, sort)) }
+                        .catch { emit(LibraryUiState.Error(status, sort)) }
                 }.stateIn(
                     scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(5_000),
@@ -42,6 +44,10 @@ class LibraryViewModel
 
         fun selectStatus(status: ReadingStatus) {
             selectedStatus.value = status
+        }
+
+        fun selectSort(sort: LibrarySort) {
+            selectedSort.value = sort
         }
 
         fun retry() {

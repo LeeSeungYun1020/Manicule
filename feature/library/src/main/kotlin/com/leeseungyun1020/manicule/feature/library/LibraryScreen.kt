@@ -1,11 +1,8 @@
 package com.leeseungyun1020.manicule.feature.library
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -17,6 +14,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
@@ -24,11 +25,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeEmptyState
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeIconButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeOutlinedButton
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTabRow
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTopAppBar
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
@@ -37,11 +35,13 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.feature.library.components.LibraryBookCard
+import com.leeseungyun1020.manicule.feature.library.components.LibraryTopBar
+import com.leeseungyun1020.manicule.feature.library.components.SortBottomSheet
 import kotlinx.datetime.Instant
 
-private val libraryStatuses = listOf(ReadingStatus.WANT, ReadingStatus.READING, ReadingStatus.FINISHED)
 private const val LIBRARY_BOOK_CONTENT_TYPE = "library_book"
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,68 +50,101 @@ private const val LIBRARY_BOOK_CONTENT_TYPE = "library_book"
 fun LibraryScreen(
     uiState: LibraryUiState,
     onStatusSelected: (ReadingStatus) -> Unit,
+    onSortSelected: (LibrarySort) -> Unit,
     onBookSelected: (String) -> Unit,
     onSearch: () -> Unit,
     onScan: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var showSortSheet by rememberSaveable { mutableStateOf(false) }
+    var draftSortCriterion by rememberSaveable { mutableStateOf(uiState.sort.criterion) }
+    var draftSortDirection by rememberSaveable { mutableStateOf(uiState.sort.direction) }
+
+    LibraryScaffold(
+        uiState = uiState,
+        onStatusSelected = onStatusSelected,
+        onSortClick = {
+            draftSortCriterion = uiState.sort.criterion
+            draftSortDirection = uiState.sort.direction
+            showSortSheet = true
+        },
+        onBookSelected = onBookSelected,
+        onSearch = onSearch,
+        onScan = onScan,
+        onRetry = onRetry,
+        modifier = modifier,
+    )
+
+    if (showSortSheet) {
+        val draftSort = LibrarySort(draftSortCriterion, draftSortDirection)
+        SortBottomSheet(
+            sort = draftSort,
+            onSortChange = {
+                draftSortCriterion = it.criterion
+                draftSortDirection = it.direction
+            },
+            onDismissRequest = { showSortSheet = false },
+            onApply = {
+                onSortSelected(draftSort)
+                showSortSheet = false
+            },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+@Suppress("LongParameterList")
+private fun LibraryScaffold(
+    uiState: LibraryUiState,
+    onStatusSelected: (ReadingStatus) -> Unit,
+    onSortClick: () -> Unit,
+    onBookSelected: (String) -> Unit,
+    onSearch: () -> Unit,
+    onScan: () -> Unit,
+    onRetry: () -> Unit,
+    modifier: Modifier,
+) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    val wantTabLabel = stringResource(R.string.library_tab_want)
-    val readingTabLabel = stringResource(R.string.library_tab_reading)
-    val finishedTabLabel = stringResource(R.string.library_tab_finished)
+    val hasBooks = uiState is LibraryUiState.Content && uiState.books.isNotEmpty()
     Scaffold(
         modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            Column {
-                ManiculeTopAppBar(
-                    title = stringResource(R.string.library_title),
-                    scrollBehavior = scrollBehavior,
-                )
-                ManiculeTabRow(
-                    tabs = libraryStatuses,
-                    selectedTabIndex = libraryStatuses.indexOf(uiState.selectedStatus),
-                    onTabSelected = { onStatusSelected(libraryStatuses[it]) },
-                    tabLabel = { status ->
-                        when (status) {
-                            ReadingStatus.WANT -> wantTabLabel
-                            ReadingStatus.READING -> readingTabLabel
-                            ReadingStatus.FINISHED -> finishedTabLabel
-                            ReadingStatus.UNSET -> ""
-                        }
-                    },
-                )
-                if (uiState is LibraryUiState.Content && uiState.books.isNotEmpty()) {
-                    LibraryActionRow(onSearch = onSearch)
-                }
-            }
+            LibraryTopBar(
+                selectedStatus = uiState.selectedStatus,
+                sort = uiState.sort,
+                hasBooks = hasBooks,
+                onStatusSelected = onStatusSelected,
+                onSortClick = onSortClick,
+                onSearch = onSearch,
+                scrollBehavior = scrollBehavior,
+            )
         },
     ) { contentPadding ->
-        when (uiState) {
-            is LibraryUiState.Loading -> ManiculeLoading(Modifier.fillMaxSize().padding(contentPadding))
-            is LibraryUiState.Error -> LibraryError(contentPadding, onRetry)
-            is LibraryUiState.Content -> {
-                if (uiState.books.isEmpty()) {
-                    EmptyLibrary(contentPadding, onSearch, onScan)
-                } else {
-                    LibraryGrid(contentPadding, uiState.books, onBookSelected)
-                }
-            }
-        }
+        LibraryBody(uiState, contentPadding, onBookSelected, onSearch, onScan, onRetry)
     }
 }
 
 @Composable
-private fun LibraryActionRow(onSearch: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = MaterialTheme.spacing.lg),
-        horizontalArrangement = Arrangement.End,
-    ) {
-        ManiculeIconButton(onClick = onSearch) {
-            Icon(
-                imageVector = ManiculeIcons.Add,
-                contentDescription = stringResource(R.string.library_add_book),
-            )
+@Suppress("LongParameterList")
+private fun LibraryBody(
+    uiState: LibraryUiState,
+    contentPadding: PaddingValues,
+    onBookSelected: (String) -> Unit,
+    onSearch: () -> Unit,
+    onScan: () -> Unit,
+    onRetry: () -> Unit,
+) {
+    when (uiState) {
+        is LibraryUiState.Loading -> ManiculeLoading(Modifier.fillMaxSize().padding(contentPadding))
+        is LibraryUiState.Error -> LibraryError(contentPadding, onRetry)
+        is LibraryUiState.Content -> {
+            if (uiState.books.isEmpty()) {
+                EmptyLibrary(contentPadding, onSearch, onScan)
+            } else {
+                LibraryGrid(contentPadding, uiState.books, onBookSelected)
+            }
         }
     }
 }
@@ -211,6 +244,7 @@ private fun LibraryContentPreview() {
         LibraryScreen(
             uiState = LibraryUiState.Content(ReadingStatus.READING, previewEntries),
             onStatusSelected = {},
+            onSortSelected = {},
             onBookSelected = {},
             onSearch = {},
             onScan = {},
@@ -226,6 +260,7 @@ private fun LibraryEmptyPreview() {
         LibraryScreen(
             uiState = LibraryUiState.Content(ReadingStatus.WANT, emptyList()),
             onStatusSelected = {},
+            onSortSelected = {},
             onBookSelected = {},
             onSearch = {},
             onScan = {},
@@ -241,6 +276,7 @@ private fun LibraryLoadingPreview() {
         LibraryScreen(
             uiState = LibraryUiState.Loading(ReadingStatus.READING),
             onStatusSelected = {},
+            onSortSelected = {},
             onBookSelected = {},
             onSearch = {},
             onScan = {},
@@ -256,6 +292,7 @@ private fun LibraryErrorPreview() {
         LibraryScreen(
             uiState = LibraryUiState.Error(ReadingStatus.FINISHED),
             onStatusSelected = {},
+            onSortSelected = {},
             onBookSelected = {},
             onSearch = {},
             onScan = {},

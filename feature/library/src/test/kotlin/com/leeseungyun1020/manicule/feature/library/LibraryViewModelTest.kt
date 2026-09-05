@@ -31,6 +31,30 @@ class LibraryViewModelTest {
                 assertThat(awaitItem()).isEqualTo(LibraryUiState.Loading(ReadingStatus.READING))
                 repository.flow(ReadingStatus.READING).emit(emptyList())
                 assertThat(awaitItem()).isEqualTo(LibraryUiState.Content(ReadingStatus.READING, emptyList()))
+                assertThat(repository.lastSort).isEqualTo(LibrarySort.Default)
+            }
+        }
+
+    @Test
+    fun selectingSort_reloadsWithSelectedSort() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val sort =
+                LibrarySort(
+                    criterion = LibrarySort.Criterion.RATING,
+                    direction = LibrarySort.Direction.ASCENDING,
+                )
+            val viewModel = LibraryViewModel(GetLibraryBooksUseCase(repository))
+            viewModel.uiState.test {
+                awaitItem()
+                repository.flow(ReadingStatus.READING).emit(emptyList())
+                awaitItem()
+
+                viewModel.selectSort(sort)
+
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Loading(ReadingStatus.READING, sort))
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Content(ReadingStatus.READING, emptyList(), sort))
+                assertThat(repository.lastSort).isEqualTo(sort)
+                cancelAndIgnoreRemainingEvents()
             }
         }
 
@@ -50,17 +74,48 @@ class LibraryViewModelTest {
         }
 
     @Test
+    fun selectingTab_keepsSelectedSort() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val sort =
+                LibrarySort(
+                    criterion = LibrarySort.Criterion.ADDED_AT,
+                    direction = LibrarySort.Direction.ASCENDING,
+                )
+            val viewModel = LibraryViewModel(GetLibraryBooksUseCase(repository))
+            viewModel.uiState.test {
+                awaitItem()
+                viewModel.selectSort(sort)
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Loading(ReadingStatus.READING, sort))
+
+                viewModel.selectStatus(ReadingStatus.FINISHED)
+
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Loading(ReadingStatus.FINISHED, sort))
+                assertThat(repository.lastSort).isEqualTo(sort)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
     fun repositoryFailure_emitsError_andRetrySubscribesAgain() =
         runTest(mainDispatcherRule.dispatcher) {
+            val sort =
+                LibrarySort(
+                    criterion = LibrarySort.Criterion.RATING,
+                    direction = LibrarySort.Direction.DESCENDING,
+                )
             repository.fail = true
             val viewModel = LibraryViewModel(GetLibraryBooksUseCase(repository))
             viewModel.uiState.test {
                 awaitItem()
                 assertThat(awaitItem()).isEqualTo(LibraryUiState.Error(ReadingStatus.READING))
+                viewModel.selectSort(sort)
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Loading(ReadingStatus.READING, sort))
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Error(ReadingStatus.READING, sort))
                 repository.fail = false
                 viewModel.retry()
-                assertThat(awaitItem()).isEqualTo(LibraryUiState.Loading(ReadingStatus.READING))
-                assertThat(repository.subscriptionCount).isEqualTo(2)
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Loading(ReadingStatus.READING, sort))
+                assertThat(repository.lastSort).isEqualTo(sort)
+                assertThat(repository.subscriptionCount).isEqualTo(3)
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -69,6 +124,7 @@ class LibraryViewModelTest {
 private class ControllableLibraryRepository : LibraryRepository {
     private val flows = ReadingStatus.entries.associateWith { MutableSharedFlow<List<BookEntry>>(replay = 1) }
     var lastStatus: ReadingStatus? = null
+    var lastSort: LibrarySort? = null
     var subscriptionCount = 0
     var fail = false
 
@@ -82,6 +138,7 @@ private class ControllableLibraryRepository : LibraryRepository {
     ): Flow<List<BookEntry>> =
         flow {
             lastStatus = status
+            lastSort = sort
             subscriptionCount += 1
             if (fail) throw IOException("failed")
             flow(status).collect(::emit)

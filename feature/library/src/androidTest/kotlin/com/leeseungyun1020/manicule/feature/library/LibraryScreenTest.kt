@@ -21,6 +21,7 @@ import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.datetime.Instant
 import org.junit.Rule
@@ -42,6 +43,7 @@ class LibraryScreenTest {
                 LibraryScreen(
                     uiState = LibraryUiState.Content(ReadingStatus.READING, listOf(entry())),
                     onStatusSelected = {},
+                    onSortSelected = {},
                     onBookSelected = { selectedIsbn = it },
                     onSearch = {},
                     onScan = {},
@@ -65,6 +67,7 @@ class LibraryScreenTest {
                 LibraryScreen(
                     uiState = LibraryUiState.Content(ReadingStatus.READING, listOf(entry())),
                     onStatusSelected = { selectedStatus = it },
+                    onSortSelected = {},
                     onBookSelected = {},
                     onSearch = {},
                     onScan = {},
@@ -86,6 +89,7 @@ class LibraryScreenTest {
                 LibraryScreen(
                     uiState = LibraryUiState.Content(ReadingStatus.WANT, emptyList()),
                     onStatusSelected = {},
+                    onSortSelected = {},
                     onBookSelected = {},
                     onSearch = { searched = true },
                     onScan = { scanned = true },
@@ -121,6 +125,7 @@ class LibraryScreenTest {
                             ),
                         ),
                     onStatusSelected = {},
+                    onSortSelected = {},
                     onBookSelected = {},
                     onSearch = {},
                     onScan = {},
@@ -152,6 +157,7 @@ class LibraryScreenTest {
                             ),
                         ),
                     onStatusSelected = {},
+                    onSortSelected = {},
                     onBookSelected = {},
                     onSearch = {},
                     onScan = {},
@@ -176,6 +182,7 @@ class LibraryScreenTest {
                 LibraryScreen(
                     uiState = uiState.value,
                     onStatusSelected = {},
+                    onSortSelected = {},
                     onBookSelected = {},
                     onSearch = { searched = true },
                     onScan = {},
@@ -205,6 +212,122 @@ class LibraryScreenTest {
     }
 
     @Test
+    fun content_showsCurrentSortCaption() {
+        val sort =
+            LibrarySort(
+                criterion = LibrarySort.Criterion.ADDED_AT,
+                direction = LibrarySort.Direction.ASCENDING,
+            )
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState = LibraryUiState.Content(ReadingStatus.READING, listOf(entry()), sort),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(
+            context.getString(
+                R.string.library_sort_caption,
+                context.getString(R.string.library_sort_added_at),
+                context.getString(R.string.library_sort_oldest),
+            ),
+        ).assertIsDisplayed()
+    }
+
+    @Test
+    fun sortSheet_appliesDraftOnlyAfterApply() {
+        var selectedSort: LibrarySort? = null
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState = LibraryUiState.Content(ReadingStatus.READING, listOf(entry())),
+                    onStatusSelected = {},
+                    onSortSelected = { selectedSort = it },
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule
+            .onNodeWithContentDescription(context.getString(R.string.library_sort_title))
+            .performClick()
+        composeRule.onNodeWithText(context.getString(R.string.library_sort_rating)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.library_sort_rating)).assertIsSelected()
+        composeRule.onNodeWithText(context.getString(R.string.library_sort_lowest)).performClick()
+        composeRule.runOnIdle { assertThat(selectedSort).isNull() }
+
+        composeRule.onNodeWithText(context.getString(R.string.library_sort_apply)).performClick()
+
+        composeRule.runOnIdle {
+            assertThat(selectedSort)
+                .isEqualTo(
+                    LibrarySort(
+                        criterion = LibrarySort.Criterion.RATING,
+                        direction = LibrarySort.Direction.ASCENDING,
+                    ),
+                )
+        }
+    }
+
+    @Test
+    fun sortSheet_cancelKeepsAppliedSort() {
+        var selectedSort: LibrarySort? = null
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState = LibraryUiState.Content(ReadingStatus.READING, listOf(entry())),
+                    onStatusSelected = {},
+                    onSortSelected = { selectedSort = it },
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule
+            .onNodeWithContentDescription(context.getString(R.string.library_sort_title))
+            .performClick()
+        composeRule.onNodeWithText(context.getString(R.string.library_sort_added_at)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.library_sort_cancel)).performClick()
+
+        composeRule.runOnIdle { assertThat(selectedSort).isNull() }
+        composeRule.onNodeWithText(context.getString(R.string.library_sort_cancel)).assertDoesNotExist()
+    }
+
+    @Test
+    fun emptyState_hidesSortAction() {
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState = LibraryUiState.Content(ReadingStatus.READING, emptyList()),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule
+            .onNodeWithContentDescription(context.getString(R.string.library_sort_title))
+            .assertDoesNotExist()
+    }
+
+    @Test
     fun errorState_callsRetry() {
         var retried = false
         composeRule.setContent {
@@ -212,6 +335,7 @@ class LibraryScreenTest {
                 LibraryScreen(
                     uiState = LibraryUiState.Error(ReadingStatus.READING),
                     onStatusSelected = {},
+                    onSortSelected = {},
                     onBookSelected = {},
                     onSearch = {},
                     onScan = {},
