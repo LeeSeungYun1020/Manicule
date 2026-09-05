@@ -68,3 +68,4 @@
 - [1de11c7](1de11c7.md) — feat: 서재 상태별 목록 구현
 - [da474e6](da474e6.md) — feat: 서재 검색 진입 아이콘 보강
 - [7db01ae](7db01ae.md) — docs: PR 작업 및 리뷰 절차 정리
+- [4ceaae3](4ceaae3.md) — feat: 월요일 기준 독서 달력 선택 계약 구현
