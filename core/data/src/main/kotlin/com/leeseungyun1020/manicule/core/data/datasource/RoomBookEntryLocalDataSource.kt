@@ -5,7 +5,10 @@ import com.leeseungyun1020.manicule.core.database.dao.projection.BookEntryWithCu
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 
 class RoomBookEntryLocalDataSource
@@ -13,6 +16,13 @@ class RoomBookEntryLocalDataSource
     constructor(
         private val bookEntryDao: BookEntryDao,
     ) : BookEntryLocalDataSource {
+        override suspend fun changeReadingStatus(
+            isbn: String,
+            status: ReadingStatus,
+            updatedAt: Instant,
+            finishedAt: LocalDate?,
+        ): ReadingStatusChangeResult = bookEntryDao.changeReadingStatus(isbn, status, updatedAt, finishedAt)
+
         override suspend fun save(entry: BookEntryEntity) = bookEntryDao.upsert(entry)
 
         override suspend fun remove(isbn: String) = bookEntryDao.delete(isbn)

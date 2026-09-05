@@ -12,11 +12,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -39,37 +40,30 @@ import com.leeseungyun1020.manicule.core.model.BookDetail
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.feature.bookdetail.components.BookInfoTabContent
+import com.leeseungyun1020.manicule.feature.bookdetail.components.MyRecordTabContent
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
+// 화면 이벤트를 명시적인 콜백으로 노출한다 (LibraryScreen과 동일).
+@Suppress("LongParameterList")
 @Composable
 fun BookDetailScreen(
     uiState: BookDetailUiState,
     onNavigateBack: () -> Unit,
     onTabSelected: (BookDetailTab) -> Unit,
     onRetry: () -> Unit,
+    onStatusSelected: (ReadingStatus) -> Unit,
+    onStatusErrorDismissed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val errorMessage = stringResource(R.string.book_detail_refresh_error)
-    val retryActionLabel = stringResource(R.string.book_detail_retry)
-
-    val refreshStatus = (uiState as? BookDetailUiState.Content)?.refreshStatus
-    LaunchedEffect(refreshStatus) {
-        if (refreshStatus == RefreshStatus.Failed) {
-            val result =
-                snackbarHostState.showSnackbar(
-                    message = errorMessage,
-                    actionLabel = retryActionLabel,
-                    duration = SnackbarDuration.Indefinite,
-                )
-            if (result == SnackbarResult.ActionPerformed) {
-                onRetry()
-            }
-        }
-    }
+    val snackbarHostState = rememberBookDetailSnackbarHostState(
+        content = uiState as? BookDetailUiState.Content,
+        onRetry = onRetry,
+        onStatusSelected = onStatusSelected,
+        onStatusErrorDismissed = onStatusErrorDismissed,
+    )
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -93,11 +87,58 @@ fun BookDetailScreen(
         BookDetailBody(
             uiState = uiState,
             onRetry = onRetry,
+            onStatusSelected = onStatusSelected,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
         )
     }
+}
+
+@Composable
+private fun rememberBookDetailSnackbarHostState(
+    content: BookDetailUiState.Content?,
+    onRetry: () -> Unit,
+    onStatusSelected: (ReadingStatus) -> Unit,
+    onStatusErrorDismissed: () -> Unit,
+): SnackbarHostState {
+    val currentOnRetry by rememberUpdatedState(onRetry)
+    val currentOnStatusSelected by rememberUpdatedState(onStatusSelected)
+    val currentOnStatusErrorDismissed by rememberUpdatedState(onStatusErrorDismissed)
+    val snackbarHostState = remember { SnackbarHostState() }
+    val errorMessage = stringResource(R.string.book_detail_refresh_error)
+    val retryActionLabel = stringResource(R.string.book_detail_retry)
+
+    val statusErrorMessage = stringResource(R.string.book_detail_status_error)
+    val statusChange = content?.statusChange
+    val refreshStatus = content?.refreshStatus
+    LaunchedEffect(refreshStatus, statusChange) {
+        if (statusChange is StatusChangeState.Failed) {
+            val result = snackbarHostState.showSnackbar(
+                message = statusErrorMessage,
+                actionLabel = retryActionLabel,
+                withDismissAction = true,
+                duration = SnackbarDuration.Indefinite,
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                currentOnStatusSelected(statusChange.target)
+            } else {
+                currentOnStatusErrorDismissed()
+            }
+        } else if (refreshStatus == RefreshStatus.Failed && statusChange !is StatusChangeState.Saving) {
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = errorMessage,
+                    actionLabel = retryActionLabel,
+                    duration = SnackbarDuration.Indefinite,
+                )
+            if (result == SnackbarResult.ActionPerformed) {
+                currentOnRetry()
+            }
+        }
+    }
+
+    return snackbarHostState
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -122,6 +163,7 @@ private fun BookDetailTab(
 private fun BookDetailBody(
     uiState: BookDetailUiState,
     onRetry: () -> Unit,
+    onStatusSelected: (ReadingStatus) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -154,9 +196,10 @@ private fun BookDetailBody(
                         BookInfoTabContent(book = uiState.bookDetail.book)
 
                     BookDetailTab.MyRecords ->
-                        Text(
-                            text = stringResource(R.string.book_detail_records_stub),
-                            style = MaterialTheme.typography.bodyLarge,
+                        MyRecordTabContent(
+                            status = uiState.bookDetail.entry?.status,
+                            isSaving = uiState.statusChange is StatusChangeState.Saving,
+                            onStatusSelected = onStatusSelected,
                         )
                 }
             }
@@ -208,6 +251,8 @@ private fun BookDetailScreenPreview() {
             onNavigateBack = {},
             onTabSelected = {},
             onRetry = {},
+            onStatusSelected = {},
+            onStatusErrorDismissed = {},
         )
     }
 }
@@ -221,6 +266,8 @@ private fun BookDetailLoadingPreview() {
             onNavigateBack = {},
             onTabSelected = {},
             onRetry = {},
+            onStatusSelected = {},
+            onStatusErrorDismissed = {},
         )
     }
 }
@@ -234,6 +281,8 @@ private fun BookDetailErrorPreview() {
             onNavigateBack = {},
             onTabSelected = {},
             onRetry = {},
+            onStatusSelected = {},
+            onStatusErrorDismissed = {},
         )
     }
 }
@@ -252,6 +301,8 @@ private fun BookDetailRefreshErrorPreview() {
             onNavigateBack = {},
             onTabSelected = {},
             onRetry = {},
+            onStatusSelected = {},
+            onStatusErrorDismissed = {},
         )
     }
 }
@@ -270,13 +321,15 @@ private fun BookDetailRefreshingPreview() {
             onNavigateBack = {},
             onTabSelected = {},
             onRetry = {},
+            onStatusSelected = {},
+            onStatusErrorDismissed = {},
         )
     }
 }
 
 @ManiculePreview
 @Composable
-private fun BookDetailRecordsStubPreview() {
+private fun BookDetailReviewOnlyPreview() {
     ManiculePreviewTheme {
         BookDetailScreen(
             uiState =
@@ -287,6 +340,8 @@ private fun BookDetailRecordsStubPreview() {
             onNavigateBack = {},
             onTabSelected = {},
             onRetry = {},
+            onStatusSelected = {},
+            onStatusErrorDismissed = {},
         )
     }
 }

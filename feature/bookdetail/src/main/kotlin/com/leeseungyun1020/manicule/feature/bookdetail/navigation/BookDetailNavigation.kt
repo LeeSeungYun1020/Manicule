@@ -17,6 +17,8 @@ fun NavGraphBuilder.bookDetailScreen(onNavigateBack: () -> Unit) {
             onNavigateBack = onNavigateBack,
             onTabSelected = viewModel::selectTab,
             onRetry = viewModel::retry,
+            onStatusSelected = viewModel::changeReadingStatus,
+            onStatusErrorDismissed = viewModel::dismissStatusError,
         )
     }
 }
