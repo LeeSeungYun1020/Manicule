@@ -1,174 +1,242 @@
 package com.leeseungyun1020.manicule.core.ui.calendar
 
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyGridItemInfo
+import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.size
+import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.ReadingCalendarDay
 import com.leeseungyun1020.manicule.core.ui.R
 import com.leeseungyun1020.manicule.core.ui.preview.ReadingCalendarPreviewParameterProvider
-import kotlinx.datetime.Clock
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
 
-private data class ReadingCalendarSelectionEvent(
-    val date: LocalDate,
-    val id: Int,
+private const val CALENDAR_ROW_COUNT = 7
+private const val CALENDAR_GAP_COUNT = CALENDAR_ROW_COUNT - 1
+
+private data class ReadingCalendarGridConfig(
+    val today: LocalDate,
+    val selectedDate: LocalDate?,
+    val itemSize: Dp,
+    val isDateSelectable: (ReadingCalendarDay) -> Boolean,
+    val onDateSelected: ((LocalDate) -> Unit)?,
 )
 
 @Composable
 fun ReadingCalendarGrid(
     days: List<ReadingCalendarDay>,
+    today: LocalDate,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
+    selectedDate: LocalDate? = null,
+    isDateSelectable: (ReadingCalendarDay) -> Boolean = { true },
+    onDateSelected: ((LocalDate) -> Unit)? = null,
+    contentPadding: PaddingValues = PaddingValues(),
 ) {
-    // 첫 번째 데이터의 요일을 확인하여 월요일(1) 기준 시작 위치 조정 패딩 생성
     val paddingCount =
         days
             .firstOrNull()
             ?.date
             ?.dayOfWeek
-            ?.value
-            ?.minus(1) ?: 0
+            ?.let { it.value - DayOfWeek.MONDAY.value }
+            ?: 0
     val totalItems = paddingCount + days.size
+    val gridState = rememberLazyGridState()
+    val rangeStart = days.firstOrNull()?.date
+    val rangeEnd = days.lastOrNull()?.date
+    val isInteractive = onDateSelected != null
+    val itemSize = if (isInteractive) ManiculeSize.touchTargetMin else MaterialTheme.size.calendarCell
+    val itemGap = if (isInteractive) MaterialTheme.spacing.sm else MaterialTheme.size.calendarCellGap
+    val minimumHeight = calendarGridHeight(itemSize = itemSize, itemGap = itemGap)
+    val gridConfig =
+        ReadingCalendarGridConfig(
+            today = today,
+            selectedDate = selectedDate,
+            itemSize = itemSize,
+            isDateSelectable = isDateSelectable,
+            onDateSelected = onDateSelected,
+        )
 
-    // 가장 최근 데이터가 있는 우측 끝단으로 초기 스크롤 설정
-    val initialIndex = maxOf(0, totalItems - 1)
-    val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = initialIndex)
-
-    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-    var selectionEvent by remember { mutableStateOf<ReadingCalendarSelectionEvent?>(null) }
-
-    fun selectDay(day: ReadingCalendarDay) {
-        selectionEvent =
-            ReadingCalendarSelectionEvent(
-                date = day.date,
-                id = (selectionEvent?.id ?: 0) + 1,
-            )
+    LaunchedEffect(rangeStart, rangeEnd, paddingCount) {
+        if (totalItems > 0) {
+            gridState.scrollToItem(totalItems - 1)
+        }
     }
 
     LazyHorizontalGrid(
-        rows = GridCells.Fixed(7),
+        rows = GridCells.Fixed(CALENDAR_ROW_COUNT),
         state = gridState,
-        modifier =
-            modifier.pointerInput(days, paddingCount) {
-                detectTapGestures { position ->
-                    gridState.layoutInfo.visibleItemsInfo
-                        .firstOrNull { item -> item.contains(position) }
-                        ?.index
-                        ?.minus(paddingCount)
-                        ?.let(days::getOrNull)
-                        ?.let(::selectDay)
-                }
-            },
+        modifier = modifier.heightIn(min = minimumHeight),
         contentPadding = contentPadding,
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.size.calendarCellGap),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.size.calendarCellGap),
+        horizontalArrangement = Arrangement.spacedBy(itemGap),
+        verticalArrangement = Arrangement.spacedBy(itemGap),
     ) {
-        items(count = totalItems) { index ->
+        readingCalendarItems(days = days, paddingCount = paddingCount, config = gridConfig)
+    }
+}
+
+private fun LazyGridScope.readingCalendarItems(
+    days: List<ReadingCalendarDay>,
+    paddingCount: Int,
+    config: ReadingCalendarGridConfig,
+) {
+    items(
+        count = paddingCount + days.size,
+        key = { index ->
             if (index < paddingCount) {
-                ReadingCalendarCell(intensity = null)
+                "calendar-padding-$index"
             } else {
-                val day = days[index - paddingCount]
-                val contentDescription =
-                    pluralStringResource(
-                        id = R.plurals.reading_calendar_cell_content_description,
-                        count = day.pages,
-                        day.date.year,
-                        day.date.monthNumber,
-                        day.date.dayOfMonth,
-                        day.pages,
-                    )
-                ReadingCalendarDayItem(
-                    day = day,
-                    isToday = day.date == today,
-                    selectionEvent = selectionEvent,
-                    contentDescription = contentDescription,
+                "calendar-day-${days[index - paddingCount].date}"
+            }
+        },
+        contentType = { index ->
+            if (index < paddingCount) CalendarItemType.Padding else CalendarItemType.Day
+        },
+    ) { index ->
+        if (index < paddingCount) {
+            ReadingCalendarGridItem(itemSize = config.itemSize) {
+                ReadingCalendarCell(
+                    intensity = null,
+                    modifier = Modifier.size(MaterialTheme.size.calendarCell),
                 )
             }
+        } else {
+            val day = days[index - paddingCount]
+            val onClick =
+                config.onDateSelected
+                    ?.takeIf { config.isDateSelectable(day) }
+                    ?.let { callback -> { callback(day.date) } }
+            ReadingCalendarDayItem(
+                day = day,
+                today = config.today,
+                selectedDate = config.selectedDate,
+                itemSize = config.itemSize,
+                onClick = onClick,
+            )
         }
     }
 }
 
-private fun LazyGridItemInfo.contains(position: Offset): Boolean =
-    position.x >= offset.x &&
-        position.x < offset.x + size.width &&
-        position.y >= offset.y &&
-        position.y < offset.y + size.height
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ReadingCalendarDayItem(
     day: ReadingCalendarDay,
-    isToday: Boolean,
-    selectionEvent: ReadingCalendarSelectionEvent?,
-    contentDescription: String,
+    today: LocalDate,
+    selectedDate: LocalDate?,
+    itemSize: Dp,
+    onClick: (() -> Unit)?,
 ) {
-    val tooltipState = rememberTooltipState()
-    val selectedEvent = selectionEvent?.takeIf { it.date == day.date }
-    val isTooltipVisible = selectedEvent != null && tooltipState.isVisible
-
-    LaunchedEffect(selectedEvent) {
-        if (selectedEvent != null) {
-            tooltipState.show()
-        }
-    }
-
-    TooltipBox(
-        positionProvider =
-            TooltipDefaults.rememberTooltipPositionProvider(
-                positioning = TooltipAnchorPosition.Above,
-            ),
-        tooltip = {
-            PlainTooltip {
-                Text(text = contentDescription)
-            }
-        },
-        state = tooltipState,
-        enableUserInput = false,
+    val isToday = day.date == today
+    val isSelected = day.date == selectedDate
+    val contentDescription = readingCalendarContentDescription(day = day, isToday = isToday)
+    val clickLabel = stringResource(R.string.reading_calendar_open_day_records)
+    ReadingCalendarGridItem(
+        itemSize = itemSize,
+        modifier =
+            Modifier
+                .then(
+                    if (onClick == null) {
+                        Modifier
+                    } else {
+                        Modifier.clickable(
+                            onClickLabel = clickLabel,
+                            onClick = onClick,
+                        )
+                    },
+                ).semantics {
+                    this.contentDescription = contentDescription
+                    if (onClick != null || isSelected) {
+                        selected = isSelected
+                    }
+                },
     ) {
         ReadingCalendarCell(
             intensity = day.intensity,
             isToday = isToday,
-            isSelected = isTooltipVisible,
-            modifier =
-                Modifier.semantics {
-                    this.contentDescription = contentDescription
-                    selected = isTooltipVisible
-                },
+            isSelected = isSelected,
+            modifier = Modifier.size(MaterialTheme.size.calendarCell),
         )
     }
 }
+
+@Composable
+private fun readingCalendarContentDescription(
+    day: ReadingCalendarDay,
+    isToday: Boolean,
+): String {
+    val dateDescription =
+        if (day.pages == 0) {
+            stringResource(
+                id = R.string.reading_calendar_cell_no_record_content_description,
+                day.date.year,
+                day.date.monthNumber,
+                day.date.dayOfMonth,
+            )
+        } else {
+            pluralStringResource(
+                id = R.plurals.reading_calendar_cell_content_description,
+                count = day.pages,
+                day.date.year,
+                day.date.monthNumber,
+                day.date.dayOfMonth,
+                day.pages,
+            )
+        }
+    return if (isToday) {
+        stringResource(R.string.reading_calendar_today_content_description, dateDescription)
+    } else {
+        dateDescription
+    }
+}
+
+@Composable
+private fun ReadingCalendarGridItem(
+    itemSize: Dp,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Box(
+        modifier =
+            modifier
+                .width(itemSize)
+                .fillMaxHeight(),
+        contentAlignment = Alignment.Center,
+    ) {
+        content()
+    }
+}
+
+private enum class CalendarItemType {
+    Padding,
+    Day,
+}
+
+private fun calendarGridHeight(
+    itemSize: Dp,
+    itemGap: Dp,
+): Dp = itemSize * CALENDAR_ROW_COUNT + itemGap * CALENDAR_GAP_COUNT
 
 @ManiculePreview
 @Composable
@@ -176,7 +244,8 @@ private fun ReadingCalendarGridPreviewSingle() {
     ManiculePreviewTheme {
         ReadingCalendarGrid(
             days = ReadingCalendarPreviewParameterProvider().values.first().take(1),
-            modifier = Modifier.height(100.dp),
+            today = LocalDate(2026, 7, 9),
+            modifier = Modifier.height(calendarGridHeight(ManiculeSize.calendarCell, ManiculeSize.calendarCellGap)),
         )
     }
 }
@@ -187,7 +256,8 @@ private fun ReadingCalendarGridPreviewSome() {
     ManiculePreviewTheme {
         ReadingCalendarGrid(
             days = ReadingCalendarPreviewParameterProvider().values.first().take(5),
-            modifier = Modifier.height(100.dp),
+            today = LocalDate(2026, 7, 9),
+            modifier = Modifier.height(calendarGridHeight(ManiculeSize.calendarCell, ManiculeSize.calendarCellGap)),
         )
     }
 }
@@ -198,7 +268,11 @@ private fun ReadingCalendarGridPreviewMulti() {
     ManiculePreviewTheme {
         ReadingCalendarGrid(
             days = ReadingCalendarPreviewParameterProvider().values.first(),
-            modifier = Modifier.height(100.dp),
+            today = LocalDate(2026, 7, 9),
+            selectedDate = LocalDate(2026, 7, 8),
+            isDateSelectable = { it.pages > 0 },
+            onDateSelected = {},
+            modifier = Modifier.height(calendarGridHeight(ManiculeSize.touchTargetMin, MaterialTheme.spacing.sm)),
         )
     }
 }

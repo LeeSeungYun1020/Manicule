@@ -10,16 +10,16 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.until
 
 /**
- * 한 주의 시작 요일. 잔디(ContributionGrid) 의 첫 행은 [WeekStart.dayOfWeek] 에 위치한다.
+ * 한 주의 시작 요일. 독서 달력의 첫 행은 [WeekStart.dayOfWeek]에 위치한다.
  *
- * Manicule 에서는 일요일을 한 주의 시작으로 본다 — 일반적인 그리드 레이아웃과 일치.
+ * Manicule 에서는 월요일을 한 주의 시작으로 본다.
  */
 object WeekStart {
-    val dayOfWeek: DayOfWeek = DayOfWeek.SUNDAY
+    val dayOfWeek: DayOfWeek = DayOfWeek.MONDAY
 }
 
 /**
- * 이 날짜가 속한 주의 시작일 (일요일) 을 반환.
+ * 이 날짜가 속한 주의 시작일을 반환.
  */
 fun LocalDate.startOfWeek(weekStart: DayOfWeek = WeekStart.dayOfWeek): LocalDate {
     val current = this.dayOfWeek.isoDayNumber
