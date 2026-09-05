@@ -1,8 +1,10 @@
 package com.leeseungyun1020.manicule.feature.bookdetail
 
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -14,6 +16,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.Density
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
@@ -202,6 +205,22 @@ class BookDetailScreenTest {
         assertThat(refreshed).isFalse()
         composeRule.onAllNodesWithText(context.getString(R.string.book_detail_status_error)).assertCountEquals(0)
         composeRule.onNodeWithText(context.getString(R.string.book_detail_status_saving)).assertIsDisplayed()
+    }
+
+    @Test
+    fun largeFont_keepsSegmentHeightsAligned_whenLabelWraps() {
+        composeRule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, 1.5f)) {
+                ManiculeTheme {
+                    BookDetailScreen(recordsState(null), {}, {}, {}, {}, {})
+                }
+            }
+        }
+        val heights = statusLabels.map {
+            composeRule.onNodeWithText(context.getString(it)).assertIsDisplayed().fetchSemanticsNode().boundsInRoot.height
+        }
+        heights.forEach { assertThat(it).isWithin(1f).of(heights.first()) }
     }
 
     private companion object {
