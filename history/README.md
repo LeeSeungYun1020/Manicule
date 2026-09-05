@@ -68,3 +68,5 @@
 - [1de11c7](1de11c7.md) — feat: 서재 상태별 목록 구현
 - [da474e6](da474e6.md) — feat: 서재 검색 진입 아이콘 보강
 - [7db01ae](7db01ae.md) — docs: PR 작업 및 리뷰 절차 정리
+- [02bd301](02bd301.md) — feat: 서재 정렬 계약 구현
+- [daf4ab3](daf4ab3.md) — feat: 서재 정렬 UI 구현

@@ -253,6 +253,8 @@ feature/library/
     ├── navigation/
     │   └── LibraryNavigation.kt
     └── components/
+        ├── LibraryTopBar.kt                # 상태 탭, 정렬 진입, 현재 정렬 요약, 책 추가 액션
+        ├── LibrarySortLabels.kt            # 정렬 기준·방향 표시 문자열 변환
         ├── StatusTabRow.kt                 # 읽고 싶음 / 읽는 중 / 다 읽음
         ├── SortBottomSheet.kt              # 기준(추가/수정/별점) 및 방향 선택 (적용 버튼으로 확정)
         ├── LibraryBookCard.kt              # 상태별 표시 (기본, 진도율, 다 읽은 날짜)
@@ -380,6 +382,7 @@ core/model/
     ├── BookDetail.kt                       # Book + nullable BookEntry. 미등록은 null, 리뷰-only 등록은 BookEntry.status=UNSET
     ├── ReadingStatus.kt                    # UNSET / WANT / READING / FINISHED
     ├── BookEntry.kt                        # Book + Status + rating + memo + finishedAt
+    ├── LibrarySort.kt                      # 서재 정렬 기준(추가/수정/별점)과 방향
     ├── ReadingRecord.kt                    # id, isbn, date, time, startPage, endPage, 파생 pagesRead
     ├── DailyReading.kt                     # 통계용 (date, pages)
     ├── ReadingCalendarDay.kt               # 독서 달력 한 칸 (date, intensity)
