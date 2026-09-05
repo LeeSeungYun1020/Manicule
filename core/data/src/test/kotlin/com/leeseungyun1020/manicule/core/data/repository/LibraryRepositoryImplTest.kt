@@ -9,6 +9,7 @@ import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
@@ -74,6 +75,20 @@ class LibraryRepositoryImplTest {
             updatedAt = Instant.fromEpochMilliseconds(0),
         )
 
+    @Test
+    fun changeStatus_delegatesWithoutRewritingBookOrEntry() =
+        runTest {
+            val time = Instant.fromEpochMilliseconds(123)
+            val date = kotlinx.datetime.LocalDate(2026, 9, 5)
+            for (result in ReadingStatusChangeResult.entries) {
+                entryDataSource.statusResult = result
+                assertThat(repository.changeReadingStatus("123", ReadingStatus.FINISHED, time, date)).isEqualTo(result)
+                assertThat(entryDataSource.statusRequest).containsExactly("123", ReadingStatus.FINISHED, time, date).inOrder()
+            }
+            assertThat(bookDataSource.saved).isNull()
+            assertThat(entryDataSource.saved).isNull()
+        }
+
     private class RecordingBookLocalDataSource : BookLocalDataSource {
         var saved: BookEntity? = null
 
@@ -87,6 +102,19 @@ class LibraryRepositoryImplTest {
     }
 
     private class RecordingBookEntryLocalDataSource : BookEntryLocalDataSource {
+        var statusResult = ReadingStatusChangeResult.Changed
+        var statusRequest: List<Any?> = emptyList()
+
+        override suspend fun changeReadingStatus(
+            isbn: String,
+            status: ReadingStatus,
+            updatedAt: Instant,
+            finishedAt: kotlinx.datetime.LocalDate?,
+        ): ReadingStatusChangeResult {
+            statusRequest = listOf(isbn, status, updatedAt, finishedAt)
+            return statusResult
+        }
+
         var saved: BookEntryEntity? = null
 
         override suspend fun save(entry: BookEntryEntity) {

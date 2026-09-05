@@ -25,6 +25,8 @@
 
 ## 인덱스
 
+- [8dab24f](8dab24f.md) — feat: 책 상세 독서 상태 변경 구현
+
 - [da35569](da35569.md) — 기반 시스템 구현 (Foundation 의 핵심 결정 모음)
 - [0f0c1fa](0f0c1fa.md) — BoM 적용 (Compose / kotlinx / OkHttp / Retrofit / Coil)
 - [3632472](3632472.md) — 타입 안전 네비게이션 적용

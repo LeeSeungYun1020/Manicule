@@ -22,4 +22,11 @@
     <string name="book_detail_content_empty">제공된 정보가 없어요</string>
     <string name="book_detail_expand">더보기</string>
     <string name="book_detail_collapse">접기</string>
+    <string name="book_detail_status_title">상태</string>
+    <string name="book_detail_status_want">읽고 싶음</string>
+    <string name="book_detail_status_reading">읽는 중</string>
+    <string name="book_detail_status_finished">다 읽음</string>
+    <string name="book_detail_status_saving">상태를 저장하고 있어요</string>
+    <string name="book_detail_status_unset">상태를 선택하면 서재에 추가돼요</string>
+    <string name="book_detail_status_error">독서 상태를 저장하지 못했어요</string>
 </resources>

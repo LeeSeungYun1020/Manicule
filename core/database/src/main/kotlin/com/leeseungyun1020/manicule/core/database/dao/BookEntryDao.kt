@@ -9,10 +9,48 @@ import com.leeseungyun1020.manicule.core.database.dao.projection.BookEntryWithCu
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 
 @Dao
 interface BookEntryDao {
+    /** 존재 확인, 최초 등록, 상태 변경을 하나의 트랜잭션으로 처리한다. */
+    @Transaction
+    suspend fun changeReadingStatus(
+        isbn: String,
+        status: ReadingStatus,
+        updatedAt: Instant,
+        finishedAt: LocalDate?,
+    ): ReadingStatusChangeResult {
+        if (status == ReadingStatus.UNSET) return ReadingStatusChangeResult.InvalidStatus
+        require((status == ReadingStatus.FINISHED) == (finishedAt != null))
+        if (!bookExists(isbn)) return ReadingStatusChangeResult.BookNotFound
+        val entry = getEntry(isbn)
+        if (entry?.status == status) return ReadingStatusChangeResult.Unchanged
+        if (entry == null) {
+            upsert(BookEntryEntity(isbn, status, 0, null, updatedAt, updatedAt, finishedAt))
+        } else {
+            updateStatus(isbn, status, updatedAt, finishedAt)
+        }
+        return ReadingStatusChangeResult.Changed
+    }
+
+    @Query("SELECT EXISTS(SELECT 1 FROM books WHERE isbn = :isbn)")
+    suspend fun bookExists(isbn: String): Boolean
+
+    @Query("SELECT * FROM book_entries WHERE isbn = :isbn")
+    suspend fun getEntry(isbn: String): BookEntryEntity?
+
+    @Query("UPDATE book_entries SET status = :status, updatedAt = :updatedAt, finishedAt = :finishedAt WHERE isbn = :isbn")
+    suspend fun updateStatus(
+        isbn: String,
+        status: ReadingStatus,
+        updatedAt: Instant,
+        finishedAt: LocalDate?,
+    )
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entry: BookEntryEntity)
 
