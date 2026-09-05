@@ -6,6 +6,7 @@ import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.data.repository.UserPreferencesRepository
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReminderConfig
 import com.leeseungyun1020.manicule.core.model.ThemeMode
@@ -188,7 +189,10 @@ private class FakeLibraryRepository(
 ) : LibraryRepository {
     override fun observeAll(): Flow<List<BookEntry>> = flowOf(entries)
 
-    override fun observeByStatus(status: ReadingStatus): Flow<List<BookEntry>> = flowOf(entries.filter { it.status == status })
+    override fun observeByStatus(
+        status: ReadingStatus,
+        sort: LibrarySort,
+    ): Flow<List<BookEntry>> = flowOf(entries.filter { it.status == status })
 
     override suspend fun getRecentBooksByStatus(
         status: ReadingStatus,

@@ -12,6 +12,7 @@ import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
+@Suppress("TooManyFunctions")
 interface BookEntryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entry: BookEntryEntity)
@@ -37,10 +38,70 @@ interface BookEntryDao {
             (SELECT MAX(endPage) FROM reading_records WHERE isbn = book_entries.isbn) AS currentPage
             FROM book_entries 
             WHERE status = :status
-            ORDER BY updatedAt DESC, isbn ASC
+            ORDER BY addedAt ASC
         """,
     )
-    fun observeByStatus(status: ReadingStatus): Flow<List<BookEntryWithCurrentPage>>
+    fun observeByStatusAddedAtAscending(status: ReadingStatus): Flow<List<BookEntryWithCurrentPage>>
+
+    @Transaction
+    @Query(
+        value = """
+            SELECT *,
+            (SELECT MAX(endPage) FROM reading_records WHERE isbn = book_entries.isbn) AS currentPage
+            FROM book_entries
+            WHERE status = :status
+            ORDER BY addedAt DESC
+        """,
+    )
+    fun observeByStatusAddedAtDescending(status: ReadingStatus): Flow<List<BookEntryWithCurrentPage>>
+
+    @Transaction
+    @Query(
+        value = """
+            SELECT *,
+            (SELECT MAX(endPage) FROM reading_records WHERE isbn = book_entries.isbn) AS currentPage
+            FROM book_entries
+            WHERE status = :status
+            ORDER BY updatedAt ASC
+        """,
+    )
+    fun observeByStatusUpdatedAtAscending(status: ReadingStatus): Flow<List<BookEntryWithCurrentPage>>
+
+    @Transaction
+    @Query(
+        value = """
+            SELECT *,
+            (SELECT MAX(endPage) FROM reading_records WHERE isbn = book_entries.isbn) AS currentPage
+            FROM book_entries
+            WHERE status = :status
+            ORDER BY updatedAt DESC
+        """,
+    )
+    fun observeByStatusUpdatedAtDescending(status: ReadingStatus): Flow<List<BookEntryWithCurrentPage>>
+
+    @Transaction
+    @Query(
+        value = """
+            SELECT *,
+            (SELECT MAX(endPage) FROM reading_records WHERE isbn = book_entries.isbn) AS currentPage
+            FROM book_entries
+            WHERE status = :status
+            ORDER BY rating ASC, updatedAt DESC
+        """,
+    )
+    fun observeByStatusRatingAscending(status: ReadingStatus): Flow<List<BookEntryWithCurrentPage>>
+
+    @Transaction
+    @Query(
+        value = """
+            SELECT *,
+            (SELECT MAX(endPage) FROM reading_records WHERE isbn = book_entries.isbn) AS currentPage
+            FROM book_entries
+            WHERE status = :status
+            ORDER BY rating DESC, updatedAt DESC
+        """,
+    )
+    fun observeByStatusRatingDescending(status: ReadingStatus): Flow<List<BookEntryWithCurrentPage>>
 
     @Query(
         value = """

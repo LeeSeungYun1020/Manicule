@@ -7,6 +7,7 @@ import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.domain.library.GetLibraryBooksUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -75,7 +76,10 @@ private class ControllableLibraryRepository : LibraryRepository {
 
     override fun observeAll(): Flow<List<BookEntry>> = flow(ReadingStatus.READING)
 
-    override fun observeByStatus(status: ReadingStatus): Flow<List<BookEntry>> =
+    override fun observeByStatus(
+        status: ReadingStatus,
+        sort: LibrarySort,
+    ): Flow<List<BookEntry>> =
         flow {
             lastStatus = status
             subscriptionCount += 1

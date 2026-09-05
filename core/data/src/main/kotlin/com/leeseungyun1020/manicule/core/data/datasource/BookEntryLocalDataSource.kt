@@ -3,6 +3,7 @@ package com.leeseungyun1020.manicule.core.data.datasource
 import com.leeseungyun1020.manicule.core.database.dao.projection.BookEntryWithCurrentPage
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
+import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.coroutines.flow.Flow
 
@@ -13,7 +14,10 @@ interface BookEntryLocalDataSource {
 
     fun observeByIsbn(isbn: String): Flow<BookEntryWithCurrentPage?>
 
-    fun observeByStatus(status: ReadingStatus): Flow<List<BookEntryWithCurrentPage>>
+    fun observeByStatus(
+        status: ReadingStatus,
+        sort: LibrarySort,
+    ): Flow<List<BookEntryWithCurrentPage>>
 
     suspend fun getRecentBooksByStatus(
         status: ReadingStatus,
