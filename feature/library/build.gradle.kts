@@ -11,6 +11,8 @@ android {
 dependencies {
     implementation(libs.kotlinx.datetime)
     testImplementation(projects.core.data)
+    testImplementation(libs.robolectric)
+    androidTestImplementation(projects.core.data)
     androidTestImplementation(libs.androidx.compose.ui.test)
     androidTestImplementation(libs.truth)
 }
