@@ -46,7 +46,9 @@ fun ManiculeNavHost(
                 appState.navController.popBackStack()
             },
         )
-        scannerScreen()
+        scannerScreen(
+            onNavigateBack = { appState.navController.popBackStack() },
+        )
         bookDetailScreen(
             onNavigateBack = { appState.navController.popBackStack() },
         )
