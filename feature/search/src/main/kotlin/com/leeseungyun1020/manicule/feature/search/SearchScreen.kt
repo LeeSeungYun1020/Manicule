@@ -7,42 +7,49 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.paging.PagingData
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeEmptyState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeIconButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSearchBar
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSectionHeader
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.size
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
+import com.leeseungyun1020.manicule.core.model.Book
+import com.leeseungyun1020.manicule.feature.search.components.FilteredQueryList
+import com.leeseungyun1020.manicule.feature.search.components.RecentQueryList
+import com.leeseungyun1020.manicule.feature.search.components.SearchResultList
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 @Composable
+@Suppress("LongParameterList")
 fun SearchScreen(
     uiState: SearchUiState,
+    searchResults: Flow<PagingData<Book>>,
     searchFieldState: TextFieldState,
+    onSearch: (String) -> Unit,
+    onQuerySelected: (String) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val books = searchResults.collectAsLazyPagingItems()
+
     Column(
         modifier =
             modifier
@@ -54,7 +61,7 @@ fun SearchScreen(
     ) {
         ManiculeSearchBar(
             state = searchFieldState,
-            onSearch = {},
+            onSearch = onSearch,
             modifier = Modifier.fillMaxWidth(),
             placeholder = stringResource(R.string.search_hint),
             requestInitialFocus = true,
@@ -68,11 +75,48 @@ fun SearchScreen(
             },
         )
 
-        when (uiState) {
-            SearchUiState.Loading -> SearchLoading()
-            SearchUiState.Unavailable -> SearchEmpty()
-            is SearchUiState.Content -> SearchContent(recentQueries = uiState.recentQueries)
+        when (uiState.inputPhase) {
+            SearchInputPhase.IDLE ->
+                IdleSearchContent(
+                    recentQueriesState = uiState.recentQueriesState,
+                    onQuerySelected = onQuerySelected,
+                )
+
+            SearchInputPhase.TYPING ->
+                if (uiState.filteredQueries.isNotEmpty()) {
+                    FilteredQueryList(
+                        queries = uiState.filteredQueries,
+                        query = uiState.query,
+                        onQuerySelected = onQuerySelected,
+                    )
+                }
+
+            SearchInputPhase.SUBMITTED ->
+                SearchResultList(
+                    query = uiState.query,
+                    books = books,
+                )
         }
+    }
+}
+
+@Composable
+private fun IdleSearchContent(
+    recentQueriesState: RecentQueriesState,
+    onQuerySelected: (String) -> Unit,
+) {
+    when (recentQueriesState) {
+        RecentQueriesState.Loading -> SearchLoading()
+        RecentQueriesState.Unavailable -> SearchEmpty()
+        is RecentQueriesState.Content ->
+            if (recentQueriesState.recentQueries.isEmpty()) {
+                SearchEmpty()
+            } else {
+                RecentQueryList(
+                    queries = recentQueriesState.recentQueries,
+                    onQuerySelected = onQuerySelected,
+                )
+            }
     }
 }
 
@@ -85,41 +129,6 @@ private fun SearchLoading() {
                 .fillMaxSize()
                 .semantics { contentDescription = description },
     )
-}
-
-@Composable
-private fun SearchContent(recentQueries: List<String>) {
-    if (recentQueries.isEmpty()) {
-        SearchEmpty()
-        return
-    }
-
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        item(contentType = "section_header") {
-            ManiculeSectionHeader(title = stringResource(R.string.search_recent_title))
-        }
-        items(
-            items = recentQueries,
-            key = { it },
-            contentType = { "recent_query" },
-        ) { query ->
-            ListItem(
-                headlineContent = {
-                    Text(
-                        text = query,
-                        maxLines = 2,
-                    )
-                },
-                leadingContent = {
-                    Icon(
-                        imageVector = Icons.Default.History,
-                        contentDescription = null,
-                    )
-                },
-            )
-            HorizontalDivider()
-        }
-    }
 }
 
 @Composable
@@ -146,8 +155,14 @@ private fun SearchEmpty() {
 private fun EmptySearchScreenPreview() {
     ManiculePreviewTheme {
         SearchScreen(
-            uiState = SearchUiState.Content(emptyList()),
+            uiState =
+                SearchUiState(
+                    recentQueriesState = RecentQueriesState.Content(emptyList()),
+                ),
+            searchResults = flowOf(PagingData.empty()),
             searchFieldState = rememberTextFieldState(),
+            onSearch = {},
+            onQuerySelected = {},
             onNavigateBack = {},
         )
     }
@@ -158,8 +173,11 @@ private fun EmptySearchScreenPreview() {
 private fun UnavailableSearchScreenPreview() {
     ManiculePreviewTheme {
         SearchScreen(
-            uiState = SearchUiState.Unavailable,
+            uiState = SearchUiState(recentQueriesState = RecentQueriesState.Unavailable),
+            searchResults = flowOf(PagingData.empty()),
             searchFieldState = rememberTextFieldState(),
+            onSearch = {},
+            onQuerySelected = {},
             onNavigateBack = {},
         )
     }
@@ -171,14 +189,20 @@ private fun RecentSearchScreenPreview() {
     ManiculePreviewTheme {
         SearchScreen(
             uiState =
-                SearchUiState.Content(
-                    listOf(
-                        "Jetpack Compose",
-                        "A very long search query that wraps onto another line for accessibility",
-                        "Kotlin coroutines",
-                    ),
+                SearchUiState(
+                    recentQueriesState =
+                        RecentQueriesState.Content(
+                            listOf(
+                                "Jetpack Compose",
+                                "A very long search query that wraps onto another line for accessibility",
+                                "Kotlin coroutines",
+                            ),
+                        ),
                 ),
+            searchResults = flowOf(PagingData.empty()),
             searchFieldState = rememberTextFieldState(),
+            onSearch = {},
+            onQuerySelected = {},
             onNavigateBack = {},
         )
     }
@@ -189,8 +213,11 @@ private fun RecentSearchScreenPreview() {
 private fun LoadingSearchScreenPreview() {
     ManiculePreviewTheme {
         SearchScreen(
-            uiState = SearchUiState.Loading,
+            uiState = SearchUiState(),
+            searchResults = flowOf(PagingData.empty()),
             searchFieldState = rememberTextFieldState(),
+            onSearch = {},
+            onQuerySelected = {},
             onNavigateBack = {},
         )
     }
