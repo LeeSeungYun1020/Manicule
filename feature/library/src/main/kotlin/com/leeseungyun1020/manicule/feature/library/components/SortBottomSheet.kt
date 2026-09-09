@@ -21,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeBottomSheet
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeIconButton
@@ -183,28 +185,41 @@ private fun SortSheetActions(
 
 @ManiculePreview
 @Composable
-private fun AddedAtSortSheetPreview() {
-    SortSheetPreview(LibrarySort.Criterion.ADDED_AT)
+private fun AddedAtSortSheetPreview(
+    @PreviewParameter(SortDirectionPreviewProvider::class) direction: LibrarySort.Direction,
+) {
+    SortSheetPreview(LibrarySort.Criterion.ADDED_AT, direction)
 }
 
 @ManiculePreview
 @Composable
-private fun UpdatedAtSortSheetPreview() {
-    SortSheetPreview(LibrarySort.Criterion.UPDATED_AT)
+private fun UpdatedAtSortSheetPreview(
+    @PreviewParameter(SortDirectionPreviewProvider::class) direction: LibrarySort.Direction,
+) {
+    SortSheetPreview(LibrarySort.Criterion.UPDATED_AT, direction)
 }
 
 @ManiculePreview
 @Composable
-private fun RatingSortSheetPreview() {
-    SortSheetPreview(LibrarySort.Criterion.RATING)
+private fun RatingSortSheetPreview(
+    @PreviewParameter(SortDirectionPreviewProvider::class) direction: LibrarySort.Direction,
+) {
+    SortSheetPreview(LibrarySort.Criterion.RATING, direction)
+}
+
+internal class SortDirectionPreviewProvider : PreviewParameterProvider<LibrarySort.Direction> {
+    override val values = LibrarySort.Direction.entries.asSequence()
 }
 
 @Composable
-private fun SortSheetPreview(criterion: LibrarySort.Criterion) {
+private fun SortSheetPreview(
+    criterion: LibrarySort.Criterion,
+    direction: LibrarySort.Direction,
+) {
     ManiculePreviewTheme {
         Surface {
             SortSheetContent(
-                sort = LibrarySort(criterion, LibrarySort.Direction.DESCENDING),
+                sort = LibrarySort(criterion, direction),
                 onSortChange = {},
                 onDismissRequest = {},
                 onApply = {},

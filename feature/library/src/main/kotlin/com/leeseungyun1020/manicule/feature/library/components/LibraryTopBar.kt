@@ -9,21 +9,30 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeIconButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTabRow
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTopAppBar
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.feature.library.R
 
 private val libraryStatuses = listOf(ReadingStatus.WANT, ReadingStatus.READING, ReadingStatus.FINISHED)
+
+internal class LibraryHasBooksPreviewProvider : PreviewParameterProvider<Boolean> {
+    override val values = sequenceOf(true, false)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,5 +106,24 @@ private fun LibraryActionRow(
                 contentDescription = stringResource(R.string.library_add_book),
             )
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@ManiculePreview
+@Composable
+private fun LibraryTopBarPreview(
+    @PreviewParameter(LibraryHasBooksPreviewProvider::class) hasBooks: Boolean,
+) {
+    ManiculePreviewTheme {
+        LibraryTopBar(
+            selectedStatus = ReadingStatus.READING,
+            sort = LibrarySort.Default,
+            hasBooks = hasBooks,
+            onStatusSelected = {},
+            onSortClick = {},
+            onSearch = {},
+            scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(),
+        )
     }
 }
