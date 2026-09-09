@@ -1,6 +1,7 @@
 package com.leeseungyun1020.manicule.core.ui.calendar
 
 import android.content.Context
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.getValue
@@ -138,6 +139,45 @@ class ReadingCalendarGridTest {
         composeTestRule
             .onNodeWithContentDescription(descriptionFor(day))
             .assertHasNoClickAction()
+    }
+
+    @Test
+    fun verticalContentPaddingDoesNotShrinkOrOverlapSelectableDays() {
+        val monday = ReadingCalendarDay.of(LocalDate(2026, 7, 6), pages = 1)
+        val tuesday = ReadingCalendarDay.of(LocalDate(2026, 7, 7), pages = 1)
+        val days = listOf(monday, tuesday)
+
+        composeTestRule.setContent {
+            ManiculeTheme {
+                ReadingCalendarGrid(
+                    days = days,
+                    today = LocalDate(2026, 7, 20),
+                    onDateSelected = {},
+                    contentPadding = PaddingValues(vertical = ManiculeSpacing.lg),
+                    modifier =
+                        Modifier
+                            .width(ManiculeSize.touchTargetMin)
+                            .height(interactiveGridHeight),
+                )
+            }
+        }
+
+        days.forEach { day ->
+            composeTestRule
+                .onNodeWithContentDescription(descriptionFor(day))
+                .assertHasClickAction()
+                .assertWidthIsAtLeast(ManiculeSize.touchTargetMin)
+                .assertHeightIsAtLeast(ManiculeSize.touchTargetMin)
+        }
+        val mondayBounds =
+            composeTestRule
+                .onNodeWithContentDescription(descriptionFor(monday))
+                .getUnclippedBoundsInRoot()
+        val tuesdayBounds =
+            composeTestRule
+                .onNodeWithContentDescription(descriptionFor(tuesday))
+                .getUnclippedBoundsInRoot()
+        assertTrue(mondayBounds.bottom <= tuesdayBounds.top)
     }
 
     @Test

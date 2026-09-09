@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -70,7 +71,12 @@ fun ReadingCalendarGrid(
     val isInteractive = onDateSelected != null
     val itemSize = if (isInteractive) ManiculeSize.touchTargetMin else MaterialTheme.size.calendarCell
     val itemGap = if (isInteractive) MaterialTheme.spacing.sm else MaterialTheme.size.calendarCellGap
-    val minimumHeight = calendarGridHeight(itemSize = itemSize, itemGap = itemGap)
+    val minimumHeight =
+        calendarGridHeight(
+            itemSize = itemSize,
+            itemGap = itemGap,
+            contentPadding = contentPadding,
+        )
     val gridConfig =
         ReadingCalendarGridConfig(
             today = today,
@@ -89,7 +95,7 @@ fun ReadingCalendarGrid(
     LazyHorizontalGrid(
         rows = GridCells.Fixed(CALENDAR_ROW_COUNT),
         state = gridState,
-        modifier = modifier.heightIn(min = minimumHeight),
+        modifier = Modifier.heightIn(min = minimumHeight).then(modifier),
         contentPadding = contentPadding,
         horizontalArrangement = Arrangement.spacedBy(itemGap),
         verticalArrangement = Arrangement.spacedBy(itemGap),
@@ -160,10 +166,12 @@ private fun ReadingCalendarDayItem(
                     if (onClick == null) {
                         Modifier
                     } else {
-                        Modifier.clickable(
-                            onClickLabel = clickLabel,
-                            onClick = onClick,
-                        )
+                        Modifier
+                            .minimumInteractiveComponentSize()
+                            .clickable(
+                                onClickLabel = clickLabel,
+                                onClick = onClick,
+                            )
                     },
                 ).semantics {
                     this.contentDescription = contentDescription
@@ -236,7 +244,12 @@ private enum class CalendarItemType {
 private fun calendarGridHeight(
     itemSize: Dp,
     itemGap: Dp,
-): Dp = itemSize * CALENDAR_ROW_COUNT + itemGap * CALENDAR_GAP_COUNT
+    contentPadding: PaddingValues = PaddingValues(),
+): Dp =
+    itemSize * CALENDAR_ROW_COUNT +
+        itemGap * CALENDAR_GAP_COUNT +
+        contentPadding.calculateTopPadding() +
+        contentPadding.calculateBottomPadding()
 
 @ManiculePreview
 @Composable
