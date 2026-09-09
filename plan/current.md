@@ -15,7 +15,7 @@
 
 | 레인 | 기능 | `depends_on` | 상태 | 다음 범위 |
 |---|---|---|---|---|
-| V1 | 검색 | 없음 | 🚧 진입·최근 검색어·오류 자동 재시도·폴백·즉시 로컬 필터·검색 실행·Paging 결과 상태 완료 | 검색 결과 없음 스캔 이동 |
+| V1 | 검색 | 없음 | 🚧 진입·최근 검색어·로컬 필터·검색 실행·Paging 결과·상세 선택·복귀 상태·비활성 스캔 버튼·상태 테스트 완료 | 최근 검색어 개별·전체 삭제와 Undo; V2 준비 후 스캔 이동 조립 |
 | V2 | 스캔 | 없음 | 🚧 수요 기반 Scanner core 완료 | BarcodeReader lifecycle bind → 조회 UseCase → 권한·인식 UI → 성공/실패/회전 테스트 |
 | V3 | 설정 | 없음 | 🚧 리마인더 플랫폼 완료 | 설정 UI·ViewModel → 권한 요청·시간 picker → 테마 연동 테스트 |
 | V4 | 책 상세 | 없음 | 🚧 BookDetail 도메인 분리·책 정보 조회·기본 탭 선택 유지·캐시 유지 새로고침 상태·Preview·상태 테스트·필수 서지정보 검증 완료 | 독서 상태 변경 API와 내 기록 상태 UI |
@@ -27,13 +27,13 @@
 
 | 레인 | 범위 | `depends_on` | 상태 |
 |---|---|---|---|
-| I1 | `ManiculeNavHost`, 최상위 콜백, destination 점진 교체, 앱 루트 테마와 E2E 조립 | 각 destination의 V navigation PR; 루트 테마는 V3 테마 계약 | 🚧 검색·책 상세·서재 destination과 현재 콜백 조립 완료; 나머지는 각 V navigation PR과 V3 테마 계약 대기 |
+| I1 | `ManiculeNavHost`, 최상위 콜백, destination 점진 교체, 앱 루트 테마와 E2E 조립 | 각 destination의 V navigation PR; 루트 테마는 V3 테마 계약 | 🚧 검색·책 상세·서재 destination과 검색 결과 → 책 상세 콜백 조립 완료; 검색 → 스캔은 V2 준비 대기, 나머지는 각 V navigation PR과 V3 테마 계약 대기 |
 
 ## 다음 실행 가능 작업
 
 1. V5 상태별 서재 조회와 V7 공유 집계가 모두 머지됐으므로 V6 홈을 시작한다. V5 정렬과 V7 UI 완료는 기다리지 않는다.
 2. V4 독서 상태 변경 API를 진행해 V5의 롱프레스 상태 변경 범위를 해소한다.
-3. V1 검색 결과 없음 스캔 이동, V2 스캔 UI, V3 설정 UI, V5 정렬, V7 통계 UI는 서로 독립적으로 진행할 수 있다.
+3. V1 최근 검색어 개별·전체 삭제와 Undo, V2 스캔 UI, V3 설정 UI, V5 정렬, V7 통계 UI는 서로 독립적으로 진행할 수 있다.
 4. V5 상태 변경은 V4의 상태 API가 머지된 뒤 연결한다.
 5. I1은 각 V navigation PR이 머지되는 즉시 해당 destination을 조립하고, V3 테마 계약 뒤 앱 루트 테마를 연결한다.
 
