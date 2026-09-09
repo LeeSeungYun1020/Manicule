@@ -7,6 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -15,12 +16,15 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 @Composable
 fun SearchRoute(
     onNavigateBack: () -> Unit,
+    onBookSelected: (String) -> Unit,
+    scannerAction: SearchScannerAction,
     modifier: Modifier = Modifier,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val searchFieldState = rememberTextFieldState()
+    val searchFieldState = rememberTextFieldState(initialText = uiState.query)
     val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(searchFieldState, viewModel) {
         snapshotFlow { searchFieldState.text.toString() }
@@ -34,6 +38,7 @@ fun SearchRoute(
             searchFieldState.setTextAndPlaceCursorAtEnd(normalizedQuery)
             viewModel.onSearch(normalizedQuery)
             keyboardController?.hide()
+            focusManager.clearFocus()
         }
     }
 
@@ -44,6 +49,8 @@ fun SearchRoute(
         onSearch = submitSearch,
         onQuerySelected = submitSearch,
         onNavigateBack = onNavigateBack,
+        onBookSelected = onBookSelected,
+        scannerAction = scannerAction,
         modifier = modifier,
     )
 }

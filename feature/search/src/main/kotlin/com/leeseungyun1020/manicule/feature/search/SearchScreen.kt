@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -46,9 +48,14 @@ fun SearchScreen(
     onSearch: (String) -> Unit,
     onQuerySelected: (String) -> Unit,
     onNavigateBack: () -> Unit,
+    onBookSelected: (String) -> Unit,
+    scannerAction: SearchScannerAction,
     modifier: Modifier = Modifier,
 ) {
     val books = searchResults.collectAsLazyPagingItems()
+    val listState = rememberSaveable(uiState.searchRequestId, saver = LazyListState.Saver) {
+        LazyListState()
+    }
 
     Column(
         modifier =
@@ -64,7 +71,7 @@ fun SearchScreen(
             onSearch = onSearch,
             modifier = Modifier.fillMaxWidth(),
             placeholder = stringResource(R.string.search_hint),
-            requestInitialFocus = true,
+            requestInitialFocus = uiState.inputPhase != SearchInputPhase.SUBMITTED,
             leadingIcon = {
                 ManiculeIconButton(onClick = onNavigateBack) {
                     Icon(
@@ -93,8 +100,10 @@ fun SearchScreen(
 
             SearchInputPhase.SUBMITTED ->
                 SearchResultList(
-                    query = uiState.query,
                     books = books,
+                    listState = listState,
+                    onBookSelected = onBookSelected,
+                    scannerAction = scannerAction,
                 )
         }
     }
@@ -164,6 +173,8 @@ private fun EmptySearchScreenPreview() {
             onSearch = {},
             onQuerySelected = {},
             onNavigateBack = {},
+            onBookSelected = {},
+            scannerAction = SearchScannerAction.Unavailable,
         )
     }
 }
@@ -179,6 +190,8 @@ private fun UnavailableSearchScreenPreview() {
             onSearch = {},
             onQuerySelected = {},
             onNavigateBack = {},
+            onBookSelected = {},
+            scannerAction = SearchScannerAction.Unavailable,
         )
     }
 }
@@ -204,6 +217,8 @@ private fun RecentSearchScreenPreview() {
             onSearch = {},
             onQuerySelected = {},
             onNavigateBack = {},
+            onBookSelected = {},
+            scannerAction = SearchScannerAction.Unavailable,
         )
     }
 }
@@ -219,6 +234,8 @@ private fun LoadingSearchScreenPreview() {
             onSearch = {},
             onQuerySelected = {},
             onNavigateBack = {},
+            onBookSelected = {},
+            scannerAction = SearchScannerAction.Unavailable,
         )
     }
 }
