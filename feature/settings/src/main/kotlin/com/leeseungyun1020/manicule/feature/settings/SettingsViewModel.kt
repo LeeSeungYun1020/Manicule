@@ -33,6 +33,7 @@ class SettingsViewModel
         private val retryRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
         private val isUpdating = MutableStateFlow(false)
         private val eventChannel = Channel<SettingsEvent>(Channel.BUFFERED)
+        private var pendingRetry: SettingsEvent.ReminderUpdateFailed? = null
 
         val events = eventChannel.receiveAsFlow()
 
@@ -73,8 +74,9 @@ class SettingsViewModel
             updateReminder(current.copy(time = time))
         }
 
-        fun retryReminderUpdate(config: ReminderConfig) {
-            updateReminder(config)
+        fun retryReminderUpdate(failure: SettingsEvent.ReminderUpdateFailed) {
+            if (pendingRetry !== failure) return
+            updateReminder(failure.desiredConfig)
         }
 
         fun retryPreferences() {
@@ -88,6 +90,7 @@ class SettingsViewModel
 
         private fun updateReminder(config: ReminderConfig) {
             if (isUpdating.value || uiState.value !is SettingsUiState.Content) return
+            pendingRetry = null
             isUpdating.value = true
             viewModelScope.launch {
                 try {
@@ -95,7 +98,9 @@ class SettingsViewModel
                 } catch (cancellation: CancellationException) {
                     throw cancellation
                 } catch (_: Throwable) {
-                    eventChannel.send(SettingsEvent.ReminderUpdateFailed(config))
+                    val failure = SettingsEvent.ReminderUpdateFailed(config)
+                    pendingRetry = failure
+                    eventChannel.send(failure)
                 } finally {
                     isUpdating.value = false
                 }

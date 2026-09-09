@@ -6,6 +6,18 @@ import org.junit.Test
 
 class NotificationPermissionTest {
     @Test
+    fun deniedPermission_subsequentAttemptShowsSettings() {
+        assertThat(notificationPermissionAction(Build.VERSION_CODES.TIRAMISU, false, previouslyDenied = true))
+            .isEqualTo(NotificationPermissionAction.SHOW_SETTINGS)
+    }
+
+    @Test
+    fun permissionGrantedInSettings_overridesPreviousDenial() {
+        assertThat(notificationPermissionAction(Build.VERSION_CODES.TIRAMISU, true, previouslyDenied = true))
+            .isEqualTo(NotificationPermissionAction.ENABLE_REMINDER)
+    }
+
+    @Test
     fun android13WithoutPermission_requestsPermission() {
         val action =
             notificationPermissionAction(

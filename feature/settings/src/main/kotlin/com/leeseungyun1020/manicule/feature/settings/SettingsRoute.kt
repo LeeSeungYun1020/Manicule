@@ -1,8 +1,7 @@
 package com.leeseungyun1020.manicule.feature.settings
 
 import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.SnackbarDuration
@@ -11,8 +10,11 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -24,6 +26,8 @@ import kotlinx.coroutines.launch
 fun SettingsRoute(viewModel: SettingsViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val activity = LocalActivity.current
+    var permissionDenied by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val permissionDeniedMessage = stringResource(R.string.settings_notification_permission_denied)
@@ -47,6 +51,7 @@ fun SettingsRoute(viewModel: SettingsViewModel = hiltViewModel()) {
 
     val permissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            permissionDenied = !granted
             if (granted) {
                 viewModel.setReminderEnabled(true)
             } else {
@@ -65,7 +70,7 @@ fun SettingsRoute(viewModel: SettingsViewModel = hiltViewModel()) {
                             duration = SnackbarDuration.Indefinite,
                         )
                     if (result == SnackbarResult.ActionPerformed) {
-                        viewModel.retryReminderUpdate(event.desiredConfig)
+                        viewModel.retryReminderUpdate(event)
                     }
                 }
             }
@@ -79,11 +84,9 @@ fun SettingsRoute(viewModel: SettingsViewModel = hiltViewModel()) {
             if (!enabled) {
                 viewModel.setReminderEnabled(false)
             } else {
-                val permissionGranted =
-                    Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-                        context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-                when (notificationPermissionAction(Build.VERSION.SDK_INT, permissionGranted)) {
+                when (notificationPermissionAction(context, activity, permissionDenied)) {
                     NotificationPermissionAction.ENABLE_REMINDER -> viewModel.setReminderEnabled(true)
+                    NotificationPermissionAction.SHOW_SETTINGS -> showPermissionDeniedMessage()
                     NotificationPermissionAction.REQUEST_PERMISSION ->
                         permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }

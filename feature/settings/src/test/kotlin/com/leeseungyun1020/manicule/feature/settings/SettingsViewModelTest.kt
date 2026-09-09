@@ -118,6 +118,8 @@ class SettingsViewModelTest {
     fun updateFailure_restoresPreviousConfigAndCanRetryDesiredConfig() =
         runTest(mainDispatcherRule.dispatcher) {
             val desired = ReminderConfig(enabled = true, time = LocalTime(10, 20))
+            val previous = desired.copy(enabled = false)
+            repository.setReminderConfig(previous)
             scheduler.scheduleFailure = IOException("failed")
             val viewModel = viewModel()
 
@@ -125,18 +127,87 @@ class SettingsViewModelTest {
                 awaitItem()
                 awaitItem()
                 viewModel.events.test {
-                    viewModel.retryReminderUpdate(desired)
+                    viewModel.setReminderEnabled(true)
                     advanceUntilIdle()
 
-                    assertThat(awaitItem()).isEqualTo(SettingsEvent.ReminderUpdateFailed(desired))
-                    assertThat(repository.currentReminder).isEqualTo(ReminderConfig.Default)
+                    val failure = awaitItem() as SettingsEvent.ReminderUpdateFailed
+                    assertThat(failure.desiredConfig).isEqualTo(desired)
+                    assertThat(repository.currentReminder).isEqualTo(previous)
 
-                    viewModel.retryReminderUpdate(desired)
+                    viewModel.retryReminderUpdate(failure)
                     advanceUntilIdle()
 
                     assertThat(repository.currentReminder).isEqualTo(desired)
                     assertThat(scheduler.scheduledTimes).containsExactly(desired.time)
                     cancelAndIgnoreRemainingEvents()
+                }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun newerSuccessfulUpdate_invalidatesOldRetry() =
+        runTest(mainDispatcherRule.dispatcher) {
+            scheduler.scheduleFailure = IOException("failed")
+            val viewModel = viewModel()
+
+            viewModel.uiState.test {
+                awaitItem()
+                awaitItem()
+                viewModel.events.test {
+                    viewModel.setReminderEnabled(true)
+                    advanceUntilIdle()
+                    val failure = awaitItem() as SettingsEvent.ReminderUpdateFailed
+
+                    viewModel.setReminderTime(LocalTime(8, 30))
+                    advanceUntilIdle()
+                    val latest = repository.currentReminder
+                    val cancellations = scheduler.cancelCount
+
+                    viewModel.retryReminderUpdate(failure)
+                    advanceUntilIdle()
+
+                    assertThat(repository.currentReminder).isEqualTo(latest)
+                    assertThat(scheduler.scheduledTimes).isEmpty()
+                    assertThat(scheduler.cancelCount).isEqualTo(cancellations)
+                    expectNoEvents()
+                }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun newerFailureWithSameConfig_onlyAllowsLatestRetry() =
+        runTest(mainDispatcherRule.dispatcher) {
+            scheduler.scheduleFailure = IOException("first failure")
+            val viewModel = viewModel()
+
+            viewModel.uiState.test {
+                awaitItem()
+                awaitItem()
+                viewModel.events.test {
+                    viewModel.setReminderEnabled(true)
+                    advanceUntilIdle()
+                    val oldFailure = awaitItem() as SettingsEvent.ReminderUpdateFailed
+
+                    scheduler.scheduleFailure = IOException("second failure")
+                    viewModel.setReminderEnabled(true)
+                    advanceUntilIdle()
+                    val latestFailure = awaitItem() as SettingsEvent.ReminderUpdateFailed
+                    assertThat(oldFailure.desiredConfig).isEqualTo(latestFailure.desiredConfig)
+
+                    viewModel.retryReminderUpdate(oldFailure)
+                    advanceUntilIdle()
+                    assertThat(repository.currentReminder).isEqualTo(ReminderConfig.Default)
+                    assertThat(scheduler.scheduledTimes).isEmpty()
+
+                    viewModel.retryReminderUpdate(latestFailure)
+                    advanceUntilIdle()
+                    viewModel.retryReminderUpdate(latestFailure)
+                    advanceUntilIdle()
+                    assertThat(repository.currentReminder).isEqualTo(latestFailure.desiredConfig)
+                    assertThat(scheduler.scheduledTimes).containsExactly(latestFailure.desiredConfig.time)
+                    expectNoEvents()
                 }
                 cancelAndIgnoreRemainingEvents()
             }
