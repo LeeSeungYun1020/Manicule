@@ -18,9 +18,9 @@
     <string name="library_sort_updated_at">수정한 날짜</string>
     <string name="library_sort_rating">별점</string>
     <string name="library_sort_latest">최신순</string>
-    <string name="library_sort_oldest">오래된순</string>
-    <string name="library_sort_highest">높은순</string>
-    <string name="library_sort_lowest">낮은순</string>
+    <string name="library_sort_oldest">오래된 순</string>
+    <string name="library_sort_highest">높은 순</string>
+    <string name="library_sort_lowest">낮은 순</string>
     <string name="library_sort_cancel">취소</string>
     <string name="library_sort_apply">적용</string>
     <string name="library_sort_caption">%1$s · %2$s</string>
