@@ -4,8 +4,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.leeseungyun1020.manicule.core.domain.book.GetBookDetailUseCase
+import com.leeseungyun1020.manicule.core.domain.library.ChangeReadingStatusUseCase
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
+import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +24,7 @@ class BookDetailViewModel
     @Inject
     constructor(
         private val getBookDetail: GetBookDetailUseCase,
+        private val changeStatus: ChangeReadingStatusUseCase,
         private val savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
         private val isbn: String = checkNotNull(savedStateHandle[ISBN_KEY])
@@ -28,6 +33,8 @@ class BookDetailViewModel
             restoredTab() ?: if (openMyRecords) BookDetailTab.MyRecords else null
         private var refreshStatus: RefreshStatus = RefreshStatus.Idle
         private var observationJob: Job? = null
+        private var statusChange: StatusChangeState = StatusChangeState.Idle
+        private var statusAttempt = 0L
         private val _uiState = MutableStateFlow<BookDetailUiState>(BookDetailUiState.Loading)
         val uiState: StateFlow<BookDetailUiState> = _uiState.asStateFlow()
 
@@ -75,6 +82,47 @@ class BookDetailViewModel
             }
         }
 
+        fun changeReadingStatus(status: ReadingStatus) {
+            if (_uiState.value !is BookDetailUiState.Content ||
+                status == ReadingStatus.UNSET ||
+                statusChange is StatusChangeState.Saving
+            ) {
+                return
+            }
+            val attempt = ++statusAttempt
+            updateStatusChange(StatusChangeState.Saving(status))
+            viewModelScope.launch {
+                try {
+                    val result = changeStatus(isbn, status)
+                    updateStatusChange(
+                        when (result) {
+                            ReadingStatusChangeResult.Changed, ReadingStatusChangeResult.Unchanged -> StatusChangeState.Idle
+                            ReadingStatusChangeResult.BookNotFound, ReadingStatusChangeResult.InvalidStatus -> StatusChangeState.Failed(
+                                status,
+                                attempt,
+                            )
+                        },
+                    )
+                } catch (cancelled: CancellationException) {
+                    updateStatusChange(StatusChangeState.Idle)
+                    throw cancelled
+                } catch (_: Exception) {
+                    updateStatusChange(StatusChangeState.Failed(status, attempt))
+                }
+            }
+        }
+
+        fun dismissStatusError() {
+            if (statusChange is StatusChangeState.Failed) updateStatusChange(StatusChangeState.Idle)
+        }
+
+        private fun updateStatusChange(value: StatusChangeState) {
+            statusChange = value
+            _uiState.update { state ->
+                if (state is BookDetailUiState.Content) state.copy(statusChange = value) else state
+            }
+        }
+
         private fun observeBookDetail() {
             if (observationJob?.isActive == true) return
 
@@ -91,6 +139,7 @@ class BookDetailViewModel
                                         bookDetail = bookDetail,
                                         selectedTab = tab,
                                         refreshStatus = refreshStatus,
+                                        statusChange = statusChange,
                                     )
                                 } else {
                                     state

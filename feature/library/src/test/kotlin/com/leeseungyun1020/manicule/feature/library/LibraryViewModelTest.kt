@@ -9,6 +9,7 @@ import com.leeseungyun1020.manicule.core.domain.library.GetLibraryBooksUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import com.leeseungyun1020.manicule.feature.library.navigation.LibraryTab
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -166,6 +167,13 @@ private class ControllableLibraryRepository : LibraryRepository {
     fun flow(status: ReadingStatus): MutableSharedFlow<List<BookEntry>> = checkNotNull(flows[status])
 
     override fun observeAll(): Flow<List<BookEntry>> = flow(ReadingStatus.READING)
+
+    override suspend fun changeReadingStatus(
+        isbn: String,
+        status: ReadingStatus,
+        updatedAt: kotlinx.datetime.Instant,
+        finishedAt: kotlinx.datetime.LocalDate?,
+    ): ReadingStatusChangeResult = error("Not used by this test")
 
     override fun observeByStatus(status: ReadingStatus): Flow<List<BookEntry>> =
         flow {

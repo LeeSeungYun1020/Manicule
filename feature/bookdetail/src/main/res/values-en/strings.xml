@@ -22,4 +22,11 @@
     <string name="book_detail_content_empty">No information provided</string>
     <string name="book_detail_expand">More</string>
     <string name="book_detail_collapse">Less</string>
+    <string name="book_detail_status_title">Status</string>
+    <string name="book_detail_status_want">Want to read</string>
+    <string name="book_detail_status_reading">Reading</string>
+    <string name="book_detail_status_finished">Finished</string>
+    <string name="book_detail_status_saving">Saving status…</string>
+    <string name="book_detail_status_unset">Choose a status to add this book to your library</string>
+    <string name="book_detail_status_error">Couldn’t save reading status</string>
 </resources>
