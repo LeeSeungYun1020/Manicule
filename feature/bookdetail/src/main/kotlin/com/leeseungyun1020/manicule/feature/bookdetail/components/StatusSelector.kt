@@ -44,6 +44,7 @@ internal fun StatusSelector(
                 enabled = enabled,
                 shape = SegmentedButtonDefaults.itemShape(index, options.size),
                 modifier = Modifier.fillMaxHeight().heightIn(min = MaterialTheme.size.touchTargetMin),
+                icon = {},
                 label = { Text(labels[index], textAlign = TextAlign.Center) },
             )
         }
