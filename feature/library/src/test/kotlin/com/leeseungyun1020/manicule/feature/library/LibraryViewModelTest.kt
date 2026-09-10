@@ -1,5 +1,6 @@
 package com.leeseungyun1020.manicule.feature.library
 
+import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
@@ -8,14 +9,20 @@ import com.leeseungyun1020.manicule.core.domain.library.GetLibraryBooksUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import com.leeseungyun1020.manicule.feature.library.navigation.LibraryTab
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.io.IOException
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], manifest = Config.NONE)
 class LibraryViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
@@ -25,7 +32,7 @@ class LibraryViewModelTest {
     @Test
     fun initialStatus_isReading_andEmitsContent() =
         runTest(mainDispatcherRule.dispatcher) {
-            val viewModel = LibraryViewModel(GetLibraryBooksUseCase(repository))
+            val viewModel = createViewModel()
             viewModel.uiState.test {
                 assertThat(awaitItem()).isEqualTo(LibraryUiState.Loading(ReadingStatus.READING))
                 repository.flow(ReadingStatus.READING).emit(emptyList())
@@ -36,7 +43,7 @@ class LibraryViewModelTest {
     @Test
     fun selectingTab_cancelsPreviousSubscription() =
         runTest(mainDispatcherRule.dispatcher) {
-            val viewModel = LibraryViewModel(GetLibraryBooksUseCase(repository))
+            val viewModel = createViewModel()
             viewModel.uiState.test {
                 awaitItem()
                 viewModel.selectStatus(ReadingStatus.WANT)
@@ -52,7 +59,7 @@ class LibraryViewModelTest {
     fun repositoryFailure_emitsError_andRetrySubscribesAgain() =
         runTest(mainDispatcherRule.dispatcher) {
             repository.fail = true
-            val viewModel = LibraryViewModel(GetLibraryBooksUseCase(repository))
+            val viewModel = createViewModel()
             viewModel.uiState.test {
                 awaitItem()
                 assertThat(awaitItem()).isEqualTo(LibraryUiState.Error(ReadingStatus.READING))
@@ -63,6 +70,91 @@ class LibraryViewModelTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
+
+    @Test
+    fun initialWantTab_isUsedForLoadingAndRepositoryQuery() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val viewModel = createViewModel(SavedStateHandle(mapOf("initialTab" to LibraryTab.WANT)))
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Loading(ReadingStatus.WANT))
+                repository.flow(ReadingStatus.WANT).emit(emptyList())
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Content(ReadingStatus.WANT, emptyList()))
+                assertThat(repository.lastStatus).isEqualTo(ReadingStatus.WANT)
+            }
+        }
+
+    @Test
+    fun initialFinishedTab_isUsedForLoadingAndRepositoryQuery() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val viewModel = createViewModel(SavedStateHandle(mapOf("initialTab" to LibraryTab.FINISHED)))
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Loading(ReadingStatus.FINISHED))
+                repository.flow(ReadingStatus.FINISHED).emit(emptyList())
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Content(ReadingStatus.FINISHED, emptyList()))
+            }
+        }
+
+    @Test
+    fun retry_keepsRequestedWantTab() =
+        runTest(mainDispatcherRule.dispatcher) {
+            repository.fail = true
+            val viewModel = createViewModel(SavedStateHandle(mapOf("initialTab" to LibraryTab.WANT)))
+            viewModel.uiState.test {
+                awaitItem()
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Error(ReadingStatus.WANT))
+                repository.fail = false
+                viewModel.retry()
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Loading(ReadingStatus.WANT))
+                repository.flow(ReadingStatus.WANT).emit(emptyList())
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Content(ReadingStatus.WANT, emptyList()))
+                assertThat(repository.subscriptionCount).isEqualTo(2)
+            }
+        }
+
+    @Test
+    fun restoredUserSelection_takesPrecedenceOverInitialTab() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val savedStateHandle = SavedStateHandle(mapOf("initialTab" to LibraryTab.WANT))
+            val viewModel = createViewModel(savedStateHandle)
+            viewModel.selectStatus(ReadingStatus.FINISHED)
+
+            val restoredHandle = SavedStateHandle(savedStateHandle.keys().associateWith { savedStateHandle.get<Any>(it) })
+            val restoredViewModel = createViewModel(restoredHandle)
+            restoredViewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Loading(ReadingStatus.FINISHED))
+                repository.flow(ReadingStatus.FINISHED).emit(emptyList())
+                assertThat(awaitItem()).isEqualTo(LibraryUiState.Content(ReadingStatus.FINISHED, emptyList()))
+            }
+        }
+
+    @Test
+    fun unknownSavedTab_fallsBackToRouteTab() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val viewModel =
+                createViewModel(
+                    SavedStateHandle(mapOf("initialTab" to LibraryTab.WANT, "librarySelectedTab" to "unknown")),
+                )
+
+            assertThat(viewModel.uiState.value).isEqualTo(LibraryUiState.Loading(ReadingStatus.WANT))
+        }
+
+    @Test
+    fun unsetStatus_doesNotReplaceVisibleTab() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val savedStateHandle = SavedStateHandle(mapOf("initialTab" to LibraryTab.WANT))
+            val viewModel = createViewModel(savedStateHandle)
+            viewModel.uiState.test {
+                awaitItem()
+                repository.flow(ReadingStatus.WANT).emit(emptyList())
+                awaitItem()
+                viewModel.selectStatus(ReadingStatus.UNSET)
+                expectNoEvents()
+                assertThat(savedStateHandle.contains("librarySelectedTab")).isFalse()
+            }
+        }
+
+    private fun createViewModel(savedStateHandle: SavedStateHandle = SavedStateHandle()): LibraryViewModel =
+        LibraryViewModel(GetLibraryBooksUseCase(repository), savedStateHandle)
 }
 
 private class ControllableLibraryRepository : LibraryRepository {

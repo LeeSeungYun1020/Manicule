@@ -29,7 +29,7 @@ enum class TopLevelDestination(
         labelRes = R.string.tab_home,
     ),
     LIBRARY(
-        route = LibraryRoute,
+        route = LibraryRoute(),
         iconSelected = ManiculeIcons.Tab.LibraryFilled,
         iconUnselected = ManiculeIcons.Tab.LibraryOutlined,
         labelRes = R.string.tab_library,
