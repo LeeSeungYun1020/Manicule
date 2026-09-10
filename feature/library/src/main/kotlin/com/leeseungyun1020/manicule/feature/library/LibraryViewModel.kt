@@ -1,10 +1,14 @@
 package com.leeseungyun1020.manicule.feature.library
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.leeseungyun1020.manicule.core.domain.library.GetLibraryBooksUseCase
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import com.leeseungyun1020.manicule.feature.library.navigation.LibraryRoute
+import com.leeseungyun1020.manicule.feature.library.navigation.LibraryTab
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,8 +26,12 @@ class LibraryViewModel
     @Inject
     constructor(
         getLibraryBooks: GetLibraryBooksUseCase,
+        private val savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
-        private val selectedStatus = MutableStateFlow(ReadingStatus.READING)
+        private val initialStatus =
+            LibraryTab.entries.firstOrNull { it.name == savedStateHandle.get<String>(SELECTED_TAB_KEY) }?.status
+                ?: savedStateHandle.toRoute<LibraryRoute>().initialTab.status
+        private val selectedStatus = MutableStateFlow(initialStatus)
         private val retries = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
         val uiState =
@@ -37,14 +45,20 @@ class LibraryViewModel
                 }.stateIn(
                     scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(5_000),
-                    initialValue = LibraryUiState.Loading(ReadingStatus.READING),
+                    initialValue = LibraryUiState.Loading(initialStatus),
                 )
 
         fun selectStatus(status: ReadingStatus) {
+            if (status == ReadingStatus.UNSET) return
+            savedStateHandle[SELECTED_TAB_KEY] = status.name
             selectedStatus.value = status
         }
 
         fun retry() {
             retries.tryEmit(Unit)
+        }
+
+        private companion object {
+            const val SELECTED_TAB_KEY = "librarySelectedTab"
         }
     }
