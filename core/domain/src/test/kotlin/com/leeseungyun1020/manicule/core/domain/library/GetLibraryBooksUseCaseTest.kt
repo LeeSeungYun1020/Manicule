@@ -8,6 +8,7 @@ import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
@@ -66,6 +67,13 @@ private class FakeLibraryRepository : LibraryRepository {
         observedAll = true
         return books
     }
+
+    override suspend fun changeReadingStatus(
+        isbn: String,
+        status: ReadingStatus,
+        updatedAt: kotlinx.datetime.Instant,
+        finishedAt: kotlinx.datetime.LocalDate?,
+    ): ReadingStatusChangeResult = error("Not used by this test")
 
     override fun observeByStatus(
         status: ReadingStatus,
