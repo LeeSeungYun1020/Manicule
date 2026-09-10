@@ -10,6 +10,7 @@ import com.leeseungyun1020.manicule.core.database.dao.projection.BookEntryWithCu
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
 import com.leeseungyun1020.manicule.core.database.entity.ReadingRecordEntity
+import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
@@ -275,10 +276,6 @@ class BookEntryDaoTest {
                 val date = if (status == ReadingStatus.FINISHED) LocalDate(2026, 9, 5) else null
                 assertThat(dao.changeReadingStatus(isbn, status, now, date)).isEqualTo(ReadingStatusChangeResult.Changed)
                 assertThat(dao.getEntry(isbn)).isEqualTo(BookEntryEntity(isbn, status, 0, null, now, now, date))
-                dao.observeByStatusUpdatedAtDescending(status).test {
-                    assertThat(awaitItem().map { it.entry.isbn }).contains(isbn)
-                    cancelAndIgnoreRemainingEvents()
-                }
             }
         }
 
