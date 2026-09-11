@@ -20,7 +20,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsRoute(viewModel: SettingsViewModel = hiltViewModel()) {
@@ -30,22 +29,15 @@ fun SettingsRoute(viewModel: SettingsViewModel = hiltViewModel()) {
     var permissionDenied by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val permissionSnackbar = remember(scope, snackbarHostState) { PermissionSnackbar(scope, snackbarHostState) }
     val permissionDeniedMessage = stringResource(R.string.settings_notification_permission_denied)
     val openSettingsLabel = stringResource(R.string.settings_open_system_settings)
     val updateFailedMessage = stringResource(R.string.settings_reminder_update_failed)
     val retryLabel = stringResource(R.string.settings_retry)
 
     fun showPermissionDeniedMessage() {
-        scope.launch {
-            val result =
-                snackbarHostState.showSnackbar(
-                    message = permissionDeniedMessage,
-                    actionLabel = openSettingsLabel,
-                    duration = SnackbarDuration.Indefinite,
-                )
-            if (result == SnackbarResult.ActionPerformed) {
-                context.startActivity(appNotificationSettingsIntent(context.packageName))
-            }
+        permissionSnackbar.show(permissionDeniedMessage, openSettingsLabel) {
+            context.startActivity(appNotificationSettingsIntent(context.packageName))
         }
     }
 
