@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -71,7 +70,7 @@ fun ReadingCalendarGrid(
     val isInteractive = onDateSelected != null
     val itemSize = if (isInteractive) ManiculeSize.touchTargetMin else MaterialTheme.size.calendarCell
     val itemGap = if (isInteractive) MaterialTheme.spacing.sm else MaterialTheme.size.calendarCellGap
-    val minimumHeight =
+    val gridHeight =
         calendarGridHeight(
             itemSize = itemSize,
             itemGap = itemGap,
@@ -92,15 +91,17 @@ fun ReadingCalendarGrid(
         }
     }
 
-    LazyHorizontalGrid(
-        rows = GridCells.Fixed(CALENDAR_ROW_COUNT),
-        state = gridState,
-        modifier = Modifier.heightIn(min = minimumHeight).then(modifier),
-        contentPadding = contentPadding,
-        horizontalArrangement = Arrangement.spacedBy(itemGap),
-        verticalArrangement = Arrangement.spacedBy(itemGap),
-    ) {
-        readingCalendarItems(days = days, paddingCount = paddingCount, config = gridConfig)
+    Box(modifier = modifier) {
+        LazyHorizontalGrid(
+            rows = GridCells.Fixed(CALENDAR_ROW_COUNT),
+            state = gridState,
+            modifier = Modifier.height(gridHeight),
+            contentPadding = contentPadding,
+            horizontalArrangement = Arrangement.spacedBy(itemGap),
+            verticalArrangement = Arrangement.spacedBy(itemGap),
+        ) {
+            readingCalendarItems(days = days, paddingCount = paddingCount, config = gridConfig)
+        }
     }
 }
 

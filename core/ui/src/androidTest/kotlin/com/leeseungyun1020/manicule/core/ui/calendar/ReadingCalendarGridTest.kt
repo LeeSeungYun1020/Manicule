@@ -3,21 +3,25 @@ package com.leeseungyun1020.manicule.core.ui.calendar
 import android.content.Context
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -37,6 +41,7 @@ import org.junit.runner.RunWith
 
 private const val TEST_CALENDAR_ROW_COUNT = 7
 private const val TEST_CALENDAR_GAP_COUNT = TEST_CALENDAR_ROW_COUNT - 1
+private const val TEST_CALENDAR_TAG = "reading-calendar"
 
 @RunWith(AndroidJUnit4::class)
 class ReadingCalendarGridTest {
@@ -60,7 +65,10 @@ class ReadingCalendarGridTest {
                     today = LocalDate(2026, 7, 20),
                     modifier =
                         Modifier
-                            .width(ManiculeSize.calendarCell)
+                            .width(
+                                ManiculeSize.calendarCell * 2 +
+                                    ManiculeSize.calendarCellGap,
+                            )
                             .height(compactGridHeight),
                 )
             }
@@ -157,11 +165,46 @@ class ReadingCalendarGridTest {
                     modifier =
                         Modifier
                             .width(ManiculeSize.touchTargetMin)
-                            .height(interactiveGridHeight),
+                            .testTag(TEST_CALENDAR_TAG),
                 )
             }
         }
 
+        composeTestRule
+            .onNodeWithTag(TEST_CALENDAR_TAG)
+            .assertHeightIsEqualTo(interactiveGridHeight + ManiculeSpacing.lg * 2)
+        assertSelectableDaysDoNotOverlap(days)
+    }
+
+    @Test
+    fun callerPaddingStaysOutsideSelectableDayTargets() {
+        val monday = ReadingCalendarDay.of(LocalDate(2026, 7, 6), pages = 1)
+        val tuesday = ReadingCalendarDay.of(LocalDate(2026, 7, 7), pages = 1)
+        val days = listOf(monday, tuesday)
+
+        composeTestRule.setContent {
+            ManiculeTheme {
+                ReadingCalendarGrid(
+                    days = days,
+                    today = LocalDate(2026, 7, 20),
+                    onDateSelected = {},
+                    modifier =
+                        Modifier
+                            .width(ManiculeSize.touchTargetMin)
+                            .testTag(TEST_CALENDAR_TAG)
+                            .padding(vertical = ManiculeSpacing.lg),
+                )
+            }
+        }
+
+        composeTestRule
+            .onNodeWithTag(TEST_CALENDAR_TAG)
+            .assertHeightIsEqualTo(interactiveGridHeight + ManiculeSpacing.lg * 2)
+        assertSelectableDaysDoNotOverlap(days)
+    }
+
+    private fun assertSelectableDaysDoNotOverlap(days: List<ReadingCalendarDay>) {
+        require(days.size >= 2)
         days.forEach { day ->
             composeTestRule
                 .onNodeWithContentDescription(descriptionFor(day))
@@ -169,15 +212,15 @@ class ReadingCalendarGridTest {
                 .assertWidthIsAtLeast(ManiculeSize.touchTargetMin)
                 .assertHeightIsAtLeast(ManiculeSize.touchTargetMin)
         }
-        val mondayBounds =
+        val firstBounds =
             composeTestRule
-                .onNodeWithContentDescription(descriptionFor(monday))
+                .onNodeWithContentDescription(descriptionFor(days[0]))
                 .getUnclippedBoundsInRoot()
-        val tuesdayBounds =
+        val secondBounds =
             composeTestRule
-                .onNodeWithContentDescription(descriptionFor(tuesday))
+                .onNodeWithContentDescription(descriptionFor(days[1]))
                 .getUnclippedBoundsInRoot()
-        assertTrue(mondayBounds.bottom <= tuesdayBounds.top)
+        assertTrue(firstBounds.bottom <= secondBounds.top)
     }
 
     @Test
