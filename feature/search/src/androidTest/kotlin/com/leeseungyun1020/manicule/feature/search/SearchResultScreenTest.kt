@@ -5,9 +5,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.StateRestorationTester
@@ -31,11 +38,38 @@ import com.leeseungyun1020.manicule.core.model.Book
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.datetime.LocalDate
 import org.junit.Rule
 import org.junit.Test
 
 class SearchResultScreenTest {
     @get:Rule val compose = createComposeRule()
+
+    @Test
+    fun rowSemantics_announcesMetadataOnceAndKeepsClickAction() {
+        val selections = mutableListOf<String>()
+        val book = resultBook(0).copy(publishedDate = LocalDate(2026, 9, 10))
+        showResults(flowOf(loadedSearchData(listOf(book))), onBookSelected = selections::add)
+
+        compose.onNodeWithText("Book 0")
+            .assertTextEquals("Book 0", "Author", "Publisher · 2026-09-10")
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentDescription))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+            .assertHasClickAction()
+            .performClick()
+
+        assertThat(selections).containsExactly("isbn-0")
+    }
+
+    @Test
+    fun rowSemantics_omitsEmptyMetadata() {
+        val book = resultBook(0).copy(author = "", publisher = " ")
+        showResults(flowOf(loadedSearchData(listOf(book))))
+
+        compose.onNodeWithText("Book 0")
+            .assertTextEquals("Book 0")
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentDescription))
+    }
 
     @Test
     fun rowTap_selectsIsbnFromCoverAndText() {
@@ -44,8 +78,10 @@ class SearchResultScreenTest {
 
         compose.onNodeWithContentDescription("Book 0", useUnmergedTree = true)
             .performTouchInput { click(center) }
-        compose.onNodeWithText("Book 0", useUnmergedTree = true)
-            .performTouchInput { click(center) }
+        compose.onNode(
+            hasText("Book 0") and hasClickAction().not(),
+            useUnmergedTree = true,
+        ).performTouchInput { click(center) }
 
         assertThat(selections).containsExactly("isbn-0", "isbn-0")
     }

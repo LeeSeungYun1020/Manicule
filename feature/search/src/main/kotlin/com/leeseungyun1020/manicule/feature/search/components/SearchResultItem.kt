@@ -7,7 +7,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.AnnotatedString
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.model.Book
@@ -21,16 +23,23 @@ internal fun SearchResultItem(
     showDivider: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val pubDate = book.publishedDate?.toString().orEmpty()
+    val publication = listOf(book.publisher, pubDate).filter { it.isNotBlank() }.joinToString(" · ")
+    val rowText = listOf(book.title, book.author, publication)
+        .filter { it.isNotBlank() }
+        .map(::AnnotatedString)
     Column(modifier) {
         BookListItem(
             title = book.title,
             author = book.author,
             publisher = book.publisher,
-            pubDate = book.publishedDate?.toString().orEmpty(),
+            pubDate = pubDate,
             imageUrl = book.coverUrl,
             modifier = Modifier
                 .clickable(role = Role.Button) { onBookSelected(book.isbn) }
-                .semantics(mergeDescendants = true) {},
+                .clearAndSetSemantics {
+                    this[SemanticsProperties.Text] = rowText
+                },
         )
         if (showDivider) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
