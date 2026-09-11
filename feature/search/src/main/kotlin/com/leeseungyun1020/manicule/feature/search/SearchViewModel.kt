@@ -63,6 +63,7 @@ class SearchViewModel
                 SearchUiState(
                     query = input.query,
                     inputPhase = input.phase,
+                    searchRequestId = input.searchRequestId,
                     recentQueriesState = recentState,
                     filteredQueries =
                         if (input.phase == SearchInputPhase.TYPING) {
@@ -110,16 +111,14 @@ class SearchViewModel
             val normalizedQuery = query.trim()
             if (normalizedQuery.isEmpty()) return
 
+            val request = SearchRequest(id = nextRequestId++, query = normalizedQuery)
             searchInput.value =
                 SearchInput(
                     query = normalizedQuery,
                     phase = SearchInputPhase.SUBMITTED,
+                    searchRequestId = request.id,
                 )
-            searchRequest.value =
-                SearchRequest(
-                    id = nextRequestId++,
-                    query = normalizedQuery,
-                )
+            searchRequest.value = request
             viewModelScope.launch {
                 try {
                     saveRecentQuery(normalizedQuery)
@@ -140,6 +139,7 @@ private fun List<SearchQuery>.toRecentQueriesState(): RecentQueriesState =
 private data class SearchInput(
     val query: String = "",
     val phase: SearchInputPhase = SearchInputPhase.IDLE,
+    val searchRequestId: Long? = null,
 )
 
 private data class SearchRequest(

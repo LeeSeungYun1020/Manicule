@@ -3,10 +3,12 @@ package com.leeseungyun1020.manicule.feature.search
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
@@ -16,8 +18,11 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.dp
+import androidx.paging.LoadState
+import androidx.paging.LoadStates
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -168,10 +173,7 @@ class SearchScreenTest {
             onSearch = { submittedQuery = it },
         )
 
-        val searchField =
-            composeTestRule.onNode(
-                hasText("Search by title or author") and hasSetTextAction(),
-            )
+        val searchField = composeTestRule.onNode(hasSetTextAction())
         searchField.performTextInput("Compose")
         searchField.performImeAction()
 
@@ -190,6 +192,7 @@ class SearchScreenTest {
                 flowOf(
                     PagingData.from(
                         listOf(book(title = "Compose in Action")),
+                        sourceLoadStates = completedLoadStates,
                     ),
                 ),
             initialQuery = "Compose",
@@ -200,6 +203,49 @@ class SearchScreenTest {
     }
 
     @Test
+    fun repeatedSearch_resetsScrollWhileOtherStateUpdatesKeepPosition() {
+        val state =
+            mutableStateOf(
+                SearchUiState(
+                    query = "Compose",
+                    inputPhase = SearchInputPhase.SUBMITTED,
+                    searchRequestId = 0L,
+                ),
+            )
+        val results =
+            flowOf(
+                PagingData.from(
+                    (1..20).map { book("Book $it") },
+                    sourceLoadStates = completedLoadStates,
+                ),
+            )
+        composeTestRule.setContent {
+            ManiculeTheme {
+                SearchScreen(
+                    uiState = state.value,
+                    searchResults = results,
+                    searchFieldState = rememberTextFieldState(initialText = "Compose"),
+                    onSearch = { state.value = state.value.copy(searchRequestId = 1L) },
+                    onQuerySelected = {},
+                    onNavigateBack = {},
+                )
+            }
+        }
+
+        composeTestRule.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Book 20"))
+        composeTestRule.onNodeWithText("Book 20").assertIsDisplayed()
+        composeTestRule.runOnIdle {
+            state.value = state.value.copy(recentQueriesState = RecentQueriesState.Content(listOf("Compose")))
+        }
+        composeTestRule.onNodeWithText("Book 20").assertIsDisplayed()
+
+        composeTestRule.onNode(hasSetTextAction()).performImeAction()
+
+        composeTestRule.onNodeWithText("Search results").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Book 1").assertIsDisplayed()
+    }
+
+    @Test
     fun submittedSearch_withNoBooksDisplaysEmptyResult() {
         composeTestRule.setSearchContent(
             uiState =
@@ -207,7 +253,7 @@ class SearchScreenTest {
                     query = "Missing",
                     inputPhase = SearchInputPhase.SUBMITTED,
                 ),
-            searchResults = flowOf(PagingData.empty()),
+            searchResults = flowOf(PagingData.empty(sourceLoadStates = completedLoadStates)),
             initialQuery = "Missing",
         )
 
@@ -254,6 +300,13 @@ class SearchScreenTest {
         composeTestRule.waitUntil { pagingSource.loadCount >= 2 }
     }
 }
+
+private val completedLoadStates =
+    LoadStates(
+        refresh = LoadState.NotLoading(false),
+        prepend = LoadState.NotLoading(true),
+        append = LoadState.NotLoading(true),
+    )
 
 private fun ComposeContentTestRule.setSearchContent(
     uiState: SearchUiState,

@@ -8,6 +8,7 @@ data class SearchUiState(
     val inputPhase: SearchInputPhase = SearchInputPhase.IDLE,
     val recentQueriesState: RecentQueriesState = RecentQueriesState.Loading,
     val filteredQueries: List<String> = emptyList(),
+    val searchRequestId: Long? = null,
 )
 
 enum class SearchInputPhase {

@@ -43,13 +43,13 @@ import kotlinx.coroutines.flow.flowOf
 
 @Composable
 fun SearchResultList(
-    query: String,
+    searchRequestId: Long?,
     books: LazyPagingItems<Book>,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
 
-    LaunchedEffect(query) {
+    LaunchedEffect(searchRequestId) {
         listState.scrollToItem(0)
     }
 
@@ -260,7 +260,7 @@ private fun SearchResultContentPreview() {
 
     ManiculePreviewTheme {
         SearchResultList(
-            query = "Kotlin",
+            searchRequestId = 0L,
             books = books,
         )
     }

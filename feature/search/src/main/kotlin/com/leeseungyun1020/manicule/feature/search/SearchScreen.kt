@@ -93,7 +93,7 @@ fun SearchScreen(
 
             SearchInputPhase.SUBMITTED ->
                 SearchResultList(
-                    query = uiState.query,
+                    searchRequestId = uiState.searchRequestId,
                     books = books,
                 )
         }
