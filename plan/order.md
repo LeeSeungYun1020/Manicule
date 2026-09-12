@@ -276,7 +276,7 @@
 
 1. 홈·통계가 공유하는 날짜 범위·오늘·연속 기록 집계 계약과 Data/Domain 구현·테스트
 2. 월요일 기준 공용 독서 달력 선택 계약과 UI 테스트
-    - `ReadingCalendarGrid`는 선택 상태와 오늘 날짜를 호출부에서 받고, 선택 가능한 날짜에만 48dp 이상의 `clickable` 영역과 클릭 semantics를 제공한다.
+    - `ReadingCalendarGrid`는 선택 상태와 오늘 날짜를 호출부에서 받고, 선택 가능한 날짜에만 `clickable`과 클릭 semantics를 제공한다. 크기와 선택 동작은 [독서 통계 기획](plan.md#35-독서-통계)을 따른다.
     - 날짜 선택 가능 정책은 `isDateSelectable`로 호출부가 소유한다. V7은 기록이 있는 날짜만 선택 가능하게 전달하고, 기록이 없는 날짜는 클릭 피드백을 노출하지 않는다.
     - 주 시작 요일은 월요일로 고정한다. 월요일/일요일 사용자 설정은 [#46](https://github.com/LeeSeungYun1020/Manicule/issues/46)의 후속 범위로 분리한다.
 3. 통계 독서 달력 조립과 날짜별 기록 시트

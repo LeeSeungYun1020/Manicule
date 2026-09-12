@@ -1,6 +1,12 @@
 package com.leeseungyun1020.manicule.core.ui.calendar
 
+import android.accessibilityservice.AccessibilityServiceInfo
+import android.app.UiAutomation
 import android.content.Context
+import android.graphics.Bitmap
+import android.view.accessibility.AccessibilityManager
+import android.view.accessibility.AccessibilityNodeInfo
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,26 +17,34 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.input.InputMode
+import androidx.compose.ui.input.InputModeManager
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.platform.LocalInputModeManager
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHasNoClickAction
-import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsSelected
-import androidx.compose.ui.test.assertWidthIsAtLeast
+import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
@@ -38,11 +52,15 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.swipe
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -60,6 +78,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 import kotlin.math.roundToInt
 
 private const val TEST_CALENDAR_ROW_COUNT = 7
@@ -131,7 +150,7 @@ class ReadingCalendarGridTest {
                     modifier =
                         Modifier
                             .width(ManiculeSize.touchTargetMin)
-                            .height(interactiveGridHeight),
+                            .height(compactGridHeight),
                 )
             }
         }
@@ -139,8 +158,8 @@ class ReadingCalendarGridTest {
         composeTestRule
             .onNodeWithContentDescription(descriptionFor(day))
             .assertHasClickAction()
-            .assertWidthIsAtLeast(ManiculeSize.touchTargetMin)
-            .assertHeightIsAtLeast(ManiculeSize.touchTargetMin)
+            .assertWidthIsEqualTo(20.dp)
+            .assertHeightIsEqualTo(20.dp)
             .performClick()
             .assertIsSelected()
         composeTestRule.runOnIdle {
@@ -162,7 +181,7 @@ class ReadingCalendarGridTest {
                     modifier =
                         Modifier
                             .width(ManiculeSize.touchTargetMin)
-                            .height(interactiveGridHeight),
+                            .height(compactGridHeight),
                 )
             }
         }
@@ -195,7 +214,7 @@ class ReadingCalendarGridTest {
 
         composeTestRule
             .onNodeWithTag(TEST_CALENDAR_TAG)
-            .assertHeightIsEqualTo(interactiveGridHeight + ManiculeSpacing.lg * 2)
+            .assertHeightIsEqualTo(compactGridHeight + ManiculeSpacing.lg * 2)
         assertSelectableDaysDoNotOverlap(days)
     }
 
@@ -222,19 +241,19 @@ class ReadingCalendarGridTest {
 
         composeTestRule
             .onNodeWithTag(TEST_CALENDAR_TAG)
-            .assertHeightIsEqualTo(interactiveGridHeight + ManiculeSpacing.lg * 2)
+            .assertHeightIsEqualTo(compactGridHeight + ManiculeSpacing.lg * 2)
         assertSelectableDaysDoNotOverlap(days)
     }
 
     @Test
     fun fixedHeightKeepsDayTargetsAndAllowsScrollingToSunday() {
-        assertConstrainedCalendar(Modifier.height(interactiveGridHeight / 2))
+        assertConstrainedCalendar(Modifier.height(compactGridHeight / 2))
     }
 
     @Test
     fun fixedHeightWithBothPaddingsKeepsDayTargets() {
         assertConstrainedCalendar(
-            modifier = Modifier.height(interactiveGridHeight / 2).padding(vertical = ManiculeSpacing.lg),
+            modifier = Modifier.height(compactGridHeight / 2).padding(vertical = ManiculeSpacing.lg),
             contentPadding = PaddingValues(ManiculeSpacing.lg),
         )
     }
@@ -242,7 +261,7 @@ class ReadingCalendarGridTest {
     @Test
     fun paddingBeforeFixedHeightKeepsDayTargets() {
         assertConstrainedCalendar(
-            modifier = Modifier.padding(vertical = ManiculeSpacing.lg).height(interactiveGridHeight / 2),
+            modifier = Modifier.padding(vertical = ManiculeSpacing.lg).height(compactGridHeight / 2),
             contentPadding = PaddingValues(vertical = ManiculeSpacing.lg),
         )
     }
@@ -252,7 +271,7 @@ class ReadingCalendarGridTest {
         assertConstrainedCalendar(
             modifier = Modifier.padding(vertical = ManiculeSpacing.lg),
             contentPadding = PaddingValues(vertical = ManiculeSpacing.lg),
-            parentHeight = interactiveGridHeight / 2,
+            parentHeight = compactGridHeight / 2,
         )
     }
 
@@ -273,14 +292,14 @@ class ReadingCalendarGridTest {
                 }
             }
         }
-        composeTestRule.onNodeWithTag(TEST_CALENDAR_TAG).assertHeightIsEqualTo(interactiveGridHeight)
+        composeTestRule.onNodeWithTag(TEST_CALENDAR_TAG).assertHeightIsEqualTo(compactGridHeight)
         assertSelectableDaysDoNotOverlap(days)
     }
 
     private fun assertConstrainedCalendar(
         modifier: Modifier,
         contentPadding: PaddingValues = PaddingValues(),
-        parentHeight: Dp = interactiveGridHeight,
+        parentHeight: Dp = compactGridHeight,
     ) {
         val days = (0 until TEST_CALENDAR_ROW_COUNT).map { offset ->
             ReadingCalendarDay.of(LocalDate(2026, 7, 6).plus(DatePeriod(days = offset)), pages = 1)
@@ -338,13 +357,13 @@ class ReadingCalendarGridTest {
             composeTestRule
                 .onNodeWithContentDescription(descriptionFor(day))
                 .assertHasClickAction()
-                .assertWidthIsAtLeast(ManiculeSize.touchTargetMin)
-                .assertHeightIsAtLeast(ManiculeSize.touchTargetMin)
+                .assertWidthIsEqualTo(20.dp)
+                .assertHeightIsEqualTo(20.dp)
         }
         days.map { day ->
             composeTestRule.onNodeWithContentDescription(descriptionFor(day)).getUnclippedBoundsInRoot()
         }.zipWithNext().forEach { (previous, next) ->
-            assertTrue("Targets must keep an 8dp gap", previous.bottom + ManiculeSpacing.sm <= next.top)
+            assertEquals(with(composeTestRule.density) { 4.dp.roundToPx().toDp().value }, (next.top - previous.bottom).value, 0.001f)
         }
     }
 
@@ -507,15 +526,15 @@ class ReadingCalendarGridTest {
     @Test
     fun shortCalendarShowsLatestDayAndSupportsVerticalSwipe() {
         val days = calendarDays(count = 70)
-        var selectedDate: LocalDate? = null
+        val selections = mutableListOf<LocalDate>()
         composeTestRule.setContent {
             ManiculeTheme {
                 ReadingCalendarGrid(
                     days = days,
                     today = LocalDate(2030, 1, 1),
-                    onDateSelected = { selectedDate = it },
+                    onDateSelected = selections::add,
                     contentPadding = PaddingValues(vertical = ManiculeSpacing.lg),
-                    modifier = Modifier.width(ManiculeSize.touchTargetMin * 2).height(interactiveGridHeight / 2),
+                    modifier = Modifier.width(ManiculeSize.touchTargetMin * 2).height(compactGridHeight / 2),
                 )
             }
         }
@@ -525,12 +544,13 @@ class ReadingCalendarGridTest {
         viewport.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, -10000f) }
         composeTestRule.onNodeWithContentDescription(descriptionFor(days[63])).assertIsDisplayed()
         repeat(3) { viewport.performTouchInput { swipeUp() } }
+        composeTestRule.runOnIdle { assertTrue(selections.isEmpty()) }
         sunday.assertIsDisplayed().performTouchInput { click() }
-        composeTestRule.runOnIdle { assertEquals(days.last().date, selectedDate) }
+        composeTestRule.runOnIdle { assertEquals(listOf(days.last().date), selections) }
     }
 
     @Test
-    fun readOnlyWeekEdgeTodayRingsAreNotClipped() {
+    fun weekEdgeTodayRingsStayInsideCells() {
         val days = calendarDays(count = 7)
         var today by mutableStateOf(days.first().date)
         var ringColor = Color.Unspecified
@@ -549,13 +569,258 @@ class ReadingCalendarGridTest {
             val dayBounds = composeTestRule.onNodeWithContentDescription(description).getUnclippedBoundsInRoot()
             val frame = composeTestRule.onNodeWithTag("calendar-frame")
             val frameBounds = frame.getUnclippedBoundsInRoot()
-            val ringOffset = ManiculeSize.calendarTodayRingOffset + ManiculeBorder.ring / 2
-            val ringY = if (day == days.first()) dayBounds.top - ringOffset else dayBounds.bottom + ringOffset
+            val ringOffset = ManiculeBorder.ring / 2
+            val ringY = if (day == days.first()) dayBounds.top + ringOffset else dayBounds.bottom - ringOffset
             val (x, y) = with(composeTestRule.density) {
                 ((dayBounds.left + dayBounds.right) / 2 - frameBounds.left).toPx().roundToInt() to
                     (ringY - frameBounds.top).toPx().roundToInt()
             }
             assertEquals(ringColor.toArgb(), frame.captureToImage().toPixelMap()[x, y].toArgb())
+        }
+    }
+
+    @Test
+    fun tapsSelectOnlyTheTouchedCellAndIgnoreGapsPaddingAndDisabledDays() {
+        val days = calendarDays(start = LocalDate(2026, 7, 8), count = 10).mapIndexed { index, day ->
+            ReadingCalendarDay.of(day.date, pages = if (index == 2) 0 else 1)
+        }
+        val selections = mutableListOf<LocalDate>()
+        composeTestRule.setContent {
+            ManiculeTheme {
+                ReadingCalendarGrid(
+                    days = days,
+                    today = LocalDate(2030, 1, 1),
+                    isDateSelectable = { it.pages > 0 && it.date != days[3].date },
+                    onDateSelected = selections::add,
+                    modifier = Modifier.width(200.dp).testTag(TEST_CALENDAR_TAG).padding(16.dp),
+                    contentPadding = PaddingValues(16.dp),
+                )
+            }
+        }
+        val frame = composeTestRule.onNodeWithTag(TEST_CALENDAR_TAG)
+        val origin = frame.getUnclippedBoundsInRoot()
+        val first = composeTestRule.onNodeWithContentDescription(descriptionFor(days[0])).getUnclippedBoundsInRoot()
+        val nextWeek = composeTestRule.onNodeWithContentDescription(descriptionFor(days[5])).getUnclippedBoundsInRoot()
+
+        fun tapAt(
+            x: Dp,
+            y: Dp,
+        ) {
+            val point = with(composeTestRule.density) { Offset((x - origin.left).toPx(), (y - origin.top).toPx()) }
+            frame.performTouchInput { click(point) }
+        }
+        tapAt(origin.left + 2.dp, origin.top + 2.dp)
+        tapAt(first.left - 8.dp, first.top + 10.dp)
+        tapAt(first.left + 10.dp, first.bottom + 2.dp)
+        tapAt(first.right + 2.dp, first.top + 10.dp)
+        tapAt(first.left + 10.dp, nextWeek.top + 10.dp) // 범위 시작 전 월요일
+        tapAt(nextWeek.left + 10.dp, nextWeek.top + 24.dp * 6 + 10.dp) // 범위 종료 후 일요일
+        listOf(days[2], days[3]).forEach { day ->
+            composeTestRule.onNodeWithContentDescription(descriptionFor(day))
+                .assertHasNoClickAction().performTouchInput {
+                    click(center)
+                    click(topLeft + Offset(1f, 1f))
+                    click(bottomRight - Offset(1f, 1f))
+                }
+        }
+        composeTestRule.runOnIdle { assertTrue(selections.isEmpty()) }
+        val selectable = days.filter { it.pages > 0 && it.date != days[3].date }
+        selectable.forEach { day ->
+            composeTestRule.onNodeWithContentDescription(descriptionFor(day)).performTouchInput {
+                click(center)
+                click(topLeft + Offset(1f, 1f))
+                click(bottomRight - Offset(1f, 1f))
+            }
+        }
+        composeTestRule.runOnIdle { assertEquals(selectable.flatMap { listOf(it.date, it.date, it.date) }, selections) }
+    }
+
+    @Test
+    fun enablingSelectionKeepsLayoutAndTheViewedWeek() {
+        val days = calendarDays(count = 70)
+        var interactive by mutableStateOf(false)
+        composeTestRule.setContent {
+            ManiculeTheme {
+                ReadingCalendarGrid(
+                    days = days,
+                    today = LocalDate(2030, 1, 1),
+                    onDateSelected = if (interactive) ({}) else null,
+                    modifier = Modifier.width(68.dp).testTag(TEST_CALENDAR_TAG),
+                )
+            }
+        }
+        composeTestRule.onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.HorizontalScrollAxisRange)).performScrollToIndex(0)
+        val first = composeTestRule.onNodeWithContentDescription(descriptionFor(days.first()))
+        val before = first.getUnclippedBoundsInRoot()
+        val gridBefore = composeTestRule.onNodeWithTag(TEST_CALENDAR_TAG).getUnclippedBoundsInRoot()
+        composeTestRule.runOnIdle { interactive = true }
+        first.assertHasClickAction().assertIsDisplayed()
+        assertEquals(before, first.getUnclippedBoundsInRoot())
+        assertEquals(gridBefore, composeTestRule.onNodeWithTag(TEST_CALENDAR_TAG).getUnclippedBoundsInRoot())
+        composeTestRule.onNodeWithTag(TEST_CALENDAR_TAG).assertHeightIsEqualTo(compactGridHeight)
+    }
+
+    @Test
+    fun rtlChronologyLatestDateAndSwipeUseReadingDirectionWithoutSelecting() {
+        val days = calendarDays(count = 70)
+        var direction by mutableStateOf(LayoutDirection.Ltr)
+        val selections = mutableListOf<LocalDate>()
+        composeTestRule.setContent {
+            ManiculeTheme {
+                key(direction) {
+                    CompositionLocalProvider(LocalLayoutDirection provides direction) {
+                        ReadingCalendarGrid(
+                            days = days,
+                            today = LocalDate(2030, 1, 1),
+                            onDateSelected = selections::add,
+                            modifier = Modifier.width(68.dp),
+                        )
+                    }
+                }
+            }
+        }
+        listOf(LayoutDirection.Ltr, LayoutDirection.Rtl).forEach { layoutDirection ->
+            composeTestRule.runOnIdle { direction = layoutDirection }
+            val scroll = composeTestRule.onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.HorizontalScrollAxisRange))
+            composeTestRule.onNodeWithContentDescription(descriptionFor(days.last())).assertIsDisplayed()
+            scroll.performScrollToIndex(0)
+            val first = composeTestRule.onNodeWithContentDescription(descriptionFor(days[0])).getUnclippedBoundsInRoot()
+            val second = composeTestRule.onNodeWithContentDescription(descriptionFor(days[7])).getUnclippedBoundsInRoot()
+            assertTrue(if (layoutDirection == LayoutDirection.Ltr) first.left < second.left else first.left > second.left)
+            scroll.performTouchInput {
+                val startX = if (layoutDirection == LayoutDirection.Ltr) width - 10.dp.toPx() else 10.dp.toPx()
+                val endX = if (layoutDirection == LayoutDirection.Ltr) 10.dp.toPx() else width - 10.dp.toPx()
+                swipe(start = Offset(startX, 10.dp.toPx()), end = Offset(endX, 10.dp.toPx()), durationMillis = 500)
+            }
+            composeTestRule.waitForIdle()
+            composeTestRule.runOnIdle { assertTrue(selections.isEmpty()) }
+            assertTrue(scroll.fetchSemanticsNode().config[SemanticsProperties.HorizontalScrollAxisRange].value() > 0f)
+        }
+    }
+
+    @OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
+    @Test
+    fun keyboardAndAccessibilityActionsSelectTheFocusedDate() {
+        val days = calendarDays(count = 7)
+        val selections = mutableListOf<LocalDate>()
+        lateinit var inputModeManager: InputModeManager
+        composeTestRule.setContent {
+            ManiculeTheme {
+                inputModeManager = LocalInputModeManager.current
+                ReadingCalendarGrid(days = days, today = LocalDate(2030, 1, 1), onDateSelected = selections::add)
+            }
+        }
+        val first = composeTestRule.onNodeWithContentDescription(descriptionFor(days[0]))
+        composeTestRule.runOnIdle { assertTrue(inputModeManager.requestInputMode(InputMode.Keyboard)) }
+        first.performSemanticsAction(SemanticsActions.RequestFocus) { assertTrue(it()) }
+        first.assertIsFocused()
+        first.performKeyInput { pressKey(Key.Enter) }
+        composeTestRule.onNodeWithContentDescription(descriptionFor(days[1])).performSemanticsAction(SemanticsActions.OnClick) { it() }
+        composeTestRule.runOnIdle { assertEquals(listOf(days[0].date, days[1].date), selections) }
+    }
+
+    @Test
+    fun adjacentTodayAndSelectedRingsStayInsideCellsInBothThemes() {
+        val days = calendarDays(count = 14)
+        var dark by mutableStateOf(false)
+        var today by mutableStateOf(days[1].date)
+        var todayColor = Color.Unspecified
+        var selectedColor = Color.Unspecified
+        var backgroundColor = Color.Unspecified
+        composeTestRule.setContent {
+            ManiculeTheme(darkTheme = dark) {
+                todayColor = MaterialTheme.colorScheme.primary
+                selectedColor = MaterialTheme.colorScheme.tertiary
+                backgroundColor = MaterialTheme.colorScheme.background
+                Box(Modifier.width(120.dp).background(backgroundColor).testTag("rings").padding(8.dp)) {
+                    ReadingCalendarGrid(
+                        days = days,
+                        today = today,
+                        selectedDate = days[0].date,
+                        onDateSelected = {},
+                    )
+                }
+            }
+        }
+        listOf(false, true).forEach { darkTheme ->
+            composeTestRule.runOnIdle { dark = darkTheme }
+            val frame = composeTestRule.onNodeWithTag("rings")
+            val frameBounds = frame.getUnclippedBoundsInRoot()
+            val screenshot = frame.captureToImage()
+            val pixels = screenshot.toPixelMap()
+
+            fun colorAt(
+                x: Dp,
+                y: Dp,
+            ): Int {
+                val px = with(composeTestRule.density) { (x - frameBounds.left).toPx().roundToInt() }
+                val py = with(composeTestRule.density) { (y - frameBounds.top).toPx().roundToInt() }
+                return pixels[px, py].toArgb()
+            }
+            listOf(0, 1).forEach { index ->
+                val description = if (index ==
+                    1
+                ) {
+                    context.getString(R.string.reading_calendar_today_content_description, descriptionFor(days[index]))
+                } else {
+                    descriptionFor(days[index])
+                }
+                val bounds = composeTestRule.onNodeWithContentDescription(description).getUnclippedBoundsInRoot()
+                val x = (bounds.left + bounds.right) / 2
+                assertEquals((if (index == 0) selectedColor else todayColor).toArgb(), colorAt(x, bounds.top + 1.dp))
+                assertEquals(backgroundColor.toArgb(), colorAt(x, bounds.top - 1.dp))
+                assertEquals(backgroundColor.toArgb(), colorAt(x, bounds.bottom + 1.dp))
+            }
+            File(context.cacheDir, "calendar-${if (darkTheme) "dark" else "light"}.png").outputStream().use {
+                screenshot.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
+            }
+        }
+        composeTestRule.runOnIdle { today = days[0].date }
+        val first = composeTestRule.onNodeWithContentDescription(
+            context.getString(R.string.reading_calendar_today_content_description, descriptionFor(days[0])),
+        )
+        first.assertIsSelected()
+        val bitmap = first.captureToImage().toPixelMap()
+        assertEquals(selectedColor.toArgb(), bitmap[bitmap.width / 2, with(composeTestRule.density) { 1.dp.toPx().roundToInt() }].toArgb())
+    }
+
+    @Test
+    fun accessibilityServiceCanFocusAndActivateADate() {
+        val days = calendarDays(count = 7)
+        val selections = mutableListOf<LocalDate>()
+        composeTestRule.setContent {
+            ManiculeTheme {
+                ReadingCalendarGrid(days = days, today = LocalDate(2030, 1, 1), onDateSelected = selections::add)
+            }
+        }
+        val automation = InstrumentationRegistry.getInstrumentation().getUiAutomation(
+            UiAutomation.FLAG_DONT_SUPPRESS_ACCESSIBILITY_SERVICES,
+        )
+        val description = descriptionFor(days[1])
+
+        fun findDateNode(node: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
+            if (node == null || node.contentDescription?.toString() == description) return node
+            repeat(node.childCount) { index ->
+                findDateNode(node.getChild(index))?.let { return it }
+            }
+            return null
+        }
+        val originalServiceInfo = automation.serviceInfo
+        try {
+            automation.serviceInfo = automation.serviceInfo.apply {
+                flags = flags or AccessibilityServiceInfo.FLAG_REQUEST_TOUCH_EXPLORATION_MODE
+            }
+            val accessibilityManager = context.getSystemService(AccessibilityManager::class.java)
+            composeTestRule.waitUntil(timeoutMillis = 5000) {
+                accessibilityManager.isTouchExplorationEnabled && findDateNode(automation.rootInActiveWindow) != null
+            }
+            val node = checkNotNull(findDateNode(automation.rootInActiveWindow))
+            node.performAction(AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS)
+            assertTrue(node.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS))
+            assertTrue(node.performAction(AccessibilityNodeInfo.ACTION_CLICK))
+            composeTestRule.runOnIdle { assertEquals(listOf(days[1].date), selections) }
+        } finally {
+            automation.serviceInfo = originalServiceInfo
         }
     }
 
@@ -586,11 +851,9 @@ class ReadingCalendarGridTest {
             )
         }
 
-    private val compactGridHeight =
-        ManiculeSize.calendarCell * TEST_CALENDAR_ROW_COUNT +
-            ManiculeSize.calendarCellGap * TEST_CALENDAR_GAP_COUNT
-
-    private val interactiveGridHeight =
-        ManiculeSize.touchTargetMin * TEST_CALENDAR_ROW_COUNT +
-            ManiculeSpacing.sm * TEST_CALENDAR_GAP_COUNT
+    private val compactGridHeight: Dp
+        get() = with(composeTestRule.density) {
+            // 20dp 셀과 4dp 간격은 각각 물리 픽셀로 반올림되어 배치된다.
+            (20.dp.roundToPx() * TEST_CALENDAR_ROW_COUNT + 4.dp.roundToPx() * TEST_CALENDAR_GAP_COUNT).toDp()
+        }
 }
