@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="scanner_stub_label">Scan\n(stub — implemented in a later phase)</string>
+    <string name="scanner_title">Scan barcode</string>
+    <string name="scanner_permission_title">Camera access is needed</string>
+    <string name="scanner_permission_description">Allow camera access to scan book barcodes. You can also search for books without granting access.</string>
+    <string name="scanner_permission_settings">Tap Use camera to open app settings, then allow camera access under Permissions.</string>
+    <string name="scanner_permission_launch_failed">Could not open the permission request or app settings. Allow camera access in device settings, or search for a book.</string>
+    <string name="scanner_use_camera">Use camera</string>
+    <string name="scanner_search">Search</string>
+    <string name="scanner_initializing">Preparing the camera</string>
+    <string name="scanner_guide">Align the book barcode with the guide</string>
+    <string name="scanner_failed_title">Could not start the camera</string>
+    <string name="scanner_failed_description">The camera is unavailable. Search for the book by title or author.</string>
 </resources>

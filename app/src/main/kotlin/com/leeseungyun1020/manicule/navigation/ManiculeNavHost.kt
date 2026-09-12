@@ -51,7 +51,9 @@ fun ManiculeNavHost(
             },
             scannerAction = SearchScannerAction.Unavailable,
         )
-        scannerScreen()
+        scannerScreen(
+            onNavigateBack = { appState.navController.popBackStack() },
+        )
         bookDetailScreen(
             onNavigateBack = { appState.navController.popBackStack() },
         )
