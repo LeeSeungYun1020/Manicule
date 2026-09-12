@@ -229,6 +229,54 @@ class SearchViewModelTest {
         }
 
     @Test
+    fun submissions_replacePreviousResultsIncludingSameQuery() =
+        runTest(testDispatcher) {
+            val repository = FakeBookRepository()
+            val viewModel = createViewModel(FakeSearchHistoryRepository { flowOf(emptyList()) }, repository)
+            viewModel.searchResults.test {
+                awaitItem()
+                viewModel.onSearch("First")
+                assertThat(flowOf(awaitItem()).asSnapshot().single().title).isEqualTo("First")
+                viewModel.onSearch("Second")
+                assertThat(flowOf(awaitItem()).asSnapshot().single().title).isEqualTo("Second")
+                repository.resultTitle = "Updated second"
+                viewModel.onSearch("Second")
+                assertThat(flowOf(awaitItem()).asSnapshot().single().title).isEqualTo("Updated second")
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun submissionId_changesOnlyWhenSearchIsSubmitted() =
+        runTest(testDispatcher) {
+            val viewModel = createViewModel(FakeSearchHistoryRepository { flowOf(emptyList()) })
+            viewModel.uiState.test {
+                awaitItem()
+                awaitItem()
+                viewModel.onSearch("Book")
+                val firstId = awaitItem().searchRequestId
+                assertThat(firstId).isNotNull()
+                viewModel.onQueryChanged("Another")
+                assertThat(awaitItem().searchRequestId).isEqualTo(firstId)
+                viewModel.onSearch("Book")
+                assertThat(awaitItem().searchRequestId).isNotEqualTo(firstId)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun scrollingSnapshot_loadsAllPages() =
+        runTest(testDispatcher) {
+            val repository = FakeBookRepository(bookCount = 40)
+            val viewModel = createViewModel(FakeSearchHistoryRepository { flowOf(emptyList()) }, repository)
+            viewModel.onSearch("Book")
+            val books = viewModel.searchResults.asSnapshot { scrollTo(39) }
+            assertThat(books).hasSize(40)
+            assertThat(books.last().title).isEqualTo("Book 39")
+            assertThat(repository.searchQueries).containsExactly("Book")
+        }
+
+    @Test
     fun historySaveFailure_doesNotBlockSearch() =
         runTest(testDispatcher) {
             val historyRepository =
@@ -339,8 +387,11 @@ private class FakeSearchHistoryRepository(
     override suspend fun clearHistory() = Unit
 }
 
-private class FakeBookRepository : BookRepository {
+private class FakeBookRepository(
+    private val bookCount: Int = 1,
+) : BookRepository {
     val searchQueries = mutableListOf<String>()
+    var resultTitle: String? = null
 
     override fun observeBook(isbn: String): Flow<Book?> = flowOf(null)
 
@@ -349,8 +400,10 @@ private class FakeBookRepository : BookRepository {
     override fun searchBooks(query: String): Flow<PagingData<Book>> {
         searchQueries += query
         return Pager(
-            config = PagingConfig(pageSize = 1),
-            pagingSourceFactory = listOf(book(query)).asPagingSourceFactory(),
+            config = PagingConfig(pageSize = 10, initialLoadSize = 10),
+            pagingSourceFactory = List(bookCount) { index ->
+                book(resultTitle ?: if (index == 0) query else "$query $index")
+            }.asPagingSourceFactory(),
         ).flow
     }
 }

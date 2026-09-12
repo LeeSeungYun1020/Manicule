@@ -190,9 +190,8 @@ class SearchScreenTest {
                 ),
             searchResults =
                 flowOf(
-                    PagingData.from(
+                    loadedSearchData(
                         listOf(book(title = "Compose in Action")),
-                        sourceLoadStates = completedLoadStates,
                     ),
                 ),
             initialQuery = "Compose",
@@ -228,6 +227,8 @@ class SearchScreenTest {
                     onSearch = { state.value = state.value.copy(searchRequestId = 1L) },
                     onQuerySelected = {},
                     onNavigateBack = {},
+                    onBookSelected = {},
+                    scannerAction = SearchScannerAction.Unavailable,
                 )
             }
         }
@@ -253,12 +254,12 @@ class SearchScreenTest {
                     query = "Missing",
                     inputPhase = SearchInputPhase.SUBMITTED,
                 ),
-            searchResults = flowOf(PagingData.empty(sourceLoadStates = completedLoadStates)),
+            searchResults = flowOf(loadedSearchData()),
             initialQuery = "Missing",
         )
 
         composeTestRule.onNodeWithText("No search results").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Try another title or author").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Scan the barcode on your book to find it").assertIsDisplayed()
     }
 
     @Test
@@ -297,7 +298,7 @@ class SearchScreenTest {
 
         composeTestRule.onNodeWithText("Couldn’t load search results").assertIsDisplayed()
         composeTestRule.onNodeWithText("Try again").performClick()
-        composeTestRule.waitUntil { pagingSource.loadCount >= 2 }
+        composeTestRule.onNodeWithText("Recovered book").assertIsDisplayed()
     }
 }
 
@@ -310,7 +311,7 @@ private val completedLoadStates =
 
 private fun ComposeContentTestRule.setSearchContent(
     uiState: SearchUiState,
-    searchResults: Flow<PagingData<Book>> = flowOf(PagingData.empty()),
+    searchResults: Flow<PagingData<Book>> = flowOf(loadedSearchData()),
     initialQuery: String = "",
     onSearch: (String) -> Unit = {},
     onQuerySelected: (String) -> Unit = {},
@@ -327,6 +328,8 @@ private fun ComposeContentTestRule.setSearchContent(
                     onSearch = onSearch,
                     onQuerySelected = onQuerySelected,
                     onNavigateBack = onNavigateBack,
+                    onBookSelected = {},
+                    scannerAction = SearchScannerAction.Unavailable,
                 )
             }
         }
@@ -346,7 +349,11 @@ private class ErrorBookPagingSource : PagingSource<Int, Book>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Book> {
         loadCount += 1
-        return LoadResult.Error(IllegalStateException("network unavailable"))
+        return if (loadCount == 1) {
+            LoadResult.Error(IllegalStateException("network unavailable"))
+        } else {
+            LoadResult.Page(listOf(book("Recovered book")), prevKey = null, nextKey = null)
+        }
     }
 
     override fun getRefreshKey(state: PagingState<Int, Book>): Int? = null

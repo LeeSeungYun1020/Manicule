@@ -12,7 +12,8 @@
     <string name="search_result_error_title">Couldn’t load search results</string>
     <string name="search_result_error_description">Please try again in a moment</string>
     <string name="search_result_empty_title">No search results</string>
-    <string name="search_result_empty_description">Try another title or author</string>
+    <string name="search_result_empty_description">Scan the barcode on your book to find it</string>
     <string name="search_result_append_error">Couldn’t load more results</string>
     <string name="search_retry">Try again</string>
+    <string name="search_scan">Scan</string>
 </resources>

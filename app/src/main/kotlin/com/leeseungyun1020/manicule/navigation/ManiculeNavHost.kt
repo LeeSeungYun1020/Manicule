@@ -15,6 +15,7 @@ import com.leeseungyun1020.manicule.feature.home.navigation.homeScreen
 import com.leeseungyun1020.manicule.feature.library.navigation.libraryScreen
 import com.leeseungyun1020.manicule.feature.scanner.navigation.ScannerRoute
 import com.leeseungyun1020.manicule.feature.scanner.navigation.scannerScreen
+import com.leeseungyun1020.manicule.feature.search.SearchScannerAction
 import com.leeseungyun1020.manicule.feature.search.navigation.SearchRoute
 import com.leeseungyun1020.manicule.feature.search.navigation.searchScreen
 import com.leeseungyun1020.manicule.feature.settings.navigation.settingsScreen
@@ -45,6 +46,10 @@ fun ManiculeNavHost(
             onNavigateBack = {
                 appState.navController.popBackStack()
             },
+            onBookSelected = { isbn ->
+                appState.navController.navigate(BookDetailRoute(isbn))
+            },
+            scannerAction = SearchScannerAction.Unavailable,
         )
         scannerScreen()
         bookDetailScreen(

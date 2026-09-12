@@ -25,8 +25,6 @@
 
 ## 인덱스
 
-- [8dab24f](8dab24f.md) — feat: 책 상세 독서 상태 변경 구현
-
 - [da35569](da35569.md) — 기반 시스템 구현 (Foundation 의 핵심 결정 모음)
 - [0f0c1fa](0f0c1fa.md) — BoM 적용 (Compose / kotlinx / OkHttp / Retrofit / Coil)
 - [3632472](3632472.md) — 타입 안전 네비게이션 적용
@@ -75,3 +73,6 @@
 - [270a111](270a111.md) — feat: 서재 초기 탭 진입 계약 추가
 - [02bd301](02bd301.md) — feat: 서재 정렬 계약 구현
 - [daf4ab3](daf4ab3.md) — feat: 서재 정렬 UI 구현
+- [8dab24f](8dab24f.md) — feat: 책 상세 독서 상태 변경 구현
+- [3c3d385](3c3d385.md) — feat: 검색 결과 선택과 복귀 상태 보완
+- [174724c](174724c.md) — feat: 검색 결과 책 상세 이동 조립

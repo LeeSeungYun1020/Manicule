@@ -96,7 +96,7 @@ class SearchViewModel
             if (searchInput.value.query == normalizedQuery) return
 
             searchInput.value =
-                SearchInput(
+                searchInput.value.copy(
                     query = normalizedQuery,
                     phase =
                         if (normalizedQuery.isEmpty()) {
@@ -111,14 +111,19 @@ class SearchViewModel
             val normalizedQuery = query.trim()
             if (normalizedQuery.isEmpty()) return
 
-            val request = SearchRequest(id = nextRequestId++, query = normalizedQuery)
+            val requestId = nextRequestId++
+
             searchInput.value =
                 SearchInput(
                     query = normalizedQuery,
                     phase = SearchInputPhase.SUBMITTED,
-                    searchRequestId = request.id,
+                    searchRequestId = requestId,
                 )
-            searchRequest.value = request
+            searchRequest.value =
+                SearchRequest(
+                    id = requestId,
+                    query = normalizedQuery,
+                )
             viewModelScope.launch {
                 try {
                     saveRecentQuery(normalizedQuery)
