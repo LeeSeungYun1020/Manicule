@@ -12,6 +12,7 @@ import com.leeseungyun1020.manicule.core.domain.library.ChangeReadingStatusUseCa
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
+import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.CancellationException
@@ -433,7 +434,10 @@ class BookDetailViewModelTest {
             return statusResult
         }
 
-        override fun observeByStatus(status: ReadingStatus): Flow<List<BookEntry>> = emptyFlow()
+        override fun observeByStatus(
+            status: ReadingStatus,
+            sort: LibrarySort,
+        ): Flow<List<BookEntry>> = emptyFlow()
 
         override suspend fun getRecentBooksByStatus(
             status: ReadingStatus,

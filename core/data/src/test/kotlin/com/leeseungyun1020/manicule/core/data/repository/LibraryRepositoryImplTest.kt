@@ -8,6 +8,7 @@ import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
@@ -51,6 +52,20 @@ class LibraryRepositoryImplTest {
             assertThat(bookDataSource.saved).isNull()
             assertThat(entryDataSource.saved).isNull()
         }
+
+    @Test
+    fun observeByStatus_forwardsSort() {
+        val sort =
+            LibrarySort(
+                criterion = LibrarySort.Criterion.RATING,
+                direction = LibrarySort.Direction.ASCENDING,
+            )
+
+        repository.observeByStatus(ReadingStatus.FINISHED, sort)
+
+        assertThat(entryDataSource.observedStatus).isEqualTo(ReadingStatus.FINISHED)
+        assertThat(entryDataSource.observedSort).isEqualTo(sort)
+    }
 
     private fun entry(rating: Int) =
         BookEntry(
@@ -116,6 +131,8 @@ class LibraryRepositoryImplTest {
         }
 
         var saved: BookEntryEntity? = null
+        var observedStatus: ReadingStatus? = null
+        var observedSort: LibrarySort? = null
 
         override suspend fun save(entry: BookEntryEntity) {
             saved = entry
@@ -125,7 +142,14 @@ class LibraryRepositoryImplTest {
 
         override fun observeByIsbn(isbn: String): Flow<BookEntryWithCurrentPage?> = emptyFlow()
 
-        override fun observeByStatus(status: ReadingStatus): Flow<List<BookEntryWithCurrentPage>> = emptyFlow()
+        override fun observeByStatus(
+            status: ReadingStatus,
+            sort: LibrarySort,
+        ): Flow<List<BookEntryWithCurrentPage>> {
+            observedStatus = status
+            observedSort = sort
+            return emptyFlow()
+        }
 
         override suspend fun getRecentBooksByStatus(
             status: ReadingStatus,

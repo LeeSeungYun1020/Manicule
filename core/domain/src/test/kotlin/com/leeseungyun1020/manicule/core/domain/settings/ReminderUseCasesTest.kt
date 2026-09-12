@@ -6,6 +6,7 @@ import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.data.repository.UserPreferencesRepository
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import com.leeseungyun1020.manicule.core.model.ReminderConfig
@@ -196,7 +197,10 @@ private class FakeLibraryRepository(
         finishedAt: kotlinx.datetime.LocalDate?,
     ): ReadingStatusChangeResult = error("Not used by this test")
 
-    override fun observeByStatus(status: ReadingStatus): Flow<List<BookEntry>> = flowOf(entries.filter { it.status == status })
+    override fun observeByStatus(
+        status: ReadingStatus,
+        sort: LibrarySort,
+    ): Flow<List<BookEntry>> = flowOf(entries.filter { it.status == status })
 
     override suspend fun getRecentBooksByStatus(
         status: ReadingStatus,
