@@ -3,21 +3,23 @@ package com.leeseungyun1020.manicule.core.ui.calendar
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyGridScope
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -42,10 +44,23 @@ private data class ReadingCalendarGridConfig(
     val today: LocalDate,
     val selectedDate: LocalDate?,
     val itemSize: Dp,
+    val itemGap: Dp,
     val isDateSelectable: (ReadingCalendarDay) -> Boolean,
     val onDateSelected: ((LocalDate) -> Unit)?,
 )
 
+private data class CalendarDimensions(
+    val itemSize: Dp,
+    val itemGap: Dp,
+    val height: Dp,
+    val latestDayBottom: Int,
+)
+
+/**
+ * 날짜 오름차순으로 연속된 [days]를 월~일 순서의 주별 열로 표시한다.
+ * 선택 모드는 48dp 셀과 8dp 간격을 사용한다. 높이가 부족하면 셀을 줄이지 않고
+ * 세로로 스크롤하며, 일반적인 세로 스크롤 화면 안에서는 전체 7행 높이를 사용한다.
+ */
 @Composable
 fun ReadingCalendarGrid(
     days: List<ReadingCalendarDay>,
@@ -56,93 +71,90 @@ fun ReadingCalendarGrid(
     onDateSelected: ((LocalDate) -> Unit)? = null,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
-    val paddingCount =
-        days
-            .firstOrNull()
-            ?.date
-            ?.dayOfWeek
-            ?.let { it.value - DayOfWeek.MONDAY.value }
-            ?: 0
-    val totalItems = paddingCount + days.size
-    val gridState = rememberLazyGridState()
     val rangeStart = days.firstOrNull()?.date
     val rangeEnd = days.lastOrNull()?.date
-    val isInteractive = onDateSelected != null
-    val itemSize = if (isInteractive) ManiculeSize.touchTargetMin else MaterialTheme.size.calendarCell
-    val itemGap = if (isInteractive) MaterialTheme.spacing.sm else MaterialTheme.size.calendarCellGap
-    val gridHeight =
-        calendarGridHeight(
-            itemSize = itemSize,
-            itemGap = itemGap,
-            contentPadding = contentPadding,
-        )
+    val paddingCount = (rangeStart?.dayOfWeek?.value ?: DayOfWeek.MONDAY.value) - DayOfWeek.MONDAY.value
+    val weekCount = (paddingCount + days.size + CALENDAR_ROW_COUNT - 1) / CALENDAR_ROW_COUNT
+    val listState = rememberLazyListState()
+    val verticalScrollState = rememberScrollState()
+    val firstWeekKey = (rangeStart?.toEpochDays() ?: 0) - paddingCount
+    val dimensions = calendarDimensions(onDateSelected != null, rangeEnd, contentPadding)
     val gridConfig =
         ReadingCalendarGridConfig(
             today = today,
             selectedDate = selectedDate,
-            itemSize = itemSize,
+            itemSize = dimensions.itemSize,
+            itemGap = dimensions.itemGap,
             isDateSelectable = isDateSelectable,
             onDateSelected = onDateSelected,
         )
 
-    LaunchedEffect(rangeStart, rangeEnd, paddingCount) {
-        if (totalItems > 0) {
-            gridState.scrollToItem(totalItems - 1)
+    LaunchedEffect(rangeStart, rangeEnd, dimensions.itemSize) {
+        if (weekCount > 0) {
+            listState.scrollToItem(weekCount - 1)
         }
     }
+    LaunchedEffect(rangeStart, rangeEnd, dimensions.latestDayBottom, verticalScrollState.viewportSize) {
+        verticalScrollState.scrollTo((dimensions.latestDayBottom - verticalScrollState.viewportSize).coerceAtLeast(0))
+    }
 
-    Box(modifier = modifier) {
-        LazyHorizontalGrid(
-            rows = GridCells.Fixed(CALENDAR_ROW_COUNT),
-            state = gridState,
-            modifier = Modifier.height(gridHeight),
-            contentPadding = contentPadding,
-            horizontalArrangement = Arrangement.spacedBy(itemGap),
-            verticalArrangement = Arrangement.spacedBy(itemGap),
-        ) {
-            readingCalendarItems(days = days, paddingCount = paddingCount, config = gridConfig)
+    BoxWithConstraints(modifier = modifier.heightIn(max = dimensions.height)) {
+        val scrollModifier = if (maxHeight < dimensions.height) Modifier.verticalScroll(verticalScrollState) else Modifier
+        Box(modifier = scrollModifier) {
+            LazyRow(
+                state = listState,
+                contentPadding = contentPadding,
+                horizontalArrangement = Arrangement.spacedBy(dimensions.itemGap),
+                verticalAlignment = Alignment.Top,
+            ) {
+                items(
+                    count = weekCount,
+                    key = { week -> firstWeekKey + week * CALENDAR_ROW_COUNT },
+                    contentType = { "calendar-week" },
+                ) { week ->
+                    ReadingCalendarWeek(
+                        days = days,
+                        firstDayIndex = week * CALENDAR_ROW_COUNT - paddingCount,
+                        config = gridConfig,
+                    )
+                }
+            }
         }
     }
 }
 
-private fun LazyGridScope.readingCalendarItems(
+@Composable
+private fun ReadingCalendarWeek(
     days: List<ReadingCalendarDay>,
-    paddingCount: Int,
+    firstDayIndex: Int,
     config: ReadingCalendarGridConfig,
 ) {
-    items(
-        count = paddingCount + days.size,
-        key = { index ->
-            if (index < paddingCount) {
-                "calendar-padding-$index"
+    Column(verticalArrangement = Arrangement.spacedBy(config.itemGap)) {
+        repeat(CALENDAR_ROW_COUNT) { row ->
+            val index = firstDayIndex + row
+            val day = days.getOrNull(index)
+            if (day == null) {
+                Box(modifier = Modifier.size(config.itemSize), contentAlignment = Alignment.Center) {
+                    if (index < 0) {
+                        ReadingCalendarCell(
+                            intensity = null,
+                            modifier = Modifier.size(MaterialTheme.size.calendarCell),
+                        )
+                    }
+                }
             } else {
-                "calendar-day-${days[index - paddingCount].date}"
-            }
-        },
-        contentType = { index ->
-            if (index < paddingCount) CalendarItemType.Padding else CalendarItemType.Day
-        },
-    ) { index ->
-        if (index < paddingCount) {
-            ReadingCalendarGridItem(itemSize = config.itemSize) {
-                ReadingCalendarCell(
-                    intensity = null,
-                    modifier = Modifier.size(MaterialTheme.size.calendarCell),
+                val onClick =
+                    config.onDateSelected
+                        ?.takeIf { config.isDateSelectable(day) }
+                        ?.let { callback -> { callback(day.date) } }
+                ReadingCalendarDayItem(
+                    day = day,
+                    today = config.today,
+                    selectedDate = config.selectedDate,
+                    itemSize = config.itemSize,
+                    onClick = onClick,
                 )
             }
-        } else {
-            val day = days[index - paddingCount]
-            val onClick =
-                config.onDateSelected
-                    ?.takeIf { config.isDateSelectable(day) }
-                    ?.let { callback -> { callback(day.date) } }
-            ReadingCalendarDayItem(
-                day = day,
-                today = config.today,
-                selectedDate = config.selectedDate,
-                itemSize = config.itemSize,
-                onClick = onClick,
-            )
         }
     }
 }
@@ -159,27 +171,25 @@ private fun ReadingCalendarDayItem(
     val isSelected = day.date == selectedDate
     val contentDescription = readingCalendarContentDescription(day = day, isToday = isToday)
     val clickLabel = stringResource(R.string.reading_calendar_open_day_records)
-    ReadingCalendarGridItem(
-        itemSize = itemSize,
+    Box(
         modifier =
             Modifier
                 .then(
                     if (onClick == null) {
                         Modifier
                     } else {
-                        Modifier
-                            .minimumInteractiveComponentSize()
-                            .clickable(
-                                onClickLabel = clickLabel,
-                                onClick = onClick,
-                            )
+                        Modifier.clickable(
+                            onClickLabel = clickLabel,
+                            onClick = onClick,
+                        )
                     },
                 ).semantics {
                     this.contentDescription = contentDescription
                     if (onClick != null || isSelected) {
                         selected = isSelected
                     }
-                },
+                }.size(itemSize),
+        contentAlignment = Alignment.Center,
     ) {
         ReadingCalendarCell(
             intensity = day.intensity,
@@ -221,36 +231,29 @@ private fun readingCalendarContentDescription(
 }
 
 @Composable
-private fun ReadingCalendarGridItem(
-    itemSize: Dp,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    Box(
-        modifier =
-            modifier
-                .width(itemSize)
-                .fillMaxHeight(),
-        contentAlignment = Alignment.Center,
-    ) {
-        content()
+private fun calendarDimensions(
+    isInteractive: Boolean,
+    lastDate: LocalDate?,
+    contentPadding: PaddingValues,
+): CalendarDimensions {
+    val itemSize = if (isInteractive) ManiculeSize.touchTargetMin else MaterialTheme.size.calendarCell
+    val itemGap = if (isInteractive) MaterialTheme.spacing.sm else MaterialTheme.size.calendarCellGap
+    return with(LocalDensity.current) {
+        // Column과 LazyRow의 항목·간격·패딩별 픽셀 반올림을 맞춘다.
+        val sizePx = itemSize.roundToPx()
+        val gapPx = itemGap.roundToPx()
+        val topPadding = contentPadding.calculateTopPadding().roundToPx()
+        val height = sizePx * CALENDAR_ROW_COUNT + gapPx * CALENDAR_GAP_COUNT +
+            topPadding + contentPadding.calculateBottomPadding().roundToPx()
+        val lastRow = (lastDate?.dayOfWeek?.value ?: DayOfWeek.MONDAY.value) - DayOfWeek.MONDAY.value
+        CalendarDimensions(
+            itemSize = itemSize,
+            itemGap = itemGap,
+            height = height.toDp(),
+            latestDayBottom = topPadding + lastRow * (sizePx + gapPx) + sizePx,
+        )
     }
 }
-
-private enum class CalendarItemType {
-    Padding,
-    Day,
-}
-
-private fun calendarGridHeight(
-    itemSize: Dp,
-    itemGap: Dp,
-    contentPadding: PaddingValues = PaddingValues(),
-): Dp =
-    itemSize * CALENDAR_ROW_COUNT +
-        itemGap * CALENDAR_GAP_COUNT +
-        contentPadding.calculateTopPadding() +
-        contentPadding.calculateBottomPadding()
 
 @ManiculePreview
 @Composable
@@ -259,7 +262,6 @@ private fun ReadingCalendarGridPreviewSingle() {
         ReadingCalendarGrid(
             days = ReadingCalendarPreviewParameterProvider().values.first().take(1),
             today = LocalDate(2026, 7, 9),
-            modifier = Modifier.height(calendarGridHeight(ManiculeSize.calendarCell, ManiculeSize.calendarCellGap)),
         )
     }
 }
@@ -271,7 +273,6 @@ private fun ReadingCalendarGridPreviewSome() {
         ReadingCalendarGrid(
             days = ReadingCalendarPreviewParameterProvider().values.first().take(5),
             today = LocalDate(2026, 7, 9),
-            modifier = Modifier.height(calendarGridHeight(ManiculeSize.calendarCell, ManiculeSize.calendarCellGap)),
         )
     }
 }
@@ -286,7 +287,28 @@ private fun ReadingCalendarGridPreviewMulti() {
             selectedDate = LocalDate(2026, 7, 8),
             isDateSelectable = { it.pages > 0 },
             onDateSelected = {},
-            modifier = Modifier.height(calendarGridHeight(ManiculeSize.touchTargetMin, MaterialTheme.spacing.sm)),
         )
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun ReadingCalendarGridPreviewConstrained() {
+    ManiculePreviewTheme {
+        ReadingCalendarGrid(
+            days = ReadingCalendarPreviewParameterProvider().values.first(),
+            today = LocalDate(2026, 7, 9),
+            onDateSelected = {},
+            contentPadding = PaddingValues(MaterialTheme.spacing.sm),
+            modifier = Modifier.height(ManiculeSize.touchTargetMin * 3).padding(MaterialTheme.spacing.sm),
+        )
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun ReadingCalendarGridPreviewEmpty() {
+    ManiculePreviewTheme {
+        ReadingCalendarGrid(days = emptyList(), today = LocalDate(2026, 7, 9))
     }
 }
