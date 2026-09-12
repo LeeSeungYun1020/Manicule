@@ -1,5 +1,6 @@
 package com.leeseungyun1020.manicule.core.data.repository
 
+import androidx.paging.testing.asSnapshot
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.datasource.RetrofitBookRemoteDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.RoomBookLocalDataSource
@@ -41,6 +42,44 @@ class BookRepositoryImplTest {
                 RetrofitBookRemoteDataSource(fakeNlkApi, fakeContentFetcher),
             )
     }
+
+    @Test
+    fun searchBooks_usesTenItemsForInitialAndAppendLoads() =
+        runTest {
+            fakeNlkApi.responseProvider = { request ->
+                if (request.title == null) {
+                    NlkSearchResponseDto(
+                        totalCount = "0",
+                        pageNo = request.pageNo.toString(),
+                    )
+                } else {
+                    val firstIndex = (request.pageNo - 1) * request.pageSize + 1
+                    val lastIndex = minOf(firstIndex + request.pageSize - 1, 20)
+                    NlkSearchResponseDto(
+                        totalCount = "20",
+                        pageNo = request.pageNo.toString(),
+                        docs =
+                            (firstIndex..lastIndex).map { index ->
+                                NlkBookDto(
+                                    isbn = "isbn-$index",
+                                    title = "Book $index",
+                                )
+                            },
+                    )
+                }
+            }
+
+            val books =
+                bookRepository.searchBooks("Compose").asSnapshot {
+                    scrollTo(index = 10)
+                }
+
+            assertThat(books).hasSize(20)
+            assertThat(fakeNlkApi.requests.map { it.pageSize })
+                .containsExactly(10, 10, 10)
+            assertThat(fakeNlkApi.requests.map { it.pageNo })
+                .containsExactly(1, 1, 2)
+        }
 
     @Test
     fun scenario1_local_exists_remote_success() =
@@ -414,8 +453,18 @@ class FakeBookDao : BookDao {
     }
 }
 
+data class FakeNlkRequest(
+    val pageNo: Int,
+    val pageSize: Int,
+    val title: String?,
+    val author: String?,
+    val isbn: String?,
+)
+
 class FakeNlkApi : NlkApi {
     var mockResponse = NlkSearchResponseDto()
+    val requests = mutableListOf<FakeNlkRequest>()
+    var responseProvider: (FakeNlkRequest) -> NlkSearchResponseDto = { mockResponse }
 
     override suspend fun searchBooks(
         resultStyle: String,
@@ -424,7 +473,11 @@ class FakeNlkApi : NlkApi {
         title: String?,
         author: String?,
         isbn: String?,
-    ): NlkSearchResponseDto = mockResponse
+    ): NlkSearchResponseDto {
+        val request = FakeNlkRequest(pageNo, pageSize, title, author, isbn)
+        requests += request
+        return responseProvider(request)
+    }
 }
 
 class FakeNlkContentFetcher : NlkContentFetcher {

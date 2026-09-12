@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="scanner_stub_label">스캔\n(stub — 후속 단계에서 구현)</string>
+    <string name="scanner_title">바코드 스캔</string>
+    <string name="scanner_permission_title">카메라 접근 권한이 필요해요</string>
+    <string name="scanner_permission_description">바코드를 스캔하기 위해 카메라 권한을 허용해 주세요. 권한 없이 책을 직접 검색할 수도 있어요.</string>
+    <string name="scanner_permission_settings">카메라 사용을 누르면 앱 설정이 열려요. 권한에서 카메라 접근을 허용해 주세요.</string>
+    <string name="scanner_permission_launch_failed">권한 요청이나 앱 설정을 열지 못했어요. 기기 설정에서 카메라 권한을 허용하거나 책을 검색해 주세요.</string>
+    <string name="scanner_use_camera">카메라 사용</string>
+    <string name="scanner_search">검색</string>
+    <string name="scanner_initializing">카메라를 준비하고 있어요</string>
+    <string name="scanner_guide">책의 바코드를 사각형에 맞춰 주세요</string>
+    <string name="scanner_failed_title">카메라를 시작하지 못했어요</string>
+    <string name="scanner_failed_description">카메라를 사용할 수 없어요. 제목이나 저자로 책을 검색해 주세요.</string>
 </resources>
