@@ -25,11 +25,14 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.domain.library.GetLibraryBooksUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import com.leeseungyun1020.manicule.feature.library.navigation.LibraryTab
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import org.junit.Rule
 import org.junit.Test
@@ -147,7 +150,17 @@ class LibraryNavigationTest {
 private object LibraryTestHomeRoute
 
 private class NavigationLibraryRepository : LibraryRepository {
-    override fun observeByStatus(status: ReadingStatus): Flow<List<BookEntry>> = flowOf(listOf(entry(status)))
+    override fun observeByStatus(
+        status: ReadingStatus,
+        sort: LibrarySort,
+    ): Flow<List<BookEntry>> = flowOf(listOf(entry(status)))
+
+    override suspend fun changeReadingStatus(
+        isbn: String,
+        status: ReadingStatus,
+        updatedAt: Instant,
+        finishedAt: LocalDate?,
+    ): ReadingStatusChangeResult = error("Not used")
 
     override fun observeAll(): Flow<List<BookEntry>> = error("Not used")
 

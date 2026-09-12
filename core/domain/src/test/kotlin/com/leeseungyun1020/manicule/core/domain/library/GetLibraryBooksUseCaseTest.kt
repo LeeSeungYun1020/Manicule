@@ -6,6 +6,7 @@ import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
 import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
@@ -18,11 +19,39 @@ class GetLibraryBooksUseCaseTest {
     private val useCase = GetLibraryBooksUseCase(repository)
 
     @Test
-    fun status_observesOnlyThatStatus() =
+    fun status_usesDefaultSort() =
         runTest {
             useCase(ReadingStatus.FINISHED).test {
                 assertThat(awaitItem()).isEmpty()
                 assertThat(repository.observedStatus).isEqualTo(ReadingStatus.FINISHED)
+                assertThat(repository.observedSort).isEqualTo(LibrarySort.Default)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun status_forwardsSelectedSort() =
+        runTest {
+            val sort =
+                LibrarySort(
+                    criterion = LibrarySort.Criterion.ADDED_AT,
+                    direction = LibrarySort.Direction.ASCENDING,
+                )
+
+            useCase(ReadingStatus.WANT, sort).test {
+                assertThat(awaitItem()).isEmpty()
+                assertThat(repository.observedStatus).isEqualTo(ReadingStatus.WANT)
+                assertThat(repository.observedSort).isEqualTo(sort)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun noStatus_observesAllBooks() =
+        runTest {
+            useCase().test {
+                assertThat(awaitItem()).isEmpty()
+                assertThat(repository.observedAll).isTrue()
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -31,8 +60,13 @@ class GetLibraryBooksUseCaseTest {
 private class FakeLibraryRepository : LibraryRepository {
     val books = MutableStateFlow<List<BookEntry>>(emptyList())
     var observedStatus: ReadingStatus? = null
+    var observedSort: LibrarySort? = null
+    var observedAll = false
 
-    override fun observeAll(): Flow<List<BookEntry>> = books
+    override fun observeAll(): Flow<List<BookEntry>> {
+        observedAll = true
+        return books
+    }
 
     override suspend fun changeReadingStatus(
         isbn: String,
@@ -41,8 +75,12 @@ private class FakeLibraryRepository : LibraryRepository {
         finishedAt: kotlinx.datetime.LocalDate?,
     ): ReadingStatusChangeResult = error("Not used by this test")
 
-    override fun observeByStatus(status: ReadingStatus): Flow<List<BookEntry>> {
+    override fun observeByStatus(
+        status: ReadingStatus,
+        sort: LibrarySort,
+    ): Flow<List<BookEntry>> {
         observedStatus = status
+        observedSort = sort
         return books
     }
 

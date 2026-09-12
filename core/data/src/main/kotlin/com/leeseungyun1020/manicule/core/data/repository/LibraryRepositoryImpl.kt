@@ -6,6 +6,7 @@ import com.leeseungyun1020.manicule.core.data.mapper.asEntity
 import com.leeseungyun1020.manicule.core.data.mapper.asExternalModel
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
@@ -32,8 +33,11 @@ class LibraryRepositoryImpl
                 list.map { it.asExternalModel() }
             }
 
-        override fun observeByStatus(status: ReadingStatus): Flow<List<BookEntry>> =
-            bookEntryLocalDataSource.observeByStatus(status).map { list ->
+        override fun observeByStatus(
+            status: ReadingStatus,
+            sort: LibrarySort,
+        ): Flow<List<BookEntry>> =
+            bookEntryLocalDataSource.observeByStatus(status, sort).map { list ->
                 list.map { it.asExternalModel() }
             }
 
