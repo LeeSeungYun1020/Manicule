@@ -13,7 +13,7 @@ android {
         versionCode = 1
         versionName = "0.1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.leeseungyun1020.manicule.NavigationTestRunner"
     }
 
     buildTypes {
@@ -78,4 +78,9 @@ dependencies {
     testImplementation(libs.junit4)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.androidx.compose.ui.test)
+    androidTestImplementation(libs.androidx.paging.testing)
+    androidTestImplementation(libs.androidx.paging.runtime)
+    androidTestImplementation(libs.kotlinx.datetime)
+    androidTestImplementation(projects.core.data)
 }

@@ -3,10 +3,12 @@ package com.leeseungyun1020.manicule.core.designsystem.icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -52,4 +54,6 @@ object ManiculeIcons {
     val NetworkError: ImageVector = Icons.Default.CloudOff
     val Back: ImageVector = Icons.AutoMirrored.Filled.ArrowBack
     val CameraOff: ImageVector = Icons.Default.NoPhotography
+    val Sort: ImageVector = Icons.AutoMirrored.Filled.Sort
+    val Close: ImageVector = Icons.Default.Close
 }

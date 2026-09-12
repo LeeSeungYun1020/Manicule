@@ -15,6 +15,7 @@ fun LibraryRoute(
     LibraryScreen(
         uiState = uiState,
         onStatusSelected = viewModel::selectStatus,
+        onSortSelected = viewModel::selectSort,
         onBookSelected = onNavigateToBookDetail,
         onSearch = onNavigateToSearch,
         onScan = onNavigateToScanner,

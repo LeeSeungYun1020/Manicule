@@ -12,4 +12,16 @@
     <string name="library_error_description">Please try again in a moment</string>
     <string name="library_retry">Retry</string>
     <string name="library_add_book">Add book</string>
+    <string name="library_sort_title">Sort</string>
+    <string name="library_sort_close">Close sorting</string>
+    <string name="library_sort_added_at">Date added</string>
+    <string name="library_sort_updated_at">Date updated</string>
+    <string name="library_sort_rating">Rating</string>
+    <string name="library_sort_latest">Newest</string>
+    <string name="library_sort_oldest">Oldest</string>
+    <string name="library_sort_highest">Highest</string>
+    <string name="library_sort_lowest">Lowest</string>
+    <string name="library_sort_cancel">Cancel</string>
+    <string name="library_sort_apply">Apply</string>
+    <string name="library_sort_caption">%1$s · %2$s</string>
 </resources>
