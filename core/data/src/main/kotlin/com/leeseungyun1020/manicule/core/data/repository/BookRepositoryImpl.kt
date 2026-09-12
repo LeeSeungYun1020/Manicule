@@ -79,6 +79,7 @@ class BookRepositoryImpl
                 config =
                     PagingConfig(
                         pageSize = NETWORK_PAGE_SIZE,
+                        initialLoadSize = NETWORK_PAGE_SIZE,
                         enablePlaceholders = false,
                     ),
                 pagingSourceFactory = { NlkBookPagingSource(bookRemoteDataSource, query) },

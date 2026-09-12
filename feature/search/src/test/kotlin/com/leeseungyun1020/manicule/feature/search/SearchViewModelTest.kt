@@ -1,9 +1,19 @@
 package com.leeseungyun1020.manicule.feature.search
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.testing.asPagingSourceFactory
+import androidx.paging.testing.asSnapshot
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.leeseungyun1020.manicule.core.data.repository.BookRepository
 import com.leeseungyun1020.manicule.core.data.repository.SearchHistoryRepository
 import com.leeseungyun1020.manicule.core.domain.search.GetRecentQueriesUseCase
+import com.leeseungyun1020.manicule.core.domain.search.SaveRecentQueryUseCase
+import com.leeseungyun1020.manicule.core.domain.search.SearchBooksUseCase
+import com.leeseungyun1020.manicule.core.model.Book
+import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import com.leeseungyun1020.manicule.core.model.SearchQuery
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,11 +50,16 @@ class SearchViewModelTest {
     fun uiState_emitsLoadingThenRecentQueries() =
         runTest(testDispatcher) {
             val repository = FakeSearchHistoryRepository { flowOf(listOf(searchQuery("Compose"))) }
-            val viewModel = SearchViewModel(GetRecentQueriesUseCase(repository))
+            val viewModel = createViewModel(repository)
 
             viewModel.uiState.test {
-                assertThat(awaitItem()).isEqualTo(SearchUiState.Loading)
-                assertThat(awaitItem()).isEqualTo(SearchUiState.Content(listOf("Compose")))
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                assertThat(awaitItem())
+                    .isEqualTo(
+                        SearchUiState(
+                            recentQueriesState = RecentQueriesState.Content(listOf("Compose")),
+                        ),
+                    )
                 assertThat(repository.observedLimits).containsExactly(10)
                 cancelAndIgnoreRemainingEvents()
             }
@@ -61,11 +76,16 @@ class SearchViewModelTest {
                         emit(emptyList())
                     }
                 }
-            val viewModel = SearchViewModel(GetRecentQueriesUseCase(repository))
+            val viewModel = createViewModel(repository)
 
             viewModel.uiState.test {
-                assertThat(awaitItem()).isEqualTo(SearchUiState.Loading)
-                assertThat(awaitItem()).isEqualTo(SearchUiState.Content(emptyList()))
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                assertThat(awaitItem())
+                    .isEqualTo(
+                        SearchUiState(
+                            recentQueriesState = RecentQueriesState.Content(emptyList()),
+                        ),
+                    )
                 assertThat(collectionCount).isEqualTo(1)
                 cancelAndIgnoreRemainingEvents()
             }
@@ -76,16 +96,152 @@ class SearchViewModelTest {
         runTest(testDispatcher) {
             val queries = MutableSharedFlow<List<SearchQuery>>(replay = 1)
             val repository = FakeSearchHistoryRepository { queries }
-            val viewModel = SearchViewModel(GetRecentQueriesUseCase(repository))
+            val viewModel = createViewModel(repository)
 
             viewModel.uiState.test {
-                assertThat(awaitItem()).isEqualTo(SearchUiState.Loading)
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
                 queries.emit(listOf(searchQuery("Kotlin")))
-                assertThat(awaitItem()).isEqualTo(SearchUiState.Content(listOf("Kotlin")))
+                assertThat(awaitItem().recentQueriesState)
+                    .isEqualTo(RecentQueriesState.Content(listOf("Kotlin")))
                 queries.emit(listOf(searchQuery("Compose"), searchQuery("Kotlin")))
-                assertThat(awaitItem()).isEqualTo(SearchUiState.Content(listOf("Compose", "Kotlin")))
+                assertThat(awaitItem().recentQueriesState)
+                    .isEqualTo(RecentQueriesState.Content(listOf("Compose", "Kotlin")))
                 cancelAndIgnoreRemainingEvents()
             }
+        }
+
+    @Test
+    fun queryChange_filtersRecentQueriesImmediatelyAndClearRestoresIdle() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(
+                        listOf(
+                            searchQuery("Jetpack Compose"),
+                            searchQuery("Kotlin"),
+                        ),
+                    )
+                }
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                awaitItem()
+                awaitItem()
+
+                viewModel.onQueryChanged("COMPOSE")
+                assertThat(awaitItem())
+                    .isEqualTo(
+                        SearchUiState(
+                            query = "COMPOSE",
+                            inputPhase = SearchInputPhase.TYPING,
+                            recentQueriesState =
+                                RecentQueriesState.Content(
+                                    listOf("Jetpack Compose", "Kotlin"),
+                                ),
+                            filteredQueries = listOf("Jetpack Compose"),
+                        ),
+                    )
+
+                viewModel.onQueryChanged("")
+                assertThat(awaitItem())
+                    .isEqualTo(
+                        SearchUiState(
+                            recentQueriesState =
+                                RecentQueriesState.Content(
+                                    listOf("Jetpack Compose", "Kotlin"),
+                                ),
+                        ),
+                    )
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun queryChange_doesNotSearchOrSave() =
+        runTest(testDispatcher) {
+            val historyRepository = FakeSearchHistoryRepository { flowOf(emptyList()) }
+            val bookRepository = FakeBookRepository()
+            val viewModel = createViewModel(historyRepository, bookRepository)
+
+            viewModel.onQueryChanged("Compose")
+            runCurrent()
+
+            assertThat(historyRepository.savedQueries).isEmpty()
+            assertThat(bookRepository.searchQueries).isEmpty()
+        }
+
+    @Test
+    fun search_trimsQuerySavesHistoryAndReturnsBooks() =
+        runTest(testDispatcher) {
+            val historyRepository = FakeSearchHistoryRepository { flowOf(emptyList()) }
+            val bookRepository = FakeBookRepository()
+            val viewModel = createViewModel(historyRepository, bookRepository)
+
+            viewModel.onSearch("  Compose  ")
+            runCurrent()
+            val books = viewModel.searchResults.asSnapshot()
+
+            assertThat(historyRepository.savedQueries).containsExactly("Compose")
+            assertThat(bookRepository.searchQueries).containsExactly("Compose")
+            assertThat(books.single().title).isEqualTo("Compose")
+        }
+
+    @Test
+    fun sameQuerySubmission_startsNewSearch() =
+        runTest(testDispatcher) {
+            val historyRepository = FakeSearchHistoryRepository { flowOf(emptyList()) }
+            val bookRepository = FakeBookRepository()
+            val viewModel = createViewModel(historyRepository, bookRepository)
+
+            viewModel.searchResults.test {
+                awaitItem()
+                viewModel.onSearch("Compose")
+                awaitItem()
+                viewModel.onSearch("Compose")
+                awaitItem()
+
+                assertThat(bookRepository.searchQueries)
+                    .containsExactly("Compose", "Compose")
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun sameQuerySubmission_updatesUiRequestId() =
+        runTest(testDispatcher) {
+            val viewModel = createViewModel(FakeSearchHistoryRepository { flowOf(emptyList()) })
+
+            viewModel.uiState.test {
+                awaitItem()
+                awaitItem()
+                viewModel.onSearch("Compose")
+                val firstSearch = awaitItem()
+
+                viewModel.onSearch("Compose")
+                val repeatedSearch = awaitItem()
+
+                assertThat(firstSearch.searchRequestId).isNotNull()
+                assertThat(repeatedSearch.searchRequestId).isNotEqualTo(firstSearch.searchRequestId)
+                assertThat(repeatedSearch.copy(searchRequestId = firstSearch.searchRequestId))
+                    .isEqualTo(firstSearch)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun historySaveFailure_doesNotBlockSearch() =
+        runTest(testDispatcher) {
+            val historyRepository =
+                FakeSearchHistoryRepository { flowOf(emptyList()) }.apply {
+                    saveFailure = IllegalStateException("database unavailable")
+                }
+            val viewModel = createViewModel(historyRepository)
+
+            viewModel.onSearch("Compose")
+            runCurrent()
+
+            assertThat(viewModel.searchResults.asSnapshot().single().title)
+                .isEqualTo("Compose")
         }
 
     @Test
@@ -102,10 +258,10 @@ class SearchViewModelTest {
                         emit(listOf(searchQuery("Compose")))
                     }
                 }
-            val viewModel = SearchViewModel(GetRecentQueriesUseCase(repository))
+            val viewModel = createViewModel(repository)
 
             viewModel.uiState.test {
-                assertThat(awaitItem()).isEqualTo(SearchUiState.Loading)
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
                 runCurrent()
                 assertThat(collectionCount).isEqualTo(1)
 
@@ -116,7 +272,8 @@ class SearchViewModelTest {
 
                 advanceTimeBy(1)
                 runCurrent()
-                assertThat(awaitItem()).isEqualTo(SearchUiState.Content(listOf("Compose")))
+                assertThat(awaitItem().recentQueriesState)
+                    .isEqualTo(RecentQueriesState.Content(listOf("Compose")))
                 assertThat(collectionCount).isEqualTo(2)
                 cancelAndIgnoreRemainingEvents()
             }
@@ -133,16 +290,17 @@ class SearchViewModelTest {
                         throw IllegalStateException("database unavailable")
                     }
                 }
-            val viewModel = SearchViewModel(GetRecentQueriesUseCase(repository))
+            val viewModel = createViewModel(repository)
 
             viewModel.uiState.test {
-                assertThat(awaitItem()).isEqualTo(SearchUiState.Loading)
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
                 runCurrent()
                 assertThat(collectionCount).isEqualTo(1)
 
                 advanceTimeBy(500)
                 runCurrent()
-                assertThat(awaitItem()).isEqualTo(SearchUiState.Unavailable)
+                assertThat(awaitItem().recentQueriesState)
+                    .isEqualTo(RecentQueriesState.Unavailable)
                 assertThat(collectionCount).isEqualTo(2)
                 expectNoEvents()
                 cancelAndIgnoreRemainingEvents()
@@ -150,12 +308,26 @@ class SearchViewModelTest {
         }
 }
 
+private fun createViewModel(
+    historyRepository: FakeSearchHistoryRepository,
+    bookRepository: FakeBookRepository = FakeBookRepository(),
+) = SearchViewModel(
+    getRecentQueries = GetRecentQueriesUseCase(historyRepository),
+    saveRecentQuery = SaveRecentQueryUseCase(historyRepository),
+    searchBooks = SearchBooksUseCase(bookRepository),
+)
+
 private class FakeSearchHistoryRepository(
     private val flowProvider: () -> Flow<List<SearchQuery>>,
 ) : SearchHistoryRepository {
     val observedLimits = mutableListOf<Int>()
+    val savedQueries = mutableListOf<String>()
+    var saveFailure: Exception? = null
 
-    override suspend fun saveQuery(query: String) = Unit
+    override suspend fun saveQuery(query: String) {
+        saveFailure?.let { throw it }
+        savedQueries += query
+    }
 
     override fun observeRecentQueries(limit: Int): Flow<List<SearchQuery>> {
         observedLimits += limit
@@ -167,8 +339,40 @@ private class FakeSearchHistoryRepository(
     override suspend fun clearHistory() = Unit
 }
 
+private class FakeBookRepository : BookRepository {
+    val searchQueries = mutableListOf<String>()
+
+    override fun observeBook(isbn: String): Flow<Book?> = flowOf(null)
+
+    override suspend fun syncBook(isbn: String): Result<BookSyncStatus> = Result.failure(NoSuchElementException(isbn))
+
+    override fun searchBooks(query: String): Flow<PagingData<Book>> {
+        searchQueries += query
+        return Pager(
+            config = PagingConfig(pageSize = 1),
+            pagingSourceFactory = listOf(book(query)).asPagingSourceFactory(),
+        ).flow
+    }
+}
+
 private fun searchQuery(query: String) =
     SearchQuery(
         query = query,
         executedAt = Instant.fromEpochMilliseconds(0),
+    )
+
+private fun book(query: String) =
+    Book(
+        isbn = query,
+        title = query,
+        author = "",
+        publisher = "",
+        publishedDate = null,
+        coverUrl = null,
+        totalPages = null,
+        price = null,
+        category = null,
+        tableOfContentsUrl = null,
+        introductionUrl = null,
+        summaryUrl = null,
     )
