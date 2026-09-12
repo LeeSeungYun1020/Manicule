@@ -6,10 +6,13 @@ import androidx.test.core.app.ApplicationProvider
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.database.ManiculeDatabase
+import com.leeseungyun1020.manicule.core.database.dao.projection.BookEntryWithCurrentPage
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
 import com.leeseungyun1020.manicule.core.database.entity.ReadingRecordEntity
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -132,6 +135,8 @@ class BookEntryDaoTest {
         isbn: String,
         status: ReadingStatus,
         updatedAt: Instant,
+        addedAt: Instant = updatedAt,
+        rating: Int = 0,
     ) {
         bookDao.upsert(
             BookEntity(
@@ -153,9 +158,9 @@ class BookEntryDaoTest {
             BookEntryEntity(
                 isbn = isbn,
                 status = status,
-                rating = null,
+                rating = rating,
                 memo = null,
-                addedAt = updatedAt,
+                addedAt = addedAt,
                 updatedAt = updatedAt,
                 finishedAt = null,
             ),
@@ -163,15 +168,160 @@ class BookEntryDaoTest {
     }
 
     @Test
-    fun observeByStatus_filtersAndUsesDeterministicOrder() =
+    fun observeByStatus_filtersByStatus() =
         runTest {
             saveBookEntry("9783", ReadingStatus.READING, Instant.fromEpochMilliseconds(10))
             saveBookEntry("9782", ReadingStatus.WANT, Instant.fromEpochMilliseconds(20))
             saveBookEntry("9781", ReadingStatus.WANT, Instant.fromEpochMilliseconds(20))
 
-            dao.observeByStatus(ReadingStatus.WANT).test {
-                assertThat(awaitItem().map { it.entry.isbn }).containsExactly("9781", "9782").inOrder()
+            dao.observeByStatusUpdatedAtDescending(ReadingStatus.WANT).test {
+                assertThat(awaitItem().map { it.entry.isbn }).containsExactly("9781", "9782")
                 cancelAndIgnoreRemainingEvents()
             }
+        }
+
+    @Test
+    fun observeByStatus_supportsEverySortOption() =
+        runTest {
+            saveBookEntry(
+                isbn = "book-a",
+                status = ReadingStatus.WANT,
+                addedAt = Instant.fromEpochMilliseconds(10),
+                updatedAt = Instant.fromEpochMilliseconds(40),
+                rating = 2,
+            )
+            saveBookEntry(
+                isbn = "book-b",
+                status = ReadingStatus.WANT,
+                addedAt = Instant.fromEpochMilliseconds(20),
+                updatedAt = Instant.fromEpochMilliseconds(30),
+                rating = 5,
+            )
+            saveBookEntry(
+                isbn = "book-c",
+                status = ReadingStatus.WANT,
+                addedAt = Instant.fromEpochMilliseconds(30),
+                updatedAt = Instant.fromEpochMilliseconds(20),
+                rating = 5,
+            )
+            saveBookEntry(
+                isbn = "book-d",
+                status = ReadingStatus.WANT,
+                addedAt = Instant.fromEpochMilliseconds(40),
+                updatedAt = Instant.fromEpochMilliseconds(10),
+                rating = 0,
+            )
+
+            assertOrder(
+                dao.observeByStatusAddedAtAscending(ReadingStatus.WANT),
+                "book-a",
+                "book-b",
+                "book-c",
+                "book-d",
+            )
+            assertOrder(
+                dao.observeByStatusAddedAtDescending(ReadingStatus.WANT),
+                "book-d",
+                "book-c",
+                "book-b",
+                "book-a",
+            )
+            assertOrder(
+                dao.observeByStatusUpdatedAtAscending(ReadingStatus.WANT),
+                "book-d",
+                "book-c",
+                "book-b",
+                "book-a",
+            )
+            assertOrder(
+                dao.observeByStatusUpdatedAtDescending(ReadingStatus.WANT),
+                "book-a",
+                "book-b",
+                "book-c",
+                "book-d",
+            )
+            assertOrder(
+                dao.observeByStatusRatingAscending(ReadingStatus.WANT),
+                "book-d",
+                "book-a",
+                "book-b",
+                "book-c",
+            )
+            assertOrder(
+                dao.observeByStatusRatingDescending(ReadingStatus.WANT),
+                "book-b",
+                "book-c",
+                "book-a",
+                "book-d",
+            )
+        }
+
+    private suspend fun assertOrder(
+        flow: Flow<List<BookEntryWithCurrentPage>>,
+        vararg expectedIsbns: String,
+    ) {
+        flow.test {
+            assertThat(awaitItem().map { it.entry.isbn }).containsExactly(*expectedIsbns).inOrder()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun changeStatus_registersCachedBookInEachLibraryTab() =
+        runTest {
+            val now = Instant.parse("2026-09-05T01:00:00Z")
+            listOf(ReadingStatus.WANT, ReadingStatus.READING, ReadingStatus.FINISHED).forEach { status ->
+                val isbn = status.name
+                bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+                val date = if (status == ReadingStatus.FINISHED) LocalDate(2026, 9, 5) else null
+                assertThat(dao.changeReadingStatus(isbn, status, now, date)).isEqualTo(ReadingStatusChangeResult.Changed)
+                assertThat(dao.getEntry(isbn)).isEqualTo(BookEntryEntity(isbn, status, 0, null, now, now, date))
+            }
+        }
+
+    @Test
+    fun changeStatus_preservesReviewBookAndRecords_andHandlesRereading() =
+        runTest {
+            val initialTime = Instant.fromEpochMilliseconds(1)
+            saveBookEntry("123", ReadingStatus.UNSET, initialTime)
+            val original = checkNotNull(dao.getEntry("123")).copy(rating = 4, memo = "Keep review")
+            dao.upsert(original)
+            val book = bookDao.getByIsbn("123")
+            recordDao.upsert(
+                ReadingRecordEntity(isbn = "123", date = LocalDate(2026, 9, 1), time = LocalTime(10, 0), startPage = 1, endPage = 42),
+            )
+            val finishedTime = Instant.parse("2026-09-05T01:00:00Z")
+            val finishedDate = LocalDate(2026, 9, 5)
+
+            dao.changeReadingStatus("123", ReadingStatus.FINISHED, finishedTime, finishedDate)
+            assertThat(
+                dao.getEntry("123"),
+            ).isEqualTo(original.copy(status = ReadingStatus.FINISHED, updatedAt = finishedTime, finishedAt = finishedDate))
+            val later = Instant.parse("2026-09-06T01:00:00Z")
+            assertThat(
+                dao.changeReadingStatus("123", ReadingStatus.FINISHED, later, LocalDate(2026, 9, 6)),
+            ).isEqualTo(ReadingStatusChangeResult.Unchanged)
+            assertThat(dao.getEntry("123")?.finishedAt).isEqualTo(finishedDate)
+            assertThat(dao.getEntry("123")?.updatedAt).isEqualTo(finishedTime)
+
+            dao.changeReadingStatus("123", ReadingStatus.READING, later, null)
+            assertThat(dao.getEntry("123")).isEqualTo(original.copy(status = ReadingStatus.READING, updatedAt = later))
+            assertThat(bookDao.getByIsbn("123")).isEqualTo(book)
+            dao.observeByIsbn("123").test {
+                assertThat(awaitItem()?.currentPage).isEqualTo(42)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun changeStatus_rejectsMissingBookAndUnset_withoutWriting() =
+        runTest {
+            val now = Instant.fromEpochMilliseconds(1)
+            assertThat(dao.changeReadingStatus("missing", ReadingStatus.WANT, now, null)).isEqualTo(ReadingStatusChangeResult.BookNotFound)
+            assertThat(dao.getEntry("missing")).isNull()
+            saveBookEntry("123", ReadingStatus.READING, now)
+            val before = dao.getEntry("123")
+            assertThat(dao.changeReadingStatus("123", ReadingStatus.UNSET, now, null)).isEqualTo(ReadingStatusChangeResult.InvalidStatus)
+            assertThat(dao.getEntry("123")).isEqualTo(before)
         }
 }
