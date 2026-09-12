@@ -251,13 +251,17 @@ feature/library/
     ├── LibraryUiState.kt                   # selectedTab, sort, books
     ├── LibraryUiEvent.kt                   # 정렬 변경, 상태 필터 변경, 책 삭제, 상태 변경, 실행취소 등
     ├── navigation/
-    │   └── LibraryNavigation.kt
+    │   └── LibraryNavigation.kt            # LibraryRoute(initialTab = READING), LibraryTab
     └── components/
+        ├── LibraryTopBar.kt                # 상태 탭, 정렬 진입, 현재 정렬 요약, 책 추가 액션
+        ├── LibrarySortLabels.kt            # 정렬 기준·방향 표시 문자열 변환
         ├── StatusTabRow.kt                 # 읽고 싶음 / 읽는 중 / 다 읽음
         ├── SortBottomSheet.kt              # 기준(추가/수정/별점) 및 방향 선택 (적용 버튼으로 확정)
         ├── LibraryBookCard.kt              # 상태별 표시 (기본, 진도율, 다 읽은 날짜)
         └── EmptyLibrary.kt                 # 책이 없는 경우 빈 상태 표시 (검색, 스캔 버튼 포함)
 ```
+
+서재 새 진입은 `LibraryRoute()`의 `READING`을 기본으로 하며, 홈 '고르기'는 `LibraryRoute(LibraryTab.WANT)`로 진입한다. `initialTab`은 새 백스택 항목의 초기값이다. 기존 화면을 복원할 때는 저장된 사용자 선택을 유지하므로, '고르기' 연결 시 기존 항목을 `restoreState`로 복원하지 않는다.
 
 ### 3.8 `feature:stats` (통계, 7a~7e)
 
@@ -380,6 +384,7 @@ core/model/
     ├── BookDetail.kt                       # Book + nullable BookEntry. 미등록은 null, 리뷰-only 등록은 BookEntry.status=UNSET
     ├── ReadingStatus.kt                    # UNSET / WANT / READING / FINISHED
     ├── BookEntry.kt                        # Book + Status + rating + memo + finishedAt
+    ├── LibrarySort.kt                      # 서재 정렬 기준(추가/수정/별점)과 방향
     ├── ReadingRecord.kt                    # id, isbn, date, time, startPage, endPage, 파생 pagesRead
     ├── DailyReading.kt                     # 통계용 (date, pages)
     ├── ReadingCalendarDay.kt               # 독서 달력 한 칸 (date, intensity)

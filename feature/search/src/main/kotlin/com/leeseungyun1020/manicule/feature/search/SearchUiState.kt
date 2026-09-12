@@ -6,9 +6,9 @@ import androidx.compose.runtime.Immutable
 data class SearchUiState(
     val query: String = "",
     val inputPhase: SearchInputPhase = SearchInputPhase.IDLE,
-    val searchRequestId: Long? = null,
     val recentQueriesState: RecentQueriesState = RecentQueriesState.Loading,
     val filteredQueries: List<String> = emptyList(),
+    val searchRequestId: Long? = null,
 )
 
 enum class SearchInputPhase {

@@ -207,6 +207,28 @@ class SearchViewModelTest {
         }
 
     @Test
+    fun sameQuerySubmission_updatesUiRequestId() =
+        runTest(testDispatcher) {
+            val viewModel = createViewModel(FakeSearchHistoryRepository { flowOf(emptyList()) })
+
+            viewModel.uiState.test {
+                awaitItem()
+                awaitItem()
+                viewModel.onSearch("Compose")
+                val firstSearch = awaitItem()
+
+                viewModel.onSearch("Compose")
+                val repeatedSearch = awaitItem()
+
+                assertThat(firstSearch.searchRequestId).isNotNull()
+                assertThat(repeatedSearch.searchRequestId).isNotEqualTo(firstSearch.searchRequestId)
+                assertThat(repeatedSearch.copy(searchRequestId = firstSearch.searchRequestId))
+                    .isEqualTo(firstSearch)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
     fun submissions_replacePreviousResultsIncludingSameQuery() =
         runTest(testDispatcher) {
             val repository = FakeBookRepository()

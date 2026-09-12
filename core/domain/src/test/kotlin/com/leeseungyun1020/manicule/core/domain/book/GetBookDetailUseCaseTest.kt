@@ -10,7 +10,9 @@ import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookDetail
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
+import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
@@ -67,7 +69,17 @@ class GetBookDetailUseCaseTest {
 
         override fun observeAll(): Flow<List<BookEntry>> = emptyFlow()
 
-        override fun observeByStatus(status: ReadingStatus): Flow<List<BookEntry>> = emptyFlow()
+        override suspend fun changeReadingStatus(
+            isbn: String,
+            status: ReadingStatus,
+            updatedAt: kotlinx.datetime.Instant,
+            finishedAt: kotlinx.datetime.LocalDate?,
+        ): ReadingStatusChangeResult = error("Not used by this test")
+
+        override fun observeByStatus(
+            status: ReadingStatus,
+            sort: LibrarySort,
+        ): Flow<List<BookEntry>> = emptyFlow()
 
         override suspend fun getRecentBooksByStatus(
             status: ReadingStatus,

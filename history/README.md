@@ -70,6 +70,9 @@
 - [7db01ae](7db01ae.md) — docs: PR 작업 및 리뷰 절차 정리
 - [8640459](8640459.md) — fix: 검색 Paging 요청 크기 일치
 - [7a2b1dd](7a2b1dd.md) — feat: 검색 실행과 Paging 결과 구현
-
+- [270a111](270a111.md) — feat: 서재 초기 탭 진입 계약 추가
+- [02bd301](02bd301.md) — feat: 서재 정렬 계약 구현
+- [daf4ab3](daf4ab3.md) — feat: 서재 정렬 UI 구현
+- [8dab24f](8dab24f.md) — feat: 책 상세 독서 상태 변경 구현
 - [3c3d385](3c3d385.md) — feat: 검색 결과 선택과 복귀 상태 보완
 - [174724c](174724c.md) — feat: 검색 결과 책 상세 이동 조립
