@@ -8,16 +8,17 @@ import com.leeseungyun1020.manicule.core.model.ReminderConfig
 import com.leeseungyun1020.manicule.core.model.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalTime
@@ -32,10 +33,10 @@ class SettingsViewModel
     ) : ViewModel() {
         private val retryRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
         private val isUpdating = MutableStateFlow(false)
-        private val eventChannel = Channel<SettingsEvent>(Channel.BUFFERED)
+        private val _events = MutableSharedFlow<SettingsEvent>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
         private var pendingRetry: SettingsEvent.ReminderUpdateFailed? = null
 
-        val events = eventChannel.receiveAsFlow()
+        val events: SharedFlow<SettingsEvent> = _events.asSharedFlow()
 
         private val preferencesState =
             retryRequests
@@ -76,7 +77,15 @@ class SettingsViewModel
 
         fun retryReminderUpdate(failure: SettingsEvent.ReminderUpdateFailed) {
             if (pendingRetry !== failure) return
+            _events.resetReplayCache()
             updateReminder(failure.desiredConfig)
+        }
+
+        fun dismissReminderUpdateFailure(failure: SettingsEvent.ReminderUpdateFailed) {
+            if (pendingRetry === failure) {
+                pendingRetry = null
+                _events.resetReplayCache()
+            }
         }
 
         fun retryPreferences() {
@@ -91,6 +100,7 @@ class SettingsViewModel
         private fun updateReminder(config: ReminderConfig) {
             if (isUpdating.value || uiState.value !is SettingsUiState.Content) return
             pendingRetry = null
+            _events.resetReplayCache()
             isUpdating.value = true
             viewModelScope.launch {
                 try {
@@ -100,7 +110,7 @@ class SettingsViewModel
                 } catch (_: Throwable) {
                     val failure = SettingsEvent.ReminderUpdateFailed(config)
                     pendingRetry = failure
-                    eventChannel.send(failure)
+                    _events.tryEmit(failure)
                 } finally {
                     isUpdating.value = false
                 }

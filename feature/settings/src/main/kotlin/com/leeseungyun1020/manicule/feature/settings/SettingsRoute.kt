@@ -61,8 +61,9 @@ fun SettingsRoute(viewModel: SettingsViewModel = hiltViewModel()) {
                             actionLabel = retryLabel,
                             duration = SnackbarDuration.Indefinite,
                         )
-                    if (result == SnackbarResult.ActionPerformed) {
-                        viewModel.retryReminderUpdate(event)
+                    when (result) {
+                        SnackbarResult.ActionPerformed -> viewModel.retryReminderUpdate(event)
+                        SnackbarResult.Dismissed -> viewModel.dismissReminderUpdateFailure(event)
                     }
                 }
             }

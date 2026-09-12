@@ -214,6 +214,65 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun updateFailure_replaysEventForRecreatedCollectorUntilRetried() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val desired = ReminderConfig(enabled = true, time = LocalTime(10, 20))
+            scheduler.scheduleFailure = IOException("failed")
+            val viewModel = viewModel()
+
+            viewModel.uiState.test {
+                awaitItem()
+                awaitItem()
+
+                var failureEvent: SettingsEvent.ReminderUpdateFailed? = null
+                viewModel.events.test {
+                    viewModel.setReminderEnabled(true)
+                    advanceUntilIdle()
+                    failureEvent = awaitItem() as SettingsEvent.ReminderUpdateFailed
+                    cancelAndIgnoreRemainingEvents()
+                }
+
+                viewModel.events.test {
+                    assertThat(awaitItem()).isEqualTo(failureEvent)
+
+                    viewModel.retryReminderUpdate(failureEvent!!)
+                    advanceUntilIdle()
+                    cancelAndIgnoreRemainingEvents()
+                }
+
+                viewModel.events.test {
+                    expectNoEvents()
+                }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun updateFailure_dismissalClearsReplayCache() =
+        runTest(mainDispatcherRule.dispatcher) {
+            scheduler.scheduleFailure = IOException("failed")
+            val viewModel = viewModel()
+
+            viewModel.uiState.test {
+                awaitItem()
+                awaitItem()
+                viewModel.events.test {
+                    viewModel.setReminderEnabled(true)
+                    advanceUntilIdle()
+                    val failure = awaitItem() as SettingsEvent.ReminderUpdateFailed
+
+                    viewModel.dismissReminderUpdateFailure(failure)
+                    cancelAndIgnoreRemainingEvents()
+                }
+
+                viewModel.events.test {
+                    expectNoEvents()
+                }
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
     fun preferencesFailure_retrySubscribesAgain() =
         runTest(mainDispatcherRule.dispatcher) {
             repository.failedSubscriptions = 1
