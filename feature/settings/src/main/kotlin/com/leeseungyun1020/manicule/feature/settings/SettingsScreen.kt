@@ -189,6 +189,34 @@ private fun SettingsContent(
 }
 
 @ManiculePreview
+@Composable
+private fun SettingsLoadingPreview() {
+    ManiculePreviewTheme {
+        SettingsScreen(
+            uiState = SettingsUiState.Loading,
+            snackbarHostState = SnackbarHostState(),
+            onReminderEnabledChange = {},
+            onReminderTimeChange = {},
+            onRetryPreferences = {},
+        )
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun SettingsErrorPreview() {
+    ManiculePreviewTheme {
+        SettingsScreen(
+            uiState = SettingsUiState.Error,
+            snackbarHostState = SnackbarHostState(),
+            onReminderEnabledChange = {},
+            onReminderTimeChange = {},
+            onRetryPreferences = {},
+        )
+    }
+}
+
+@ManiculePreview
 @Preview(name = "Phone", device = Devices.PHONE)
 @Preview(name = "Foldable", device = Devices.FOLDABLE)
 @Preview(name = "Tablet", device = Devices.TABLET)
@@ -221,10 +249,14 @@ private fun DisabledReminderSettingsScreenPreview() {
 
 @ManiculePreview
 @Composable
-private fun SettingsErrorPreview() {
+private fun UpdatingReminderSettingsScreenPreview() {
     ManiculePreviewTheme {
         SettingsScreen(
-            uiState = SettingsUiState.Error,
+            uiState =
+                SettingsUiState.Content(
+                    reminder = ReminderConfig(enabled = true, time = LocalTime(21, 0)),
+                    isUpdating = true,
+                ),
             snackbarHostState = SnackbarHostState(),
             onReminderEnabledChange = {},
             onReminderTimeChange = {},
