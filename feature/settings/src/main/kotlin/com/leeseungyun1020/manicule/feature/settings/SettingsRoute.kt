@@ -51,24 +51,12 @@ fun SettingsRoute(viewModel: SettingsViewModel = hiltViewModel()) {
             }
         }
 
-    LaunchedEffect(viewModel, snackbarHostState) {
-        viewModel.events.collectLatest { event ->
-            when (event) {
-                is SettingsEvent.ReminderUpdateFailed -> {
-                    val result =
-                        snackbarHostState.showSnackbar(
-                            message = updateFailedMessage,
-                            actionLabel = retryLabel,
-                            duration = SnackbarDuration.Indefinite,
-                        )
-                    when (result) {
-                        SnackbarResult.ActionPerformed -> viewModel.retryReminderUpdate(event)
-                        SnackbarResult.Dismissed -> viewModel.dismissReminderUpdateFailure(event)
-                    }
-                }
-            }
-        }
-    }
+    SettingsSnackbarEffect(
+        viewModel = viewModel,
+        snackbarHostState = snackbarHostState,
+        updateFailedMessage = updateFailedMessage,
+        retryLabel = retryLabel,
+    )
 
     SettingsScreen(
         uiState = uiState,
@@ -88,4 +76,34 @@ fun SettingsRoute(viewModel: SettingsViewModel = hiltViewModel()) {
         onReminderTimeChange = viewModel::setReminderTime,
         onRetryPreferences = viewModel::retryPreferences,
     )
+}
+
+@Composable
+private fun SettingsSnackbarEffect(
+    viewModel: SettingsViewModel,
+    snackbarHostState: SnackbarHostState,
+    updateFailedMessage: String,
+    retryLabel: String,
+) {
+    LaunchedEffect(viewModel, snackbarHostState) {
+        viewModel.events.collectLatest { event ->
+            when (event) {
+                is SettingsEvent.ReminderUpdateFailed -> {
+                    val result =
+                        snackbarHostState.showSnackbar(
+                            message = updateFailedMessage,
+                            actionLabel = retryLabel,
+                            duration = SnackbarDuration.Indefinite,
+                        )
+                    when (result) {
+                        SnackbarResult.ActionPerformed -> viewModel.retryReminderUpdate(event)
+                        SnackbarResult.Dismissed -> viewModel.dismissReminderUpdateFailure(event)
+                    }
+                }
+                SettingsEvent.DismissReminderUpdateFailure -> {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                }
+            }
+        }
+    }
 }

@@ -160,6 +160,7 @@ class SettingsViewModelTest {
                     val failure = awaitItem() as SettingsEvent.ReminderUpdateFailed
 
                     viewModel.setReminderTime(LocalTime(8, 30))
+                    assertThat(awaitItem()).isEqualTo(SettingsEvent.DismissReminderUpdateFailure)
                     advanceUntilIdle()
                     val latest = repository.currentReminder
                     val cancellations = scheduler.cancelCount
@@ -192,6 +193,7 @@ class SettingsViewModelTest {
 
                     scheduler.scheduleFailure = IOException("second failure")
                     viewModel.setReminderEnabled(true)
+                    assertThat(awaitItem()).isEqualTo(SettingsEvent.DismissReminderUpdateFailure)
                     advanceUntilIdle()
                     val latestFailure = awaitItem() as SettingsEvent.ReminderUpdateFailed
                     assertThat(oldFailure.desiredConfig).isEqualTo(latestFailure.desiredConfig)
@@ -202,6 +204,7 @@ class SettingsViewModelTest {
                     assertThat(scheduler.scheduledTimes).isEmpty()
 
                     viewModel.retryReminderUpdate(latestFailure)
+                    assertThat(awaitItem()).isEqualTo(SettingsEvent.DismissReminderUpdateFailure)
                     advanceUntilIdle()
                     viewModel.retryReminderUpdate(latestFailure)
                     advanceUntilIdle()
@@ -236,6 +239,7 @@ class SettingsViewModelTest {
                     assertThat(awaitItem()).isEqualTo(failureEvent)
 
                     viewModel.retryReminderUpdate(failureEvent!!)
+                    assertThat(awaitItem()).isEqualTo(SettingsEvent.DismissReminderUpdateFailure)
                     advanceUntilIdle()
                     cancelAndIgnoreRemainingEvents()
                 }

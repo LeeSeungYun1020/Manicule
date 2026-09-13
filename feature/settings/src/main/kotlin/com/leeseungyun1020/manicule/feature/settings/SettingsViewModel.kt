@@ -77,7 +77,6 @@ class SettingsViewModel
 
         fun retryReminderUpdate(failure: SettingsEvent.ReminderUpdateFailed) {
             if (pendingRetry !== failure) return
-            _events.resetReplayCache()
             updateReminder(failure.desiredConfig)
         }
 
@@ -99,6 +98,9 @@ class SettingsViewModel
 
         private fun updateReminder(config: ReminderConfig) {
             if (isUpdating.value || uiState.value !is SettingsUiState.Content) return
+            if (pendingRetry != null) {
+                _events.tryEmit(SettingsEvent.DismissReminderUpdateFailure)
+            }
             pendingRetry = null
             _events.resetReplayCache()
             isUpdating.value = true

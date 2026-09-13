@@ -8,4 +8,6 @@ sealed interface SettingsEvent {
     data class ReminderUpdateFailed(
         val desiredConfig: ReminderConfig,
     ) : SettingsEvent
+
+    data object DismissReminderUpdateFailure : SettingsEvent
 }
