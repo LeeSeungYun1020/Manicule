@@ -1,23 +1,31 @@
 package com.leeseungyun1020.manicule.core.common.time
 
 import com.google.common.truth.Truth.assertThat
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import org.junit.Test
 
 class DateExtTest {
 
     @Test
-    fun `startOfWeek returns previous sunday for a wednesday`() {
+    fun `startOfWeek returns previous monday for a wednesday`() {
         // 2026-04-29 is Wednesday
         val date = LocalDate(2026, 4, 29)
-        assertThat(date.startOfWeek()).isEqualTo(LocalDate(2026, 4, 26))
+        assertThat(date.startOfWeek()).isEqualTo(LocalDate(2026, 4, 27))
     }
 
     @Test
-    fun `startOfWeek returns same day for sunday`() {
-        // 2026-04-26 is Sunday
-        val date = LocalDate(2026, 4, 26)
+    fun `startOfWeek returns same day for monday`() {
+        // 2026-04-27 is Monday
+        val date = LocalDate(2026, 4, 27)
         assertThat(date.startOfWeek()).isEqualTo(date)
+    }
+
+    @Test
+    fun `startOfWeek supports an explicit sunday`() {
+        val date = LocalDate(2026, 4, 29)
+        assertThat(date.startOfWeek(weekStart = DayOfWeek.SUNDAY))
+            .isEqualTo(LocalDate(2026, 4, 26))
     }
 
     @Test

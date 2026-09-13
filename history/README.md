@@ -72,6 +72,7 @@
 - [8640459](8640459.md) — fix: 검색 Paging 요청 크기 일치
 - [7a2b1dd](7a2b1dd.md) — feat: 검색 실행과 Paging 결과 구현
 - [270a111](270a111.md) — feat: 서재 초기 탭 진입 계약 추가
+- [4ceaae3](4ceaae3.md) — feat: 월요일 기준 독서 달력 선택 계약 구현
 - [02bd301](02bd301.md) — feat: 서재 정렬 계약 구현
 - [daf4ab3](daf4ab3.md) — feat: 서재 정렬 UI 구현
 - [8dab24f](8dab24f.md) — feat: 책 상세 독서 상태 변경 구현

@@ -278,7 +278,7 @@ feature/stats/
         ├── PeriodSelector.kt               # 오늘 / 4주 / 1년 / 직접 선택
         ├── PeriodSelectionBottomSheet.kt   # 직접 선택 탭의 시작일/종료일 설정용 바텀 시트
         ├── SummaryCards.kt                 # 다 읽은 권수, 페이지 수
-        ├── ReadingChart.kt                 # 책(막대) + 페이지(꺾은선) 복합 차트 (좌축=권수, 우축=페이지 눈금 + 격자선, 가로 스크롤 시 좌우 축 고정·가운데만 스크롤, 우측 정렬)
+        ├── ReadingChart.kt                 # 책(막대) + 페이지(꺾은선) 복합 차트 (좌축=권수, 우축=페이지 눈금 + 격자선, 가로 스크롤 시 좌우 축 고정·가운데만 스크롤)
         ├── SelectedDayRecords.kt           # 오늘 탭 하단에 표시되는 해당 일 독서 기록 목록
         └── SelectedDayRecordsBottomSheet.kt # 4주/1년/직접선택 탭 달력에서 특정 날짜 클릭 시 올라오는 독서 기록 바텀 시트
 ```
