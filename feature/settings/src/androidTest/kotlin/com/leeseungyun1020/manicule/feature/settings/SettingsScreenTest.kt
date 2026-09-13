@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.model.ReminderConfig
 import kotlinx.datetime.LocalTime
@@ -135,7 +136,7 @@ class SettingsScreenTest {
             state = SettingsUiState.Content(ReminderConfig.Default),
             width = 840,
         )
-        composeRule.onNodeWithTag(SETTINGS_CONTENT_TEST_TAG).assertWidthIsEqualTo(600.dp)
+        composeRule.onNodeWithTag(SETTINGS_CONTENT_TEST_TAG).assertWidthIsEqualTo(ManiculeSize.contentMaxWidth)
         composeRule
             .onNode(hasText(context.getString(R.string.settings_reading_reminder)) and isToggleable())
             .assertIsDisplayed()

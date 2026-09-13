@@ -32,7 +32,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeEmptyState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
@@ -40,6 +39,7 @@ import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSnackbar
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTopAppBar
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.size
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.ReminderConfig
 import com.leeseungyun1020.manicule.feature.settings.components.ReminderTimePicker
@@ -48,7 +48,6 @@ import kotlinx.datetime.LocalTime
 import java.util.Calendar
 import android.text.format.DateFormat as AndroidDateFormat
 
-private val SettingsContentMaxWidth = 600.dp
 internal const val SETTINGS_CONTENT_TEST_TAG = "settings_content"
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -114,7 +113,7 @@ private fun SettingsError(
         ManiculeEmptyState(
             title = stringResource(R.string.settings_load_error_title),
             description = stringResource(R.string.settings_load_error_description),
-            modifier = Modifier.widthIn(max = SettingsContentMaxWidth),
+            modifier = Modifier.widthIn(max = MaterialTheme.size.contentMaxWidth),
             actions = {
                 ManiculeButton(
                     onClick = onRetry,
@@ -159,7 +158,7 @@ private fun SettingsContent(
         Column(
             modifier =
                 Modifier
-                    .widthIn(max = SettingsContentMaxWidth)
+                    .widthIn(max = MaterialTheme.size.contentMaxWidth)
                     .fillMaxWidth()
                     .fillMaxHeight()
                     .verticalScroll(rememberScrollState())
