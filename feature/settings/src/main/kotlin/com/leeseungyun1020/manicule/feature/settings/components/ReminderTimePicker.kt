@@ -44,15 +44,34 @@ fun ReminderTimePicker(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @ManiculePreview
 @Composable
-private fun ReminderTimePickerPreview() {
+private fun ReminderTimePicker12HourPreview() {
     ManiculePreviewTheme {
-        ReminderTimePicker(
-            initialTime = LocalTime(21, 0),
-            is24Hour = false,
-            onDismiss = {},
-            onConfirm = {},
+        TimePicker(
+            state =
+                rememberTimePickerState(
+                    initialHour = 21,
+                    initialMinute = 0,
+                    is24Hour = false,
+                ),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@ManiculePreview
+@Composable
+private fun ReminderTimePicker24HourPreview() {
+    ManiculePreviewTheme {
+        TimePicker(
+            state =
+                rememberTimePickerState(
+                    initialHour = 21,
+                    initialMinute = 0,
+                    is24Hour = true,
+                ),
         )
     }
 }
