@@ -9,9 +9,10 @@
     <string name="settings_load_error_description">Please try again in a moment.</string>
     <string name="settings_retry">Retry</string>
     <string name="settings_notification_permission_denied">Allow notifications to receive reading reminders.</string>
-    <string name="settings_open_system_settings">Open settings</string>
     <string name="settings_reminder_update_failed">Couldn’t update the reading reminder.</string>
     <string name="settings_time_picker_title">Reminder time</string>
     <string name="settings_confirm">OK</string>
     <string name="settings_cancel">Cancel</string>
+    <string name="settings_notification_permission_title">Notification permission</string>
+    <string name="settings_continue">Continue</string>
 </resources>

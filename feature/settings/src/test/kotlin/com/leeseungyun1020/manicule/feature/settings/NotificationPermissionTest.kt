@@ -6,14 +6,14 @@ import org.junit.Test
 
 class NotificationPermissionTest {
     @Test
-    fun deniedPermission_subsequentAttemptShowsSettings() {
-        assertThat(notificationPermissionAction(Build.VERSION_CODES.TIRAMISU, false, previouslyDenied = true))
-            .isEqualTo(NotificationPermissionAction.SHOW_SETTINGS)
+    fun rationaleRequired_explainsBeforeRequesting() {
+        assertThat(notificationPermissionAction(Build.VERSION_CODES.TIRAMISU, false, shouldShowRationale = true))
+            .isEqualTo(NotificationPermissionAction.SHOW_RATIONALE)
     }
 
     @Test
-    fun permissionGrantedInSettings_overridesPreviousDenial() {
-        assertThat(notificationPermissionAction(Build.VERSION_CODES.TIRAMISU, true, previouslyDenied = true))
+    fun permissionGrantedInSettings_overridesRationale() {
+        assertThat(notificationPermissionAction(Build.VERSION_CODES.TIRAMISU, true, shouldShowRationale = true))
             .isEqualTo(NotificationPermissionAction.ENABLE_REMINDER)
     }
 
@@ -26,6 +26,14 @@ class NotificationPermissionTest {
             )
 
         assertThat(action).isEqualTo(NotificationPermissionAction.REQUEST_PERMISSION)
+    }
+
+    @Test
+    fun dismissedPrompt_nextAttemptStillRequestsPermission() {
+        repeat(2) {
+            assertThat(notificationPermissionAction(Build.VERSION_CODES.TIRAMISU, false, shouldShowRationale = false))
+                .isEqualTo(NotificationPermissionAction.REQUEST_PERMISSION)
+        }
     }
 
     @Test

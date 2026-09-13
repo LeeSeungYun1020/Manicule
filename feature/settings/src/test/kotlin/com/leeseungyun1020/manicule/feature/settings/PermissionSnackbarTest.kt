@@ -10,23 +10,23 @@ import org.junit.Test
 
 class PermissionSnackbarTest {
     @Test
-    fun repeatedRequests_openSettingsOnceWithoutQueuedDuplicates() =
+    fun repeatedRequests_showOneMessageWithoutSettingsAction() =
         runTest {
             val host = SnackbarHostState()
             val snackbar = PermissionSnackbar(backgroundScope, host)
-            var opened = 0
 
-            repeat(5) { snackbar.show("Permission required", "Open settings") { opened++ } }
+            repeat(5) { snackbar.show("Permission required") }
             runCurrent()
             val displayed = checkNotNull(host.currentSnackbarData)
-            repeat(5) { snackbar.show("Permission required", "Open settings") { opened++ } }
+            repeat(5) { snackbar.show("Permission required") }
             runCurrent()
             assertThat(host.currentSnackbarData).isSameInstanceAs(displayed)
 
-            displayed.performAction()
+            assertThat(displayed.visuals.actionLabel).isNull()
+            assertThat(displayed.visuals.duration).isEqualTo(SnackbarDuration.Short)
+            displayed.dismiss()
             runCurrent()
 
-            assertThat(opened).isEqualTo(1)
             assertThat(host.currentSnackbarData).isNull()
         }
 
@@ -38,7 +38,7 @@ class PermissionSnackbarTest {
             backgroundScope.launch { host.showSnackbar("Update failed", duration = SnackbarDuration.Indefinite) }
             runCurrent()
 
-            repeat(5) { snackbar.show("Permission required", "Open settings") {} }
+            repeat(5) { snackbar.show("Permission required") }
             runCurrent()
             assertThat(host.currentSnackbarData?.visuals?.message).isEqualTo("Update failed")
             checkNotNull(host.currentSnackbarData).dismiss()
@@ -55,18 +55,15 @@ class PermissionSnackbarTest {
         runTest {
             val host = SnackbarHostState()
             val snackbar = PermissionSnackbar(backgroundScope, host)
-            var opened = 0
-            snackbar.show("Permission required", "Open settings") { opened++ }
+            snackbar.show("Permission required")
             runCurrent()
             checkNotNull(host.currentSnackbarData).dismiss()
             runCurrent()
-            assertThat(opened).isEqualTo(0)
 
-            snackbar.show("Permission required", "Open settings") { opened++ }
+            snackbar.show("Permission required")
             runCurrent()
-            checkNotNull(host.currentSnackbarData).performAction()
+            checkNotNull(host.currentSnackbarData).dismiss()
             runCurrent()
-            assertThat(opened).isEqualTo(1)
             assertThat(host.currentSnackbarData).isNull()
         }
 }

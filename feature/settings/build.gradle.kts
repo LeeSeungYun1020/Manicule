@@ -15,6 +15,7 @@ dependencies {
 
     testImplementation(projects.core.data)
 
+    androidTestImplementation(projects.core.data)
     androidTestImplementation(libs.androidx.compose.ui.test)
     androidTestImplementation(libs.truth)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

@@ -24,6 +24,7 @@ import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.model.ReminderConfig
+import com.leeseungyun1020.manicule.feature.settings.components.NotificationPermissionRationale
 import kotlinx.datetime.LocalTime
 import org.junit.Rule
 import org.junit.Test
@@ -33,6 +34,40 @@ import org.junit.runner.RunWith
 class SettingsScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    fun permissionRationale_cancelDoesNotRequestPermission() {
+        var requested = false
+        var dismissed = false
+        composeRule.setContent {
+            ManiculeTheme {
+                NotificationPermissionRationale(
+                    onContinue = { requested = true },
+                    onDismiss = { dismissed = true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.settings_cancel)).performClick()
+
+        assertThat(dismissed).isTrue()
+        assertThat(requested).isFalse()
+    }
+
+    @Test
+    fun permissionRationale_continueRequestsPermission() {
+        var requested = false
+        composeRule.setContent {
+            ManiculeTheme {
+                NotificationPermissionRationale(onContinue = { requested = true }, onDismiss = {})
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.settings_notification_permission_denied)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.settings_continue)).performClick()
+
+        assertThat(requested).isTrue()
+    }
 
     @Test
     fun disabledReminder_hidesTimeAndRequestsEnable() {
