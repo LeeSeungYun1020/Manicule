@@ -139,10 +139,9 @@ private fun SettingsContent(
         remember(state.reminder.time, configuration, is24Hour) {
             val calendar =
                 Calendar.getInstance().apply {
+                    clear()
                     set(Calendar.HOUR_OF_DAY, state.reminder.time.hour)
                     set(Calendar.MINUTE, state.reminder.time.minute)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
                 }
             AndroidDateFormat.getTimeFormat(context).format(calendar.time)
         }
