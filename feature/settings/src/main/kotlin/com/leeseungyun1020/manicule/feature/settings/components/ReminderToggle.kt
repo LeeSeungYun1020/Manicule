@@ -24,7 +24,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeCard
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSectionHeader
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
@@ -42,7 +41,6 @@ fun ReminderToggle(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        ManiculeSectionHeader(title = stringResource(R.string.settings_notifications_section))
         ManiculeCard(modifier = Modifier.fillMaxWidth()) {
             ListItem(
                 headlineContent = { Text(stringResource(R.string.settings_reading_reminder)) },

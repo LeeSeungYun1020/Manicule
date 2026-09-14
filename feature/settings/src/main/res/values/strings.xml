@@ -4,9 +4,8 @@
     <string name="settings_notifications_section">알림</string>
     <string name="settings_reading_reminder">독서 리마인더</string>
     <string name="settings_reminder_time">리마인더 시간</string>
-    <string name="settings_loading">설정을 불러오는 중</string>
-    <string name="settings_load_error_title">설정을 불러오지 못했어요</string>
-    <string name="settings_load_error_description">잠시 후 다시 시도해 주세요.</string>
+    <string name="settings_loading">리마인더 설정을 불러오는 중</string>
+    <string name="settings_load_error_title">리마인더 설정을 불러오지 못했어요</string>
     <string name="settings_retry">다시 시도</string>
     <string name="settings_notification_permission_denied">리마인더를 받으려면 알림 권한이 필요해요.</string>
     <string name="settings_reminder_update_failed">리마인더 설정을 변경하지 못했어요.</string>
@@ -15,4 +14,5 @@
     <string name="settings_cancel">취소</string>
     <string name="settings_notification_permission_title">알림 권한 안내</string>
     <string name="settings_continue">계속</string>
+    <string name="settings_previous_reminder_description">마지막으로 확인한 설정이에요. 다시 불러온 후 변경할 수 있어요.</string>
 </resources>

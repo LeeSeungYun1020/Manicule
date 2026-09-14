@@ -12,6 +12,7 @@ import com.leeseungyun1020.manicule.core.model.UserPreferences
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -37,8 +38,8 @@ class SettingsViewModelTest {
             val viewModel = viewModel()
 
             viewModel.uiState.test {
-                assertThat(awaitItem()).isEqualTo(SettingsUiState.Loading)
-                assertThat(awaitItem()).isEqualTo(SettingsUiState.Content(reminder))
+                assertThat(awaitItem()).isEqualTo(SettingsUiState(ReminderUiState.Loading()))
+                assertThat(awaitItem()).isEqualTo(SettingsUiState(ReminderUiState.Content(reminder)))
             }
         }
 
@@ -101,7 +102,11 @@ class SettingsViewModelTest {
                 viewModel.setReminderEnabled(true)
                 runCurrent()
                 assertThat(viewModel.uiState.value)
-                    .isEqualTo(SettingsUiState.Content(ReminderConfig(enabled = true, time = LocalTime(21, 0)), isUpdating = true))
+                    .isEqualTo(
+                        SettingsUiState(
+                            ReminderUiState.Content(ReminderConfig(enabled = true, time = LocalTime(21, 0)), isUpdating = true),
+                        ),
+                    )
 
                 viewModel.setReminderEnabled(false)
                 gate.complete(Unit)
@@ -283,15 +288,126 @@ class SettingsViewModelTest {
             val viewModel = viewModel()
 
             viewModel.uiState.test {
-                assertThat(awaitItem()).isEqualTo(SettingsUiState.Loading)
-                assertThat(awaitItem()).isEqualTo(SettingsUiState.Error)
+                assertThat(awaitItem()).isEqualTo(SettingsUiState(ReminderUiState.Loading()))
+                assertThat(awaitItem()).isEqualTo(SettingsUiState(ReminderUiState.Error()))
 
                 viewModel.retryPreferences()
 
-                assertThat(awaitItem()).isEqualTo(SettingsUiState.Loading)
-                assertThat(awaitItem()).isEqualTo(SettingsUiState.Content(ReminderConfig.Default))
+                assertThat(awaitItem()).isEqualTo(SettingsUiState(ReminderUiState.Loading()))
+                assertThat(awaitItem()).isEqualTo(SettingsUiState(ReminderUiState.Content(ReminderConfig.Default)))
                 assertThat(repository.subscriptionCount).isEqualTo(2)
             }
+        }
+
+    @Test
+    fun initialLoading_blocksChangesAndDuplicateRetries() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val gate = CompletableDeferred<Unit>()
+            repository.readGate = gate
+            val viewModel = viewModel()
+            runCurrent()
+
+            repeat(3) {
+                viewModel.retryPreferences()
+                viewModel.setReminderEnabled(true)
+                viewModel.setReminderTime(LocalTime(7, 0))
+            }
+            runCurrent()
+
+            assertThat(viewModel.uiState.value.reminder).isEqualTo(ReminderUiState.Loading())
+            assertThat(repository.subscriptionCount).isEqualTo(1)
+            assertThat(repository.updates).isEqualTo(0)
+            assertThat(scheduler.scheduledTimes).isEmpty()
+            assertThat(scheduler.cancelCount).isEqualTo(0)
+            gate.complete(Unit)
+            runCurrent()
+        }
+
+    @Test
+    fun readFailure_preservesPreviousValueAndRetryRestoresContent() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val previous = ReminderConfig(true, LocalTime(8, 30))
+            repository.setReminderConfig(previous)
+            val viewModel = viewModel()
+            runCurrent()
+            repository.readFailure.value = true
+            runCurrent()
+            assertThat(viewModel.uiState.value.reminder).isEqualTo(ReminderUiState.Error(previous))
+
+            val updates = repository.updates
+            viewModel.setReminderEnabled(false)
+            viewModel.setReminderTime(LocalTime(7, 0))
+            runCurrent()
+            assertThat(repository.updates).isEqualTo(updates)
+            assertThat(scheduler.scheduledTimes).isEmpty()
+            assertThat(scheduler.cancelCount).isEqualTo(0)
+
+            repository.readFailure.value = false
+            val gate = CompletableDeferred<Unit>()
+            repository.readGate = gate
+            repeat(3) { viewModel.retryPreferences() }
+            runCurrent()
+            assertThat(viewModel.uiState.value.reminder).isEqualTo(ReminderUiState.Loading(previous))
+            repeat(3) { viewModel.retryPreferences() }
+            runCurrent()
+            assertThat(repository.subscriptionCount).isEqualTo(2)
+            val latest = previous.copy(time = LocalTime(9, 0))
+            repository.setReminderConfig(latest)
+            gate.complete(Unit)
+            runCurrent()
+            assertThat(viewModel.uiState.value.reminder).isEqualTo(ReminderUiState.Content(latest))
+        }
+
+    @Test
+    fun readFailure_invalidatesPendingUpdateRetryEvenAfterRecovery() =
+        runTest(mainDispatcherRule.dispatcher) {
+            scheduler.scheduleFailure = IOException("schedule failed")
+            val viewModel = viewModel()
+            runCurrent()
+            viewModel.events.test {
+                viewModel.setReminderEnabled(true)
+                runCurrent()
+                val failure = awaitItem() as SettingsEvent.ReminderUpdateFailed
+
+                repository.readFailure.value = true
+                runCurrent()
+                assertThat(awaitItem()).isEqualTo(SettingsEvent.DismissReminderUpdateFailure)
+                assertThat(viewModel.events.replayCache).isEmpty()
+                repository.readFailure.value = false
+                viewModel.retryPreferences()
+                runCurrent()
+                val updates = repository.updates
+                viewModel.retryReminderUpdate(failure)
+                runCurrent()
+
+                assertThat(repository.updates).isEqualTo(updates)
+                assertThat(scheduler.scheduledTimes).isEmpty()
+                expectNoEvents()
+            }
+        }
+
+    @Test
+    fun readFailureDuringSave_doesNotPublishLateRetry() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val gate = CompletableDeferred<Unit>()
+            scheduler.scheduleGate = gate
+            scheduler.scheduleFailure = IOException("schedule failed")
+            val viewModel = viewModel()
+            runCurrent()
+            viewModel.setReminderEnabled(true)
+            runCurrent()
+            repository.readFailure.value = true
+            runCurrent()
+            assertThat(viewModel.uiState.value.reminder).isInstanceOf(ReminderUiState.Error::class.java)
+
+            repository.readFailure.value = false
+            viewModel.retryPreferences()
+            runCurrent()
+            gate.complete(Unit)
+            runCurrent()
+
+            assertThat(viewModel.events.replayCache).isEmpty()
+            assertThat(viewModel.uiState.value.reminder).isEqualTo(ReminderUiState.Content(ReminderConfig.Default))
         }
 
     private fun viewModel() =
@@ -305,6 +421,9 @@ private class FakeUserPreferencesRepository : UserPreferencesRepository {
     private val preferences = MutableStateFlow(UserPreferences.Default)
     var failedSubscriptions = 0
     var subscriptionCount = 0
+    var updates = 0
+    var readGate: CompletableDeferred<Unit>? = null
+    val readFailure = MutableStateFlow(false)
 
     val currentReminder: ReminderConfig
         get() = preferences.value.reminder
@@ -313,11 +432,17 @@ private class FakeUserPreferencesRepository : UserPreferencesRepository {
         get() =
             flow {
                 subscriptionCount += 1
+                readGate?.await()
                 if (failedSubscriptions > 0) {
                     failedSubscriptions -= 1
                     throw IOException("failed")
                 }
-                emitAll(preferences)
+                emitAll(
+                    combine(preferences, readFailure) { value, failed ->
+                        if (failed) throw IOException("read failed")
+                        value
+                    },
+                )
             }
 
     override suspend fun setThemeMode(themeMode: ThemeMode) {
@@ -325,6 +450,7 @@ private class FakeUserPreferencesRepository : UserPreferencesRepository {
     }
 
     override suspend fun setReminderConfig(config: ReminderConfig) {
+        updates++
         preferences.value = preferences.value.copy(reminder = config)
     }
 }

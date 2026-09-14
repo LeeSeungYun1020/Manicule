@@ -4,9 +4,8 @@
     <string name="settings_notifications_section">Notifications</string>
     <string name="settings_reading_reminder">Reading reminder</string>
     <string name="settings_reminder_time">Reminder time</string>
-    <string name="settings_loading">Loading settings</string>
-    <string name="settings_load_error_title">Couldn’t load settings</string>
-    <string name="settings_load_error_description">Please try again in a moment.</string>
+    <string name="settings_loading">Loading reminder settings</string>
+    <string name="settings_load_error_title">Couldn’t load reminder settings</string>
     <string name="settings_retry">Retry</string>
     <string name="settings_notification_permission_denied">Allow notifications to receive reading reminders.</string>
     <string name="settings_reminder_update_failed">Couldn’t update the reading reminder.</string>
@@ -15,4 +14,5 @@
     <string name="settings_cancel">Cancel</string>
     <string name="settings_notification_permission_title">Notification permission</string>
     <string name="settings_continue">Continue</string>
+    <string name="settings_previous_reminder_description">Showing the last known settings. Reload to make changes.</string>
 </resources>
