@@ -15,4 +15,5 @@
     <string name="settings_notification_permission_title">알림 권한 안내</string>
     <string name="settings_continue">계속</string>
     <string name="settings_previous_reminder_description">마지막으로 확인한 설정이에요. 다시 불러온 후 변경할 수 있어요.</string>
+    <string name="settings_open_system_settings">설정 열기</string>
 </resources>

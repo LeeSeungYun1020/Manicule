@@ -10,6 +10,43 @@ import org.junit.Test
 
 class PermissionSnackbarTest {
     @Test
+    fun dismissingRecovery_doesNotRunAction() =
+        runTest {
+            val host = SnackbarHostState()
+            val snackbar = PermissionSnackbar(backgroundScope, host)
+            var actions = 0
+            snackbar.show("Permission required", actionLabel = "Open settings") { actions++ }
+            runCurrent()
+            val displayed = checkNotNull(host.currentSnackbarData)
+            assertThat(displayed.visuals.actionLabel).isEqualTo("Open settings")
+            assertThat(displayed.visuals.withDismissAction).isTrue()
+            displayed.dismiss()
+            runCurrent()
+
+            assertThat(actions).isEqualTo(0)
+            assertThat(host.currentSnackbarData).isNull()
+        }
+
+    @Test
+    fun recoveryAction_canShowFailureFeedback() =
+        runTest {
+            val host = SnackbarHostState()
+            val snackbar = PermissionSnackbar(backgroundScope, host)
+            var actions = 0
+            snackbar.show("Permission required", actionLabel = "Open settings") {
+                actions++
+                snackbar.show("Settings unavailable")
+            }
+            runCurrent()
+            assertThat(actions).isEqualTo(0)
+            checkNotNull(host.currentSnackbarData).performAction()
+            runCurrent()
+
+            assertThat(actions).isEqualTo(1)
+            assertThat(host.currentSnackbarData?.visuals?.message).isEqualTo("Settings unavailable")
+        }
+
+    @Test
     fun repeatedRequests_showOneMessageWithoutSettingsAction() =
         runTest {
             val host = SnackbarHostState()

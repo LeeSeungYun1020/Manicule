@@ -1,8 +1,11 @@
 package com.leeseungyun1020.manicule.feature.settings
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.ContextWrapper
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.provider.Settings
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.result.ActivityResultRegistry
@@ -45,6 +48,8 @@ class SettingsRoutePermissionTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
     private var granted = false
     private var rationale = false
+    private val settingsIntents = mutableListOf<Intent>()
+    private var notificationSettingsUnavailable = false
     private val registry = PermissionRegistry()
     private val repository = RecordingPreferences()
     private val scheduler = RecordingScheduler()
@@ -52,6 +57,13 @@ class SettingsRoutePermissionTest {
     @Before
     fun setUp() {
         val permissionContext = object : ContextWrapper(context) {
+            override fun startActivity(intent: Intent) {
+                settingsIntents += intent
+                if (notificationSettingsUnavailable && intent.action == Settings.ACTION_APP_NOTIFICATION_SETTINGS) {
+                    throw ActivityNotFoundException()
+                }
+            }
+
             override fun checkSelfPermission(permission: String): Int =
                 if (granted) PackageManager.PERMISSION_GRANTED else PackageManager.PERMISSION_DENIED
         }
@@ -78,14 +90,13 @@ class SettingsRoutePermissionTest {
 
     @Test
     fun dismissedPrompt_keepsOffAndAllowsAnotherRequest() {
-        toggleOn()
-        respond(false)
-        assertNoUpdate()
-
-        toggleOn()
-        assertThat(registry.requests).isEqualTo(2)
-        respond(false)
-        assertNoUpdate()
+        repeat(3) { attempt ->
+            toggleOn()
+            assertThat(registry.requests).isEqualTo(attempt + 1)
+            respond(false)
+            assertNoUpdate()
+            assertThat(settingsIntents).isEmpty()
+        }
     }
 
     @Test
@@ -116,19 +127,42 @@ class SettingsRoutePermissionTest {
     }
 
     @Test
-    fun blockedRequest_keepsOffWithoutSettingsAction() {
-        repeat(2) {
-            toggleOn()
-            respond(false)
-        }
+    fun deniedRequest_settingsRecoveryOnlyOpensAfterUserSelection() {
+        toggleOn()
+        respond(false)
         assertNoUpdate()
-        composeRule.onNodeWithText(context.getString(R.string.settings_notification_permission_denied)).assertExists()
+        assertThat(settingsIntents).isEmpty()
+
+        openSettings()
+
+        val intent = settingsIntents.single()
+        assertThat(intent.action).isEqualTo(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+        assertThat(intent.getStringExtra(Settings.EXTRA_APP_PACKAGE)).isEqualTo(context.packageName)
+        assertNoUpdate()
+        toggleOn()
+        assertThat(registry.requests).isEqualTo(2)
+    }
+
+    @Test
+    fun unavailableNotificationSettings_fallsBackToAppDetails() {
+        notificationSettingsUnavailable = true
+        toggleOn()
+        respond(false)
+        openSettings()
+
+        assertThat(settingsIntents.map { it.action }).containsExactly(
+            Settings.ACTION_APP_NOTIFICATION_SETTINGS,
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+        ).inOrder()
+        assertThat(settingsIntents.last().data.toString()).isEqualTo("package:${context.packageName}")
+        assertNoUpdate()
     }
 
     @Test
     fun grantedInSettings_nextToggleUsesCurrentPermission() {
         toggleOn()
         respond(false)
+        openSettings()
         granted = true
         toggleOn()
 
@@ -143,6 +177,11 @@ class SettingsRoutePermissionTest {
         toggleOn()
         respond(true)
         assertNoUpdate()
+    }
+
+    private fun openSettings() {
+        composeRule.onNodeWithText(context.getString(R.string.settings_open_system_settings)).performClick()
+        composeRule.waitForIdle()
     }
 
     private fun toggleOn() {

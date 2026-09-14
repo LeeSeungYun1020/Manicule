@@ -15,4 +15,5 @@
     <string name="settings_notification_permission_title">Notification permission</string>
     <string name="settings_continue">Continue</string>
     <string name="settings_previous_reminder_description">Showing the last known settings. Reload to make changes.</string>
+    <string name="settings_open_system_settings">Open settings</string>
 </resources>
