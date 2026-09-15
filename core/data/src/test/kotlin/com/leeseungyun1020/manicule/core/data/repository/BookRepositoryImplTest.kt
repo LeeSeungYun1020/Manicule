@@ -82,6 +82,43 @@ class BookRepositoryImplTest {
         }
 
     @Test
+    fun searchBooks_deduplicatesIsbnsAcrossPages() =
+        runTest {
+            fakeNlkApi.responseProvider = { request ->
+                if (request.title == null) {
+                    NlkSearchResponseDto(totalCount = "0", pageNo = request.pageNo.toString())
+                } else {
+                    when (request.pageNo) {
+                        1 ->
+                            NlkSearchResponseDto(
+                                totalCount = "20",
+                                pageNo = "1",
+                                docs = (1..10).map { NlkBookDto(isbn = "isbn-$it", title = "Book $it") },
+                            )
+                        2 ->
+                            NlkSearchResponseDto(
+                                totalCount = "20",
+                                pageNo = "2",
+                                docs = (10..20).map { NlkBookDto(isbn = "isbn-$it", title = "Book $it") },
+                            )
+                        else -> NlkSearchResponseDto(totalCount = "20", pageNo = request.pageNo.toString())
+                    }
+                }
+            }
+
+            val books =
+                bookRepository.searchBooks("Compose").asSnapshot {
+                    scrollTo(index = 10)
+                }
+
+            // 1페이지(1..10)와 2페이지(10..20)에서 중복된 isbn-10이 제거되어 총 20권이어야 함
+            assertThat(books).hasSize(20)
+            assertThat(books.map { it.isbn }).containsNoDuplicates()
+            assertThat(books.first().isbn).isEqualTo("isbn-1")
+            assertThat(books.last().isbn).isEqualTo("isbn-20")
+        }
+
+    @Test
     fun scenario1_local_exists_remote_success() =
         runTest {
             val localEntity =
