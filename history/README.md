@@ -68,6 +68,7 @@
 - [1de11c7](1de11c7.md) — feat: 서재 상태별 목록 구현
 - [da474e6](da474e6.md) — feat: 서재 검색 진입 아이콘 보강
 - [7db01ae](7db01ae.md) — docs: PR 작업 및 리뷰 절차 정리
+- [59356f3](59356f3.md) — feat: 리마인더 설정 화면 구현
 - [7f16326](7f16326.md) — 스캔 권한과 CameraX Preview 구현
 - [8640459](8640459.md) — fix: 검색 Paging 요청 크기 일치
 - [7a2b1dd](7a2b1dd.md) — feat: 검색 실행과 Paging 결과 구현

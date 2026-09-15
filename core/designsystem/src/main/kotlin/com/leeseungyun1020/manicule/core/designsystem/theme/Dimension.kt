@@ -60,6 +60,8 @@ object ManiculeSize {
     val coverMediumWidth: Dp = 100.dp
     val coverMediumHeight: Dp = 148.dp
 
+    val contentMaxWidth: Dp = 600.dp
+
     val scannerViewfinderMaxWidth: Dp = 320.dp
 }
 
