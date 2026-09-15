@@ -32,6 +32,7 @@
    - destination-local 버튼의 실제 back stack 동작(`popBackStack()` 등) 검사
    - cross-destination 연결 시 route·인자·예상 back stack 검사
    - feature 콜백 단위 테스트와 app `NavHost` navigation 통합 테스트의 분리 및 대상 검사
+   - 미연결 navigation 액션의 활성 UI 노출 여부(target 미준비 시 UI availability 처리) 검사
 
 ## 제약 사항
 

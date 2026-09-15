@@ -66,6 +66,7 @@
 1. **Destination-local 이동**: 현재 화면 종료 후 기존 history로 복귀(뒤로가기, 닫기 등).
    - feature는 필수 `onNavigateBack` 또는 `onClose` 콜백을 소유하며 `NavController`를 직접 받지 않는다.
    - 실제 destination을 앱에서 접근 가능하게 만드는 feature PR이 최소 app-side 연결(`popBackStack()` 등)까지 완료해야 한다.
+   - 단, pop 실패나 deep link fallback이 필요한 경우의 구현 위치와 정책은 app/I1 소유로 유지한다.
 2. **Cross-destination 이동**: 다른 destination의 route 및 동작에 의존하는 이동(검색 열기, 책 상세 열기 등).
    - source feature는 이동 의도와 인자 콜백을 정의하고, target feature는 route 타입과 destination 계약을 소유한다.
    - I1은 source/target 계약이 모두 준비된 즉시 `ManiculeNavHost`에서 점진 연결한다.
