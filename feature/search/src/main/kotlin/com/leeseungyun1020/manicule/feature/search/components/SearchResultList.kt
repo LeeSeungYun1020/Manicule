@@ -180,6 +180,9 @@ private fun SearchResultError(
             onClick = onRetry,
             text = stringResource(R.string.search_retry),
             modifier = Modifier.padding(top = MaterialTheme.spacing.md),
+            leadingIcon = {
+                Icon(imageVector = ManiculeIcons.Refresh, contentDescription = null)
+            },
         )
     }
 }
