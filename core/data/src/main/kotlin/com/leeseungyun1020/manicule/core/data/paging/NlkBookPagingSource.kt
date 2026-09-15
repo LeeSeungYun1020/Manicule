@@ -17,6 +17,10 @@ class NlkBookPagingSource(
     private val pageSize: Int = DEFAULT_PAGE_SIZE,
 ) : PagingSource<Int, Book>() {
 
+    init {
+        require(pageSize > 0) { "pageSize must be positive: $pageSize" }
+    }
+
     companion object {
         const val DEFAULT_PAGE_SIZE = 10
     }

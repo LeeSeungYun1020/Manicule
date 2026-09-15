@@ -6,6 +6,7 @@ import com.leeseungyun1020.manicule.core.data.datasource.BookRemoteDataSource
 import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkBookDto
 import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkSearchResponseDto
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertThrows
 import org.junit.Test
 import java.io.IOException
 
@@ -433,4 +434,14 @@ class NlkBookPagingSourceTest {
             assertThat(page3.data.map { it.isbn }).containsExactly("isbn-5", "isbn-6")
             assertThat(page3.nextKey).isNull()
         }
+
+    @Test
+    fun init_withNonPositivePageSize_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException::class.java) {
+            NlkBookPagingSource(fakeBookRemoteDataSource, "query", pageSize = 0)
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            NlkBookPagingSource(fakeBookRemoteDataSource, "query", pageSize = -1)
+        }
+    }
 }
