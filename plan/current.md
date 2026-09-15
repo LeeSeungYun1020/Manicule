@@ -28,7 +28,7 @@
 
 | 레인 | 범위 | `depends_on` | 상태 |
 |---|---|---|---|
-| I1 | `ManiculeNavHost`, 최상위 콜백, destination 점진 교체, 앱 루트 테마와 E2E 조립 | 각 destination의 V navigation PR; 루트 테마는 V3 테마 계약 | 🚧 검색·책 상세·서재 destination과 검색 결과 → 책 상세 콜백 조립 완료; 검색 → 스캔은 V2 준비 대기, 나머지는 각 V navigation PR과 V3 테마 계약 대기 |
+| I1 | `ManiculeNavHost`, 점진적 cross-destination 연결, 전역 백스택 정책, 앱 루트 테마와 E2E 조립 | 각 destination의 V navigation PR; 루트 테마는 V3 테마 계약 | 🚧 검색·책 상세·서재 destination과 검색 결과 → 책 상세 콜백 조립 완료; 검색 → 스캔은 V2 준비 대기, 나머지는 각 V navigation PR과 V3 테마 계약 대기 |
 
 ## 다음 실행 가능 작업
 
@@ -36,7 +36,7 @@
 2. V6 선행 작업인 서재 초기 탭 진입 계약이 머지되었으므로 홈 상태 조합·첫 사용자 화면을 진행한다. V7 UI 완료는 기다리지 않는다.
 3. V4는 별점·메모 인라인 저장을 진행한다.
 4. V1 최근 검색어 개별·전체 삭제와 Undo, V2 스캔 UI, V3 테마·라이선스·버전, V7 통계 UI는 서로 독립적으로 진행할 수 있다.
-5. I1은 각 V navigation PR이 머지되는 즉시 해당 destination을 조립하고, V3 테마 계약 뒤 앱 루트 테마를 연결한다.
+5. I1은 각 V navigation PR이 머지되는 즉시 cross-destination 이동을 점진 조립하고, V3 테마 계약 뒤 앱 루트 테마를 연결한다.
 
 세부 작업과 공용 API 소유 규칙은 [order.md](order.md)를 따른다. UI 착수 전에는 [ui-ux-guidelines.md](prototype/ui-ux-guidelines.md)의 확정 편차, 색상 기준과 컴포넌트 커버리지를 확인한다.
 
@@ -48,7 +48,7 @@
 - 동일 기능 중복 구현과 기존 공용 API 의미의 동시 변경은 금지한다.
 - 여러 작업자가 같은 파일에 항목을 추가해 생긴 단순 병합 충돌은 최종 머지자가 최신 `main` 기준으로 정리한다.
 - 공용 API 변경을 기다리는 레인은 해당 소유 PR 머지 후 rebase한다.
-- 각 feature route와 navigation 확장 함수는 해당 feature가 소유한다. C2가 stub을 생성하고 V 레인이 같은 파일을 구현하며, `app`의 destination 조립은 I1만 변경한다.
+- 각 feature route와 navigation 확장 함수는 해당 feature가 소유한다. destination-local 이동(뒤로가기 등)은 V 레인이 app 최소 연결까지 완료하며, cross-destination 이동 조립과 전역 백스택 정책은 I1이 소유한다.
 - V3는 테마 설정 저장·조회 계약을 소유하고, I1은 기존 설정 흐름을 `MainActivity`의 루트 `ManiculeTheme`에 연결한다.
 
 ### 모듈 추가 절차

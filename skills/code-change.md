@@ -27,6 +27,11 @@
 3. Markdown, GitHub 설정, `plan`, `history`, `skills`만 변경한 경우 Gradle 검증을 생략하고 `git diff --check`와 문서 링크·표 형식을 확인.
 4. 코드와 문서가 함께 변경된 경우 코드 변경 기준으로 Gradle 검증 수행.
 5. 검증 과정에서 `work.md` 준비 단계에서 확정한 변경 소유 범위 밖 파일이 변경되면 해당 변경을 포함하지 않고 원인을 확인.
+6. Navigation 관련 변경이 포함된 경우 검증:
+   - production navigation 콜백의 기본 빈 람다(`{}`) 및 no-op 전달 여부 검사
+   - destination-local 버튼의 실제 back stack 동작(`popBackStack()` 등) 검사
+   - cross-destination 연결 시 route·인자·예상 back stack 검사
+   - feature 콜백 단위 테스트와 app `NavHost` navigation 통합 테스트의 분리 및 대상 검사
 
 ## 제약 사항
 
