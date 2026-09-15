@@ -128,7 +128,7 @@ app/
         ├── ManiculeApplication.kt              # @HiltAndroidApp
         ├── MainActivity.kt                  # 단일 Activity, UserPreferences 수집과 루트 ManiculeTheme 적용
         └── navigation/
-            ├── ManiculeNavHost.kt               # 최상위 NavHost
+            ├── ManiculeNavHost.kt               # 최상위 NavHost (NavController 소유 및 실제 stack mutation 조립)
             ├── TopLevelDestination.kt       # feature route를 사용하는 홈/서재/통계/설정 4개 탭
             └── ManiculeAppState.kt              # rememberManiculeAppState
 ```
@@ -151,7 +151,7 @@ feature/<name>/
     └── components/                         # 해당 화면 전용 컴포저블
 ```
 
-각 `<Name>Navigation.kt`는 해당 feature의 route 타입을 물리적으로 소유한다. C2가 route와 stub을 생성하고, 대응 V 레인이 같은 파일의 destination 구현을 교체한다. `app`은 이 route를 import하며 별도 route를 다시 선언하지 않는다.
+각 `<Name>Navigation.kt`는 해당 feature의 route 타입, destination 및 필수 콜백 계약을 소유한다. feature Composable은 `NavController`를 직접 받지 않고 콜백만 호출한다. `app`의 `ManiculeNavHost`는 `NavController`와 실제 backstack mutation을 소유한다. destination-local 이동(뒤로가기·닫기)을 위한 최소 app 연결은 feature PR 완료를 위해 허용되는 조립 변경이며, cross-destination 이동 연결은 I1이 점진적으로 조립한다.
 
 ### 3.3 `feature:home` (홈, 1a~1c)
 
