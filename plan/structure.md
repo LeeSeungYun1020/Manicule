@@ -151,7 +151,14 @@ feature/<name>/
     └── components/                         # 해당 화면 전용 컴포저블
 ```
 
-각 `<Name>Navigation.kt`는 해당 feature의 route 타입, destination 및 필수 콜백 계약을 소유한다. feature Composable은 `NavController`를 직접 받지 않고 콜백만 호출한다. `app`의 `ManiculeNavHost`는 `NavController`와 실제 backstack mutation을 소유한다. destination-local 이동(뒤로가기·닫기)을 위한 최소 app 연결은 feature PR 완료를 위해 허용되는 조립 변경이며, cross-destination 이동 연결은 I1이 점진적으로 조립한다.
+각 `<Name>Navigation.kt`는 해당 feature의 route 타입, destination 및 필수 콜백 계약을 소유한다. C2가 route와 stub을 생성하고, 대응 V 레인이 같은 파일의 destination 구현을 교체한다.
+
+#### Navigation 아키텍처 및 책임 경계
+
+- **Feature는 NavController 비의존**: feature Composable은 `NavController`를 직접 받지 않고 콜백만 호출한다. production 콜백에 기본 빈 람다(`{}`)를 두지 않는다 (Preview/테스트만 허용, 미지원 이동은 UI availability로 모델링).
+- **Destination-local 이동**: 현재 화면 종료 후 기존 history로 복귀(뒤로가기, 닫기 등). feature는 필수 콜백을 소유하고, `app`의 최소 연결(`popBackStack()` 등)은 해당 destination을 노출하는 feature PR에서 완료한다. 단, pop 실패·deep link fallback 정책은 app이 소유한다.
+- **Cross-destination 이동**: 다른 destination으로 이동(검색·책 상세 등). source는 의도/인자 콜백, target은 route 타입을 소유하며, 준비 즉시 `app/`의 `ManiculeNavHost`에서 점진 연결한다.
+- **App 계층의 백스택 소유**: `app`의 `ManiculeNavHost`가 `NavController`, 실제 백스택 조작, `popUpTo`, `launchSingleTop`, 상태 복원 정책을 소유한다.
 
 ### 3.3 `feature:home` (홈, 1a~1c)
 
