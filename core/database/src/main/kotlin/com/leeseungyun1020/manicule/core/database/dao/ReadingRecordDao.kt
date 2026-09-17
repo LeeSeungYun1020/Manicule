@@ -1,14 +1,47 @@
 package com.leeseungyun1020.manicule.core.database.dao
 
 import androidx.room.Dao
+import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import com.leeseungyun1020.manicule.core.database.entity.ReadingRecordEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 
 @Dao
 interface ReadingRecordDao {
+    /** 추가에 실패하면 서재 상태와 수정 시각도 함께 롤백한다. */
+    @Transaction
+    suspend fun add(
+        record: ReadingRecordEntity,
+        updatedAt: Instant,
+    ): Long {
+        require(record.id == 0L) { "A new record must have id 0" }
+        require(record.isbn.isNotBlank() && record.startPage >= 1 && record.endPage >= record.startPage)
+        updateEntryForNewRecord(record.isbn, updatedAt)
+        return insert(record)
+    }
+
+    @Insert
+    suspend fun insert(record: ReadingRecordEntity): Long
+
+    @Query(
+        """
+        UPDATE book_entries
+        SET status = CASE
+            WHEN status = 'WANT' AND NOT EXISTS(SELECT 1 FROM reading_records WHERE isbn = :isbn)
+            THEN 'READING' ELSE status END,
+            updatedAt = :updatedAt
+        WHERE isbn = :isbn
+        """,
+    )
+    suspend fun updateEntryForNewRecord(
+        isbn: String,
+        updatedAt: Instant,
+    )
+
     @Upsert
     suspend fun upsert(record: ReadingRecordEntity): Long
 

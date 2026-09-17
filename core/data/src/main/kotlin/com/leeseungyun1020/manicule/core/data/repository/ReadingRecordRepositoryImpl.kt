@@ -6,6 +6,7 @@ import com.leeseungyun1020.manicule.core.data.mapper.asExternalModel
 import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 
@@ -14,6 +15,11 @@ class ReadingRecordRepositoryImpl
     constructor(
         private val readingRecordLocalDataSource: ReadingRecordLocalDataSource,
     ) : ReadingRecordRepository {
+
+        override suspend fun addRecord(
+            record: ReadingRecord,
+            updatedAt: Instant,
+        ): Long = readingRecordLocalDataSource.add(record.asEntity(), updatedAt)
 
         override suspend fun saveRecord(record: ReadingRecord): Long = readingRecordLocalDataSource.save(record.asEntity())
 
