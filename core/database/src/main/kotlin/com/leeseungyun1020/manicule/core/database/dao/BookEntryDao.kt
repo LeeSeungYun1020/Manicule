@@ -19,6 +19,7 @@ import kotlinx.datetime.LocalDate
 interface BookEntryDao {
     /** 존재 확인, 최초 등록, 상태 변경을 하나의 트랜잭션으로 처리한다. */
     @Transaction
+    @Suppress("ReturnCount") // 상태별 조기 반환으로 트랜잭션의 쓰기 경로를 구분한다.
     suspend fun changeReadingStatus(
         isbn: String,
         status: ReadingStatus,

@@ -1,7 +1,5 @@
 package com.leeseungyun1020.manicule.core.domain.record
 
-import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
-import com.leeseungyun1020.manicule.core.data.repository.ReadingRecordRepository
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import javax.inject.Inject
@@ -16,10 +14,7 @@ sealed interface AddRecordResult {
 
 class AddReadingRecordUseCase
     @Inject
-    constructor(
-        private val readingRecordRepository: ReadingRecordRepository,
-        private val libraryRepository: LibraryRepository,
-    ) {
+    constructor() {
         /**
          * 독서 기록 추가.
          * - 읽고싶음 상태 → 읽는 중 자동 전환

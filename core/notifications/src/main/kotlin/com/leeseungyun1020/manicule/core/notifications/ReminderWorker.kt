@@ -72,6 +72,8 @@ internal class ReminderScheduleActions(
     val scheduleNext: suspend (LocalTime) -> Unit,
 )
 
+// 각 단계의 실패는 즉시 반환하고 coroutine 취소는 호출자에게 전파한다.
+@Suppress("ReturnCount", "ThrowsCount")
 internal suspend fun runReminder(
     timeZones: ReminderTimeZones,
     getActiveTime: suspend () -> LocalTime?,

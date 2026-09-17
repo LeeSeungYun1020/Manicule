@@ -1,5 +1,6 @@
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.LibraryExtension
+import com.leeseungyun1020.manicule.buildlogic.libs
 import io.gitlab.arturbosch.detekt.extensions.DetektExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -22,7 +23,7 @@ class AndroidLintConventionPlugin : Plugin<Project> {
 
             // ktlint
             extensions.configure<KtlintExtension> {
-                android.set(true)
+                version.set(libs.findVersion("ktlint-engine").get().requiredVersion)
                 ignoreFailures.set(false)
                 verbose.set(true)
                 outputToConsole.set(true)

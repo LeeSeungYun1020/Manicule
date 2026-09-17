@@ -27,8 +27,8 @@ fun ReadingCalendarCell(
         if (intensity == null) {
             MaterialTheme.maniculeColors.calendarPlaceholder
         } else {
-            val safeIntensity = intensity.coerceIn(0, 4)
-            MaterialTheme.maniculeColors.calendarLevels[safeIntensity]
+            val levels = MaterialTheme.maniculeColors.calendarLevels
+            levels[intensity.coerceIn(levels.indices)]
         }
 
     val todayRingColor = MaterialTheme.colorScheme.primary

@@ -46,7 +46,6 @@ private const val LIBRARY_BOOK_CONTENT_TYPE = "library_book"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Suppress("LongParameterList")
 fun LibraryScreen(
     uiState: LibraryUiState,
     onStatusSelected: (ReadingStatus) -> Unit,
@@ -95,7 +94,6 @@ fun LibraryScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Suppress("LongParameterList")
 private fun LibraryScaffold(
     uiState: LibraryUiState,
     onStatusSelected: (ReadingStatus) -> Unit,
@@ -127,7 +125,6 @@ private fun LibraryScaffold(
 }
 
 @Composable
-@Suppress("LongParameterList")
 private fun LibraryBody(
     uiState: LibraryUiState,
     contentPadding: PaddingValues,

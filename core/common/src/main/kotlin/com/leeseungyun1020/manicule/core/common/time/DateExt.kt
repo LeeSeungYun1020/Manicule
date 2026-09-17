@@ -24,7 +24,8 @@ object WeekStart {
 fun LocalDate.startOfWeek(weekStart: DayOfWeek = WeekStart.dayOfWeek): LocalDate {
     val current = this.dayOfWeek.isoDayNumber
     val target = weekStart.isoDayNumber
-    val diff = ((current - target) + 7) % 7
+    val daysPerWeek = DayOfWeek.entries.size
+    val diff = ((current - target) + daysPerWeek) % daysPerWeek
     return this.minus(DatePeriod(days = diff))
 }
 
@@ -49,7 +50,7 @@ fun LocalDate.startOfYear(): LocalDate = LocalDate(year, 1, 1)
 /**
  * 올해의 12월 31일.
  */
-fun LocalDate.endOfYear(): LocalDate = LocalDate(year, 12, 31)
+fun LocalDate.endOfYear(): LocalDate = LocalDate(year = year, monthNumber = 12, dayOfMonth = 31)
 
 /**
  * 두 날짜 사이의 일 수 (포함).

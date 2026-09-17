@@ -231,17 +231,16 @@ class DemandDrivenBarcodeReaderTest {
             var afterSuspend = false
             var caughtException: Throwable? = null
 
-            val job =
-                launch(UnconfinedTestDispatcher(testScheduler)) {
-                    launch {
-                        delay(100)
-                        siblingCompleted = true
-                    }
-
-                    caughtException = runCatching { fixture.reader.getBarcodes() }.exceptionOrNull()
-                    afterSuspend = true
-                    delay(10)
+            launch(UnconfinedTestDispatcher(testScheduler)) {
+                launch {
+                    delay(100)
+                    siblingCompleted = true
                 }
+
+                caughtException = runCatching { fixture.reader.getBarcodes() }.exceptionOrNull()
+                afterSuspend = true
+                delay(10)
+            }
 
             runCurrent()
             fixture.reader.close()

@@ -68,6 +68,7 @@ hiltAndroidTesting = "2.59.2"
 
 # Lint / Static analysis
 ktlint = "14.2.0"
+ktlint-engine = "1.5.0"
 detekt = "1.23.8"
 
 # Firebase (google-services.json 연결 시 적용)

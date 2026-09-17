@@ -45,6 +45,8 @@ internal fun NlkBookDto.asExternalModelOrNull(): Book? =
     takeIf { it.isbn.isNotBlank() && it.title.isNotBlank() }
         ?.asExternalModel()
 
+// 국립중앙도서관 날짜 형식은 고정 길이 YYYYMMDD이다.
+@Suppress("MagicNumber")
 internal fun parseNlkDate(dateString: String): LocalDate? {
     if (dateString.length != 8) return null
     return runCatching {
