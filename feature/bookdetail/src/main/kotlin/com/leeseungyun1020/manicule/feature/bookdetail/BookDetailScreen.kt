@@ -187,7 +187,18 @@ private fun BookDetailBody(
                             modifier = Modifier.size(MaterialTheme.size.iconEmptyState),
                         )
                     },
-                    actions = { ManiculeButton(onClick = onRetry, text = stringResource(R.string.book_detail_retry)) },
+                    actions = {
+                        ManiculeButton(
+                            onClick = onRetry,
+                            text = stringResource(R.string.book_detail_retry),
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = ManiculeIcons.Refresh,
+                                    contentDescription = null,
+                                )
+                            },
+                        )
+                    },
                 )
 
             is BookDetailUiState.Content -> {

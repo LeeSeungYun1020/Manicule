@@ -230,7 +230,16 @@ private fun LibraryError(
         description = stringResource(R.string.library_error_description),
         modifier = Modifier.fillMaxSize().padding(scaffoldPadding).padding(ManiculeSpacing.screenContent),
         actions = {
-            ManiculeButton(onClick = onRetry, text = stringResource(R.string.library_retry))
+            ManiculeButton(
+                onClick = onRetry,
+                text = stringResource(R.string.library_retry),
+                leadingIcon = {
+                    Icon(
+                        imageVector = ManiculeIcons.Refresh,
+                        contentDescription = null,
+                    )
+                },
+            )
         },
     )
 }
