@@ -14,14 +14,20 @@ import kotlin.math.ceil
 class NlkBookPagingSource(
     private val bookRemoteDataSource: BookRemoteDataSource,
     private val query: String,
+    private val pageSize: Int = DEFAULT_PAGE_SIZE,
 ) : PagingSource<Int, Book>() {
 
+    companion object {
+        const val DEFAULT_PAGE_SIZE = 10
+    }
+
     private val request =
-        mutableListOf(
+        listOf(
             bookRemoteDataSource::searchBooksByTitle,
             bookRemoteDataSource::searchBooksByAuthor,
         )
     private val endPageList = MutableList(request.size) { Int.MAX_VALUE }
+    private val seenIsbns = mutableSetOf<String>()
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Book> =
         runCatching {
@@ -33,7 +39,7 @@ class NlkBookPagingSource(
                         .map { (search, endPage) ->
                             async {
                                 if (page <= endPage) {
-                                    search(query, page, params.loadSize)
+                                    search(query, page, pageSize)
                                 } else {
                                     NlkSearchResponseDto(docs = emptyList())
                                 }
@@ -46,14 +52,14 @@ class NlkBookPagingSource(
                         dto.totalCount
                             .toDoubleOrNull()
                             ?.takeIf { it > 0.0 }
-                            ?.let { ceil(it / params.loadSize).toInt() } ?: 0
+                            ?.let { ceil(it / pageSize).toInt() } ?: 0
                 }
             }
             val books =
                 resultList
                     .flatMap { it.docs }
                     .mapNotNull { it.asExternalModelOrNull() }
-                    .distinctBy { it.isbn }
+                    .filter { seenIsbns.add(it.isbn) }
             LoadResult.Page(
                 data = books,
                 prevKey = (page - 1).takeIf { it > 0 },

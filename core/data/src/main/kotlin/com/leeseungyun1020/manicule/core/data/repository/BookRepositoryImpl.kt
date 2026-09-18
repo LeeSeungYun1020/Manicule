@@ -82,7 +82,13 @@ class BookRepositoryImpl
                         initialLoadSize = NETWORK_PAGE_SIZE,
                         enablePlaceholders = false,
                     ),
-                pagingSourceFactory = { NlkBookPagingSource(bookRemoteDataSource, query) },
+                pagingSourceFactory = {
+                    NlkBookPagingSource(
+                        bookRemoteDataSource = bookRemoteDataSource,
+                        query = query,
+                        pageSize = NETWORK_PAGE_SIZE,
+                    )
+                },
             ).flow
 
         private suspend fun resolveAuxiliaryContent(
