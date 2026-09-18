@@ -19,7 +19,9 @@ interface ReadingRecordDao {
         updatedAt: Instant,
     ): Long {
         require(record.id == 0L) { "A new record must have id 0" }
-        require(record.isbn.isNotBlank() && record.startPage >= 1 && record.endPage >= record.startPage)
+        require(record.isbn.isNotBlank()) { "isbn must not be blank" }
+        require(record.startPage >= 1) { "startPage must be at least 1, was ${record.startPage}" }
+        require(record.endPage >= record.startPage) { "endPage must be at least startPage, was ${record.endPage}" }
         updateEntryForNewRecord(record.isbn, updatedAt)
         return insert(record)
     }
