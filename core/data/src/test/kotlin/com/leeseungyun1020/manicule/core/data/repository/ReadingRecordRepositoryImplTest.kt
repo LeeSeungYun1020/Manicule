@@ -105,6 +105,11 @@ class FakeReadingRecordDao : ReadingRecordDao {
 
     var updatedEntry: Pair<String, Instant>? = null
 
+    override suspend fun registerEntryForNewRecord(
+        isbn: String,
+        updatedAt: Instant,
+    ) = Unit
+
     override suspend fun insert(record: ReadingRecordEntity): Long = upsert(record)
 
     override suspend fun updateEntryForNewRecord(

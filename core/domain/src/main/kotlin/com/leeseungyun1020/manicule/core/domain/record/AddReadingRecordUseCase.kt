@@ -13,7 +13,7 @@ class AddReadingRecordUseCase
         private val readingRecordRepository: ReadingRecordRepository,
         private val clock: Clock,
     ) {
-        /** 새 세션 ID를 반환한다. 첫 WANT 기록만 READING으로 전환하며 나머지 상태는 유지한다. */
+        /** 새 세션 ID를 반환한다. 미등록 책은 READING으로 등록하고 UNSET·첫 WANT 기록은 READING으로 전환한다. */
         suspend operator fun invoke(
             isbn: String,
             date: LocalDate,

@@ -12,7 +12,7 @@ import kotlinx.datetime.LocalDate
 
 @Dao
 interface ReadingRecordDao {
-    /** 추가에 실패하면 서재 상태와 수정 시각도 함께 롤백한다. */
+    /** 세션 추가와 서재 등록·상태 전환을 원자적으로 처리하며, 실패 시 롤백한다. */
     @Transaction
     suspend fun add(
         record: ReadingRecordEntity,
@@ -22,6 +22,7 @@ interface ReadingRecordDao {
         require(record.isbn.isNotBlank()) { "isbn must not be blank" }
         require(record.startPage >= 1) { "startPage must be at least 1, was ${record.startPage}" }
         require(record.endPage >= record.startPage) { "endPage must be at least startPage, was ${record.endPage}" }
+        registerEntryForNewRecord(record.isbn, updatedAt)
         updateEntryForNewRecord(record.isbn, updatedAt)
         return insert(record)
     }
@@ -31,8 +32,21 @@ interface ReadingRecordDao {
 
     @Query(
         """
+        INSERT INTO book_entries (isbn, status, rating, memo, addedAt, updatedAt, finishedAt)
+        SELECT :isbn, 'READING', 0, NULL, :updatedAt, :updatedAt, NULL
+        WHERE NOT EXISTS(SELECT 1 FROM book_entries WHERE isbn = :isbn)
+        """,
+    )
+    suspend fun registerEntryForNewRecord(
+        isbn: String,
+        updatedAt: Instant,
+    )
+
+    @Query(
+        """
         UPDATE book_entries
         SET status = CASE
+            WHEN status = 'UNSET' THEN 'READING'
             WHEN status = 'WANT' AND NOT EXISTS(SELECT 1 FROM reading_records WHERE isbn = :isbn)
             THEN 'READING' ELSE status END,
             updatedAt = :updatedAt

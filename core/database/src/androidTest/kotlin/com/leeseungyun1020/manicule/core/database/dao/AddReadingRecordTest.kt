@@ -65,7 +65,7 @@ class AddReadingRecordTest {
     @Test
     fun otherStatusesAndFinishedDateArePreserved() =
         runTest {
-            listOf(ReadingStatus.UNSET, ReadingStatus.READING, ReadingStatus.FINISHED).forEach { status ->
+            listOf(ReadingStatus.READING, ReadingStatus.FINISHED).forEach { status ->
                 val isbn = status.name
                 val entry = seed(status, isbn)
                 dao.add(record(isbn), now)
@@ -74,11 +74,47 @@ class AddReadingRecordTest {
         }
 
     @Test
-    fun unregisteredBookCanBeRecordedWithoutChoosingStatus() =
+    fun unregisteredBookIsRegisteredAsReading() =
         runTest {
             seedBook("123")
             dao.add(record(), now)
-            assertThat(db.bookEntryDao().getEntry("123")).isNull()
+            assertThat(db.bookEntryDao().getEntry("123"))
+                .isEqualTo(BookEntryEntity("123", ReadingStatus.READING, 0, null, now, now, null))
+            assertThat(dao.observeByIsbn("123").first()).hasSize(1)
+        }
+
+    @Test
+    fun unsetTransitionsWithOrWithoutPreviousRecordsAndPreservesReview() =
+        runTest {
+            listOf(false, true).forEach { hasRecords ->
+                val isbn = "unset-$hasRecords"
+                val entry = seed(ReadingStatus.UNSET, isbn)
+                if (hasRecords) dao.upsert(record(isbn))
+
+                dao.add(record(isbn), now)
+
+                assertThat(db.bookEntryDao().getEntry(isbn)).isEqualTo(entry.copy(status = ReadingStatus.READING, updatedAt = now))
+                assertThat(dao.observeByIsbn(isbn).first()).hasSize(if (hasRecords) 2 else 1)
+            }
+        }
+
+    @Test
+    fun insertFailureRollsBackNewLibraryEntry() =
+        runTest {
+            seedBook("123")
+            db.openHelper.writableDatabase.execSQL(
+                "CREATE TRIGGER fail_record BEFORE INSERT ON reading_records BEGIN SELECT RAISE(ABORT, 'write failure'); END",
+            )
+            try {
+                dao.add(record(), now)
+                error("Expected insert failure")
+            } catch (_: SQLiteException) {
+                assertThat(db.bookEntryDao().getEntry("123")).isNull()
+                assertThat(dao.observeByIsbn("123").first()).isEmpty()
+            }
+            db.openHelper.writableDatabase.execSQL("DROP TRIGGER fail_record")
+            dao.add(record(), now)
+            assertThat(db.bookEntryDao().getEntry("123")?.status).isEqualTo(ReadingStatus.READING)
             assertThat(dao.observeByIsbn("123").first()).hasSize(1)
         }
 
