@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.leeseungyun1020.manicule.core.domain.search.ClearRecentQueriesUseCase
+import com.leeseungyun1020.manicule.core.domain.search.DeleteRecentQueryUseCase
 import com.leeseungyun1020.manicule.core.domain.search.GetRecentQueriesUseCase
 import com.leeseungyun1020.manicule.core.domain.search.SaveRecentQueryUseCase
 import com.leeseungyun1020.manicule.core.domain.search.SearchBooksUseCase
@@ -34,11 +36,16 @@ class SearchViewModel
     constructor(
         getRecentQueries: GetRecentQueriesUseCase,
         private val saveRecentQuery: SaveRecentQueryUseCase,
+        private val deleteRecentQuery: DeleteRecentQueryUseCase,
+        private val clearRecentQueries: ClearRecentQueriesUseCase,
         private val searchBooks: SearchBooksUseCase,
     ) : ViewModel() {
         private val searchInput = MutableStateFlow(SearchInput())
         private val searchRequest = MutableStateFlow<SearchRequest?>(null)
+        private val pendingDelete = MutableStateFlow<PendingDelete?>(null)
+        private val snackbarMessage = MutableStateFlow<SearchSnackbarMessage?>(null)
         private var nextRequestId = 0L
+        private var nextMessageId = 0L
 
         private val recentQueriesState =
             getRecentQueries()
@@ -55,24 +62,41 @@ class SearchViewModel
                 .onStart { emit(RecentQueriesState.Loading) }
 
         val uiState =
-            combine(recentQueriesState, searchInput) { recentState, input ->
-                val recentQueries =
+            combine(
+                recentQueriesState,
+                searchInput,
+                pendingDelete,
+                snackbarMessage,
+            ) { recentState, input, pending, message ->
+                val rawQueries =
                     (recentState as? RecentQueriesState.Content)
                         ?.recentQueries
                         .orEmpty()
+                val effectiveQueries =
+                    when (pending) {
+                        null -> rawQueries
+                        is PendingDelete.Single -> rawQueries.filterNot { it == pending.query }
+                        is PendingDelete.All -> emptyList()
+                    }
+                val effectiveRecentState =
+                    when (recentState) {
+                        is RecentQueriesState.Content -> RecentQueriesState.Content(effectiveQueries)
+                        else -> recentState
+                    }
                 SearchUiState(
                     query = input.query,
                     inputPhase = input.phase,
                     searchRequestId = input.searchRequestId,
-                    recentQueriesState = recentState,
+                    recentQueriesState = effectiveRecentState,
                     filteredQueries =
                         if (input.phase == SearchInputPhase.TYPING) {
-                            recentQueries.filter { query ->
+                            effectiveQueries.filter { query ->
                                 query.contains(input.query, ignoreCase = true)
                             }
                         } else {
                             emptyList()
                         },
+                    snackbarMessage = message,
                 )
             }.stateIn(
                 scope = viewModelScope,
@@ -107,9 +131,83 @@ class SearchViewModel
                 )
         }
 
+        fun onDeleteQuery(query: String) {
+            val normalizedQuery = query.trim()
+            if (normalizedQuery.isEmpty()) return
+
+            commitPendingDelete()
+            pendingDelete.value = PendingDelete.Single(normalizedQuery)
+            snackbarMessage.value =
+                SearchSnackbarMessage.QueryDeleted(
+                    id = ++nextMessageId,
+                    query = normalizedQuery,
+                )
+        }
+
+        fun onClearAllQueries() {
+            val currentQueries =
+                (uiState.value.recentQueriesState as? RecentQueriesState.Content)
+                    ?.recentQueries
+                    .orEmpty()
+            if (currentQueries.isEmpty()) return
+
+            commitPendingDelete()
+            pendingDelete.value = PendingDelete.All(currentQueries)
+            snackbarMessage.value =
+                SearchSnackbarMessage.AllQueriesDeleted(
+                    id = ++nextMessageId,
+                )
+        }
+
+        fun onUndoDelete() {
+            pendingDelete.value = null
+            snackbarMessage.value = null
+        }
+
+        fun onConfirmDelete() {
+            commitPendingDelete()
+            snackbarMessage.value = null
+        }
+
+        fun onSnackbarDismissed(messageId: Long) {
+            if (snackbarMessage.value?.id == messageId) {
+                commitPendingDelete()
+                snackbarMessage.value = null
+            }
+        }
+
+        fun onEvent(event: SearchUiEvent) {
+            when (event) {
+                is SearchUiEvent.DeleteQuery -> onDeleteQuery(event.query)
+                SearchUiEvent.ClearAllQueries -> onClearAllQueries()
+                SearchUiEvent.UndoDelete -> onUndoDelete()
+                SearchUiEvent.ConfirmDelete -> onConfirmDelete()
+                is SearchUiEvent.SnackbarDismissed -> onSnackbarDismissed(event.messageId)
+            }
+        }
+
+        private fun commitPendingDelete() {
+            val pending = pendingDelete.value ?: return
+            pendingDelete.value = null
+            viewModelScope.launch {
+                try {
+                    when (pending) {
+                        is PendingDelete.Single -> deleteRecentQuery(pending.query)
+                        is PendingDelete.All -> clearRecentQueries()
+                    }
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (_: Exception) {
+                    // 검색 기록 삭제 실패는 검색 화면을 차단하지 않는다.
+                }
+            }
+        }
+
         fun onSearch(query: String) {
             val normalizedQuery = query.trim()
             if (normalizedQuery.isEmpty()) return
+
+            commitPendingDelete()
 
             val requestId = nextRequestId++
 
@@ -134,7 +232,22 @@ class SearchViewModel
                 }
             }
         }
+
+        override fun onCleared() {
+            commitPendingDelete()
+            super.onCleared()
+        }
     }
+
+private sealed interface PendingDelete {
+    data class Single(
+        val query: String,
+    ) : PendingDelete
+
+    data class All(
+        val queries: List<String>,
+    ) : PendingDelete
+}
 
 private fun List<SearchQuery>.toRecentQueriesState(): RecentQueriesState =
     RecentQueriesState.Content(
