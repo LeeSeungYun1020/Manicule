@@ -3,6 +3,7 @@ package com.leeseungyun1020.manicule.core.data.datasource
 import com.leeseungyun1020.manicule.core.database.dao.ReadingRecordDao
 import com.leeseungyun1020.manicule.core.database.entity.ReadingRecordEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 
@@ -11,6 +12,11 @@ class RoomReadingRecordLocalDataSource
     constructor(
         private val readingRecordDao: ReadingRecordDao,
     ) : ReadingRecordLocalDataSource {
+        override suspend fun add(
+            record: ReadingRecordEntity,
+            updatedAt: Instant,
+        ): Long = readingRecordDao.add(record, updatedAt)
+
         override suspend fun save(record: ReadingRecordEntity): Long = readingRecordDao.upsert(record)
 
         override suspend fun remove(id: Long) {
