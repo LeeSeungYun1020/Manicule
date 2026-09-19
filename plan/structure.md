@@ -1,6 +1,6 @@
 # 독서 기록 앱 — 모듈 구조
 
-> [plan.md](plan.md) 기능 요구사항 기반, Android 3-layer 아키텍처 준수.
+> [plan.md](plan.md) 기능 요구사항 기반, [Android App Architecture](https://developer.android.com/topic/architecture) 준수.
 
 ---
 
