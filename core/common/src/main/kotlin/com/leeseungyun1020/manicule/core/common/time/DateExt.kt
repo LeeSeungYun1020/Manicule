@@ -45,7 +45,7 @@ fun LocalDate.endOfMonth(): LocalDate {
 /**
  * 올해의 1월 1일.
  */
-fun LocalDate.startOfYear(): LocalDate = LocalDate(year, 1, 1)
+fun LocalDate.startOfYear(): LocalDate = LocalDate(year = year, monthNumber = 1, dayOfMonth = 1)
 
 /**
  * 올해의 12월 31일.
