@@ -6,13 +6,17 @@ import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.common.time.Clock
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
+import com.leeseungyun1020.manicule.core.data.repository.ReadingRecordRepository
 import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.domain.book.GetBookDetailUseCase
 import com.leeseungyun1020.manicule.core.domain.library.ChangeReadingStatusUseCase
+import com.leeseungyun1020.manicule.core.domain.record.AddReadingRecordUseCase
+import com.leeseungyun1020.manicule.core.domain.record.ObserveBookRecordsUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.CancellationException
@@ -30,6 +34,8 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Before
@@ -39,12 +45,14 @@ class BookDetailViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private lateinit var bookRepository: FakeBookRepository
     private lateinit var libraryRepository: FakeLibraryRepository
+    private lateinit var recordRepository: FakeReadingRecordRepository
 
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
         bookRepository = FakeBookRepository()
         libraryRepository = FakeLibraryRepository()
+        recordRepository = FakeReadingRecordRepository()
     }
 
     @After
@@ -349,6 +357,115 @@ class BookDetailViewModelTest {
             assertThat(contentState(viewModel).bookDetail.entry).isNull()
         }
 
+    @Test
+    fun records_areObserved_andUpdatedInUiState() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.records.value = listOf(testRecord)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.records).containsExactly(testRecord)
+        }
+
+    @Test
+    fun addRecord_success_callsUseCase_andResetsRecordSavingState() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.addRecord(
+                date = testRecord.date,
+                time = testRecord.time,
+                startPage = testRecord.startPage,
+                endPage = testRecord.endPage,
+            )
+            advanceUntilIdle()
+
+            assertThat(recordRepository.addCalls).isEqualTo(1)
+            val content = contentState(viewModel)
+            assertThat(content.recordSaving).isEqualTo(RecordSavingState.Idle)
+            assertThat(content.records).hasSize(1)
+            assertThat(content.records.first().startPage).isEqualTo(testRecord.startPage)
+            assertThat(content.records.first().endPage).isEqualTo(testRecord.endPage)
+        }
+
+    @Test
+    fun addRecord_saving_blocksDuplicateRequests() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.addGate = CompletableDeferred()
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.addRecord(
+                date = testRecord.date,
+                time = testRecord.time,
+                startPage = 1,
+                endPage = 10,
+            )
+            viewModel.addRecord(
+                date = testRecord.date,
+                time = testRecord.time,
+                startPage = 11,
+                endPage = 20,
+            )
+            runCurrent()
+
+            assertThat(contentState(viewModel).recordSaving).isEqualTo(RecordSavingState.Saving)
+            assertThat(recordRepository.addCalls).isEqualTo(1)
+
+            recordRepository.addGate?.complete(Unit)
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).recordSaving).isEqualTo(RecordSavingState.Idle)
+            assertThat(recordRepository.addCalls).isEqualTo(1)
+        }
+
+    @Test
+    fun addRecord_failure_setsRecordSavingFailed_andCanBeDismissed() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.addFailure = IllegalStateException("Save failed")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.addRecord(
+                date = testRecord.date,
+                time = testRecord.time,
+                startPage = 1,
+                endPage = 10,
+            )
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.recordSaving).isInstanceOf(RecordSavingState.Failed::class.java)
+
+            viewModel.dismissRecordError()
+            assertThat(contentState(viewModel).recordSaving).isEqualTo(RecordSavingState.Idle)
+        }
+
+    @Test
+    fun addRecord_cancellation_doesNotLeaveSavingState() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.addFailure = CancellationException("Cancelled")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.addRecord(
+                date = testRecord.date,
+                time = testRecord.time,
+                startPage = 1,
+                endPage = 10,
+            )
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).recordSaving).isEqualTo(RecordSavingState.Idle)
+        }
+
     private fun createSavedStateHandle(
         openMyRecords: Boolean = false,
         savedTab: BookDetailTab? = null,
@@ -367,6 +484,15 @@ class BookDetailViewModelTest {
             getBookDetail = GetBookDetailUseCase(bookRepository, libraryRepository),
             changeStatus = ChangeReadingStatusUseCase(
                 libraryRepository,
+                object : Clock {
+                    override fun now(): Instant = Instant.fromEpochMilliseconds(100)
+
+                    override fun timeZone(): TimeZone = TimeZone.UTC
+                },
+            ),
+            observeBookRecords = ObserveBookRecordsUseCase(recordRepository),
+            addReadingRecord = AddReadingRecordUseCase(
+                recordRepository,
                 object : Clock {
                     override fun now(): Instant = Instant.fromEpochMilliseconds(100)
 
@@ -451,6 +577,41 @@ class BookDetailViewModelTest {
         override suspend fun removeBookEntry(isbn: String) = Unit
     }
 
+    private class FakeReadingRecordRepository : ReadingRecordRepository {
+        val records = MutableStateFlow<List<ReadingRecord>>(emptyList())
+        var addCalls = 0
+        var addGate: CompletableDeferred<Unit>? = null
+        var addFailure: Exception? = null
+
+        override fun observeRecordsByIsbn(isbn: String): Flow<List<ReadingRecord>> = records
+
+        override suspend fun addRecord(
+            record: ReadingRecord,
+            updatedAt: Instant,
+        ): Long {
+            addCalls++
+            addGate?.await()
+            addFailure?.let { throw it }
+            val newId = (records.value.size + 1).toLong()
+            val newRecord = record.copy(id = newId)
+            records.value = listOf(newRecord) + records.value
+            return newId
+        }
+
+        override suspend fun saveRecord(record: ReadingRecord): Long = record.id
+
+        override suspend fun removeRecord(id: Long) {
+            records.value = records.value.filterNot { it.id == id }
+        }
+
+        override fun observeRecordsBetween(
+            start: LocalDate,
+            end: LocalDate,
+        ): Flow<List<ReadingRecord>> = emptyFlow()
+
+        override suspend fun getMaxEndPage(isbn: String): Int? = records.value.maxOfOrNull { it.endPage }
+    }
+
     private companion object {
         val testBook =
             Book(
@@ -473,6 +634,15 @@ class BookDetailViewModelTest {
                 status = ReadingStatus.READING,
                 addedAt = Instant.fromEpochMilliseconds(1),
                 updatedAt = Instant.fromEpochMilliseconds(1),
+            )
+        val testRecord =
+            ReadingRecord(
+                id = 1L,
+                isbn = "123",
+                date = LocalDate(2026, 9, 19),
+                time = LocalTime(14, 0),
+                startPage = 1,
+                endPage = 20,
             )
     }
 }

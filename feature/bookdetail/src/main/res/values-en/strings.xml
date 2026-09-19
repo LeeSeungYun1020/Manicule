@@ -29,4 +29,25 @@
     <string name="book_detail_status_saving">Saving status…</string>
     <string name="book_detail_status_unset">Choose a status to add this book to your library</string>
     <string name="book_detail_status_error">Couldn’t save reading status</string>
+    <string name="book_detail_records_title">Reading records</string>
+    <string name="book_detail_records_empty_title">No reading records yet</string>
+    <string name="book_detail_records_empty_description">Add pages read to track your daily reading</string>
+    <string name="book_detail_add_record_button">Add record</string>
+    <string name="book_detail_add_record_title">Add record</string>
+    <string name="book_detail_record_date">Date</string>
+    <string name="book_detail_record_date_today">Today</string>
+    <string name="book_detail_record_date_yesterday">Yesterday</string>
+    <string name="book_detail_record_date_custom">Pick date</string>
+    <string name="book_detail_record_time">Time</string>
+    <string name="book_detail_record_time_now">Now</string>
+    <string name="book_detail_record_time_custom">Pick time</string>
+    <string name="book_detail_record_start_page">Start page</string>
+    <string name="book_detail_record_end_page">End page</string>
+    <string name="book_detail_record_page_validation_error">End page must be greater than or equal to start page</string>
+    <string name="book_detail_record_save_error">Couldn’t save reading record</string>
+    <string name="book_detail_record_pages_sum">%1$dp</string>
+    <string name="book_detail_record_session_format">%1$s · pp. %2$d–%3$d</string>
+    <string name="book_detail_date_format">%1$d/%2$d</string>
+    <string name="book_detail_time_am">%1$d:%2$02d AM</string>
+    <string name="book_detail_time_pm">%1$d:%2$02d PM</string>
 </resources>
