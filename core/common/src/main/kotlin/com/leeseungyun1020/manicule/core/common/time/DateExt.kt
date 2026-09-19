@@ -18,14 +18,15 @@ object WeekStart {
     val dayOfWeek: DayOfWeek = DayOfWeek.MONDAY
 }
 
+private const val DAYS_IN_WEEK = 7
+
 /**
  * 이 날짜가 속한 주의 시작일을 반환.
  */
 fun LocalDate.startOfWeek(weekStart: DayOfWeek = WeekStart.dayOfWeek): LocalDate {
     val current = this.dayOfWeek.isoDayNumber
     val target = weekStart.isoDayNumber
-    val daysPerWeek = DayOfWeek.entries.size
-    val diff = ((current - target) + daysPerWeek) % daysPerWeek
+    val diff = ((current - target) + DAYS_IN_WEEK) % DAYS_IN_WEEK
     return this.minus(DatePeriod(days = diff))
 }
 
