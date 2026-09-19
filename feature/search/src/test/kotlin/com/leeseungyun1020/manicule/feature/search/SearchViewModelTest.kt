@@ -301,7 +301,7 @@ class SearchViewModelTest {
                     flow {
                         collectionCount += 1
                         if (collectionCount == 1) {
-                            throw IllegalStateException("database unavailable")
+                            error("database unavailable")
                         }
                         emit(listOf(searchQuery("Compose")))
                     }
@@ -335,7 +335,7 @@ class SearchViewModelTest {
                 FakeSearchHistoryRepository {
                     flow<List<SearchQuery>> {
                         collectionCount += 1
-                        throw IllegalStateException("database unavailable")
+                        error("database unavailable")
                     }
                 }
             val viewModel = createViewModel(repository)

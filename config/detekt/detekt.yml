@@ -14,10 +14,45 @@ coroutines:
 complexity:
   LongParameterList:
     ignoreDefaultParameters: true
-    ignoreAnnotatedParameter: [ 'androidx.compose.runtime.Composable' ]
+    ignoreAnnotated: [ 'Composable' ]
+  LongMethod:
+    ignoreAnnotated: [ 'Composable' ]
+  TooManyFunctions:
+    ignoreAnnotatedFunctions: [ 'Preview', 'ManiculePreview' ]
 
-# style, naming은 ktlint가 확인
+# 서식은 ktlint에 맡기고 의미 분석은 detekt 기본 규칙을 유지한다.
 style:
-  active: false
+  active: true
+  MaxLineLength:
+    active: false
+  ModifierOrder:
+    active: false
+  NewLineAtEndOfFile:
+    active: false
+  WildcardImport:
+    active: false
+  MagicNumber:
+    active: false
+  # 함수 시작의 입력 검증/조기 종료는 반환 개수에서 제외한다.
+  ReturnCount:
+    excludeGuardClauses: true
+  UnusedPrivateMember:
+    ignoreAnnotated: [ 'Preview', 'ManiculePreview' ]
+
+# ktlint와 중복되는 이름/파일명 검사만 제외한다.
 naming:
-  active: false
+  active: true
+  ClassNaming:
+    active: false
+  FunctionNaming:
+    active: false
+  MatchingDeclarationName:
+    active: false
+  ObjectPropertyNaming:
+    active: false
+  PackageNaming:
+    active: false
+  TopLevelPropertyNaming:
+    active: false
+  VariableNaming:
+    active: false

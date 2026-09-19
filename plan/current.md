@@ -5,6 +5,8 @@
 
 ## 완료
 
+- #58 Compose 린트 예외·일반 함수 이름 검사, detekt 미사용 코드/의미 검사 복구 및 ktlint 엔진 고정
+
 - 최근 검색어 조회·저장·전체 삭제·개별 삭제 Repository와 UseCase
 - C1 독서 기록·공유 쿼리 계약
 - C2 feature 모듈·Navigation 경계 계약

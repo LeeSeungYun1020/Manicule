@@ -40,7 +40,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
 @Composable
-@Suppress("LongParameterList")
 fun SearchScreen(
     uiState: SearchUiState,
     searchResults: Flow<PagingData<Book>>,

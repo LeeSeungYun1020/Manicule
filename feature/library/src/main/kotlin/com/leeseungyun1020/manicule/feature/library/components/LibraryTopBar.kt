@@ -36,7 +36,6 @@ internal class LibraryHasBooksPreviewProvider : PreviewParameterProvider<Boolean
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Suppress("LongParameterList")
 internal fun LibraryTopBar(
     selectedStatus: ReadingStatus,
     sort: LibrarySort,

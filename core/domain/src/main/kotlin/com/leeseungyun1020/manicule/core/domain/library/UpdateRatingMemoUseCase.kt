@@ -1,13 +1,10 @@
 package com.leeseungyun1020.manicule.core.domain.library
 
-import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
 import javax.inject.Inject
 
 class UpdateRatingMemoUseCase
     @Inject
-    constructor(
-        private val libraryRepository: LibraryRepository,
-    ) {
+    constructor() {
         /**
          * 별점·메모 수정.
          */

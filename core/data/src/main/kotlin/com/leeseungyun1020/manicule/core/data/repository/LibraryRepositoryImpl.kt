@@ -53,7 +53,7 @@ class LibraryRepositoryImpl
             bookEntryLocalDataSource.observeByIsbn(isbn).map { it?.asExternalModel() }
 
         override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult {
-            if (entry.rating !in 0..5) {
+            if (entry.rating !in 0..MAX_RATING) {
                 return SaveBookEntryResult.InvalidRating(entry.rating)
             }
 
@@ -66,3 +66,5 @@ class LibraryRepositoryImpl
             bookEntryLocalDataSource.remove(isbn)
         }
     }
+
+private const val MAX_RATING = 5

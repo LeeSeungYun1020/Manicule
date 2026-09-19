@@ -46,7 +46,6 @@ import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 // 화면 이벤트를 명시적인 콜백으로 노출한다 (LibraryScreen과 동일).
-@Suppress("LongParameterList")
 @Composable
 fun BookDetailScreen(
     uiState: BookDetailUiState,
