@@ -12,7 +12,6 @@ import kotlinx.datetime.LocalDate
  * - 3: 50–99 페이지
  * - 4: 100+ 페이지
  */
-@Suppress("MagicNumber") // 위에 명시한 페이지 수 구간과 0..4 단계 매핑을 그대로 표현한다.
 data class ReadingCalendarDay(
     val date: LocalDate,
     val pages: Int,

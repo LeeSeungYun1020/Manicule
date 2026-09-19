@@ -18,15 +18,13 @@ object WeekStart {
     val dayOfWeek: DayOfWeek = DayOfWeek.MONDAY
 }
 
-private const val DAYS_IN_WEEK = 7
-
 /**
  * 이 날짜가 속한 주의 시작일을 반환.
  */
 fun LocalDate.startOfWeek(weekStart: DayOfWeek = WeekStart.dayOfWeek): LocalDate {
     val current = this.dayOfWeek.isoDayNumber
     val target = weekStart.isoDayNumber
-    val diff = ((current - target) + DAYS_IN_WEEK) % DAYS_IN_WEEK
+    val diff = ((current - target) + 7) % 7
     return this.minus(DatePeriod(days = diff))
 }
 
@@ -46,12 +44,12 @@ fun LocalDate.endOfMonth(): LocalDate {
 /**
  * 올해의 1월 1일.
  */
-fun LocalDate.startOfYear(): LocalDate = LocalDate(year = year, monthNumber = 1, dayOfMonth = 1)
+fun LocalDate.startOfYear(): LocalDate = LocalDate(year, 1, 1)
 
 /**
  * 올해의 12월 31일.
  */
-fun LocalDate.endOfYear(): LocalDate = LocalDate(year = year, monthNumber = 12, dayOfMonth = 31)
+fun LocalDate.endOfYear(): LocalDate = LocalDate(year, 12, 31)
 
 /**
  * 두 날짜 사이의 일 수 (포함).

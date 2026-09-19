@@ -31,7 +31,7 @@ fun BookProgressBar(
 
     val safeCurrentPage = currentPage.coerceAtLeast(0)
     val progress = (safeCurrentPage.toDouble() / totalPages).coerceIn(0.0, 1.0)
-    val percentage = (progress * PERCENT_SCALE).roundToInt()
+    val percentage = (progress * 100).roundToInt()
 
     Column(modifier = modifier) {
         LinearProgressIndicator(
@@ -73,5 +73,3 @@ private fun BookProgressBarPreview() {
         }
     }
 }
-
-private const val PERCENT_SCALE = 100

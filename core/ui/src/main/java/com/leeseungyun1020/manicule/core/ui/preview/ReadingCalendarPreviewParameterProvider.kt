@@ -8,7 +8,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.todayIn
 
-@Suppress("MagicNumber") // Preview용 날짜와 독서량 샘플.
 class ReadingCalendarPreviewParameterProvider : PreviewParameterProvider<List<ReadingCalendarDay>> {
     override val values: Sequence<List<ReadingCalendarDay>>
         get() {

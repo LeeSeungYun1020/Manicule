@@ -31,11 +31,8 @@ style:
     active: false
   WildcardImport:
     active: false
-  # 테마 토큰/애너테이션 값과 Preview 샘플은 숫자 자체로 의미가 드러난다.
   MagicNumber:
-    ignorePropertyDeclaration: true
-    ignoreAnnotation: true
-    ignoreAnnotated: [ 'Preview', 'ManiculePreview' ]
+    active: false
   # 함수 시작의 입력 검증/조기 종료는 반환 개수에서 제외한다.
   ReturnCount:
     excludeGuardClauses: true
