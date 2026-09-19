@@ -22,7 +22,10 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeIconButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSectionHeader
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSectionHeaderAction
+import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.feature.search.R
@@ -31,6 +34,8 @@ import com.leeseungyun1020.manicule.feature.search.R
 fun RecentQueryList(
     queries: List<String>,
     onQuerySelected: (String) -> Unit,
+    onDeleteQuery: (String) -> Unit,
+    onClearAll: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -39,6 +44,11 @@ fun RecentQueryList(
         item(contentType = "section_header") {
             ManiculeSectionHeader(
                 title = stringResource(R.string.search_recent_title),
+                action =
+                    ManiculeSectionHeaderAction(
+                        label = stringResource(R.string.search_clear_all),
+                        onClick = onClearAll,
+                    ),
             )
         }
         items(
@@ -53,6 +63,16 @@ fun RecentQueryList(
                         imageVector = Icons.Default.History,
                         contentDescription = null,
                     )
+                },
+                trailingIcon = {
+                    ManiculeIconButton(
+                        onClick = { onDeleteQuery(query) },
+                    ) {
+                        Icon(
+                            imageVector = ManiculeIcons.Delete,
+                            contentDescription = stringResource(R.string.search_delete_query, query),
+                        )
+                    }
                 },
                 onClick = { onQuerySelected(query) },
             )
@@ -97,6 +117,7 @@ fun FilteredQueryList(
 private fun QueryListItem(
     query: AnnotatedString,
     leadingIcon: @Composable () -> Unit,
+    trailingIcon: (@Composable () -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     ListItem(
@@ -112,6 +133,7 @@ private fun QueryListItem(
                 .fillMaxWidth()
                 .clickable(onClick = onClick),
         leadingContent = leadingIcon,
+        trailingContent = trailingIcon,
     )
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 }
@@ -138,6 +160,8 @@ private fun RecentQueryListPreview() {
         RecentQueryList(
             queries = listOf("Jetpack Compose", "Kotlin coroutines"),
             onQuerySelected = {},
+            onDeleteQuery = {},
+            onClearAll = {},
         )
     }
 }
