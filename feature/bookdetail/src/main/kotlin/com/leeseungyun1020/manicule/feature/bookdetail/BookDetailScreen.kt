@@ -16,8 +16,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -39,10 +42,12 @@ import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookDetail
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import com.leeseungyun1020.manicule.feature.bookdetail.components.AddRecordBottomSheet
 import com.leeseungyun1020.manicule.feature.bookdetail.components.BookInfoTabContent
 import com.leeseungyun1020.manicule.feature.bookdetail.components.MyRecordTabContent
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 // 화면 이벤트를 명시적인 콜백으로 노출한다 (LibraryScreen과 동일).
@@ -54,7 +59,8 @@ fun BookDetailScreen(
     onRetry: () -> Unit,
     onStatusSelected: (ReadingStatus) -> Unit,
     onStatusErrorDismissed: () -> Unit,
-    onAddRecord: () -> Unit = {},
+    onAddRecord: (LocalDate, LocalTime, Int, Int) -> Unit = { _, _, _, _ -> },
+    onRecordErrorDismissed: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -63,7 +69,9 @@ fun BookDetailScreen(
         onRetry = onRetry,
         onStatusSelected = onStatusSelected,
         onStatusErrorDismissed = onStatusErrorDismissed,
+        onRecordErrorDismissed = onRecordErrorDismissed,
     )
+    var showAddRecordSheet by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -88,10 +96,23 @@ fun BookDetailScreen(
             uiState = uiState,
             onRetry = onRetry,
             onStatusSelected = onStatusSelected,
-            onAddRecord = onAddRecord,
+            onAddRecord = { showAddRecordSheet = true },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
+        )
+    }
+
+    if (showAddRecordSheet && uiState is BookDetailUiState.Content) {
+        val initialStartPage = (uiState.records.maxOfOrNull { it.endPage } ?: 0) + 1
+        AddRecordBottomSheet(
+            initialStartPage = initialStartPage,
+            isSaving = uiState.recordSaving is RecordSavingState.Saving,
+            onDismissRequest = { showAddRecordSheet = false },
+            onSave = { date, time, startPage, endPage ->
+                onAddRecord(date, time, startPage, endPage)
+                showAddRecordSheet = false
+            },
         )
     }
 }
@@ -102,16 +123,20 @@ private fun rememberBookDetailSnackbarHostState(
     onRetry: () -> Unit,
     onStatusSelected: (ReadingStatus) -> Unit,
     onStatusErrorDismissed: () -> Unit,
+    onRecordErrorDismissed: () -> Unit = {},
 ): SnackbarHostState {
     val currentOnRetry by rememberUpdatedState(onRetry)
     val currentOnStatusSelected by rememberUpdatedState(onStatusSelected)
     val currentOnStatusErrorDismissed by rememberUpdatedState(onStatusErrorDismissed)
+    val currentOnRecordErrorDismissed by rememberUpdatedState(onRecordErrorDismissed)
     val snackbarHostState = remember { SnackbarHostState() }
     val errorMessage = stringResource(R.string.book_detail_refresh_error)
     val retryActionLabel = stringResource(R.string.book_detail_retry)
 
     val statusErrorMessage = stringResource(R.string.book_detail_status_error)
+    val recordErrorMessage = stringResource(R.string.book_detail_record_save_error)
     val statusChange = content?.statusChange
+    val recordSaving = content?.recordSaving
     val refreshStatus = content?.refreshStatus
     LaunchedEffect(refreshStatus, statusChange) {
         if (statusChange is StatusChangeState.Failed) {
@@ -136,6 +161,17 @@ private fun rememberBookDetailSnackbarHostState(
             if (result == SnackbarResult.ActionPerformed) {
                 currentOnRetry()
             }
+        }
+    }
+
+    LaunchedEffect(recordSaving) {
+        if (recordSaving is RecordSavingState.Failed) {
+            snackbarHostState.showSnackbar(
+                message = recordErrorMessage,
+                withDismissAction = true,
+                duration = SnackbarDuration.Short,
+            )
+            currentOnRecordErrorDismissed()
         }
     }
 

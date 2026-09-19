@@ -50,4 +50,6 @@
     <string name="book_detail_date_format">%1$d/%2$d</string>
     <string name="book_detail_time_am">%1$d:%2$02d AM</string>
     <string name="book_detail_time_pm">%1$d:%2$02d PM</string>
+    <string name="book_detail_confirm">Confirm</string>
+    <string name="book_detail_cancel">Cancel</string>
 </resources>

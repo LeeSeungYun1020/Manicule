@@ -16,6 +16,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.Density
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
@@ -227,8 +228,7 @@ class BookDetailScreenTest {
     }
 
     @Test
-    fun myRecordsTab_emptyRecords_displaysEmptyStateAndAddButton() {
-        var addClicked = false
+    fun myRecordsTab_emptyRecords_displaysEmptyStateAndOpensBottomSheet() {
         composeRule.setContent {
             ManiculeTheme {
                 BookDetailScreen(
@@ -238,14 +238,60 @@ class BookDetailScreenTest {
                     onStatusErrorDismissed = {},
                     onTabSelected = {},
                     onRetry = {},
-                    onAddRecord = { addClicked = true },
                 )
             }
         }
 
         composeRule.onNodeWithText(context.getString(R.string.book_detail_records_empty_title)).assertIsDisplayed()
         composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
-        assertThat(addClicked).isTrue()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertIsDisplayed()
+    }
+
+    @Test
+    fun addRecordBottomSheet_enterPages_andSaves() {
+        var savedStart = 0
+        var savedEnd = 0
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING, emptyList()),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onAddRecord = { _, _, start, end ->
+                        savedStart = start
+                        savedEnd = end
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_end_page)).performTextInput("25")
+        composeRule.onAllNodesWithText(context.getString(R.string.book_detail_add_record_button))[1].performClick()
+
+        assertThat(savedStart).isEqualTo(1)
+        assertThat(savedEnd).isEqualTo(25)
+    }
+
+    @Test
+    fun recordSavingFailed_showsSnackbar() {
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING).copy(recordSaving = RecordSavingState.Failed(1L)),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_save_error)).assertIsDisplayed()
     }
 
     @Test

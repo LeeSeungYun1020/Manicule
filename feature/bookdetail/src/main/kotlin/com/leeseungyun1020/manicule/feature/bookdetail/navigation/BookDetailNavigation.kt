@@ -19,6 +19,8 @@ fun NavGraphBuilder.bookDetailScreen(onNavigateBack: () -> Unit) {
             onRetry = viewModel::retry,
             onStatusSelected = viewModel::changeReadingStatus,
             onStatusErrorDismissed = viewModel::dismissStatusError,
+            onAddRecord = viewModel::addRecord,
+            onRecordErrorDismissed = viewModel::dismissRecordError,
         )
     }
 }
