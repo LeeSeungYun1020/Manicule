@@ -23,9 +23,12 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookDetail
 import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.feature.bookdetail.components.BookDetailExpandableText
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import org.junit.Rule
 import org.junit.Test
 import com.leeseungyun1020.manicule.core.designsystem.R as DesignSystemR
@@ -223,27 +226,74 @@ class BookDetailScreenTest {
         heights.forEach { assertThat(it).isWithin(1f).of(heights.first()) }
     }
 
+    @Test
+    fun myRecordsTab_emptyRecords_displaysEmptyStateAndAddButton() {
+        var addClicked = false
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING, emptyList()),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onAddRecord = { addClicked = true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_records_empty_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+        assertThat(addClicked).isTrue()
+    }
+
+    @Test
+    fun myRecordsTab_withRecords_displaysProgressBarAndGroupedSessions() {
+        val record = ReadingRecord(1L, "123", LocalDate(2026, 9, 19), LocalTime(14, 0), 1, 30)
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING, listOf(record)),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("30 / 300쪽").assertIsDisplayed()
+        composeRule.onNodeWithText("9월 19일").assertIsDisplayed()
+        composeRule.onNodeWithText("30p").assertIsDisplayed()
+        composeRule.onNodeWithText("+30p").assertIsDisplayed()
+    }
+
     private companion object {
         val statusLabels =
             listOf(R.string.book_detail_status_want, R.string.book_detail_status_reading, R.string.book_detail_status_finished)
 
-        fun recordsState(status: ReadingStatus?) =
-            contentState().copy(
-                selectedTab = BookDetailTab.MyRecords,
-                bookDetail = BookDetail(
-                    testBook,
-                    status?.let {
-                        BookEntry(
-                            testBook,
-                            it,
-                            rating = 4,
-                            memo = "Keep review",
-                            addedAt = Instant.fromEpochMilliseconds(1),
-                            updatedAt = Instant.fromEpochMilliseconds(1),
-                        )
-                    },
-                ),
-            )
+        fun recordsState(
+            status: ReadingStatus?,
+            records: List<ReadingRecord> = emptyList(),
+        ) = contentState().copy(
+            selectedTab = BookDetailTab.MyRecords,
+            records = records,
+            bookDetail = BookDetail(
+                testBook,
+                status?.let {
+                    BookEntry(
+                        testBook,
+                        it,
+                        rating = 4,
+                        memo = "Keep review",
+                        addedAt = Instant.fromEpochMilliseconds(1),
+                        updatedAt = Instant.fromEpochMilliseconds(1),
+                    )
+                },
+            ),
+        )
 
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val testBook =

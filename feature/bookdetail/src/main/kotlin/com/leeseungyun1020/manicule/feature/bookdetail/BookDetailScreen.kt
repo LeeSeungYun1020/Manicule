@@ -54,6 +54,7 @@ fun BookDetailScreen(
     onRetry: () -> Unit,
     onStatusSelected: (ReadingStatus) -> Unit,
     onStatusErrorDismissed: () -> Unit,
+    onAddRecord: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -87,6 +88,7 @@ fun BookDetailScreen(
             uiState = uiState,
             onRetry = onRetry,
             onStatusSelected = onStatusSelected,
+            onAddRecord = onAddRecord,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
@@ -163,6 +165,7 @@ private fun BookDetailBody(
     uiState: BookDetailUiState,
     onRetry: () -> Unit,
     onStatusSelected: (ReadingStatus) -> Unit,
+    onAddRecord: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -209,7 +212,10 @@ private fun BookDetailBody(
                         MyRecordTabContent(
                             status = uiState.bookDetail.entry?.status,
                             isSaving = uiState.statusChange is StatusChangeState.Saving,
+                            records = uiState.records,
+                            totalPages = uiState.bookDetail.book.totalPages,
                             onStatusSelected = onStatusSelected,
+                            onAddRecord = onAddRecord,
                         )
                 }
             }

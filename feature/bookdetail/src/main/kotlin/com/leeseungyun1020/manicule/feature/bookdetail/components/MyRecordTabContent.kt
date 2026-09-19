@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.semantics
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
+import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.feature.bookdetail.R
 
@@ -24,27 +25,42 @@ import com.leeseungyun1020.manicule.feature.bookdetail.R
 internal fun MyRecordTabContent(
     status: ReadingStatus?,
     isSaving: Boolean,
+    records: List<ReadingRecord>,
+    totalPages: Int?,
     onStatusSelected: (ReadingStatus) -> Unit,
+    onAddRecord: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(MaterialTheme.spacing.screenContent),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.lg),
     ) {
-        Text(stringResource(R.string.book_detail_status_title), style = MaterialTheme.typography.titleMedium)
-        StatusSelector(status = status, onStatusSelected = onStatusSelected, enabled = !isSaving)
-        if (isSaving) {
-            Text(
-                stringResource(R.string.book_detail_status_saving),
-                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        } else if (status == null || status == ReadingStatus.UNSET) {
-            Text(
-                stringResource(R.string.book_detail_status_unset),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
+            Text(stringResource(R.string.book_detail_status_title), style = MaterialTheme.typography.titleMedium)
+            StatusSelector(status = status, onStatusSelected = onStatusSelected, enabled = !isSaving)
+            if (isSaving) {
+                Text(
+                    stringResource(R.string.book_detail_status_saving),
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else if (status == null || status == ReadingStatus.UNSET) {
+                Text(
+                    stringResource(R.string.book_detail_status_unset),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        if (records.isEmpty()) {
+            EmptyReadingRecord(onAddRecord = onAddRecord)
+        } else {
+            ReadingRecordList(
+                records = records,
+                totalPages = totalPages,
+                onAddRecord = onAddRecord,
             )
         }
     }
@@ -53,23 +69,23 @@ internal fun MyRecordTabContent(
 @ManiculePreview
 @Composable
 private fun MyRecordUnregisteredPreview() {
-    ManiculePreviewTheme { MyRecordTabContent(null, false, {}) }
+    ManiculePreviewTheme { MyRecordTabContent(null, false, emptyList(), null, {}, {}) }
 }
 
 @ManiculePreview
 @Composable
 private fun MyRecordReviewOnlyPreview() {
-    ManiculePreviewTheme { MyRecordTabContent(ReadingStatus.UNSET, false, {}) }
+    ManiculePreviewTheme { MyRecordTabContent(ReadingStatus.UNSET, false, emptyList(), null, {}, {}) }
 }
 
 @ManiculePreview
 @Composable
 private fun MyRecordSavingPreview() {
-    ManiculePreviewTheme { MyRecordTabContent(ReadingStatus.READING, true, {}) }
+    ManiculePreviewTheme { MyRecordTabContent(ReadingStatus.READING, true, emptyList(), null, {}, {}) }
 }
 
 @ManiculePreview
 @Composable
 private fun MyRecordRegisteredPreview() {
-    ManiculePreviewTheme { MyRecordTabContent(ReadingStatus.FINISHED, false, {}) }
+    ManiculePreviewTheme { MyRecordTabContent(ReadingStatus.FINISHED, false, emptyList(), null, {}, {}) }
 }
