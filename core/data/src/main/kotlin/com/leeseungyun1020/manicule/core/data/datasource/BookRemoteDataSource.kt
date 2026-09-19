@@ -6,6 +6,12 @@ import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkSearchResponseDto
 interface BookRemoteDataSource {
     suspend fun searchBooks(isbn: String): NlkSearchResponseDto
 
+    suspend fun searchBooksByIsbn(
+        isbn: String,
+        page: Int,
+        size: Int,
+    ): NlkSearchResponseDto = searchBooks(isbn)
+
     suspend fun searchBooksByTitle(
         query: String,
         page: Int,

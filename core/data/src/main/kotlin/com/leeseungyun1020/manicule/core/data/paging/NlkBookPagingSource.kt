@@ -15,17 +15,22 @@ class NlkBookPagingSource(
     private val bookRemoteDataSource: BookRemoteDataSource,
     private val query: String,
     private val pageSize: Int = DEFAULT_PAGE_SIZE,
+    private val isIsbnSearch: Boolean = false,
 ) : PagingSource<Int, Book>() {
 
     companion object {
         const val DEFAULT_PAGE_SIZE = 10
     }
 
-    private val request =
-        listOf(
-            bookRemoteDataSource::searchBooksByTitle,
-            bookRemoteDataSource::searchBooksByAuthor,
-        )
+    private val request: List<suspend (String, Int, Int) -> NlkSearchResponseDto> =
+        if (isIsbnSearch) {
+            listOf(bookRemoteDataSource::searchBooksByIsbn)
+        } else {
+            listOf(
+                bookRemoteDataSource::searchBooksByTitle,
+                bookRemoteDataSource::searchBooksByAuthor,
+            )
+        }
     private val endPageList = MutableList(request.size) { Int.MAX_VALUE }
     private val seenIsbns = mutableSetOf<String>()
 

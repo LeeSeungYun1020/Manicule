@@ -354,6 +354,48 @@ class SearchViewModelTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
+
+    @Test
+    fun onSearch_withIsbnQuery_savesOriginalInputAndRoutesSearch() =
+        runTest(testDispatcher) {
+            val historyRepository = FakeSearchHistoryRepository { flowOf(emptyList()) }
+            val bookRepository = FakeBookRepository()
+            val viewModel = createViewModel(historyRepository, bookRepository)
+
+            val isbnInput = "  978-89-546-9991-4  "
+            viewModel.onSearch(isbnInput)
+            runCurrent()
+            val snapshot = viewModel.searchResults.asSnapshot()
+
+            assertThat(historyRepository.savedQueries).containsExactly("978-89-546-9991-4")
+            assertThat(bookRepository.isbnQueries).containsExactly("9788954699914")
+            assertThat(snapshot).isNotEmpty()
+        }
+
+    @Test
+    fun onQueryChanged_filtersHyphenatedIsbnQuery() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(
+                        listOf(
+                            searchQuery("978-89-546-9991-4"),
+                            searchQuery("Kotlin in Action"),
+                        ),
+                    )
+                }
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                awaitItem()
+                awaitItem()
+
+                viewModel.onQueryChanged("978-89")
+                val typingState = awaitItem()
+                assertThat(typingState.filteredQueries).containsExactly("978-89-546-9991-4")
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 }
 
 private fun createViewModel(
@@ -391,6 +433,7 @@ private class FakeBookRepository(
     private val bookCount: Int = 1,
 ) : BookRepository {
     val searchQueries = mutableListOf<String>()
+    val isbnQueries = mutableListOf<String>()
     var resultTitle: String? = null
 
     override fun observeBook(isbn: String): Flow<Book?> = flowOf(null)
@@ -405,6 +448,11 @@ private class FakeBookRepository(
                 book(resultTitle ?: if (index == 0) query else "$query $index")
             }.asPagingSourceFactory(),
         ).flow
+    }
+
+    override fun searchBooksByIsbn(isbn: String): Flow<PagingData<Book>> {
+        isbnQueries += isbn
+        return searchBooks(isbn)
     }
 }
 
