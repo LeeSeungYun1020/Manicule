@@ -45,8 +45,8 @@ internal fun NlkBookDto.asExternalModelOrNull(): Book? =
     takeIf { it.isbn.isNotBlank() && it.title.isNotBlank() }
         ?.asExternalModel()
 
-// 국립중앙도서관 날짜 형식은 고정 길이 YYYYMMDD이다.
 internal fun parseNlkDate(dateString: String): LocalDate? {
+    // 국립중앙도서관 날짜 형식은 고정 길이 YYYYMMDD이다.
     if (dateString.length != 8) return null
     return runCatching {
         val year = dateString.substring(0, 4).toInt()
