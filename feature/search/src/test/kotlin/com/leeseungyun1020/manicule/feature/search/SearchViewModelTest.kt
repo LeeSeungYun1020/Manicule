@@ -9,6 +9,8 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
 import com.leeseungyun1020.manicule.core.data.repository.SearchHistoryRepository
+import com.leeseungyun1020.manicule.core.domain.search.ClearRecentQueriesUseCase
+import com.leeseungyun1020.manicule.core.domain.search.DeleteRecentQueryUseCase
 import com.leeseungyun1020.manicule.core.domain.search.GetRecentQueriesUseCase
 import com.leeseungyun1020.manicule.core.domain.search.SaveRecentQueryUseCase
 import com.leeseungyun1020.manicule.core.domain.search.SearchBooksUseCase
@@ -354,6 +356,248 @@ class SearchViewModelTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
+
+    @Test
+    fun onDeleteQuery_filtersQueryAndPostsSnackbarMessage_withoutCommittingToRepository() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(listOf(searchQuery("Compose"), searchQuery("Kotlin")))
+                }
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                val initialContent = awaitItem()
+                assertThat((initialContent.recentQueriesState as RecentQueriesState.Content).recentQueries)
+                    .containsExactly("Compose", "Kotlin").inOrder()
+
+                viewModel.onDeleteQuery("Compose")
+
+                val updatedState = awaitItem()
+                assertThat((updatedState.recentQueriesState as RecentQueriesState.Content).recentQueries)
+                    .containsExactly("Kotlin")
+                val message = updatedState.snackbarMessage as SearchSnackbarMessage.QueryDeleted
+                assertThat(message.query).isEqualTo("Compose")
+                assertThat(repository.removedQueries).isEmpty()
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onUndoDelete_restoresQueryAndClearsSnackbarMessage() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(listOf(searchQuery("Compose"), searchQuery("Kotlin")))
+                }
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                awaitItem()
+
+                viewModel.onDeleteQuery("Compose")
+                assertThat((awaitItem().recentQueriesState as RecentQueriesState.Content).recentQueries)
+                    .containsExactly("Kotlin")
+
+                viewModel.onUndoDelete()
+                val restoredState = awaitItem()
+                assertThat((restoredState.recentQueriesState as RecentQueriesState.Content).recentQueries)
+                    .containsExactly("Compose", "Kotlin").inOrder()
+                assertThat(restoredState.snackbarMessage).isNull()
+                assertThat(repository.removedQueries).isEmpty()
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onConfirmDelete_commitsDeletionToRepository() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(listOf(searchQuery("Compose"), searchQuery("Kotlin")))
+                }
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                awaitItem()
+
+                viewModel.onDeleteQuery("Compose")
+                awaitItem()
+
+                viewModel.onConfirmDelete()
+                runCurrent()
+
+                val confirmedState = awaitItem()
+                assertThat(confirmedState.snackbarMessage).isNull()
+                assertThat(repository.removedQueries).containsExactly("Compose")
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onSnackbarDismissed_commitsMatchingDeletionToRepository() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(listOf(searchQuery("Compose"), searchQuery("Kotlin")))
+                }
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                awaitItem()
+
+                viewModel.onDeleteQuery("Compose")
+                val deletedState = awaitItem()
+                val messageId = checkNotNull(deletedState.snackbarMessage?.id)
+
+                viewModel.onSnackbarDismissed(messageId)
+                runCurrent()
+
+                assertThat(awaitItem().snackbarMessage).isNull()
+                assertThat(repository.removedQueries).containsExactly("Compose")
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun consecutiveDelete_commitsPreviousPendingDeletionImmediately() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(listOf(searchQuery("Compose"), searchQuery("Kotlin"), searchQuery("Android")))
+                }
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                awaitItem()
+
+                viewModel.onDeleteQuery("Compose")
+                awaitItem()
+                assertThat(repository.removedQueries).isEmpty()
+
+                viewModel.onDeleteQuery("Kotlin")
+                runCurrent()
+
+                val secondDeleteState = awaitItem()
+                assertThat((secondDeleteState.recentQueriesState as RecentQueriesState.Content).recentQueries)
+                    .containsExactly("Compose", "Android")
+                assertThat((secondDeleteState.snackbarMessage as SearchSnackbarMessage.QueryDeleted).query)
+                    .isEqualTo("Kotlin")
+                assertThat(repository.removedQueries).containsExactly("Compose")
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onClearAllQueries_filtersAllQueriesAndPostsSnackbarMessage() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(listOf(searchQuery("Compose"), searchQuery("Kotlin")))
+                }
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                awaitItem()
+
+                viewModel.onClearAllQueries()
+                val clearedState = awaitItem()
+                assertThat((clearedState.recentQueriesState as RecentQueriesState.Content).recentQueries).isEmpty()
+                assertThat(clearedState.snackbarMessage).isInstanceOf(SearchSnackbarMessage.AllQueriesDeleted::class.java)
+                assertThat(repository.clearHistoryCount).isEqualTo(0)
+
+                viewModel.onUndoDelete()
+                val restoredState = awaitItem()
+                assertThat((restoredState.recentQueriesState as RecentQueriesState.Content).recentQueries)
+                    .containsExactly("Compose", "Kotlin").inOrder()
+                assertThat(restoredState.snackbarMessage).isNull()
+                assertThat(repository.clearHistoryCount).isEqualTo(0)
+
+                viewModel.onClearAllQueries()
+                awaitItem()
+                viewModel.onConfirmDelete()
+                runCurrent()
+                awaitItem()
+                assertThat(repository.clearHistoryCount).isEqualTo(1)
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onSearch_commitsPendingDeletion() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(listOf(searchQuery("Compose"), searchQuery("Kotlin")))
+                }
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                awaitItem()
+
+                viewModel.onDeleteQuery("Compose")
+                awaitItem()
+                assertThat(repository.removedQueries).isEmpty()
+
+                viewModel.onSearch("Android")
+                runCurrent()
+
+                assertThat(repository.removedQueries).containsExactly("Compose")
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onEvent_delegatesToAppropriateActions() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(listOf(searchQuery("Compose")))
+                }
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                awaitItem()
+
+                viewModel.onEvent(SearchUiEvent.DeleteQuery("Compose"))
+                val deleted = awaitItem()
+                val messageId = checkNotNull(deleted.snackbarMessage?.id)
+
+                viewModel.onEvent(SearchUiEvent.UndoDelete)
+                awaitItem()
+                assertThat(repository.removedQueries).isEmpty()
+
+                viewModel.onEvent(SearchUiEvent.DeleteQuery("Compose"))
+                awaitItem()
+                viewModel.onEvent(SearchUiEvent.ConfirmDelete)
+                runCurrent()
+                awaitItem()
+                assertThat(repository.removedQueries).containsExactly("Compose")
+
+                viewModel.onEvent(SearchUiEvent.ClearAllQueries)
+                awaitItem()
+                viewModel.onEvent(SearchUiEvent.SnackbarDismissed(messageId + 2))
+                runCurrent()
+                awaitItem()
+                assertThat(repository.clearHistoryCount).isEqualTo(1)
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
 }
 
 private fun createViewModel(
@@ -362,6 +606,8 @@ private fun createViewModel(
 ) = SearchViewModel(
     getRecentQueries = GetRecentQueriesUseCase(historyRepository),
     saveRecentQuery = SaveRecentQueryUseCase(historyRepository),
+    deleteRecentQuery = DeleteRecentQueryUseCase(historyRepository),
+    clearRecentQueries = ClearRecentQueriesUseCase(historyRepository),
     searchBooks = SearchBooksUseCase(bookRepository),
 )
 
@@ -370,6 +616,8 @@ private class FakeSearchHistoryRepository(
 ) : SearchHistoryRepository {
     val observedLimits = mutableListOf<Int>()
     val savedQueries = mutableListOf<String>()
+    val removedQueries = mutableListOf<String>()
+    var clearHistoryCount = 0
     var saveFailure: Exception? = null
 
     override suspend fun saveQuery(query: String) {
@@ -382,9 +630,13 @@ private class FakeSearchHistoryRepository(
         return flowProvider()
     }
 
-    override suspend fun removeQuery(query: String) = Unit
+    override suspend fun removeQuery(query: String) {
+        removedQueries += query
+    }
 
-    override suspend fun clearHistory() = Unit
+    override suspend fun clearHistory() {
+        clearHistoryCount++
+    }
 }
 
 private class FakeBookRepository(

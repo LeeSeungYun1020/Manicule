@@ -9,6 +9,7 @@ data class SearchUiState(
     val recentQueriesState: RecentQueriesState = RecentQueriesState.Loading,
     val filteredQueries: List<String> = emptyList(),
     val searchRequestId: Long? = null,
+    val snackbarMessage: SearchSnackbarMessage? = null,
 )
 
 enum class SearchInputPhase {
@@ -26,4 +27,18 @@ sealed interface RecentQueriesState {
     data class Content(
         val recentQueries: List<String>,
     ) : RecentQueriesState
+}
+
+@Immutable
+sealed interface SearchSnackbarMessage {
+    val id: Long
+
+    data class QueryDeleted(
+        override val id: Long,
+        val query: String,
+    ) : SearchSnackbarMessage
+
+    data class AllQueriesDeleted(
+        override val id: Long,
+    ) : SearchSnackbarMessage
 }

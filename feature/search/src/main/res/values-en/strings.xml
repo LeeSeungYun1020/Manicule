@@ -16,4 +16,9 @@
     <string name="search_result_append_error">Couldn’t load more results</string>
     <string name="search_retry">Try again</string>
     <string name="search_scan">Scan</string>
+    <string name="search_clear_all">Clear all</string>
+    <string name="search_delete_query">Delete %1$s</string>
+    <string name="search_query_deleted">Search query deleted</string>
+    <string name="search_all_queries_deleted">All recent searches deleted</string>
+    <string name="search_undo">Undo</string>
 </resources>
