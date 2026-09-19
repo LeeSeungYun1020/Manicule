@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.NoPhotography
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
@@ -39,6 +40,7 @@ object ManiculeIcons {
     val Delete: ImageVector = Icons.Default.Delete
     val Star: ImageVector = Icons.Default.Star
     val StarBorder: ImageVector = Icons.Default.StarBorder
+    val Refresh: ImageVector = Icons.Default.Refresh
 
     object Tab {
         val HomeFilled: ImageVector = Icons.Filled.Home

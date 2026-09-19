@@ -44,9 +44,9 @@
 | 위험 경계 | 공용 계약·플랫폼 lifecycle·UI 상태 머신·공유 UI·앱 조립 중 둘 이상을 동시에 의미 변경하면 분리를 우선한다. |
 | 기반 PR 예외 | 공용 계약·다중 레인 공유 집계나 Scanner·WorkManager처럼 독립적으로 검증 가능한 기반은 별도 PR로 허용한다. |
 | 공유 변경 | 기존 호출부에 영향을 주는 공용 컴포넌트 변경은 feature PR과 분리한다. 단순 문자열·아이콘 추가는 예외로 한다. |
-| 앱 조립 | feature 구현과 `app`의 navigation·inset·루트 테마 연결을 분리하며 앱 조립은 I1이 소유한다. |
-| 콜백 계약 | navigation 콜백은 기본 빈 람다를 제공하지 않는다. 조립 누락이 컴파일 단계에서 드러나도록 필수 파라미터로 선언한다. |
-| 미구현 범위 | 후속 흐름은 stub 또는 비활성 상태로 둘 수 있지만 실제 앱에서 접근 가능한 동작으로 노출하지 않는다. |
+| 앱 조립 | destination-local 이동(뒤로가기·닫기)은 feature PR 완료 기준에 최소 app 연결을 포함한다. cross-destination 이동, 전역 백스택, 루트 테마는 I1이 점진 소유한다. |
+| 콜백 계약 | production navigation 콜백은 기본 빈 람다(`{}`)를 금지하고 필수 파라미터로 선언한다. Preview/독립 UI 테스트만 명시적 `{}` 또는 fake 콜백을 허용한다. |
+| 미구현 범위 | 후속 흐름은 stub 또는 비활성 상태로 둘 수 있지만 실제 앱에서 접근 가능한 동작으로 노출하지 않는다. target 미준비 시 no-op 콜백 노출을 금지하고 UI availability로 표현한다. |
 | 테스트 | 변경한 행동과 실패 경로의 테스트를 같은 PR에 포함한다. |
 
 좋은 분할은 `최근 검색어 표시`, `검색 실행과 Paging 결과`, `기록 추가와 자동 상태 전환`처럼 하나의 행동을 끝까지 확인할 수 있다. 기능 전체를 한 PR에 넣거나 DAO·UseCase·화면을 각각 따로 완성하는 방식은 피한다.
@@ -89,6 +89,7 @@
 2. 동일한 Screen, ViewModel 또는 공용 계약을 동시에 소유하지 않는다.
 3. 공유 파일 변경은 문자열·아이콘·Gradle 항목 같은 단순 추가에 한정한다.
 4. 병렬 구현된 컴포넌트의 화면 조립은 별도 통합 PR 하나가 담당한다.
+5. 여러 PR이 `ManiculeNavHost`를 동시에 수정하는 경우 선행 PR 머지 후 최신 `main` 기준으로 rebase하여 직렬화한다.
 
 ---
 
@@ -207,7 +208,7 @@
 | 계층 | 범위 |
 |---|---|
 | Data | ReadingRecord CRUD·책별 관찰과 BookEntry 상태·별점·메모 저장 Repository를 완성한다. 소개·목차 URL 조회도 연결한다. |
-| Domain | 기록 추가·수정·삭제·관찰, 상태 변경, 리뷰 저장 UseCase를 구현한다. 첫 기록의 `WANT → READING` 전환과 남은 페이지 10% 또는 40쪽 이하 신호를 처리한다. |
+| Domain | 기록 추가·수정·삭제·관찰, 상태 변경, 리뷰 저장 UseCase를 구현한다. 기록 추가 시 미등록 책의 READING 등록·UNSET의 READING 전환, 첫 기록의 `WANT → READING` 전환을 기록 저장과 원자적으로 처리하고, 남은 페이지 10% 또는 40쪽 이하 신호를 처리한다. |
 | UI | 책 정보/내 기록 탭, 상태·별점·메모 인라인 편집, 기록 시트, 진행률, 삭제 Undo, 완독 확인 다이얼로그를 구현한다. |
 | 검증 | CRUD, 기본 탭, 자동 상태 전환, 완독 날짜, 리뷰 저장, Undo, 빈 기록과 재독 흐름 테스트를 작성한다. |
 
@@ -291,11 +292,11 @@
 
 `depends_on`: C2; 각 destination은 대응 V 레인의 navigation PR. 앱 루트 테마 연결은 V3의 테마 저장·조회 계약
 
-이 레인만 `app`의 `ManiculeNavHost`, 최상위 화면 간 콜백과 앱 루트 테마 조립을 변경한다. C2의 stub을 유지한 채 시작하고, 각 V 레인의 navigation destination이 머지되는 즉시 해당 destination을 실제 화면으로 교체한다. 모든 V 레인의 완료를 기다리는 전체 배리어는 두지 않는다.
+I1은 마지막에 일괄 조립하는 단계가 아니라 준비된 계약을 즉시 연결하는 점진 통합 레인이다. `app`의 `ManiculeNavHost`, cross-destination 콜백, 전역 백스택 정책(`popUpTo`, `launchSingleTop`), 시작 destination 및 앱 루트 테마를 소유한다. (단, destination-local 뒤로가기 연결은 각 feature PR에서 완료한다.)
 
 조립 작업은 필요한 V 레인이 머지된 destination부터 점진적으로 진행한다.
 
-- stub destination을 실제 `NavGraphBuilder.<name>Screen()`으로 교체하고 화면 간 콜백·인자를 연결한다.
+- stub destination을 실제 `NavGraphBuilder.<name>Screen()`으로 교체하고 화면 간 cross-destination 콜백·인자를 연결한다.
 - TopLevelDestination 4개와 시작 destination을 확인한다.
 - V3의 기존 `GetUserPreferencesUseCase` 흐름이 준비되면 `app/build.gradle.kts`의 `core:domain` 의존성을 활성화하고 `MainActivity.kt`에서 이를 수집해 `ThemeMode`를 루트 `ManiculeTheme`에 전달한다. 새 app ViewModel 도입은 이 계획에서 선결하지 않는다.
 - 검색 → 책 상세 → 기록 추가 → 서재 → 통계 E2E 흐름을 검증한다.
@@ -314,6 +315,6 @@
 | 서재 | C1, C2, C3 | V5 | 정렬·상태 Data/Domain/UI/Undo 테스트 |
 | 홈 | C1, C2, C3 | V6 | V7 공유 집계/UseCase/UI/상태·이동 테스트 |
 | 통계 | 공유 집계는 C1; UI는 C2, C3 | V7 | 기간 집계/UseCase/UI/기간·스크롤 테스트 |
-| 앱 조립 | C2와 대응 V destination | I1 | 실제 destination 연결과 E2E 테스트 |
+| 앱 조립 | C2와 대응 V destination | I1 | 점진적 cross-destination 연결과 E2E 테스트 |
 
 모든 사용자 기능은 하나의 버티컬 레인에 매핑되며, 공용 계약의 의미 변경은 C1·C2·C3 또는 표에 지정된 소유 레인에서만 수행한다.

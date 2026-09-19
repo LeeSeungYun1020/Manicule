@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import org.junit.Before
@@ -24,6 +25,19 @@ class ReadingRecordRepositoryImplTest {
         fakeDao = FakeReadingRecordDao()
         repository = ReadingRecordRepositoryImpl(RoomReadingRecordLocalDataSource(fakeDao))
     }
+
+    @Test
+    fun addRecord_preservesSessionFieldsAndReturnsGeneratedId() =
+        runTest {
+            val now = Instant.parse("2026-09-16T10:00:00Z")
+            val record = ReadingRecord(0, "123", LocalDate(2026, 9, 15), LocalTime(21, 30), 11, 42)
+
+            val id = repository.addRecord(record, now)
+
+            assertThat(id).isEqualTo(1L)
+            assertThat(repository.observeRecordsByIsbn("123").first()).containsExactly(record.copy(id = id))
+            assertThat(fakeDao.updatedEntry).isEqualTo("123" to now)
+        }
 
     @Test
     fun saveRecord_saves_entity_to_dao() =
@@ -88,6 +102,22 @@ private fun recordEntity(
 
 class FakeReadingRecordDao : ReadingRecordDao {
     val records = mutableListOf<ReadingRecordEntity>()
+
+    var updatedEntry: Pair<String, Instant>? = null
+
+    override suspend fun registerEntryForNewRecord(
+        isbn: String,
+        updatedAt: Instant,
+    ) = Unit
+
+    override suspend fun insert(record: ReadingRecordEntity): Long = upsert(record)
+
+    override suspend fun updateEntryForNewRecord(
+        isbn: String,
+        updatedAt: Instant,
+    ) {
+        updatedEntry = isbn to updatedAt
+    }
 
     override suspend fun upsert(record: ReadingRecordEntity): Long {
         if (record.id == 0L) {
