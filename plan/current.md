@@ -5,8 +5,6 @@
 
 ## 완료
 
-- #58 Compose 린트 예외·일반 함수 이름 검사, detekt 미사용 코드/의미 검사 복구 및 ktlint 엔진 고정
-
 - 최근 검색어 조회·저장·전체 삭제·개별 삭제 Repository와 UseCase
 - C1 독서 기록·공유 쿼리 계약
 - C2 feature 모듈·Navigation 경계 계약
@@ -30,7 +28,7 @@
 
 | 레인 | 범위 | `depends_on` | 상태 |
 |---|---|---|---|
-| I1 | `ManiculeNavHost`, 점진적 cross-destination 연결, 전역 백스택 정책, 앱 루트 테마와 E2E 조립 | 각 destination의 V navigation PR; 루트 테마는 V3 테마 계약 | 🚧 검색·책 상세·서재 destination과 검색 결과 → 책 상세 콜백 조립 완료; 검색 → 스캔은 V2 준비 대기, 나머지는 각 V navigation PR과 V3 테마 계약 대기 |
+| I1 | `ManiculeNavHost`, 점진적 cross-destination 연결, 전역 백스택 정책, 앱 루트 테마와 E2E 조립 | 각 destination의 V navigation PR; 루트 테마는 V3 테마 계약 | 🚧 검색·책 상세·서재·스캔 destination과 검색 결과 → 책 상세, 스캔 대체 → 검색 콜백 조립 완료; 검색 → 스캔은 V2 준비 대기, 나머지는 각 V navigation PR과 V3 테마 계약 대기 |
 
 ## 다음 실행 가능 작업
 
