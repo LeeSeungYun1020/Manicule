@@ -647,4 +647,3 @@ dependencies {
 | `core:ui`            | BookCover, BookListItem, BookProgressBar, ReadingCalendarGrid Compose UI 테스트 |
 | `feature:*`          | ViewModel StateFlow 검증, Compose UI 테스트(`createAndroidComposeRule`) |
 | `app`                | Navigation 통합 테스트                                                  |
-
