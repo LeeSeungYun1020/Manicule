@@ -165,7 +165,7 @@ private fun LibraryGrid(
             contentType = { LIBRARY_BOOK_CONTENT_TYPE },
         ) { entry ->
             LibraryBookCard(
-                book = entry.book,
+                entry = entry,
                 onClick = { onBookSelected(entry.book.isbn) },
             )
         }
@@ -330,6 +330,7 @@ private val previewEntries =
                     status = ReadingStatus.READING,
                     addedAt = Instant.fromEpochMilliseconds(0),
                     updatedAt = Instant.fromEpochMilliseconds(1),
+                    currentPage = 205,
                 ),
             )
         }
