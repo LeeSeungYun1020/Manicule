@@ -1,7 +1,6 @@
 # 독서 기록 앱 — 모듈 구조
 
-> 본 문서는 [plan.md](plan.md) 의 기능 요구사항을 기반으로
-> [Android App Architecture (Guide to app architecture)](https://developer.android.com/topic/architecture) 준수하여 구조 설계를 진행
+> [plan.md](plan.md) 기능 요구사항 기반, [Android App Architecture](https://developer.android.com/topic/architecture) 준수.
 
 ---
 
@@ -649,12 +648,3 @@ dependencies {
 | `feature:*`          | ViewModel StateFlow 검증, Compose UI 테스트(`createAndroidComposeRule`) |
 | `app`                | Navigation 통합 테스트                                                  |
 
----
-
-## 8. 모듈화로 얻는 이점
-
-- **빌드 속도**: feature 모듈 변경 시 영향 범위 최소화 → 증분 빌드 단축.
-- **관심사 분리**: 화면 추가가 다른 화면에 영향을 주지 않음.
-- **재사용**: `core:ui` 의 `ReadingCalendarGrid` 를 홈(8주 미리보기)·통계(기간 가변형)에서 동일 구현으로 사용.
-- **테스트 용이성**: `core:model`, `core:common`은 순수 JVM 모듈. `core:domain` UseCase, `core:data` Repository는 Fake 구현체로 Android 환경 없이 단위 테스트 가능.
-- **Offline-first 단순화**: Repository SSOT 원칙으로 UI는 항상 Room의 Flow만 구독.
