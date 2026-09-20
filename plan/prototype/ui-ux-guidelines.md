@@ -12,7 +12,6 @@
     - 프로젝트 테마 토큰 (`Color.kt`, `Type.kt`, `Shape.kt`)
     - WCAG AA 명암비
     - 터치 타겟 최소 크기
-- 재검토 결과 및 결정 사항은 [history/](../../history/README.md) 에 기록한다.
 
 ### 확정된 프로토타입 편차
 
