@@ -58,7 +58,6 @@ fun SearchScreen(
     onDeleteQuery: (String) -> Unit = {},
     onClearAll: () -> Unit = {},
     onUndoDelete: () -> Unit = {},
-    onConfirmDelete: () -> Unit = {},
     onSnackbarDismissed: (Long) -> Unit = {},
 ) {
     val books = searchResults.collectAsLazyPagingItems()
@@ -89,9 +88,8 @@ fun SearchScreen(
         if (result == SnackbarResult.ActionPerformed) {
             onUndoDelete()
         } else {
-            onConfirmDelete()
+            onSnackbarDismissed(message.id)
         }
-        onSnackbarDismissed(message.id)
     }
 
     Scaffold(

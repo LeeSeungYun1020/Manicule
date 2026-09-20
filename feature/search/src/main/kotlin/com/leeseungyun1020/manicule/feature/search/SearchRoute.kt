@@ -51,7 +51,6 @@ fun SearchRoute(
         onDeleteQuery = viewModel::onDeleteQuery,
         onClearAll = viewModel::onClearAllQueries,
         onUndoDelete = viewModel::onUndoDelete,
-        onConfirmDelete = viewModel::onConfirmDelete,
         onSnackbarDismissed = viewModel::onSnackbarDismissed,
         onNavigateBack = {
             viewModel.onConfirmDelete()
