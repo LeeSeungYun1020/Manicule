@@ -313,7 +313,14 @@ class BookDetailScreenTest {
         composeRule.onNodeWithText("30 / 300쪽").assertIsDisplayed()
         composeRule.onNodeWithText("9월 19일").assertIsDisplayed()
         composeRule.onNodeWithText("30p").assertIsDisplayed()
-        composeRule.onNodeWithText("+30p").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(context.getString(R.string.book_detail_edit_record))
+            .assertIsDisplayed()
+            .assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription(context.getString(R.string.book_detail_delete_record))
+            .assertIsDisplayed()
+            .assertIsNotEnabled()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertIsDisplayed()
     }
 
     private companion object {
