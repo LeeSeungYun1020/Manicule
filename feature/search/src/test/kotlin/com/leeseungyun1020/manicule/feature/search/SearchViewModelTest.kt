@@ -17,8 +17,10 @@ import com.leeseungyun1020.manicule.core.domain.search.SearchBooksUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import com.leeseungyun1020.manicule.core.model.SearchQuery
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
@@ -598,18 +600,47 @@ class SearchViewModelTest {
                 cancelAndIgnoreRemainingEvents()
             }
         }
-}
 
-private fun createViewModel(
-    historyRepository: FakeSearchHistoryRepository,
-    bookRepository: FakeBookRepository = FakeBookRepository(),
-) = SearchViewModel(
-    getRecentQueries = GetRecentQueriesUseCase(historyRepository),
-    saveRecentQuery = SaveRecentQueryUseCase(historyRepository),
-    deleteRecentQuery = DeleteRecentQueryUseCase(historyRepository),
-    clearRecentQueries = ClearRecentQueriesUseCase(historyRepository),
-    searchBooks = SearchBooksUseCase(bookRepository),
-)
+    @Test
+    fun onCleared_commitsPendingDeletionViaApplicationScope() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(listOf(searchQuery("Compose"), searchQuery("Kotlin")))
+                }
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                awaitItem()
+
+                viewModel.onDeleteQuery("Compose")
+                awaitItem()
+                assertThat(repository.removedQueries).isEmpty()
+
+                val onClearedMethod = viewModel.javaClass.getDeclaredMethod("onCleared")
+                onClearedMethod.isAccessible = true
+                onClearedMethod.invoke(viewModel)
+                runCurrent()
+
+                assertThat(repository.removedQueries).containsExactly("Compose")
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    private fun createViewModel(
+        historyRepository: FakeSearchHistoryRepository,
+        bookRepository: FakeBookRepository = FakeBookRepository(),
+        applicationScope: CoroutineScope = CoroutineScope(SupervisorJob() + testDispatcher),
+    ) = SearchViewModel(
+        getRecentQueries = GetRecentQueriesUseCase(historyRepository),
+        saveRecentQuery = SaveRecentQueryUseCase(historyRepository),
+        deleteRecentQuery = DeleteRecentQueryUseCase(historyRepository),
+        clearRecentQueries = ClearRecentQueriesUseCase(historyRepository),
+        searchBooks = SearchBooksUseCase(bookRepository),
+        applicationScope = applicationScope,
+    )
+}
 
 private class FakeSearchHistoryRepository(
     private val flowProvider: () -> Flow<List<SearchQuery>>,

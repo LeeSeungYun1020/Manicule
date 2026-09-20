@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.leeseungyun1020.manicule.core.common.di.ApplicationScope
 import com.leeseungyun1020.manicule.core.domain.search.ClearRecentQueriesUseCase
 import com.leeseungyun1020.manicule.core.domain.search.DeleteRecentQueryUseCase
 import com.leeseungyun1020.manicule.core.domain.search.GetRecentQueriesUseCase
@@ -13,6 +14,7 @@ import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.SearchQuery
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +41,7 @@ class SearchViewModel
         private val deleteRecentQuery: DeleteRecentQueryUseCase,
         private val clearRecentQueries: ClearRecentQueriesUseCase,
         private val searchBooks: SearchBooksUseCase,
+        @ApplicationScope private val applicationScope: CoroutineScope,
     ) : ViewModel() {
         private val searchInput = MutableStateFlow(SearchInput())
         private val searchRequest = MutableStateFlow<SearchRequest?>(null)
@@ -189,7 +192,7 @@ class SearchViewModel
         private fun commitPendingDelete() {
             val pending = pendingDelete.value ?: return
             pendingDelete.value = null
-            viewModelScope.launch {
+            applicationScope.launch {
                 try {
                     when (pending) {
                         is PendingDelete.Single -> deleteRecentQuery(pending.query)
