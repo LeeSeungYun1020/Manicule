@@ -491,7 +491,7 @@ class SearchViewModelTest {
 
                 val secondDeleteState = awaitItem()
                 assertThat((secondDeleteState.recentQueriesState as RecentQueriesState.Content).recentQueries)
-                    .containsExactly("Compose", "Android")
+                    .containsExactly("Android")
                 assertThat((secondDeleteState.snackbarMessage as SearchSnackbarMessage.QueryDeleted).query)
                     .isEqualTo("Kotlin")
                 assertThat(repository.removedQueries).containsExactly("Compose")
@@ -567,7 +567,7 @@ class SearchViewModelTest {
         runTest(testDispatcher) {
             val repository =
                 FakeSearchHistoryRepository {
-                    flowOf(listOf(searchQuery("Compose")))
+                    flowOf(listOf(searchQuery("Compose"), searchQuery("Kotlin")))
                 }
             val viewModel = createViewModel(repository)
 

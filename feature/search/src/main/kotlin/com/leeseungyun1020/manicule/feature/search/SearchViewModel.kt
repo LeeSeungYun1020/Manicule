@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -40,19 +41,28 @@ class SearchViewModel
         private val saveRecentQuery: SaveRecentQueryUseCase,
         private val deleteRecentQuery: DeleteRecentQueryUseCase,
         private val clearRecentQueries: ClearRecentQueriesUseCase,
-        private val searchBooks: SearchBooksUseCase,
+        searchBooks: SearchBooksUseCase,
         @ApplicationScope private val applicationScope: CoroutineScope,
     ) : ViewModel() {
         private val searchInput = MutableStateFlow(SearchInput())
         private val searchRequest = MutableStateFlow<SearchRequest?>(null)
-        private val pendingDelete = MutableStateFlow<PendingDelete?>(null)
+        private val deletionState = MutableStateFlow(DeletionState())
         private val snackbarMessage = MutableStateFlow<SearchSnackbarMessage?>(null)
         private var nextRequestId = 0L
         private var nextMessageId = 0L
 
         private val recentQueriesState =
             getRecentQueries()
-                .map { queries -> queries.toRecentQueriesState() }
+                .map { queries ->
+                    val querySet = queries.map { it.query }.toSet()
+                    deletionState.update { state ->
+                        state.copy(
+                            inFlight = state.inFlight.intersect(querySet),
+                            isClearAllInFlight = if (queries.isEmpty()) false else state.isClearAllInFlight,
+                        )
+                    }
+                    queries.toRecentQueriesState()
+                }
                 .retryWhen { cause, attempt ->
                     if (cause is CancellationException || attempt > 0L) {
                         false
@@ -68,18 +78,19 @@ class SearchViewModel
             combine(
                 recentQueriesState,
                 searchInput,
-                pendingDelete,
+                deletionState,
                 snackbarMessage,
-            ) { recentState, input, pending, message ->
+            ) { recentState, input, deletions, message ->
                 val rawQueries =
                     (recentState as? RecentQueriesState.Content)
                         ?.recentQueries
                         .orEmpty()
                 val effectiveQueries =
-                    when (pending) {
-                        null -> rawQueries
-                        is PendingDelete.Single -> rawQueries.filterNot { it == pending.query }
-                        is PendingDelete.All -> emptyList()
+                    if (deletions.isClearAllInFlight || deletions.pending is PendingDelete.All) {
+                        emptyList()
+                    } else {
+                        val pendingQuery = (deletions.pending as? PendingDelete.Single)?.query
+                        rawQueries.filterNot { it == pendingQuery || it in deletions.inFlight }
                     }
                 val effectiveRecentState =
                     when (recentState) {
@@ -139,7 +150,7 @@ class SearchViewModel
             if (normalizedQuery.isEmpty()) return
 
             commitPendingDelete()
-            pendingDelete.value = PendingDelete.Single(normalizedQuery)
+            deletionState.update { it.copy(pending = PendingDelete.Single(normalizedQuery)) }
             snackbarMessage.value =
                 SearchSnackbarMessage.QueryDeleted(
                     id = ++nextMessageId,
@@ -155,7 +166,7 @@ class SearchViewModel
             if (currentQueries.isEmpty()) return
 
             commitPendingDelete()
-            pendingDelete.value = PendingDelete.All(currentQueries)
+            deletionState.update { it.copy(pending = PendingDelete.All(currentQueries)) }
             snackbarMessage.value =
                 SearchSnackbarMessage.AllQueriesDeleted(
                     id = ++nextMessageId,
@@ -163,7 +174,7 @@ class SearchViewModel
         }
 
         fun onUndoDelete() {
-            pendingDelete.value = null
+            deletionState.update { it.copy(pending = null) }
             snackbarMessage.value = null
         }
 
@@ -190,8 +201,24 @@ class SearchViewModel
         }
 
         private fun commitPendingDelete() {
-            val pending = pendingDelete.value ?: return
-            pendingDelete.value = null
+            var pendingToCommit: PendingDelete? = null
+            deletionState.update { state ->
+                pendingToCommit = state.pending
+                when (val pending = state.pending) {
+                    null -> state
+                    is PendingDelete.Single ->
+                        state.copy(
+                            pending = null,
+                            inFlight = state.inFlight + pending.query,
+                        )
+                    is PendingDelete.All ->
+                        state.copy(
+                            pending = null,
+                            isClearAllInFlight = true,
+                        )
+                }
+            }
+            val pending = pendingToCommit ?: return
             applicationScope.launch {
                 try {
                     when (pending) {
@@ -211,6 +238,12 @@ class SearchViewModel
             if (normalizedQuery.isEmpty()) return
 
             commitPendingDelete()
+            deletionState.update { state ->
+                state.copy(
+                    inFlight = state.inFlight - normalizedQuery,
+                    isClearAllInFlight = false,
+                )
+            }
 
             val requestId = nextRequestId++
 
@@ -241,6 +274,12 @@ class SearchViewModel
             super.onCleared()
         }
     }
+
+private data class DeletionState(
+    val pending: PendingDelete? = null,
+    val inFlight: Set<String> = emptySet(),
+    val isClearAllInFlight: Boolean = false,
+)
 
 private sealed interface PendingDelete {
     data class Single(
