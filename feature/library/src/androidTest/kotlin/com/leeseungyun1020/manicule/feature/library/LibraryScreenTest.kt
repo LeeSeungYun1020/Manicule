@@ -435,8 +435,101 @@ class LibraryScreenTest {
             }
         }
 
-        composeRule.onNodeWithTag("bottom_cover_overlay", useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithTag("book_cover_status_overlay", useUnmergedTree = true).assertDoesNotExist()
         composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun readingTab_whenTotalPagesNotPositive_doesNotShowOverlay() {
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState =
+                        LibraryUiState.Content(
+                            ReadingStatus.READING,
+                            listOf(
+                                entry(
+                                    isbn = "9780000000001",
+                                    totalPages = 0,
+                                    currentPage = 1,
+                                ),
+                                entry(
+                                    isbn = "9780000000002",
+                                    totalPages = -1,
+                                    currentPage = 1,
+                                ),
+                            ),
+                        ),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("book_cover_status_overlay", useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun readingTab_whenCurrentPageNull_showsZeroPercentAndNoBookmark() {
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState =
+                        LibraryUiState.Content(
+                            ReadingStatus.READING,
+                            listOf(
+                                entry(
+                                    totalPages = 300,
+                                    currentPage = null,
+                                ),
+                            ),
+                        ),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("0%").assertIsDisplayed()
+        composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun readingTab_whenCurrentPageExceedsTotalPages_clampsToHundredPercent() {
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState =
+                        LibraryUiState.Content(
+                            ReadingStatus.READING,
+                            listOf(
+                                entry(
+                                    totalPages = 300,
+                                    currentPage = 400,
+                                ),
+                            ),
+                        ),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("100%").assertIsDisplayed()
+        composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertIsDisplayed()
     }
 
     @Test
@@ -469,6 +562,35 @@ class LibraryScreenTest {
     }
 
     @Test
+    fun finishedTab_whenFinishedAtNull_doesNotShowOverlay() {
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState =
+                        LibraryUiState.Content(
+                            ReadingStatus.FINISHED,
+                            listOf(
+                                entry(
+                                    status = ReadingStatus.FINISHED,
+                                    finishedAt = null,
+                                ),
+                            ),
+                        ),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("book_cover_status_overlay", useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
     fun wantTab_doesNotShowOverlay() {
         composeRule.setContent {
             ManiculeTheme {
@@ -494,7 +616,7 @@ class LibraryScreenTest {
             }
         }
 
-        composeRule.onNodeWithTag("bottom_cover_overlay", useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithTag("book_cover_status_overlay", useUnmergedTree = true).assertDoesNotExist()
         composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertDoesNotExist()
     }
 

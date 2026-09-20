@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
@@ -63,7 +61,7 @@ fun LibraryBookCard(
             modifier =
                 Modifier
                     .size(BookCoverSize.Medium.width, BookCoverSize.Medium.height)
-                    .clip(RoundedCornerShape(4.dp)),
+                    .clip(MaterialTheme.shapes.extraSmall),
         ) {
             BookCover(
                 imageUrl = entry.book.coverUrl,
@@ -77,11 +75,11 @@ fun LibraryBookCard(
                     modifier =
                         Modifier
                             .align(Alignment.TopEnd)
-                            .padding(end = 10.dp),
+                            .padding(end = MaterialTheme.spacing.sm),
                 )
             }
             if (overlayText != null) {
-                BottomCoverOverlay(
+                BookCoverStatusOverlay(
                     text = overlayText,
                     modifier = Modifier.align(Alignment.BottomCenter),
                 )
@@ -157,6 +155,38 @@ private fun LibraryBookCardFinishedPreview() {
                     addedAt = Instant.fromEpochMilliseconds(0),
                     updatedAt = Instant.fromEpochMilliseconds(0),
                     finishedAt = LocalDate(2026, 7, 8),
+                ),
+            onClick = {},
+            modifier = Modifier.padding(MaterialTheme.spacing.lg),
+        )
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun LibraryBookCardWantPreview() {
+    ManiculePreviewTheme {
+        LibraryBookCard(
+            entry =
+                BookEntry(
+                    book =
+                        Book(
+                            isbn = "9780000000003",
+                            title = "읽고 싶은 책 제목",
+                            author = "작가",
+                            publisher = "출판사",
+                            publishedDate = null,
+                            coverUrl = null,
+                            totalPages = 300,
+                            price = null,
+                            category = null,
+                            tableOfContentsUrl = null,
+                            introductionUrl = null,
+                            summaryUrl = null,
+                        ),
+                    status = ReadingStatus.WANT,
+                    addedAt = Instant.fromEpochMilliseconds(0),
+                    updatedAt = Instant.fromEpochMilliseconds(0),
                 ),
             onClick = {},
             modifier = Modifier.padding(MaterialTheme.spacing.lg),
