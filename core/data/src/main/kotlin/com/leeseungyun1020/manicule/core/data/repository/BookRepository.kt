@@ -11,4 +11,6 @@ interface BookRepository {
     suspend fun syncBook(isbn: String): Result<BookSyncStatus>
 
     fun searchBooks(query: String): Flow<PagingData<Book>>
+
+    fun searchBooksByIsbn(isbn: String): Flow<PagingData<Book>> = searchBooks(isbn)
 }

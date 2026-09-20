@@ -433,4 +433,111 @@ class NlkBookPagingSourceTest {
             assertThat(page3.data.map { it.isbn }).containsExactly("isbn-5", "isbn-6")
             assertThat(page3.nextKey).isNull()
         }
+
+    @Test
+    fun load_withIsbnSearch_callsSearchBooksByIsbnAndEndsPaging() =
+        runTest {
+            var isbnCalls = 0
+            var titleCalls = 0
+            var authorCalls = 0
+            val isbnDataSource =
+                object : BookRemoteDataSource {
+                    override suspend fun searchBooks(isbn: String): NlkSearchResponseDto = TODO("Not needed")
+
+                    override suspend fun searchBooksByIsbn(
+                        isbn: String,
+                        page: Int,
+                        size: Int,
+                    ): NlkSearchResponseDto {
+                        isbnCalls++
+                        return NlkSearchResponseDto(
+                            totalCount = "1",
+                            pageNo = "1",
+                            docs = listOf(NlkBookDto(isbn = isbn, title = "ISBN Book")),
+                        )
+                    }
+
+                    override suspend fun searchBooksByTitle(
+                        query: String,
+                        page: Int,
+                        size: Int,
+                    ): NlkSearchResponseDto {
+                        titleCalls++
+                        return NlkSearchResponseDto(totalCount = "0")
+                    }
+
+                    override suspend fun searchBooksByAuthor(
+                        query: String,
+                        page: Int,
+                        size: Int,
+                    ): NlkSearchResponseDto {
+                        authorCalls++
+                        return NlkSearchResponseDto(totalCount = "0")
+                    }
+                }
+
+            val pagingSource =
+                NlkBookPagingSource(
+                    bookRemoteDataSource = isbnDataSource,
+                    query = "9788954699914",
+                    pageSize = 10,
+                    isIsbnSearch = true,
+                )
+
+            val result =
+                pagingSource.load(
+                    PagingSource.LoadParams.Refresh(key = null, loadSize = 10, placeholdersEnabled = false),
+                ) as PagingSource.LoadResult.Page
+
+            assertThat(result.data.map { it.isbn }).containsExactly("9788954699914")
+            assertThat(result.prevKey).isNull()
+            assertThat(result.nextKey).isNull()
+            assertThat(isbnCalls).isEqualTo(1)
+            assertThat(titleCalls).isEqualTo(0)
+            assertThat(authorCalls).isEqualTo(0)
+        }
+
+    @Test
+    fun load_withIsbnSearch_whenEmpty_returnsEmptyPageAndEndsPaging() =
+        runTest {
+            val emptyIsbnDataSource =
+                object : BookRemoteDataSource {
+                    override suspend fun searchBooks(isbn: String): NlkSearchResponseDto = TODO("Not needed")
+
+                    override suspend fun searchBooksByIsbn(
+                        isbn: String,
+                        page: Int,
+                        size: Int,
+                    ): NlkSearchResponseDto = NlkSearchResponseDto(totalCount = "0", docs = emptyList())
+
+                    override suspend fun searchBooksByTitle(
+                        query: String,
+                        page: Int,
+                        size: Int,
+                    ): NlkSearchResponseDto = TODO("Not needed")
+
+                    override suspend fun searchBooksByAuthor(
+                        query: String,
+                        page: Int,
+                        size: Int,
+                    ): NlkSearchResponseDto = TODO("Not needed")
+                }
+
+            val pagingSource =
+                NlkBookPagingSource(
+                    bookRemoteDataSource = emptyIsbnDataSource,
+                    query = "9788954699914",
+                    pageSize = 10,
+                    isIsbnSearch = true,
+                )
+
+            val result =
+                pagingSource.load(
+                    PagingSource.LoadParams.Refresh(key = null, loadSize = 10, placeholdersEnabled = false),
+                ) as PagingSource.LoadResult.Page
+
+            assertThat(result.data).isEmpty()
+            assertThat(result.prevKey).isNull()
+            assertThat(result.nextKey).isNull()
+        }
 }
