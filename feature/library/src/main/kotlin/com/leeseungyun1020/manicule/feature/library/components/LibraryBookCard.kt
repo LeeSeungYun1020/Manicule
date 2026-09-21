@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
@@ -21,6 +22,7 @@ import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.ui.book.BookCover
 import com.leeseungyun1020.manicule.core.ui.book.BookCoverSize
+import com.leeseungyun1020.manicule.feature.library.R
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlin.math.roundToInt
@@ -42,10 +44,18 @@ fun LibraryBookCard(
 
     val overlayText =
         when (entry.status) {
-            ReadingStatus.READING -> progress?.let { "${(it * 100).roundToInt()}%" }
+            ReadingStatus.READING ->
+                progress?.let {
+                    stringResource(R.string.library_book_progress, (it * 100).roundToInt())
+                }
             ReadingStatus.FINISHED ->
                 entry.finishedAt?.let {
-                    "${it.year}/${it.monthNumber}/${it.dayOfMonth}"
+                    stringResource(
+                        R.string.library_book_finished_date,
+                        it.year,
+                        it.monthNumber,
+                        it.dayOfMonth,
+                    )
                 }
             ReadingStatus.WANT, ReadingStatus.UNSET -> null
         }

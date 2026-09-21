@@ -375,7 +375,7 @@ class LibraryScreenTest {
             }
         }
 
-        composeRule.onNodeWithText("50%").assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.library_book_progress, 50)).assertIsDisplayed()
         composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertIsDisplayed()
     }
 
@@ -405,7 +405,7 @@ class LibraryScreenTest {
             }
         }
 
-        composeRule.onNodeWithText("0%").assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.library_book_progress, 0)).assertIsDisplayed()
         composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertDoesNotExist()
     }
 
@@ -499,7 +499,7 @@ class LibraryScreenTest {
             }
         }
 
-        composeRule.onNodeWithText("0%").assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.library_book_progress, 0)).assertIsDisplayed()
         composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertDoesNotExist()
     }
 
@@ -528,7 +528,7 @@ class LibraryScreenTest {
             }
         }
 
-        composeRule.onNodeWithText("100%").assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.library_book_progress, 100)).assertIsDisplayed()
         composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertIsDisplayed()
     }
 
@@ -557,7 +557,9 @@ class LibraryScreenTest {
             }
         }
 
-        composeRule.onNodeWithText("2026/7/8").assertIsDisplayed()
+        composeRule
+            .onNodeWithText(context.getString(R.string.library_book_finished_date, 2026, 7, 8))
+            .assertIsDisplayed()
         composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertDoesNotExist()
     }
 
