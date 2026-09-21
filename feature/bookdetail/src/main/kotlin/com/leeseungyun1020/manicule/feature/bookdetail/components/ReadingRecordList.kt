@@ -14,9 +14,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeIconButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSectionHeader
@@ -27,8 +29,11 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.core.ui.book.BookProgressBar
 import com.leeseungyun1020.manicule.feature.bookdetail.R
+import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 private enum class ReadingRecordContentType {
     Title,
@@ -124,13 +129,21 @@ private fun ReadingRecordDateHeader(
     totalPagesForDate: Int,
     modifier: Modifier = Modifier,
 ) {
+    val currentYear = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).year }
+    val dateText =
+        if (date.year == currentYear) {
+            stringResource(R.string.book_detail_date_format, date.monthNumber, date.dayOfMonth)
+        } else {
+            stringResource(R.string.book_detail_date_with_year_format, date.year, date.monthNumber, date.dayOfMonth)
+        }
+
     Row(
         modifier = modifier.fillMaxWidth().padding(top = MaterialTheme.spacing.md, bottom = MaterialTheme.spacing.xs),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = stringResource(R.string.book_detail_date_format, date.monthNumber, date.dayOfMonth),
+            text = dateText,
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -192,6 +205,7 @@ private fun ReadingRecordSessionItem(
 }
 
 @ManiculePreview
+@Preview(name = "Locale ko", locale = "ko")
 @Composable
 private fun ReadingRecordListPreview() {
     ManiculePreviewTheme {
