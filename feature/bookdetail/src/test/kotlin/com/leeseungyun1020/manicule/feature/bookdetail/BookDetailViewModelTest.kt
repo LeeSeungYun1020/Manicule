@@ -370,6 +370,21 @@ class BookDetailViewModelTest {
         }
 
     @Test
+    fun recordObservationFailure_keepsBookContent_andRecoversRecordsIndependently() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.recordFlow = flow { throw IllegalStateException("Record observation failed") }
+
+            val viewModel = createViewModel()
+            runCurrent()
+
+            val content = contentState(viewModel)
+            assertThat(content.bookDetail.book).isEqualTo(testBook)
+            assertThat(content.records).isEmpty()
+            assertThat(recordRepository.observationCount).isEqualTo(1)
+        }
+
+    @Test
     fun addRecord_success_callsUseCase_andResetsRecordSavingState() =
         runTest(dispatcher) {
             bookRepository.books.value = testBook
@@ -579,11 +594,17 @@ class BookDetailViewModelTest {
 
     private class FakeReadingRecordRepository : ReadingRecordRepository {
         val records = MutableStateFlow<List<ReadingRecord>>(emptyList())
+        var recordFlow: Flow<List<ReadingRecord>> = records
+        var observationCount = 0
         var addCalls = 0
         var addGate: CompletableDeferred<Unit>? = null
         var addFailure: Exception? = null
 
-        override fun observeRecordsByIsbn(isbn: String): Flow<List<ReadingRecord>> = records
+        override fun observeRecordsByIsbn(isbn: String): Flow<List<ReadingRecord>> =
+            flow {
+                observationCount++
+                emitAll(recordFlow)
+            }
 
         override suspend fun addRecord(
             record: ReadingRecord,

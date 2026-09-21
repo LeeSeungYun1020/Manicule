@@ -8,21 +8,30 @@ import com.leeseungyun1020.manicule.core.domain.library.ChangeReadingStatusUseCa
 import com.leeseungyun1020.manicule.core.domain.record.AddReadingRecordUseCase
 import com.leeseungyun1020.manicule.core.domain.record.ObserveBookRecordsUseCase
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
+import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import javax.inject.Inject
+
+private fun Flow<List<ReadingRecord>>.recoverRecordObservation() =
+    onStart { emit(emptyList()) }
+        .catch { cause ->
+            if (cause is CancellationException) throw cause
+        }
 
 @HiltViewModel
 class BookDetailViewModel
@@ -184,7 +193,7 @@ class BookDetailViewModel
                 viewModelScope.launch {
                     combine(
                         getBookDetail(isbn),
-                        observeBookRecords(isbn),
+                        observeBookRecords(isbn).recoverRecordObservation(),
                     ) { bookDetail, records -> bookDetail to records }
                         .catch { _uiState.value = BookDetailUiState.Error }
                         .collect { (bookDetail, records) ->
