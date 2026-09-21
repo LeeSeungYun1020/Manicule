@@ -20,10 +20,12 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.feature.bookdetail.R
+import com.leeseungyun1020.manicule.feature.bookdetail.RecordLoadState
 
 private enum class MyRecordContentType {
     Status,
     EmptyRecords,
+    RecordError,
 }
 
 @Composable
@@ -31,9 +33,11 @@ internal fun MyRecordTabContent(
     status: ReadingStatus?,
     isSaving: Boolean,
     records: List<ReadingRecord>,
+    recordLoadState: RecordLoadState,
     totalPages: Int?,
     onStatusSelected: (ReadingStatus) -> Unit,
     onAddRecord: () -> Unit,
+    onRetryRecords: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val maxEndPage = remember(records) { records.maxOfOrNull { it.endPage } ?: 0 }
@@ -75,7 +79,14 @@ internal fun MyRecordTabContent(
             }
         }
 
-        if (records.isEmpty()) {
+        if (recordLoadState is RecordLoadState.Failed) {
+            item(
+                key = "reading-records-error",
+                contentType = MyRecordContentType.RecordError,
+            ) {
+                ReadingRecordLoadError(onRetry = onRetryRecords)
+            }
+        } else if (records.isEmpty()) {
             item(
                 key = "empty-reading-records",
                 contentType = MyRecordContentType.EmptyRecords,
@@ -96,23 +107,29 @@ internal fun MyRecordTabContent(
 @ManiculePreview
 @Composable
 private fun MyRecordUnregisteredPreview() {
-    ManiculePreviewTheme { MyRecordTabContent(null, false, emptyList(), null, {}, {}) }
+    ManiculePreviewTheme { MyRecordTabContent(null, false, emptyList(), RecordLoadState.Idle, null, {}, {}, {}) }
 }
 
 @ManiculePreview
 @Composable
 private fun MyRecordReviewOnlyPreview() {
-    ManiculePreviewTheme { MyRecordTabContent(ReadingStatus.UNSET, false, emptyList(), null, {}, {}) }
+    ManiculePreviewTheme {
+        MyRecordTabContent(ReadingStatus.UNSET, false, emptyList(), RecordLoadState.Idle, null, {}, {}, {})
+    }
 }
 
 @ManiculePreview
 @Composable
 private fun MyRecordSavingPreview() {
-    ManiculePreviewTheme { MyRecordTabContent(ReadingStatus.READING, true, emptyList(), null, {}, {}) }
+    ManiculePreviewTheme {
+        MyRecordTabContent(ReadingStatus.READING, true, emptyList(), RecordLoadState.Idle, null, {}, {}, {})
+    }
 }
 
 @ManiculePreview
 @Composable
 private fun MyRecordRegisteredPreview() {
-    ManiculePreviewTheme { MyRecordTabContent(ReadingStatus.FINISHED, false, emptyList(), null, {}, {}) }
+    ManiculePreviewTheme {
+        MyRecordTabContent(ReadingStatus.FINISHED, false, emptyList(), RecordLoadState.Idle, null, {}, {}, {})
+    }
 }

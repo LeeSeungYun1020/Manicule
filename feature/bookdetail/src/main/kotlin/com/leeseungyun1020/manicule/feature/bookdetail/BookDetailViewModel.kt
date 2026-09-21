@@ -20,18 +20,31 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import javax.inject.Inject
 
-private fun Flow<List<ReadingRecord>>.recoverRecordObservation() =
-    onStart { emit(emptyList()) }
-        .catch { cause ->
-            if (cause is CancellationException) throw cause
-        }
+private sealed interface RecordObservation {
+    data class Loaded(
+        val records: List<ReadingRecord>,
+    ) : RecordObservation
+
+    data object Failed : RecordObservation
+}
+
+private fun ObserveBookRecordsUseCase.observeWithRetry(
+    isbn: String,
+    retrySignals: Flow<Long>,
+): Flow<RecordObservation> =
+    retrySignals.flatMapLatest {
+        this(isbn)
+            .map<List<ReadingRecord>, RecordObservation>(RecordObservation::Loaded)
+            .catch { emit(RecordObservation.Failed) }
+    }
 
 @HiltViewModel
 class BookDetailViewModel
@@ -55,6 +68,7 @@ class BookDetailViewModel
         private var statusAttempt = 0L
         private var recordSaving: RecordSavingState = RecordSavingState.Idle
         private var recordAttempt = 0L
+        private val recordRetrySignals = MutableStateFlow(0L)
         private val _uiState = MutableStateFlow<BookDetailUiState>(BookDetailUiState.Loading)
         val uiState: StateFlow<BookDetailUiState> = _uiState.asStateFlow()
 
@@ -75,6 +89,7 @@ class BookDetailViewModel
         }
 
         fun retry() {
+            recordRetrySignals.update { it + 1 }
             observeBookDetail()
 
             if (refreshStatus == RefreshStatus.Refreshing) return
@@ -193,12 +208,20 @@ class BookDetailViewModel
                 viewModelScope.launch {
                     combine(
                         getBookDetail(isbn),
-                        observeBookRecords(isbn).recoverRecordObservation(),
-                    ) { bookDetail, records -> bookDetail to records }
+                        observeBookRecords.observeWithRetry(isbn, recordRetrySignals),
+                    ) { bookDetail, recordObservation -> bookDetail to recordObservation }
                         .catch { _uiState.value = BookDetailUiState.Error }
-                        .collect { (bookDetail, records) ->
+                        .collect { (bookDetail, recordObservation) ->
                             _uiState.update { state ->
                                 if (bookDetail != null) {
+                                    val previousRecords = (state as? BookDetailUiState.Content)?.records.orEmpty()
+                                    val (records, recordLoadState) =
+                                        when (recordObservation) {
+                                            is RecordObservation.Loaded ->
+                                                recordObservation.records to RecordLoadState.Idle
+
+                                            RecordObservation.Failed -> previousRecords to RecordLoadState.Failed
+                                        }
                                     val tab =
                                         selectedTab ?: if (bookDetail.entry != null) {
                                             BookDetailTab.MyRecords
@@ -213,6 +236,7 @@ class BookDetailViewModel
                                         refreshStatus = refreshStatus,
                                         statusChange = statusChange,
                                         recordSaving = recordSaving,
+                                        recordLoadState = recordLoadState,
                                     )
                                 } else {
                                     state

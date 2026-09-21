@@ -21,7 +21,14 @@ sealed interface BookDetailUiState {
         val refreshStatus: RefreshStatus = RefreshStatus.Idle,
         val statusChange: StatusChangeState = StatusChangeState.Idle,
         val recordSaving: RecordSavingState = RecordSavingState.Idle,
+        val recordLoadState: RecordLoadState = RecordLoadState.Idle,
     ) : BookDetailUiState
+}
+
+sealed interface RecordLoadState {
+    data object Idle : RecordLoadState
+
+    data object Failed : RecordLoadState
 }
 
 sealed interface StatusChangeState {

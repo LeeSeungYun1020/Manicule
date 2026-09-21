@@ -489,6 +489,29 @@ class BookDetailScreenTest {
         composeRule.onNodeWithText("오후 2:00 · 100–100쪽").assertDoesNotExist()
     }
 
+    @Test
+    fun recordLoadFailure_keepsStatusControls_andRetriesRecords() {
+        var retried = false
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING).copy(recordLoadState = RecordLoadState.Failed),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = { retried = true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_status_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_records_error_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+
+        assertThat(retried).isTrue()
+    }
+
     @Composable
     private fun BookDetailScreen(
         uiState: BookDetailUiState,

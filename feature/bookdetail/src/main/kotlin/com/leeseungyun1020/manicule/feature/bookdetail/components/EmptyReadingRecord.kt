@@ -56,6 +56,45 @@ internal fun EmptyReadingRecord(
     }
 }
 
+@Composable
+internal fun ReadingRecordLoadError(
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+    ) {
+        Text(
+            text = stringResource(R.string.book_detail_records_title),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        ManiculeEmptyState(
+            title = stringResource(R.string.book_detail_records_error_title),
+            description = stringResource(R.string.book_detail_records_error_description),
+            icon = {
+                Icon(
+                    imageVector = ManiculeIcons.NetworkError,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            },
+            actions = {
+                ManiculeButton(
+                    onClick = onRetry,
+                    text = stringResource(R.string.book_detail_retry),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = ManiculeIcons.Refresh,
+                            contentDescription = null,
+                        )
+                    },
+                )
+            },
+        )
+    }
+}
+
 @ManiculePreview
 @Composable
 private fun EmptyReadingRecordPreview() {

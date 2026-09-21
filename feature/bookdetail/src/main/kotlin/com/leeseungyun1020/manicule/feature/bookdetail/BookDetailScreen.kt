@@ -265,9 +265,11 @@ private fun BookDetailBody(
                             status = uiState.bookDetail.entry?.status,
                             isSaving = uiState.statusChange is StatusChangeState.Saving,
                             records = uiState.records,
+                            recordLoadState = uiState.recordLoadState,
                             totalPages = uiState.bookDetail.book.totalPages,
                             onStatusSelected = onStatusSelected,
                             onAddRecord = onAddRecord,
+                            onRetryRecords = onRetry,
                         )
                 }
             }

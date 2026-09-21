@@ -381,7 +381,18 @@ class BookDetailViewModelTest {
             val content = contentState(viewModel)
             assertThat(content.bookDetail.book).isEqualTo(testBook)
             assertThat(content.records).isEmpty()
+            assertThat(content.recordLoadState).isEqualTo(RecordLoadState.Failed)
             assertThat(recordRepository.observationCount).isEqualTo(1)
+
+            recordRepository.recordFlow = recordRepository.records
+            recordRepository.records.value = listOf(testRecord)
+            viewModel.retry()
+            advanceUntilIdle()
+
+            val recovered = contentState(viewModel)
+            assertThat(recovered.records).containsExactly(testRecord)
+            assertThat(recovered.recordLoadState).isEqualTo(RecordLoadState.Idle)
+            assertThat(recordRepository.observationCount).isEqualTo(2)
         }
 
     @Test

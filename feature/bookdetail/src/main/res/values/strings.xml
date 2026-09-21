@@ -32,6 +32,8 @@
     <string name="book_detail_records_title">독서 기록</string>
     <string name="book_detail_records_empty_title">아직 독서 기록이 없어요</string>
     <string name="book_detail_records_empty_description">읽은 쪽수를 추가하면 매일 얼마나 읽었는지 확인할 수 있어요</string>
+    <string name="book_detail_records_error_title">독서 기록을 불러오지 못했어요</string>
+    <string name="book_detail_records_error_description">잠시 후 다시 시도해 주세요</string>
     <string name="book_detail_add_record_button">기록 추가</string>
     <string name="book_detail_add_record_title">기록 추가</string>
     <string name="book_detail_record_date">날짜</string>

@@ -32,6 +32,8 @@
     <string name="book_detail_records_title">Reading records</string>
     <string name="book_detail_records_empty_title">No reading records yet</string>
     <string name="book_detail_records_empty_description">Add pages read to track your daily reading</string>
+    <string name="book_detail_records_error_title">Couldn’t load reading records</string>
+    <string name="book_detail_records_error_description">Please try again shortly</string>
     <string name="book_detail_add_record_button">Add record</string>
     <string name="book_detail_add_record_title">Add record</string>
     <string name="book_detail_record_date">Date</string>
