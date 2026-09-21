@@ -232,6 +232,14 @@ class SearchViewModel
                         }
                     }.onFailure {
                         if (it is CancellationException) throw it
+                        deletionState.update { state ->
+                            when (pending) {
+                                is PendingDelete.Single ->
+                                    state.copy(inFlight = state.inFlight - pending.query)
+                                is PendingDelete.All ->
+                                    state.copy(isClearAllInFlight = false)
+                            }
+                        }
                     }
                 }
             }

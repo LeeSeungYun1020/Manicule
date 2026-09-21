@@ -37,6 +37,7 @@ import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@Suppress("LargeClass")
 class SearchViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
@@ -729,6 +730,68 @@ class SearchViewModelTest {
             }
         }
 
+    @Test
+    fun onDeleteQuery_whenDeletionFails_restoresOptimisticInFlightState() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(listOf(searchQuery("Compose"), searchQuery("Kotlin")))
+                }
+            repository.removeFailure = RuntimeException("DB delete failed")
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                val initialContent = awaitItem()
+                assertThat((initialContent.recentQueriesState as RecentQueriesState.Content).recentQueries)
+                    .containsExactly("Compose", "Kotlin")
+
+                viewModel.onDeleteQuery("Compose")
+                awaitItem()
+
+                viewModel.onConfirmDelete()
+                val confirmingState = awaitItem()
+                assertThat(confirmingState.snackbarMessage).isNull()
+
+                runCurrent()
+
+                val restoredState = awaitItem()
+                assertThat((restoredState.recentQueriesState as RecentQueriesState.Content).recentQueries)
+                    .containsExactly("Compose", "Kotlin")
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onClearAllQueries_whenClearFails_restoresOptimisticClearAllInFlightState() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(listOf(searchQuery("Compose"), searchQuery("Kotlin")))
+                }
+            repository.clearFailure = RuntimeException("DB clear failed")
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                awaitItem()
+
+                viewModel.onClearAllQueries()
+                awaitItem()
+
+                viewModel.onConfirmDelete()
+                val confirmingState = awaitItem()
+                assertThat(confirmingState.snackbarMessage).isNull()
+
+                runCurrent()
+
+                val restoredState = awaitItem()
+                assertThat((restoredState.recentQueriesState as RecentQueriesState.Content).recentQueries)
+                    .containsExactly("Compose", "Kotlin")
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
     private fun createViewModel(
         historyRepository: FakeSearchHistoryRepository,
         bookRepository: FakeBookRepository = FakeBookRepository(),
@@ -752,6 +815,8 @@ private class FakeSearchHistoryRepository(
     val operations = mutableListOf<String>()
     var clearHistoryCount = 0
     var saveFailure: Exception? = null
+    var removeFailure: Exception? = null
+    var clearFailure: Exception? = null
 
     override suspend fun saveQuery(query: String) {
         saveFailure?.let { throw it }
@@ -765,11 +830,13 @@ private class FakeSearchHistoryRepository(
     }
 
     override suspend fun removeQuery(query: String) {
+        removeFailure?.let { throw it }
         operations += "remove:$query"
         removedQueries += query
     }
 
     override suspend fun clearHistory() {
+        clearFailure?.let { throw it }
         operations += "clear"
         clearHistoryCount++
     }
