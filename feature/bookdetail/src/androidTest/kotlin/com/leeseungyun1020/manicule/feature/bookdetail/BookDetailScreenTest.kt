@@ -1,5 +1,6 @@
 package com.leeseungyun1020.manicule.feature.bookdetail
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,12 +11,16 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.Density
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
@@ -23,9 +28,12 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookDetail
 import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.feature.bookdetail.components.BookDetailExpandableText
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 import org.junit.Rule
 import org.junit.Test
 import com.leeseungyun1020.manicule.core.designsystem.R as DesignSystemR
@@ -223,27 +231,409 @@ class BookDetailScreenTest {
         heights.forEach { assertThat(it).isWithin(1f).of(heights.first()) }
     }
 
+    @Test
+    fun myRecordsTab_emptyRecords_displaysEmptyStateAndOpensBottomSheet() {
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING, emptyList()),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_records_empty_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertIsDisplayed()
+    }
+
+    @Test
+    fun addRecordBottomSheet_enterPages_andSaves() {
+        var savedStart = 0
+        var savedEnd = 0
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING, emptyList()),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onAddRecord = { _, _, start, end ->
+                        savedStart = start
+                        savedEnd = end
+                        1L
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_end_page)).performTextInput("25")
+        composeRule.onAllNodesWithText(context.getString(R.string.book_detail_add_record_button))[1].performClick()
+
+        assertThat(savedStart).isEqualTo(1)
+        assertThat(savedEnd).isEqualTo(25)
+    }
+
+    @Test
+    fun addRecordBottomSheet_preservesDraftAfterStateRestoration() {
+        val restorationTester = StateRestorationTester(composeRule)
+        restorationTester.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING, emptyList()),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_date_yesterday)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_end_page)).performTextInput("25")
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_date_yesterday)).assertIsSelected()
+        composeRule.onNodeWithText("25").assertIsDisplayed()
+    }
+
+    @Test
+    fun addRecordBottomSheet_formIsVerticallyScrollable() {
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING, emptyList()),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+
+        composeRule.onNode(
+            hasScrollAction() and
+                hasAnyDescendant(hasText(context.getString(R.string.book_detail_add_record_title))),
+            useUnmergedTree = true,
+        ).assertExists()
+    }
+
+    @Test
+    fun addRecordBottomSheet_staysOpenWhileSaving_andClosesAfterSuccess() {
+        var uiState by mutableStateOf(recordsState(ReadingStatus.READING, emptyList()))
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onAddRecord = { _, _, _, _ ->
+                        uiState = uiState.copy(recordSaving = RecordSavingState.Saving(1L))
+                        1L
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_end_page)).performTextInput("25")
+        composeRule.onAllNodesWithText(context.getString(R.string.book_detail_add_record_button))[1].performClick()
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertIsDisplayed()
+        composeRule.onAllNodesWithText(context.getString(R.string.book_detail_add_record_button))[1].assertIsNotEnabled()
+
+        composeRule.runOnIdle { uiState = uiState.copy(recordSaving = RecordSavingState.Succeeded(1L)) }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertDoesNotExist()
+    }
+
+    @Test
+    fun addRecordBottomSheet_restoredIdleDoesNotDiscardInFlightDraft() {
+        var uiState by mutableStateOf(recordsState(ReadingStatus.READING, emptyList()))
+        val restorationTester = StateRestorationTester(composeRule)
+        restorationTester.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onAddRecord = { _, _, _, _ ->
+                        uiState = uiState.copy(recordSaving = RecordSavingState.Saving(1L))
+                        1L
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_end_page)).performTextInput("25")
+        composeRule.onAllNodesWithText(context.getString(R.string.book_detail_add_record_button))[1].performClick()
+        composeRule.runOnIdle { uiState = uiState.copy(recordSaving = RecordSavingState.Idle) }
+
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertIsDisplayed()
+        composeRule.onNodeWithText("25").assertIsDisplayed()
+    }
+
+    @Test
+    fun addRecordBottomSheet_failureKeepsDraftForRetry() {
+        var uiState by mutableStateOf(recordsState(ReadingStatus.READING, emptyList()))
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onAddRecord = { _, _, _, _ ->
+                        uiState = uiState.copy(recordSaving = RecordSavingState.Saving(1L))
+                        1L
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_end_page)).performTextInput("25")
+        composeRule.onAllNodesWithText(context.getString(R.string.book_detail_add_record_button))[1].performClick()
+        composeRule.runOnIdle { uiState = uiState.copy(recordSaving = RecordSavingState.Failed(1L)) }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertIsDisplayed()
+        composeRule.onNodeWithText("25").assertIsDisplayed()
+    }
+
+    @Test
+    fun recordSavingFailed_showsSnackbar() {
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING).copy(recordSaving = RecordSavingState.Failed(1L)),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_save_error)).assertIsDisplayed()
+    }
+
+    @Test
+    fun myRecordsTab_withRecords_displaysProgressBarAndGroupedSessions() {
+        val record = ReadingRecord(1L, "123", LocalDate(2026, 9, 19), LocalTime(14, 0), 1, 30)
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING, listOf(record)),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("30 / 300쪽").assertIsDisplayed()
+        composeRule.onNodeWithText("9월 19일").assertIsDisplayed()
+        composeRule.onNodeWithText("30p").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(context.getString(R.string.book_detail_edit_record))
+            .assertIsDisplayed()
+            .assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription(context.getString(R.string.book_detail_delete_record))
+            .assertIsDisplayed()
+            .assertIsNotEnabled()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertIsDisplayed()
+    }
+
+    @Test
+    fun myRecordsTab_longHistory_onlyComposesVisibleSessions() {
+        val records =
+            (1L..100L).map { id ->
+                ReadingRecord(id, "123", LocalDate(2026, 9, 19), LocalTime(14, 0), id.toInt(), id.toInt())
+            }
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING, records),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("오후 2:00 · 1–1쪽").assertIsDisplayed()
+        composeRule.onNodeWithText("오후 2:00 · 100–100쪽").assertDoesNotExist()
+    }
+
+    @Test
+    fun recordLoadFailure_keepsStatusControls_andRetriesRecords() {
+        var retried = false
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING).copy(recordLoadState = RecordLoadState.Failed(1L)),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = { retried = true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_status_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_records_error_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+
+        assertThat(retried).isTrue()
+    }
+
+    @Test
+    fun recordLoadFailure_withRetainedRecords_keepsRecordsAndShowsRetrySnackbar() {
+        var retried = false
+        val record =
+            ReadingRecord(
+                id = 1L,
+                isbn = "123",
+                date = LocalDate(2026, 9, 19),
+                time = LocalTime(14, 0),
+                startPage = 1,
+                endPage = 30,
+            )
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING, listOf(record)).copy(recordLoadState = RecordLoadState.Failed(1L)),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = { retried = true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).assertIsDisplayed()
+        composeRule.onNodeWithText("30p").assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+
+        assertThat(retried).isTrue()
+    }
+
+    @Test
+    fun recordLoadFailure_repeatedFailure_rearmsRetrySnackbar() {
+        var retryCount = 0
+        val record =
+            ReadingRecord(
+                id = 1L,
+                isbn = "123",
+                date = LocalDate(2026, 9, 19),
+                time = LocalTime(14, 0),
+                startPage = 1,
+                endPage = 30,
+            )
+        var uiState by mutableStateOf(
+            recordsState(ReadingStatus.READING, listOf(record)).copy(recordLoadState = RecordLoadState.Failed(1L)),
+        )
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {
+                        retryCount++
+                        uiState = uiState.copy(recordLoadState = RecordLoadState.Failed(2L))
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+        assertThat(retryCount).isEqualTo(1)
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+        assertThat(retryCount).isEqualTo(2)
+    }
+
+    @Composable
+    private fun BookDetailScreen(
+        uiState: BookDetailUiState,
+        onNavigateBack: () -> Unit,
+        onTabSelected: (BookDetailTab) -> Unit,
+        onRetry: () -> Unit,
+        onStatusSelected: (ReadingStatus) -> Unit,
+        onStatusErrorDismissed: () -> Unit,
+        onAddRecord: (LocalDate, LocalTime, Int, Int) -> Long? = { _, _, _, _ -> null },
+        onRecordErrorDismissed: () -> Unit = {},
+    ) {
+        com.leeseungyun1020.manicule.feature.bookdetail.BookDetailScreen(
+            uiState = uiState,
+            onNavigateBack = onNavigateBack,
+            onTabSelected = onTabSelected,
+            onRetry = onRetry,
+            onStatusSelected = onStatusSelected,
+            onStatusErrorDismissed = onStatusErrorDismissed,
+            onAddRecord = onAddRecord,
+            onRecordErrorDismissed = onRecordErrorDismissed,
+        )
+    }
+
     private companion object {
         val statusLabels =
             listOf(R.string.book_detail_status_want, R.string.book_detail_status_reading, R.string.book_detail_status_finished)
 
-        fun recordsState(status: ReadingStatus?) =
-            contentState().copy(
-                selectedTab = BookDetailTab.MyRecords,
-                bookDetail = BookDetail(
-                    testBook,
-                    status?.let {
-                        BookEntry(
-                            testBook,
-                            it,
-                            rating = 4,
-                            memo = "Keep review",
-                            addedAt = Instant.fromEpochMilliseconds(1),
-                            updatedAt = Instant.fromEpochMilliseconds(1),
-                        )
-                    },
-                ),
-            )
+        fun recordsState(
+            status: ReadingStatus?,
+            records: List<ReadingRecord> = emptyList(),
+        ) = contentState().copy(
+            selectedTab = BookDetailTab.MyRecords,
+            records = records,
+            bookDetail = BookDetail(
+                testBook,
+                status?.let {
+                    BookEntry(
+                        testBook,
+                        it,
+                        rating = 4,
+                        memo = "Keep review",
+                        addedAt = Instant.fromEpochMilliseconds(1),
+                        updatedAt = Instant.fromEpochMilliseconds(1),
+                    )
+                },
+            ),
+        )
 
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val testBook =

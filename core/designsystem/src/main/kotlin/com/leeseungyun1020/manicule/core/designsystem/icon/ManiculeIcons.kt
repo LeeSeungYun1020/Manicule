@@ -7,6 +7,7 @@ import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudOff
@@ -58,4 +59,5 @@ object ManiculeIcons {
     val CameraOff: ImageVector = Icons.Default.NoPhotography
     val Sort: ImageVector = Icons.AutoMirrored.Filled.Sort
     val Close: ImageVector = Icons.Default.Close
+    val Bookmark: ImageVector = Icons.Default.Bookmark
 }
