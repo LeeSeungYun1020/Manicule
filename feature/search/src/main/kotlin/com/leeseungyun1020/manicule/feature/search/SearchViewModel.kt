@@ -47,7 +47,6 @@ class SearchViewModel
         searchBooks: SearchBooksUseCase,
         @param:ApplicationScope private val applicationScope: CoroutineScope,
     ) : ViewModel() {
-        private val historyMutationMutex = Mutex()
         private val searchInput = MutableStateFlow(SearchInput())
         private val searchRequest = MutableStateFlow<SearchRequest?>(null)
         private val deletionState = MutableStateFlow(DeletionState())
@@ -285,6 +284,10 @@ class SearchViewModel
         override fun onCleared() {
             commitPendingDelete()
             super.onCleared()
+        }
+
+        companion object {
+            private val historyMutationMutex = Mutex()
         }
     }
 
