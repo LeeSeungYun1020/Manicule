@@ -628,6 +628,80 @@ class SearchViewModelTest {
             }
         }
 
+    @Test
+    fun onSearch_whilePendingDelete_clearsSnackbarMessage() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(listOf(searchQuery("Compose"), searchQuery("Kotlin")))
+                }
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                awaitItem()
+
+                viewModel.onDeleteQuery("Compose")
+                val deletedState = awaitItem()
+                assertThat(deletedState.snackbarMessage).isNotNull()
+
+                viewModel.onSearch("Kotlin")
+                runCurrent()
+
+                val searchSubmittedState = awaitItem()
+                assertThat(searchSubmittedState.snackbarMessage).isNull()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onSearch_whilePendingDeleteOfSameQuery_commitsDeletionThenSavesQuery() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(listOf(searchQuery("Compose")))
+                }
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                awaitItem()
+
+                viewModel.onDeleteQuery("Compose")
+                awaitItem()
+
+                viewModel.onSearch("Compose")
+                runCurrent()
+
+                assertThat(repository.operations).containsExactly("remove:Compose", "save:Compose").inOrder()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun onSearch_whilePendingClearAll_commitsClearAllThenSavesQuery() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(listOf(searchQuery("Compose"), searchQuery("Kotlin")))
+                }
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                awaitItem()
+
+                viewModel.onClearAllQueries()
+                awaitItem()
+
+                viewModel.onSearch("Android")
+                runCurrent()
+
+                assertThat(repository.operations).containsExactly("clear", "save:Android").inOrder()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
     private fun createViewModel(
         historyRepository: FakeSearchHistoryRepository,
         bookRepository: FakeBookRepository = FakeBookRepository(),
@@ -648,11 +722,13 @@ private class FakeSearchHistoryRepository(
     val observedLimits = mutableListOf<Int>()
     val savedQueries = mutableListOf<String>()
     val removedQueries = mutableListOf<String>()
+    val operations = mutableListOf<String>()
     var clearHistoryCount = 0
     var saveFailure: Exception? = null
 
     override suspend fun saveQuery(query: String) {
         saveFailure?.let { throw it }
+        operations += "save:$query"
         savedQueries += query
     }
 
@@ -662,10 +738,12 @@ private class FakeSearchHistoryRepository(
     }
 
     override suspend fun removeQuery(query: String) {
+        operations += "remove:$query"
         removedQueries += query
     }
 
     override suspend fun clearHistory() {
+        operations += "clear"
         clearHistoryCount++
     }
 }

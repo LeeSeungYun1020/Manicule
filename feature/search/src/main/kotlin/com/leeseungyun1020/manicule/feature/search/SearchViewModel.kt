@@ -15,6 +15,7 @@ import com.leeseungyun1020.manicule.core.model.SearchQuery
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -200,7 +201,7 @@ class SearchViewModel
             }
         }
 
-        private fun commitPendingDelete() {
+        private fun commitPendingDelete(): Job? {
             var pendingToCommit: PendingDelete? = null
             deletionState.update { state ->
                 pendingToCommit = state.pending
@@ -218,8 +219,8 @@ class SearchViewModel
                         )
                 }
             }
-            val pending = pendingToCommit ?: return
-            applicationScope.launch {
+            val pending = pendingToCommit ?: return null
+            return applicationScope.launch {
                 try {
                     when (pending) {
                         is PendingDelete.Single -> deleteRecentQuery(pending.query)
@@ -237,13 +238,8 @@ class SearchViewModel
             val normalizedQuery = query.trim()
             if (normalizedQuery.isEmpty()) return
 
-            commitPendingDelete()
-            deletionState.update { state ->
-                state.copy(
-                    inFlight = state.inFlight - normalizedQuery,
-                    isClearAllInFlight = false,
-                )
-            }
+            val commitJob = commitPendingDelete()
+            snackbarMessage.value = null
 
             val requestId = nextRequestId++
 
@@ -258,13 +254,20 @@ class SearchViewModel
                     id = requestId,
                     query = normalizedQuery,
                 )
-            viewModelScope.launch {
+            applicationScope.launch {
                 try {
+                    commitJob?.join()
+                    deletionState.update { state ->
+                        state.copy(
+                            inFlight = state.inFlight - normalizedQuery,
+                            isClearAllInFlight = false,
+                        )
+                    }
                     saveRecentQuery(normalizedQuery)
                 } catch (cancellation: CancellationException) {
                     throw cancellation
                 } catch (_: Exception) {
-                    // 검색 기록 저장 실패는 검색 결과를 막지 않는다.
+                    // 검색 기록 저장 실패는 검색 흐름을 차단하지 않는다.
                 }
             }
         }
