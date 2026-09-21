@@ -587,6 +587,32 @@ class BookDetailScreenTest {
         assertThat(retryCount).isEqualTo(2)
     }
 
+    @Test
+    fun finishCheck_displaysDialog_andInteractionsWork() {
+        var confirmedAttempt: Long? = null
+        val finishCheck = FinishCheckState.Pending(attempt = 1L, maxEndPage = 254, totalPages = 264)
+        val uiState = recordsState(ReadingStatus.READING).copy(finishCheck = finishCheck)
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onFinishCheckConfirmed = { confirmedAttempt = it },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_finish_check_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_finish_check_message, 254, 264)).assertIsDisplayed()
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_finish_check_confirm)).performClick()
+        assertThat(confirmedAttempt).isEqualTo(1L)
+    }
+
     @Composable
     private fun BookDetailScreen(
         uiState: BookDetailUiState,
@@ -597,6 +623,8 @@ class BookDetailScreenTest {
         onStatusErrorDismissed: () -> Unit,
         onAddRecord: (LocalDate, LocalTime, Int, Int) -> Long? = { _, _, _, _ -> null },
         onRecordErrorDismissed: () -> Unit = {},
+        onFinishCheckConfirmed: (Long) -> Unit = {},
+        onFinishCheckDismissed: () -> Unit = {},
     ) {
         com.leeseungyun1020.manicule.feature.bookdetail.BookDetailScreen(
             uiState = uiState,
@@ -607,6 +635,8 @@ class BookDetailScreenTest {
             onStatusErrorDismissed = onStatusErrorDismissed,
             onAddRecord = onAddRecord,
             onRecordErrorDismissed = onRecordErrorDismissed,
+            onFinishCheckConfirmed = onFinishCheckConfirmed,
+            onFinishCheckDismissed = onFinishCheckDismissed,
         )
     }
 

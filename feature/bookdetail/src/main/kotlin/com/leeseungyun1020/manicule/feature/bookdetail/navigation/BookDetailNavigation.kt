@@ -21,6 +21,8 @@ fun NavGraphBuilder.bookDetailScreen(onNavigateBack: () -> Unit) {
             onStatusErrorDismissed = viewModel::dismissStatusError,
             onAddRecord = viewModel::addRecord,
             onRecordErrorDismissed = viewModel::dismissRecordError,
+            onFinishCheckConfirmed = viewModel::confirmFinish,
+            onFinishCheckDismissed = viewModel::dismissFinishCheck,
         )
     }
 }

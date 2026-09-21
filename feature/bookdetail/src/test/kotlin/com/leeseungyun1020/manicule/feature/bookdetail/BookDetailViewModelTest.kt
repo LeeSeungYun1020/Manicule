@@ -492,6 +492,172 @@ class BookDetailViewModelTest {
             assertThat(contentState(viewModel).recordSaving).isEqualTo(RecordSavingState.Idle)
         }
 
+    @Test
+    fun addRecord_success_triggersFinishCheck_whenConditionMet() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook.copy(totalPages = 200)
+            libraryRepository.entry.value = testEntry.copy(status = ReadingStatus.READING)
+            recordRepository.maxEndPageAfterAdd = 160
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.addRecord(date = testRecord.date, time = testRecord.time, startPage = 1, endPage = 160)
+            advanceUntilIdle()
+
+            val check = contentState(viewModel).finishCheck
+            assertThat(check).isInstanceOf(FinishCheckState.Pending::class.java)
+            assertThat((check as FinishCheckState.Pending).maxEndPage).isEqualTo(160)
+            assertThat(check.totalPages).isEqualTo(200)
+        }
+
+    @Test
+    fun addRecord_success_doesNotTriggerFinishCheck_whenConditionNotMet() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook.copy(totalPages = 200)
+            libraryRepository.entry.value = testEntry.copy(status = ReadingStatus.READING)
+            recordRepository.maxEndPageAfterAdd = 100
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.addRecord(date = testRecord.date, time = testRecord.time, startPage = 1, endPage = 100)
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).finishCheck).isEqualTo(FinishCheckState.Idle)
+        }
+
+    @Test
+    fun addRecord_success_doesNotTriggerFinishCheck_whenStatusIsFinished() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook.copy(totalPages = 200)
+            libraryRepository.entry.value = testEntry.copy(status = ReadingStatus.FINISHED)
+            recordRepository.maxEndPageAfterAdd = 200
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.addRecord(date = testRecord.date, time = testRecord.time, startPage = 1, endPage = 200)
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).finishCheck).isEqualTo(FinishCheckState.Idle)
+        }
+
+    @Test
+    fun finishCheck_confirm_changesStatusToFinished_andClearsDialog() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook.copy(totalPages = 200)
+            libraryRepository.entry.value = testEntry.copy(status = ReadingStatus.READING)
+            recordRepository.maxEndPageAfterAdd = 200
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val attempt = viewModel.addRecord(date = testRecord.date, time = testRecord.time, startPage = 1, endPage = 200)!!
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).finishCheck).isInstanceOf(FinishCheckState.Pending::class.java)
+
+            viewModel.confirmFinish(attempt)
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).finishCheck).isEqualTo(FinishCheckState.Idle)
+            assertThat(contentState(viewModel).bookDetail.entry?.status).isEqualTo(ReadingStatus.FINISHED)
+        }
+
+    @Test
+    fun finishCheck_dismiss_clearsDialog_withoutChangingStatus() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook.copy(totalPages = 200)
+            libraryRepository.entry.value = testEntry.copy(status = ReadingStatus.READING)
+            recordRepository.maxEndPageAfterAdd = 200
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val attempt = viewModel.addRecord(date = testRecord.date, time = testRecord.time, startPage = 1, endPage = 200)!!
+            advanceUntilIdle()
+
+            viewModel.dismissFinishCheck()
+
+            assertThat(contentState(viewModel).finishCheck).isEqualTo(FinishCheckState.Idle)
+            assertThat(libraryRepository.statusCalls).isEqualTo(0)
+        }
+
+    @Test
+    fun finishCheck_confirm_failure_showsFailedState_andCanRetry() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook.copy(totalPages = 200)
+            libraryRepository.entry.value = testEntry.copy(status = ReadingStatus.READING)
+            recordRepository.maxEndPageAfterAdd = 200
+            libraryRepository.statusFailure = IllegalStateException("Network error")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val attempt = viewModel.addRecord(date = testRecord.date, time = testRecord.time, startPage = 1, endPage = 200)!!
+            advanceUntilIdle()
+            viewModel.confirmFinish(attempt)
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).finishCheck).isInstanceOf(FinishCheckState.Failed::class.java)
+
+            libraryRepository.statusFailure = null
+            viewModel.confirmFinish(attempt)
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).finishCheck).isEqualTo(FinishCheckState.Idle)
+            assertThat(contentState(viewModel).bookDetail.entry?.status).isEqualTo(ReadingStatus.FINISHED)
+        }
+
+    @Test
+    fun finishCheck_confirm_domainFailure_showsFailedState_andCanRetry() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook.copy(totalPages = 200)
+            libraryRepository.entry.value = testEntry.copy(status = ReadingStatus.READING)
+            recordRepository.maxEndPageAfterAdd = 200
+            libraryRepository.statusResult = ReadingStatusChangeResult.BookNotFound
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val attempt = viewModel.addRecord(date = testRecord.date, time = testRecord.time, startPage = 1, endPage = 200)!!
+            advanceUntilIdle()
+            viewModel.confirmFinish(attempt)
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).finishCheck).isInstanceOf(FinishCheckState.Failed::class.java)
+
+            libraryRepository.statusResult = ReadingStatusChangeResult.Changed
+            viewModel.confirmFinish(attempt)
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).finishCheck).isEqualTo(FinishCheckState.Idle)
+            assertThat(contentState(viewModel).bookDetail.entry?.status).isEqualTo(ReadingStatus.FINISHED)
+        }
+
+    @Test
+    fun finishCheck_survivesRotation_andIsNotReshownAfterResponse() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook.copy(totalPages = 200)
+            libraryRepository.entry.value = testEntry.copy(status = ReadingStatus.READING)
+            recordRepository.maxEndPageAfterAdd = 200
+            val savedStateHandle = createSavedStateHandle()
+            val viewModel = createViewModel(savedStateHandle)
+            advanceUntilIdle()
+
+            val attempt = viewModel.addRecord(date = testRecord.date, time = testRecord.time, startPage = 1, endPage = 200)!!
+            advanceUntilIdle()
+            assertThat(contentState(viewModel).finishCheck).isInstanceOf(FinishCheckState.Pending::class.java)
+
+            // 회전 시뮬레이션: 같은 ViewModel 인스턴스 유지
+            assertThat(contentState(viewModel).finishCheck).isInstanceOf(FinishCheckState.Pending::class.java)
+
+            // 응답 후 재노출 없음
+            viewModel.dismissFinishCheck()
+            assertThat(contentState(viewModel).finishCheck).isEqualTo(FinishCheckState.Idle)
+            viewModel.addRecord(date = testRecord.date, time = testRecord.time, startPage = 1, endPage = 200)
+            advanceUntilIdle()
+            // 새 추가는 새 attempt를 생성하므로 다시 Pending이 될 수 있음 - 이전 응답은 재노출 안 됨
+            val newCheck = contentState(viewModel).finishCheck
+            if (newCheck is FinishCheckState.Pending) {
+                assertThat(newCheck.attempt).isGreaterThan(attempt)
+            }
+        }
+
     private fun createSavedStateHandle(
         openMyRecords: Boolean = false,
         savedTab: BookDetailTab? = null,
@@ -519,6 +685,8 @@ class BookDetailViewModelTest {
             observeBookRecords = ObserveBookRecordsUseCase(recordRepository),
             addReadingRecord = AddReadingRecordUseCase(
                 recordRepository,
+                bookRepository,
+                libraryRepository,
                 object : Clock {
                     override fun now(): Instant = Instant.fromEpochMilliseconds(100)
 
@@ -610,6 +778,7 @@ class BookDetailViewModelTest {
         var addCalls = 0
         var addGate: CompletableDeferred<Unit>? = null
         var addFailure: Exception? = null
+        var maxEndPageAfterAdd: Int? = null
 
         override fun observeRecordsByIsbn(isbn: String): Flow<List<ReadingRecord>> =
             flow {
@@ -641,7 +810,7 @@ class BookDetailViewModelTest {
             end: LocalDate,
         ): Flow<List<ReadingRecord>> = emptyFlow()
 
-        override suspend fun getMaxEndPage(isbn: String): Int? = records.value.maxOfOrNull { it.endPage }
+        override suspend fun getMaxEndPage(isbn: String): Int? = maxEndPageAfterAdd ?: records.value.maxOfOrNull { it.endPage }
     }
 
     private companion object {

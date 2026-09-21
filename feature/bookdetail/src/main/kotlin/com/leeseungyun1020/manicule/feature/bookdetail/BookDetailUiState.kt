@@ -22,7 +22,36 @@ sealed interface BookDetailUiState {
         val statusChange: StatusChangeState = StatusChangeState.Idle,
         val recordSaving: RecordSavingState = RecordSavingState.Idle,
         val recordLoadState: RecordLoadState = RecordLoadState.Idle,
+        val finishCheck: FinishCheckState = FinishCheckState.Idle,
     ) : BookDetailUiState
+}
+
+sealed interface FinishCheckState {
+    data object Idle : FinishCheckState
+
+    sealed interface Active : FinishCheckState {
+        val attempt: Long
+        val maxEndPage: Int
+        val totalPages: Int
+    }
+
+    data class Pending(
+        override val attempt: Long,
+        override val maxEndPage: Int,
+        override val totalPages: Int,
+    ) : Active
+
+    data class Confirming(
+        override val attempt: Long,
+        override val maxEndPage: Int,
+        override val totalPages: Int,
+    ) : Active
+
+    data class Failed(
+        override val attempt: Long,
+        override val maxEndPage: Int,
+        override val totalPages: Int,
+    ) : Active
 }
 
 sealed interface RecordLoadState {

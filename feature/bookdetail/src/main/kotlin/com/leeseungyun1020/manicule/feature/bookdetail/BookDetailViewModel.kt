@@ -48,6 +48,10 @@ private fun ObserveBookRecordsUseCase.observeWithRetry(
             .catch { emit(RecordObservation.Failed(attempt)) }
     }
 
+private inline fun MutableStateFlow<BookDetailUiState>.updateContent(transform: (BookDetailUiState.Content) -> BookDetailUiState.Content) {
+    update { state -> if (state is BookDetailUiState.Content) transform(state) else state }
+}
+
 @HiltViewModel
 class BookDetailViewModel
     @Inject
@@ -66,9 +70,7 @@ class BookDetailViewModel
             } ?: if (openMyRecords) BookDetailTab.MyRecords else null
         private var refreshStatus: RefreshStatus = RefreshStatus.Idle
         private var observationJob: Job? = null
-        private var statusChange: StatusChangeState = StatusChangeState.Idle
         private var statusAttempt = 0L
-        private var recordSaving: RecordSavingState = RecordSavingState.Idle
         private var recordAttempt = 0L
         private val recordRetrySignals = MutableStateFlow(0L)
         private val _uiState = MutableStateFlow<BookDetailUiState>(BookDetailUiState.Loading)
@@ -81,13 +83,7 @@ class BookDetailViewModel
         fun selectTab(tab: BookDetailTab) {
             selectedTab = tab
             savedStateHandle[SELECTED_TAB_KEY] = tab.name
-            _uiState.update { state ->
-                if (state is BookDetailUiState.Content) {
-                    state.copy(selectedTab = tab)
-                } else {
-                    state
-                }
-            }
+            _uiState.updateContent { it.copy(selectedTab = tab) }
         }
 
         fun retry() {
@@ -120,37 +116,37 @@ class BookDetailViewModel
         }
 
         fun changeReadingStatus(status: ReadingStatus) {
-            if (_uiState.value !is BookDetailUiState.Content ||
-                status == ReadingStatus.UNSET ||
-                statusChange is StatusChangeState.Saving
-            ) {
-                return
-            }
+            val content = _uiState.value as? BookDetailUiState.Content ?: return
+            if (status == ReadingStatus.UNSET || content.statusChange is StatusChangeState.Saving) return
             val attempt = ++statusAttempt
-            updateStatusChange(StatusChangeState.Saving(status))
+            _uiState.updateContent { it.copy(statusChange = StatusChangeState.Saving(status)) }
             viewModelScope.launch {
-                try {
-                    val result = changeStatus(isbn, status)
-                    updateStatusChange(
-                        when (result) {
-                            ReadingStatusChangeResult.Changed, ReadingStatusChangeResult.Unchanged -> StatusChangeState.Idle
-                            ReadingStatusChangeResult.BookNotFound, ReadingStatusChangeResult.InvalidStatus -> StatusChangeState.Failed(
-                                status,
-                                attempt,
+                runCatching { changeStatus(isbn, status) }
+                    .onSuccess { result ->
+                        _uiState.updateContent {
+                            it.copy(
+                                statusChange =
+                                    when (result) {
+                                        ReadingStatusChangeResult.Changed, ReadingStatusChangeResult.Unchanged -> StatusChangeState.Idle
+                                        ReadingStatusChangeResult.BookNotFound, ReadingStatusChangeResult.InvalidStatus ->
+                                            StatusChangeState.Failed(status, attempt)
+                                    },
                             )
-                        },
-                    )
-                } catch (cancelled: CancellationException) {
-                    updateStatusChange(StatusChangeState.Idle)
-                    throw cancelled
-                } catch (_: Exception) {
-                    updateStatusChange(StatusChangeState.Failed(status, attempt))
-                }
+                        }
+                    }.onFailure { e ->
+                        if (e is CancellationException) {
+                            _uiState.updateContent { it.copy(statusChange = StatusChangeState.Idle) }
+                            throw e
+                        }
+                        _uiState.updateContent { it.copy(statusChange = StatusChangeState.Failed(status, attempt)) }
+                    }
             }
         }
 
         fun dismissStatusError() {
-            if (statusChange is StatusChangeState.Failed) updateStatusChange(StatusChangeState.Idle)
+            _uiState.updateContent {
+                if (it.statusChange is StatusChangeState.Failed) it.copy(statusChange = StatusChangeState.Idle) else it
+            }
         }
 
         fun addRecord(
@@ -159,15 +155,12 @@ class BookDetailViewModel
             startPage: Int,
             endPage: Int,
         ): Long? {
-            if (_uiState.value !is BookDetailUiState.Content ||
-                recordSaving is RecordSavingState.Saving
-            ) {
-                return null
-            }
+            val content = _uiState.value as? BookDetailUiState.Content ?: return null
+            if (content.recordSaving is RecordSavingState.Saving) return null
             val attempt = ++recordAttempt
-            updateRecordSaving(RecordSavingState.Saving(attempt))
+            _uiState.updateContent { it.copy(recordSaving = RecordSavingState.Saving(attempt)) }
             viewModelScope.launch {
-                try {
+                runCatching {
                     addReadingRecord(
                         isbn = isbn,
                         date = date,
@@ -175,32 +168,77 @@ class BookDetailViewModel
                         startPage = startPage,
                         endPage = endPage,
                     )
-                    updateRecordSaving(RecordSavingState.Succeeded(attempt))
-                } catch (cancelled: CancellationException) {
-                    updateRecordSaving(RecordSavingState.Idle)
-                    throw cancelled
-                } catch (_: Exception) {
-                    updateRecordSaving(RecordSavingState.Failed(attempt))
+                }.onSuccess { result ->
+                    _uiState.updateContent { state ->
+                        val check =
+                            if (result.shouldCheckFinish) {
+                                FinishCheckState.Pending(attempt, result.maxEndPage, state.bookDetail.book.totalPages ?: 0)
+                            } else {
+                                FinishCheckState.Idle
+                            }
+                        state.copy(recordSaving = RecordSavingState.Succeeded(attempt), finishCheck = check)
+                    }
+                }.onFailure { e ->
+                    if (e is CancellationException) {
+                        _uiState.updateContent { it.copy(recordSaving = RecordSavingState.Idle) }
+                        throw e
+                    }
+                    _uiState.updateContent { it.copy(recordSaving = RecordSavingState.Failed(attempt)) }
                 }
             }
             return attempt
         }
 
         fun dismissRecordError() {
-            if (recordSaving is RecordSavingState.Failed) updateRecordSaving(RecordSavingState.Idle)
-        }
-
-        private fun updateRecordSaving(value: RecordSavingState) {
-            recordSaving = value
-            _uiState.update { state ->
-                if (state is BookDetailUiState.Content) state.copy(recordSaving = value) else state
+            _uiState.updateContent {
+                if (it.recordSaving is RecordSavingState.Failed) it.copy(recordSaving = RecordSavingState.Idle) else it
             }
         }
 
-        private fun updateStatusChange(value: StatusChangeState) {
-            statusChange = value
-            _uiState.update { state ->
-                if (state is BookDetailUiState.Content) state.copy(statusChange = value) else state
+        fun confirmFinish(attempt: Long) {
+            val content = _uiState.value as? BookDetailUiState.Content ?: return
+            val check = content.finishCheck as? FinishCheckState.Active ?: return
+            if (check is FinishCheckState.Confirming || check.attempt != attempt) return
+            val confirming = FinishCheckState.Confirming(check.attempt, check.maxEndPage, check.totalPages)
+            _uiState.updateContent { it.copy(finishCheck = confirming) }
+            viewModelScope.launch {
+                runCatching { changeStatus(isbn, ReadingStatus.FINISHED) }
+                    .onSuccess { result ->
+                        _uiState.updateContent { state ->
+                            when (result) {
+                                ReadingStatusChangeResult.Changed, ReadingStatusChangeResult.Unchanged -> {
+                                    state.copy(finishCheck = FinishCheckState.Idle)
+                                }
+
+                                ReadingStatusChangeResult.BookNotFound, ReadingStatusChangeResult.InvalidStatus -> {
+                                    state.copy(
+                                        finishCheck = FinishCheckState.Failed(
+                                            confirming.attempt,
+                                            confirming.maxEndPage,
+                                            confirming.totalPages,
+                                        ),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    .onFailure { e ->
+                        if (e is CancellationException) {
+                            _uiState.updateContent { it.copy(finishCheck = FinishCheckState.Idle) }
+                            throw e
+                        }
+                        _uiState.updateContent {
+                            it.copy(
+                                finishCheck = FinishCheckState.Failed(confirming.attempt, confirming.maxEndPage, confirming.totalPages),
+                            )
+                        }
+                    }
+            }
+        }
+
+        fun dismissFinishCheck() {
+            _uiState.updateContent {
+                if (it.finishCheck !is FinishCheckState.Idle) it.copy(finishCheck = FinishCheckState.Idle) else it
             }
         }
 
@@ -217,7 +255,8 @@ class BookDetailViewModel
                         .collect { (bookDetail, recordObservation) ->
                             _uiState.update { state ->
                                 if (bookDetail != null) {
-                                    val previousRecords = (state as? BookDetailUiState.Content)?.records.orEmpty()
+                                    val previous = state as? BookDetailUiState.Content
+                                    val previousRecords = previous?.records.orEmpty()
                                     val (records, recordLoadState) =
                                         when (recordObservation) {
                                             is RecordObservation.Loaded ->
@@ -238,9 +277,10 @@ class BookDetailViewModel
                                         records = records,
                                         selectedTab = tab,
                                         refreshStatus = refreshStatus,
-                                        statusChange = statusChange,
-                                        recordSaving = recordSaving,
+                                        statusChange = previous?.statusChange ?: StatusChangeState.Idle,
+                                        recordSaving = previous?.recordSaving ?: RecordSavingState.Idle,
                                         recordLoadState = recordLoadState,
+                                        finishCheck = previous?.finishCheck ?: FinishCheckState.Idle,
                                     )
                                 } else {
                                     state

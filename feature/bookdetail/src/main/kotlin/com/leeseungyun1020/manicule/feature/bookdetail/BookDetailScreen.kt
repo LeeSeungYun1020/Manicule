@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeDialog
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeEmptyState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSnackbarHost
@@ -61,6 +62,8 @@ fun BookDetailScreen(
     onStatusErrorDismissed: () -> Unit,
     onAddRecord: (LocalDate, LocalTime, Int, Int) -> Long?,
     onRecordErrorDismissed: () -> Unit,
+    onFinishCheckConfirmed: (Long) -> Unit,
+    onFinishCheckDismissed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -131,6 +134,44 @@ fun BookDetailScreen(
             },
         )
     }
+
+    val finishCheck = (uiState as? BookDetailUiState.Content)?.finishCheck as? FinishCheckState.Active
+    if (finishCheck != null) {
+        FinishCheckDialog(
+            finishCheck = finishCheck,
+            onConfirm = onFinishCheckConfirmed,
+            onDismiss = onFinishCheckDismissed,
+        )
+    }
+}
+
+@Composable
+private fun FinishCheckDialog(
+    finishCheck: FinishCheckState.Active,
+    onConfirm: (Long) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val isConfirming = finishCheck is FinishCheckState.Confirming
+    ManiculeDialog(
+        onDismissRequest = { if (!isConfirming) onDismiss() },
+        icon = {
+            Icon(
+                imageVector = ManiculeIcons.Celebration,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        },
+        title = stringResource(R.string.book_detail_finish_check_title),
+        message = stringResource(
+            R.string.book_detail_finish_check_message,
+            finishCheck.maxEndPage,
+            finishCheck.totalPages,
+        ),
+        confirmText = stringResource(R.string.book_detail_finish_check_confirm),
+        dismissText = stringResource(R.string.book_detail_finish_check_dismiss),
+        onConfirm = { if (!isConfirming) onConfirm(finishCheck.attempt) },
+        onDismiss = { if (!isConfirming) onDismiss() },
+    )
 }
 
 @Composable
@@ -342,6 +383,8 @@ private fun BookDetailScreenPreview() {
             onStatusErrorDismissed = {},
             onAddRecord = { _, _, _, _ -> null },
             onRecordErrorDismissed = {},
+            onFinishCheckConfirmed = {},
+            onFinishCheckDismissed = {},
         )
     }
 }
@@ -359,6 +402,8 @@ private fun BookDetailLoadingPreview() {
             onStatusErrorDismissed = {},
             onAddRecord = { _, _, _, _ -> null },
             onRecordErrorDismissed = {},
+            onFinishCheckConfirmed = {},
+            onFinishCheckDismissed = {},
         )
     }
 }
@@ -376,6 +421,8 @@ private fun BookDetailErrorPreview() {
             onStatusErrorDismissed = {},
             onAddRecord = { _, _, _, _ -> null },
             onRecordErrorDismissed = {},
+            onFinishCheckConfirmed = {},
+            onFinishCheckDismissed = {},
         )
     }
 }
@@ -398,6 +445,8 @@ private fun BookDetailRefreshErrorPreview() {
             onStatusErrorDismissed = {},
             onAddRecord = { _, _, _, _ -> null },
             onRecordErrorDismissed = {},
+            onFinishCheckConfirmed = {},
+            onFinishCheckDismissed = {},
         )
     }
 }
@@ -420,6 +469,8 @@ private fun BookDetailRefreshingPreview() {
             onStatusErrorDismissed = {},
             onAddRecord = { _, _, _, _ -> null },
             onRecordErrorDismissed = {},
+            onFinishCheckConfirmed = {},
+            onFinishCheckDismissed = {},
         )
     }
 }
@@ -441,6 +492,32 @@ private fun BookDetailReviewOnlyPreview() {
             onStatusErrorDismissed = {},
             onAddRecord = { _, _, _, _ -> null },
             onRecordErrorDismissed = {},
+            onFinishCheckConfirmed = {},
+            onFinishCheckDismissed = {},
+        )
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun BookDetailFinishCheckPreview() {
+    ManiculePreviewTheme {
+        BookDetailScreen(
+            uiState =
+                BookDetailUiState.Content(
+                    bookDetail = BookDetail(previewBook, entry = null),
+                    selectedTab = BookDetailTab.MyRecords,
+                    finishCheck = FinishCheckState.Pending(attempt = 1L, maxEndPage = 254, totalPages = 264),
+                ),
+            onNavigateBack = {},
+            onTabSelected = {},
+            onRetry = {},
+            onStatusSelected = {},
+            onStatusErrorDismissed = {},
+            onAddRecord = { _, _, _, _ -> null },
+            onRecordErrorDismissed = {},
+            onFinishCheckConfirmed = {},
+            onFinishCheckDismissed = {},
         )
     }
 }
