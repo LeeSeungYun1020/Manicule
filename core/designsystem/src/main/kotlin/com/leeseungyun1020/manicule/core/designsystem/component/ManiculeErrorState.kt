@@ -84,11 +84,15 @@ fun ManiculeNetworkErrorState(
 
 @ManiculePreview
 @Composable
-private fun ManiculeNetworkErrorStateWithRetryPreview() {
+private fun ManiculeErrorStateWithRetryPreview() {
     ManiculePreviewTheme {
         Box(Modifier.padding(MaterialTheme.spacing.lg)) {
-            ManiculeNetworkErrorState(
+            ManiculeErrorState(
+                title = "카메라를 사용할 수 없어요",
+                icon = ManiculeIcons.CameraOff,
+                description = "설정에서 카메라 권한을 허용해 주세요",
                 onRetry = {},
+                retryText = "설정 열기",
             )
         }
     }
@@ -96,10 +100,26 @@ private fun ManiculeNetworkErrorStateWithRetryPreview() {
 
 @ManiculePreview
 @Composable
-private fun ManiculeNetworkErrorStateWithoutRetryPreview() {
+private fun ManiculeErrorStateWithoutRetryPreview() {
     ManiculePreviewTheme {
         Box(Modifier.padding(MaterialTheme.spacing.lg)) {
-            ManiculeNetworkErrorState()
+            ManiculeErrorState(
+                title = "지원하지 않는 기기예요",
+                icon = ManiculeIcons.CameraOff,
+                description = "카메라가 없는 기기에서는 바코드를 스캔할 수 없어요",
+            )
+        }
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun ManiculeNetworkErrorStatePreview() {
+    ManiculePreviewTheme {
+        Box(Modifier.padding(MaterialTheme.spacing.lg)) {
+            ManiculeNetworkErrorState(
+                onRetry = {},
+            )
         }
     }
 }
