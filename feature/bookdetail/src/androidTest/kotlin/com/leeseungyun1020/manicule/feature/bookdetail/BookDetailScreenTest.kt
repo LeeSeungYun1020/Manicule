@@ -1,5 +1,6 @@
 package com.leeseungyun1020.manicule.feature.bookdetail
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -277,6 +278,90 @@ class BookDetailScreenTest {
     }
 
     @Test
+    fun addRecordBottomSheet_preservesDraftAfterStateRestoration() {
+        val restorationTester = StateRestorationTester(composeRule)
+        restorationTester.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING, emptyList()),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_date_yesterday)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_end_page)).performTextInput("25")
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_date_yesterday)).assertIsSelected()
+        composeRule.onNodeWithText("25").assertIsDisplayed()
+    }
+
+    @Test
+    fun addRecordBottomSheet_staysOpenWhileSaving_andClosesAfterSuccess() {
+        var uiState by mutableStateOf(recordsState(ReadingStatus.READING, emptyList()))
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onAddRecord = { _, _, _, _ ->
+                        uiState = uiState.copy(recordSaving = RecordSavingState.Saving)
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_end_page)).performTextInput("25")
+        composeRule.onAllNodesWithText(context.getString(R.string.book_detail_add_record_button))[1].performClick()
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertIsDisplayed()
+        composeRule.onAllNodesWithText(context.getString(R.string.book_detail_add_record_button))[1].assertIsNotEnabled()
+
+        composeRule.runOnIdle { uiState = uiState.copy(recordSaving = RecordSavingState.Idle) }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertDoesNotExist()
+    }
+
+    @Test
+    fun addRecordBottomSheet_failureKeepsDraftForRetry() {
+        var uiState by mutableStateOf(recordsState(ReadingStatus.READING, emptyList()))
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onAddRecord = { _, _, _, _ ->
+                        uiState = uiState.copy(recordSaving = RecordSavingState.Saving)
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_end_page)).performTextInput("25")
+        composeRule.onAllNodesWithText(context.getString(R.string.book_detail_add_record_button))[1].performClick()
+        composeRule.runOnIdle { uiState = uiState.copy(recordSaving = RecordSavingState.Failed(1L)) }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertIsDisplayed()
+        composeRule.onNodeWithText("25").assertIsDisplayed()
+    }
+
+    @Test
     fun recordSavingFailed_showsSnackbar() {
         composeRule.setContent {
             ManiculeTheme {
@@ -321,6 +406,52 @@ class BookDetailScreenTest {
             .assertIsNotEnabled()
         composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
         composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertIsDisplayed()
+    }
+
+    @Test
+    fun myRecordsTab_longHistory_onlyComposesVisibleSessions() {
+        val records =
+            (1L..100L).map { id ->
+                ReadingRecord(id, "123", LocalDate(2026, 9, 19), LocalTime(14, 0), id.toInt(), id.toInt())
+            }
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING, records),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("오후 2:00 · 1–1쪽").assertIsDisplayed()
+        composeRule.onNodeWithText("오후 2:00 · 100–100쪽").assertDoesNotExist()
+    }
+
+    @Composable
+    private fun BookDetailScreen(
+        uiState: BookDetailUiState,
+        onNavigateBack: () -> Unit,
+        onTabSelected: (BookDetailTab) -> Unit,
+        onRetry: () -> Unit,
+        onStatusSelected: (ReadingStatus) -> Unit,
+        onStatusErrorDismissed: () -> Unit,
+        onAddRecord: (LocalDate, LocalTime, Int, Int) -> Unit = { _, _, _, _ -> },
+        onRecordErrorDismissed: () -> Unit = {},
+    ) {
+        com.leeseungyun1020.manicule.feature.bookdetail.BookDetailScreen(
+            uiState = uiState,
+            onNavigateBack = onNavigateBack,
+            onTabSelected = onTabSelected,
+            onRetry = onRetry,
+            onStatusSelected = onStatusSelected,
+            onStatusErrorDismissed = onStatusErrorDismissed,
+            onAddRecord = onAddRecord,
+            onRecordErrorDismissed = onRecordErrorDismissed,
+        )
     }
 
     private companion object {
