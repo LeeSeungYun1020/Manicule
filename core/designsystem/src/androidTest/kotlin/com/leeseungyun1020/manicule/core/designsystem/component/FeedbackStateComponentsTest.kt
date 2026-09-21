@@ -140,4 +140,40 @@ class FeedbackStateComponentsTest {
         composeTestRule.onNodeWithText("Undo").performClick()
         composeTestRule.runOnIdle { assertEquals(SnackbarResult.ActionPerformed, secondResult) }
     }
+
+    @Test
+    fun errorState_withRetry_displaysContentAndCallsRetry() {
+        var retryCount = 0
+        composeTestRule.setContent {
+            ManiculeTheme {
+                ManiculeErrorState(
+                    title = "Failed to load",
+                    description = "Check your connection",
+                    onRetry = { retryCount++ },
+                    retryText = "Retry now",
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Failed to load").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Check your connection").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Retry now").assertIsDisplayed().performClick()
+        composeTestRule.runOnIdle { assertEquals(1, retryCount) }
+    }
+
+    @Test
+    fun errorState_withoutRetry_displaysOnlyTitleAndDescription() {
+        composeTestRule.setContent {
+            ManiculeTheme {
+                ManiculeErrorState(
+                    title = "Connection error",
+                    description = "Please try again later",
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Connection error").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Please try again later").assertIsDisplayed()
+        assertEquals(0, composeTestRule.onAllNodesWithText("Retry").fetchSemanticsNodes().size)
+    }
 }
