@@ -516,6 +516,38 @@ class BookDetailScreenTest {
         assertThat(retried).isTrue()
     }
 
+    @Test
+    fun recordLoadFailure_withRetainedRecords_keepsRecordsAndShowsRetrySnackbar() {
+        var retried = false
+        val record =
+            ReadingRecord(
+                id = 1L,
+                isbn = "123",
+                date = LocalDate(2026, 9, 19),
+                time = LocalTime(14, 0),
+                startPage = 1,
+                endPage = 30,
+            )
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING, listOf(record)).copy(recordLoadState = RecordLoadState.Failed),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = { retried = true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).assertIsDisplayed()
+        composeRule.onNodeWithText("30p").assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+
+        assertThat(retried).isTrue()
+    }
+
     @Composable
     private fun BookDetailScreen(
         uiState: BookDetailUiState,

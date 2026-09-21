@@ -79,7 +79,7 @@ internal fun MyRecordTabContent(
             }
         }
 
-        if (recordLoadState is RecordLoadState.Failed) {
+        if (records.isEmpty() && recordLoadState is RecordLoadState.Failed) {
             item(
                 key = "reading-records-error",
                 contentType = MyRecordContentType.RecordError,

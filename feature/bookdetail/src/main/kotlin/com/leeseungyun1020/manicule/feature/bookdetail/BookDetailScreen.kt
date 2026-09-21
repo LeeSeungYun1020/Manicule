@@ -151,9 +151,12 @@ private fun rememberBookDetailSnackbarHostState(
 
     val statusErrorMessage = stringResource(R.string.book_detail_status_error)
     val recordErrorMessage = stringResource(R.string.book_detail_record_save_error)
+    val recordLoadErrorMessage = stringResource(R.string.book_detail_records_error_title)
     val statusChange = content?.statusChange
     val recordSaving = content?.recordSaving
     val refreshStatus = content?.refreshStatus
+    val recordLoadState = content?.recordLoadState
+    val hasRecords = content?.records?.isNotEmpty() == true
     LaunchedEffect(refreshStatus, statusChange) {
         if (statusChange is StatusChangeState.Failed) {
             val result = snackbarHostState.showSnackbar(
@@ -188,6 +191,20 @@ private fun rememberBookDetailSnackbarHostState(
                 duration = SnackbarDuration.Short,
             )
             currentOnRecordErrorDismissed()
+        }
+    }
+
+    LaunchedEffect(recordLoadState, hasRecords) {
+        if (recordLoadState is RecordLoadState.Failed && hasRecords) {
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = recordLoadErrorMessage,
+                    actionLabel = retryActionLabel,
+                    duration = SnackbarDuration.Indefinite,
+                )
+            if (result == SnackbarResult.ActionPerformed) {
+                currentOnRetry()
+            }
         }
     }
 
