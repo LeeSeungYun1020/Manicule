@@ -25,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeEmptyState
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeErrorState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeOutlinedButton
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
@@ -222,22 +223,16 @@ private fun LibraryError(
     scaffoldPadding: PaddingValues,
     onRetry: () -> Unit,
 ) {
-    ManiculeEmptyState(
+    ManiculeErrorState(
         title = stringResource(R.string.library_error_title),
         description = stringResource(R.string.library_error_description),
-        modifier = Modifier.fillMaxSize().padding(scaffoldPadding).padding(ManiculeSpacing.screenContent),
-        actions = {
-            ManiculeButton(
-                onClick = onRetry,
-                text = stringResource(R.string.library_retry),
-                leadingIcon = {
-                    Icon(
-                        imageVector = ManiculeIcons.Refresh,
-                        contentDescription = null,
-                    )
-                },
-            )
-        },
+        onRetry = onRetry,
+        retryText = stringResource(R.string.library_retry),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(scaffoldPadding)
+                .padding(ManiculeSpacing.screenContent),
     )
 }
 

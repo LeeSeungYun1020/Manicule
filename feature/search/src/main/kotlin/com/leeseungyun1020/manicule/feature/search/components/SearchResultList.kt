@@ -1,7 +1,5 @@
 package com.leeseungyun1020.manicule.feature.search.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -12,13 +10,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.paging.LoadState
 import androidx.paging.LoadStates
 import androidx.paging.PagingData
@@ -26,6 +22,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeEmptyState
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeErrorState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
@@ -148,46 +145,13 @@ private fun SearchResultError(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .padding(MaterialTheme.spacing.xl),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            imageVector = ManiculeIcons.NetworkError,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.error,
-            modifier = Modifier.size(ManiculeSize.iconEmptyState),
-        )
-        Text(
-            text = stringResource(R.string.search_result_error_title),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = MaterialTheme.spacing.sm),
-        )
-        Text(
-            text = stringResource(R.string.search_result_error_description),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = MaterialTheme.spacing.sm),
-        )
-        ManiculeButton(
-            onClick = onRetry,
-            text = stringResource(R.string.search_retry),
-            modifier = Modifier.padding(top = MaterialTheme.spacing.md),
-            leadingIcon = {
-                Icon(
-                    imageVector = ManiculeIcons.Refresh,
-                    contentDescription = null,
-                )
-            },
-        )
-    }
+    ManiculeErrorState(
+        title = stringResource(R.string.search_result_error_title),
+        description = stringResource(R.string.search_result_error_description),
+        onRetry = onRetry,
+        retryText = stringResource(R.string.search_retry),
+        modifier = modifier.fillMaxSize(),
+    )
 }
 
 @Composable

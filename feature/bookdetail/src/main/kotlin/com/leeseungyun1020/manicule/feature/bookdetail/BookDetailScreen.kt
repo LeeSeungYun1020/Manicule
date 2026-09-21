@@ -4,9 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -27,16 +25,13 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeEmptyState
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeErrorState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSnackbarHost
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTabRow
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTopAppBar
-import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
-import com.leeseungyun1020.manicule.core.designsystem.theme.size
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookDetail
@@ -244,32 +239,8 @@ private fun BookDetailBody(
         when (uiState) {
             is BookDetailUiState.Loading -> ManiculeLoading(modifier = Modifier.fillMaxSize())
             is BookDetailUiState.Error ->
-                ManiculeEmptyState(
-                    title = stringResource(R.string.book_detail_error_title),
-                    description = stringResource(R.string.book_detail_error_description),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(MaterialTheme.spacing.lg),
-                    icon = {
-                        Icon(
-                            imageVector = ManiculeIcons.NetworkError,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(MaterialTheme.size.iconEmptyState),
-                        )
-                    },
-                    actions = {
-                        ManiculeButton(
-                            onClick = onRetry,
-                            text = stringResource(R.string.book_detail_retry),
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = ManiculeIcons.Refresh,
-                                    contentDescription = null,
-                                )
-                            },
-                        )
-                    },
+                BookDetailError(
+                    onRetry = onRetry,
                 )
 
             is BookDetailUiState.Content -> {
@@ -292,6 +263,23 @@ private fun BookDetailBody(
             }
         }
     }
+}
+
+@Composable
+private fun BookDetailError(
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    ManiculeErrorState(
+        title = stringResource(R.string.book_detail_error_title),
+        description = stringResource(R.string.book_detail_error_description),
+        onRetry = onRetry,
+        retryText = stringResource(R.string.book_detail_retry),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(MaterialTheme.spacing.lg),
+    )
 }
 
 private val previewBook =
