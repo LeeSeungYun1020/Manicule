@@ -6,12 +6,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -28,33 +30,49 @@ import com.leeseungyun1020.manicule.feature.bookdetail.R
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 
-@Composable
-internal fun ReadingRecordList(
-    records: List<ReadingRecord>,
+private enum class ReadingRecordContentType {
+    Title,
+    Progress,
+    Add,
+    DateHeader,
+    Session,
+}
+
+internal fun LazyListScope.readingRecordListItems(
+    groupedRecords: List<Pair<LocalDate, List<ReadingRecord>>>,
+    maxEndPage: Int,
     totalPages: Int?,
     onAddRecord: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
-    val maxEndPage = remember(records) { records.maxOfOrNull { it.endPage } ?: 0 }
-    val groupedRecords = remember(records) {
-        records.groupBy { it.date }.toList().sortedByDescending { it.first }
+    item(
+        key = "reading-record-title",
+        contentType = ReadingRecordContentType.Title,
+    ) {
+        ManiculeSectionHeader(
+            title = stringResource(R.string.book_detail_records_title),
+            modifier = Modifier.padding(bottom = MaterialTheme.spacing.md),
+        )
     }
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
-    ) {
-        ManiculeSectionHeader(title = stringResource(R.string.book_detail_records_title))
-
-        if (totalPages != null && totalPages > 0) {
+    if (totalPages != null && totalPages > 0) {
+        item(
+            key = "reading-record-progress",
+            contentType = ReadingRecordContentType.Progress,
+        ) {
             BookProgressBar(
                 currentPage = maxEndPage,
                 totalPages = totalPages,
+                modifier = Modifier.padding(bottom = MaterialTheme.spacing.md),
             )
         }
+    }
 
+    item(
+        key = "reading-record-add",
+        contentType = ReadingRecordContentType.Add,
+    ) {
         Box(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(bottom = MaterialTheme.spacing.md),
             contentAlignment = Alignment.Center,
         ) {
             ManiculeButton(
@@ -68,12 +86,32 @@ internal fun ReadingRecordList(
                 },
             )
         }
+    }
 
-        Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md)) {
-            groupedRecords.forEach { (date, sessions) ->
-                ReadingRecordDateGroup(
-                    date = date,
-                    sessions = sessions.sortedByDescending { it.time },
+    readingRecordSessionItems(groupedRecords)
+}
+
+private fun LazyListScope.readingRecordSessionItems(groupedRecords: List<Pair<LocalDate, List<ReadingRecord>>>) {
+    groupedRecords.forEach { (date, sessions) ->
+        item(
+            key = "reading-record-date-$date",
+            contentType = ReadingRecordContentType.DateHeader,
+        ) {
+            ReadingRecordDateHeader(
+                date = date,
+                totalPagesForDate = sessions.sumOf { it.pagesRead },
+            )
+        }
+        items(
+            items = sessions,
+            key = ReadingRecord::id,
+            contentType = { ReadingRecordContentType.Session },
+        ) { record ->
+            Column {
+                ReadingRecordSessionItem(record = record)
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = MaterialTheme.spacing.xs),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                 )
             }
         }
@@ -81,38 +119,26 @@ internal fun ReadingRecordList(
 }
 
 @Composable
-private fun ReadingRecordDateGroup(
+private fun ReadingRecordDateHeader(
     date: LocalDate,
-    sessions: List<ReadingRecord>,
+    totalPagesForDate: Int,
     modifier: Modifier = Modifier,
 ) {
-    val totalPagesForDate = remember(sessions) { sessions.sumOf { it.pagesRead } }
-
-    Column(modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = MaterialTheme.spacing.xs),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.book_detail_date_format, date.monthNumber, date.dayOfMonth),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = stringResource(R.string.book_detail_record_pages_sum, totalPagesForDate),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-
-        sessions.forEach { record ->
-            ReadingRecordSessionItem(record = record)
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = MaterialTheme.spacing.xs),
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-            )
-        }
+    Row(
+        modifier = modifier.fillMaxWidth().padding(top = MaterialTheme.spacing.md, bottom = MaterialTheme.spacing.xs),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(R.string.book_detail_date_format, date.monthNumber, date.dayOfMonth),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            text = stringResource(R.string.book_detail_record_pages_sum, totalPagesForDate),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 }
 
@@ -169,13 +195,18 @@ private fun ReadingRecordSessionItem(
 @Composable
 private fun ReadingRecordListPreview() {
     ManiculePreviewTheme {
-        ReadingRecordList(
-            records = listOf(
+        val records =
+            listOf(
                 ReadingRecord(1L, "123", LocalDate(2026, 7, 8), LocalTime(21, 12), 43, 68),
                 ReadingRecord(2L, "123", LocalDate(2026, 7, 6), LocalTime(20, 3), 11, 42),
-            ),
-            totalPages = 264,
-            onAddRecord = {},
-        )
+            )
+        LazyColumn(contentPadding = MaterialTheme.spacing.screenContent) {
+            readingRecordListItems(
+                groupedRecords = records.groupBy { it.date }.toList().sortedByDescending { it.first },
+                maxEndPage = records.maxOf { it.endPage },
+                totalPages = 264,
+                onAddRecord = {},
+            )
+        }
     }
 }
