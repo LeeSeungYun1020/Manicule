@@ -15,10 +15,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -93,9 +95,15 @@ internal fun AddRecordBottomSheet(
     val selectedDate = resolveSelectedDate(dateMode, today, LocalDate.parse(customDateText))
     val selectedTime = resolveSelectedTime(timeMode, currentTime, LocalTime.parse(customTimeText))
 
+    val sheetState =
+        rememberModalBottomSheetState(
+            confirmValueChange = { targetValue -> !(isSaving && targetValue == SheetValue.Hidden) },
+        )
+
     ManiculeBottomSheet(
         onDismissRequest = { if (!isSaving) onDismissRequest() },
         modifier = modifier,
+        sheetState = sheetState,
     ) {
         Column(
             modifier = Modifier
