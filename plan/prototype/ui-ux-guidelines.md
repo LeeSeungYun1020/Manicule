@@ -50,7 +50,11 @@
 - **타이포그래피 계층**: M3 15종 텍스트 스타일 (Display / Headline / Title / Body / Label × L/M/S) 준수. 프로젝트는 Noto Sans KR + 한국어 line-height 튜닝 적용 (
   `Type.kt`)
 - **색상 명암비**: 일반 텍스트 4.5:1 이상, 대형 텍스트(24sp+) 및 아이콘 3.0:1 이상 (WCAG AA)
-- **상태별 UI**: 핵심 콘텐츠는 로딩 / 오류 / 빈 상태를 구분하고, 실패 시 사용자가 인지할 수 있는 오류 UI와 재시도·복구 동작을 제공한다. 보조 콘텐츠 실패는 핵심 흐름을 유지하도록 숨기거나 빈 상태와 동일하게 표현할 수 있지만, 상태 모델에서는 성공한 빈 결과와 오류를 구분하고 자동 재시도 / 수동 재시도 / 화면 재진입 시 재구독 중 하나 이상의 복구 경로를 둔다. `ManiculeEmptyState`는 성공적으로 조회된 빈 결과에 활용한다
+- **상태별 UI**: 핵심 콘텐츠는 로딩 / 오류 / 빈 상태를 구분하고, 실패 시 사용자가 인지할 수 있는 오류 UI와 재시도·복구 동작을 제공한다. 보조 콘텐츠 실패는 핵심 흐름을 유지하도록 숨기거나 빈 상태와 동일하게 표현할 수 있지만, 상태 모델에서는 성공한 빈 결과와 오류를 구분하고 자동 재시도 / 수동 재시도 / 화면 재진입 시 재구독 중 하나 이상의 복구 경로를 둔다.
+  - **Level 1. 전체 화면 에러 (데이터 없음 / Initial Load Failure)**: 핵심 콘텐츠 조회가 실패하여 화면 전체를 표시할 수 없는 오류 상태는 `ManiculeEmptyState` 서식(점선 카드)을 활용한 `ManiculeErrorState`로 일관된 오류 안내와 재시도 복구 경로 제공
+  - **Level 2. 갱신 에러 (기존 데이터 있음 / Refresh Failure)**: 독서 기록 목록이나 서재 등 기존 데이터가 이미 화면에 존재하는 상태에서 새로고침/업데이트에 실패한 경우, 기존 콘텐츠를 100% 유지하고 `ManiculeSnackbarHost` 스낵바(재시도 액션 포함)를 통해 비간섭적 안내 제공(기존 화면을 에러 화면으로 덮어버리는 UX 방지)
+  - **Level 3. 부분/추가 에러 (페이징 / 독립 보조 섹션 / Append Failure)**: 리스트의 다음 페이지(더보기) 로드 실패(`SearchAppendState`)나 독립 보조 섹션 로드 실패(`ReminderSection`) 시 해당 위치에 인라인(`Text` + `ManiculeTextButton`)으로 안내 및 재시도 제공
+  - `ManiculeEmptyState`는 성공적으로 조회된 빈 결과 안내에 활용하고, 화면 전체 오류에는 이를 특화한 `ManiculeErrorState`를 사용한다.
 - **내비게이션**: 하단 탭 3\~5개. 시스템 뒤로가기 지원. Type-safe Navigation 사용
 
 ---
@@ -124,6 +128,7 @@
 |                     | `ManiculeCard`                                     | 공통 카드 (기본, Dashed) |
 |                     | `ManiculeDialog`                                   | 확인/취소 다이얼로그   |
 |                     | `ManiculeEmptyState`                               | 빈 상태 안내       |
+|                     | `ManiculeErrorState`                               | 공통 에러 상태 안내 (점선 카드, 네트워크 에러 아이콘, 재시도 버튼) |
 |                     | `ManiculeLoading`                                  | 로딩 인디케이터 (크기는 호출부 `modifier` 지정) |
 |                     | `ManiculeSegmentedButton`                          | 세그먼트 버튼      |
 |                     | `ManiculeTextField`                                | 텍스트 입력        |
