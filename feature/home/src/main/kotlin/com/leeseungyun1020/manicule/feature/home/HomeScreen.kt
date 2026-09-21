@@ -61,15 +61,13 @@ import kotlinx.datetime.LocalDate
 fun HomeScreen(
     uiState: HomeUiState,
     onSearch: () -> Unit,
-    onScan: () -> Unit,
+    onScan: (() -> Unit)?,
     onBookSelected: (String) -> Unit,
     onShowReadingBooks: () -> Unit,
     onChooseWantBook: () -> Unit,
-    onShowStats: () -> Unit,
+    onShowStats: (() -> Unit)?,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
-    isScanAvailable: Boolean = false,
-    isStatsAvailable: Boolean = false,
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -88,8 +86,6 @@ fun HomeScreen(
                     onShowReadingBooks = onShowReadingBooks,
                     onChooseWantBook = onChooseWantBook,
                     onShowStats = onShowStats,
-                    isScanAvailable = isScanAvailable,
-                    isStatsAvailable = isStatsAvailable,
                     modifier = Modifier.padding(padding),
                 )
         }
@@ -101,26 +97,24 @@ private fun HomeContent(
     data: HomeData,
     isFirstUser: Boolean,
     onSearch: () -> Unit,
-    onScan: () -> Unit,
+    onScan: (() -> Unit)?,
     onBookSelected: (String) -> Unit,
     onShowReadingBooks: () -> Unit,
     onChooseWantBook: () -> Unit,
-    onShowStats: () -> Unit,
-    isScanAvailable: Boolean,
-    isStatsAvailable: Boolean,
+    onShowStats: (() -> Unit)?,
     modifier: Modifier,
 ) {
     Column(
         modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(ManiculeSpacing.screenContent),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xl),
     ) {
-        HomeSearchEntry(onSearch, onScan, isScanAvailable)
+        HomeSearchEntry(onSearch, onScan)
         if (isFirstUser) {
-            OnboardingContent(onSearch, onScan, isScanAvailable)
+            OnboardingContent(onSearch, onScan)
         } else {
-            ReadingSummary(data, onShowStats, isStatsAvailable)
+            ReadingSummary(data, onShowStats)
             if (data.readingBooks.isEmpty()) {
-                NoReadingBooks(data.wantBookCount, onSearch, onScan, onChooseWantBook, isScanAvailable)
+                NoReadingBooks(data.wantBookCount, onSearch, onScan, onChooseWantBook)
             } else {
                 ReadingBooks(data.readingBooks, onBookSelected, onShowReadingBooks)
             }
@@ -131,8 +125,7 @@ private fun HomeContent(
 @Composable
 private fun HomeSearchEntry(
     onSearch: () -> Unit,
-    onScan: () -> Unit,
-    isScanAvailable: Boolean,
+    onScan: (() -> Unit)?,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
         ManiculeSearchEntry(
@@ -142,8 +135,8 @@ private fun HomeSearchEntry(
             leadingIcon = { Icon(ManiculeIcons.Search, null) },
         )
         ManiculeIconButton(
-            onClick = onScan,
-            enabled = isScanAvailable,
+            onClick = onScan ?: {},
+            enabled = onScan != null,
             icon = {
                 Icon(
                     imageVector = ManiculeIcons.ScanBarcode,
@@ -157,8 +150,7 @@ private fun HomeSearchEntry(
 @Composable
 private fun OnboardingContent(
     onSearch: () -> Unit,
-    onScan: () -> Unit,
-    isScanAvailable: Boolean,
+    onScan: (() -> Unit)?,
 ) {
     ManiculeDashedCard {
         Column(
@@ -185,8 +177,8 @@ private fun OnboardingContent(
             Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
                 ManiculeButton(onClick = onSearch, text = stringResource(R.string.home_search))
                 ManiculeOutlinedButton(
-                    onClick = onScan,
-                    enabled = isScanAvailable,
+                    onClick = onScan ?: {},
+                    enabled = onScan != null,
                     text = stringResource(R.string.home_scan),
                 )
             }
@@ -197,12 +189,11 @@ private fun OnboardingContent(
 @Composable
 private fun ReadingSummary(
     data: HomeData,
-    onShowStats: () -> Unit,
-    isStatsAvailable: Boolean,
+    onShowStats: (() -> Unit)?,
 ) {
     ManiculeCard(
         modifier =
-            if (isStatsAvailable) Modifier.clickable(onClick = onShowStats) else Modifier,
+            if (onShowStats != null) Modifier.clickable(onClick = onShowStats) else Modifier,
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.lg),
@@ -276,9 +267,8 @@ private fun ReadingBookCard(
 private fun NoReadingBooks(
     wantBookCount: Int,
     onSearch: () -> Unit,
-    onScan: () -> Unit,
+    onScan: (() -> Unit)?,
     onChooseWantBook: () -> Unit,
-    isScanAvailable: Boolean,
 ) {
     ManiculeEmptyState(
         title = stringResource(R.string.home_no_reading_title),
@@ -291,7 +281,7 @@ private fun NoReadingBooks(
         actions = {
             if (wantBookCount > 0) ManiculeButton(onClick = onChooseWantBook, text = stringResource(R.string.home_choose))
             ManiculeOutlinedButton(onClick = onSearch, text = stringResource(R.string.home_search))
-            ManiculeOutlinedButton(onClick = onScan, enabled = isScanAvailable, text = stringResource(R.string.home_scan))
+            ManiculeOutlinedButton(onClick = onScan ?: {}, enabled = onScan != null, text = stringResource(R.string.home_scan))
         },
     )
 }
