@@ -344,7 +344,11 @@ class LibraryScreenTest {
             }
         }
 
-        composeRule.onNodeWithText(context.getString(R.string.library_error_title)).assertIsDisplayed()
+        composeRule
+            .onNodeWithText(
+                context.getString(com.leeseungyun1020.manicule.core.designsystem.R.string.core_designsystem_network_error_title),
+            )
+            .assertIsDisplayed()
         composeRule.onNodeWithText(context.getString(R.string.library_retry)).performClick()
         composeRule.runOnIdle { assertThat(retried).isTrue() }
     }

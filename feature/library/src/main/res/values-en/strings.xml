@@ -8,8 +8,6 @@
     <string name="library_empty_description">Search or scan a book to add it to your library</string>
     <string name="library_search">Search</string>
     <string name="library_scan">Scan</string>
-    <string name="library_error_title">Couldn’t load your library</string>
-    <string name="library_error_description">Please try again in a moment</string>
     <string name="library_retry">Retry</string>
     <string name="library_add_book">Add book</string>
     <string name="library_sort_title">Sort</string>

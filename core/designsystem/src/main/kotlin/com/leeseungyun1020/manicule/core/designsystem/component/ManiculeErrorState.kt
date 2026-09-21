@@ -17,18 +17,18 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 
 /**
- * 네트워크 장애, 초기 로드 실패 등 화면 전체를 표시할 수 없을 때 사용하는 공통 에러 컴포넌트.
+ * 임의의 오류 상태를 표시할 때 사용하는 범용 에러 컴포넌트.
  *
  * [ManiculeEmptyState] 점선 카드 서식을 기반으로 일관된 에러 아이콘, 타이틀, 설명, 재시도 액션을 제공한다.
  */
 @Composable
 fun ManiculeErrorState(
     title: String,
+    icon: ImageVector,
     modifier: Modifier = Modifier,
     description: String? = null,
-    icon: ImageVector = ManiculeIcons.NetworkError,
-    onRetry: (() -> Unit)? = null,
     retryText: String = stringResource(R.string.core_designsystem_retry),
+    onRetry: (() -> Unit)? = null,
 ) {
     ManiculeEmptyState(
         title = title,
@@ -62,14 +62,35 @@ fun ManiculeErrorState(
     )
 }
 
+/**
+ * 네트워크 장애 및 연결 실패 시 사용하는 공통 에러 컴포넌트.
+ *
+ * [ManiculeErrorState]를 기반으로 기본 네트워크 오류 아이콘과 공통 안내 문구를 제공한다.
+ */
+@Composable
+fun ManiculeNetworkErrorState(
+    modifier: Modifier = Modifier,
+    title: String = stringResource(R.string.core_designsystem_network_error_title),
+    description: String? = stringResource(R.string.core_designsystem_network_error_description),
+    retryText: String = stringResource(R.string.core_designsystem_retry),
+    onRetry: (() -> Unit)? = null,
+) {
+    ManiculeErrorState(
+        title = title,
+        icon = ManiculeIcons.NetworkError,
+        modifier = modifier,
+        description = description,
+        retryText = retryText,
+        onRetry = onRetry,
+    )
+}
+
 @ManiculePreview
 @Composable
-private fun ManiculeErrorStateWithRetryPreview() {
+private fun ManiculeNetworkErrorStateWithRetryPreview() {
     ManiculePreviewTheme {
         Box(Modifier.padding(MaterialTheme.spacing.lg)) {
-            ManiculeErrorState(
-                title = "검색 결과를 불러올 수 없어요",
-                description = "잠시 후 다시 시도해 주세요",
+            ManiculeNetworkErrorState(
                 onRetry = {},
             )
         }
@@ -78,13 +99,10 @@ private fun ManiculeErrorStateWithRetryPreview() {
 
 @ManiculePreview
 @Composable
-private fun ManiculeErrorStateWithoutRetryPreview() {
+private fun ManiculeNetworkErrorStateWithoutRetryPreview() {
     ManiculePreviewTheme {
         Box(Modifier.padding(MaterialTheme.spacing.lg)) {
-            ManiculeErrorState(
-                title = "네트워크 연결 오류",
-                description = "인터넷 연결 상태를 확인해 주세요",
-            )
+            ManiculeNetworkErrorState()
         }
     }
 }

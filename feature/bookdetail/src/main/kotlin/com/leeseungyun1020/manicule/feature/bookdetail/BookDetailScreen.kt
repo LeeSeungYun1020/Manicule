@@ -25,8 +25,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeErrorState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeNetworkErrorState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSnackbarHost
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTabRow
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTopAppBar
@@ -270,11 +270,8 @@ private fun BookDetailError(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    ManiculeErrorState(
-        title = stringResource(R.string.book_detail_error_title),
-        description = stringResource(R.string.book_detail_error_description),
+    ManiculeNetworkErrorState(
         onRetry = onRetry,
-        retryText = stringResource(R.string.book_detail_retry),
         modifier =
             modifier
                 .fillMaxSize()

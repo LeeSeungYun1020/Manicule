@@ -22,8 +22,8 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeEmptyState
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeErrorState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeNetworkErrorState
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
@@ -145,11 +145,8 @@ private fun SearchResultError(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    ManiculeErrorState(
-        title = stringResource(R.string.search_result_error_title),
-        description = stringResource(R.string.search_result_error_description),
+    ManiculeNetworkErrorState(
         onRetry = onRetry,
-        retryText = stringResource(R.string.search_retry),
         modifier = modifier.fillMaxSize(),
     )
 }

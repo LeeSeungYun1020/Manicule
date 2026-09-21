@@ -128,6 +128,7 @@
 |                     | `ManiculeDialog`                                   | 확인/취소 다이얼로그   |
 |                     | `ManiculeEmptyState`                               | 빈 상태 안내       |
 |                     | `ManiculeErrorState`                               | 공통 에러 상태 안내 |
+|                     | `ManiculeNetworkErrorState`                        | 네트워크 에러 상태 안내 |
 |                     | `ManiculeLoading`                                  | 로딩 인디케이터 (크기는 호출부 `modifier` 지정) |
 |                     | `ManiculeSegmentedButton`                          | 세그먼트 버튼      |
 |                     | `ManiculeTextField`                                | 텍스트 입력        |

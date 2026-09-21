@@ -9,8 +9,6 @@
     <string name="search_result_title">검색 결과</string>
     <string name="search_result_loading">검색 결과를 불러오는 중</string>
     <string name="search_result_loading_more">검색 결과를 더 불러오는 중</string>
-    <string name="search_result_error_title">검색 결과를 불러오지 못했어요</string>
-    <string name="search_result_error_description">잠시 후 다시 시도해 주세요</string>
     <string name="search_result_empty_title">검색 결과가 없어요</string>
     <string name="search_result_empty_description">책에 있는 바코드를 스캔해 찾아보세요</string>
     <string name="search_result_append_error">검색 결과를 더 불러오지 못했어요</string>

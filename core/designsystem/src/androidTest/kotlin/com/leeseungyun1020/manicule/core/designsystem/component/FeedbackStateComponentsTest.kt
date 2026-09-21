@@ -16,6 +16,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import kotlinx.coroutines.CoroutineScope
@@ -148,6 +149,7 @@ class FeedbackStateComponentsTest {
             ManiculeTheme {
                 ManiculeErrorState(
                     title = "Failed to load",
+                    icon = ManiculeIcons.NetworkError,
                     description = "Check your connection",
                     onRetry = { retryCount++ },
                     retryText = "Retry now",
@@ -167,6 +169,7 @@ class FeedbackStateComponentsTest {
             ManiculeTheme {
                 ManiculeErrorState(
                     title = "Connection error",
+                    icon = ManiculeIcons.NetworkError,
                     description = "Please try again later",
                 )
             }
@@ -174,6 +177,23 @@ class FeedbackStateComponentsTest {
 
         composeTestRule.onNodeWithText("Connection error").assertIsDisplayed()
         composeTestRule.onNodeWithText("Please try again later").assertIsDisplayed()
-        assertEquals(0, composeTestRule.onAllNodesWithText("Retry").fetchSemanticsNodes().size)
+        assertEquals(0, composeTestRule.onAllNodesWithText("다시 시도").fetchSemanticsNodes().size)
+    }
+
+    @Test
+    fun networkErrorState_withRetry_displaysDefaultTextAndCallsRetry() {
+        var retryCount = 0
+        composeTestRule.setContent {
+            ManiculeTheme {
+                ManiculeNetworkErrorState(
+                    onRetry = { retryCount++ },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("정보를 불러오지 못했어요").assertIsDisplayed()
+        composeTestRule.onNodeWithText("네트워크 연결을 확인하고 다시 시도해 주세요").assertIsDisplayed()
+        composeTestRule.onNodeWithText("다시 시도").assertIsDisplayed().performClick()
+        composeTestRule.runOnIdle { assertEquals(1, retryCount) }
     }
 }
