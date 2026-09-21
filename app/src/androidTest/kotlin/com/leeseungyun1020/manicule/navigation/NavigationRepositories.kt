@@ -11,12 +11,15 @@ import com.leeseungyun1020.manicule.core.data.repository.SearchHistoryRepository
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
+import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import com.leeseungyun1020.manicule.core.model.SearchQuery
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -63,9 +66,19 @@ class NavigationBooks
 class NavigationLibrary
     @Inject
     constructor() : LibraryRepository {
+        override suspend fun changeReadingStatus(
+            isbn: String,
+            status: ReadingStatus,
+            updatedAt: Instant,
+            finishedAt: LocalDate?,
+        ): ReadingStatusChangeResult = ReadingStatusChangeResult.Changed
+
         override fun observeAll(): Flow<List<BookEntry>> = flowOf(emptyList())
 
-        override fun observeByStatus(status: ReadingStatus): Flow<List<BookEntry>> = flowOf(emptyList())
+        override fun observeByStatus(
+            status: ReadingStatus,
+            sort: LibrarySort,
+        ): Flow<List<BookEntry>> = flowOf(emptyList())
 
         override suspend fun getRecentBooksByStatus(
             status: ReadingStatus,
