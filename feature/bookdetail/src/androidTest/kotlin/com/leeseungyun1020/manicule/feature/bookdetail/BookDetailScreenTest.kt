@@ -267,6 +267,7 @@ class BookDetailScreenTest {
                     onAddRecord = { _, _, start, end ->
                         savedStart = start
                         savedEnd = end
+                        1L
                     },
                 )
             }
@@ -343,6 +344,7 @@ class BookDetailScreenTest {
                     onRetry = {},
                     onAddRecord = { _, _, _, _ ->
                         uiState = uiState.copy(recordSaving = RecordSavingState.Saving(1L))
+                        1L
                     },
                 )
             }
@@ -375,6 +377,7 @@ class BookDetailScreenTest {
                     onRetry = {},
                     onAddRecord = { _, _, _, _ ->
                         uiState = uiState.copy(recordSaving = RecordSavingState.Saving(1L))
+                        1L
                     },
                 )
             }
@@ -405,6 +408,7 @@ class BookDetailScreenTest {
                     onRetry = {},
                     onAddRecord = { _, _, _, _ ->
                         uiState = uiState.copy(recordSaving = RecordSavingState.Saving(1L))
+                        1L
                     },
                 )
             }
@@ -520,7 +524,7 @@ class BookDetailScreenTest {
         onRetry: () -> Unit,
         onStatusSelected: (ReadingStatus) -> Unit,
         onStatusErrorDismissed: () -> Unit,
-        onAddRecord: (LocalDate, LocalTime, Int, Int) -> Unit = { _, _, _, _ -> },
+        onAddRecord: (LocalDate, LocalTime, Int, Int) -> Long? = { _, _, _, _ -> null },
         onRecordErrorDismissed: () -> Unit = {},
     ) {
         com.leeseungyun1020.manicule.feature.bookdetail.BookDetailScreen(

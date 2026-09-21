@@ -59,7 +59,7 @@ fun BookDetailScreen(
     onRetry: () -> Unit,
     onStatusSelected: (ReadingStatus) -> Unit,
     onStatusErrorDismissed: () -> Unit,
-    onAddRecord: (LocalDate, LocalTime, Int, Int) -> Unit,
+    onAddRecord: (LocalDate, LocalTime, Int, Int) -> Long?,
     onRecordErrorDismissed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -77,7 +77,7 @@ fun BookDetailScreen(
 
     LaunchedEffect(recordSaving) {
         when (recordSaving) {
-            is RecordSavingState.Saving -> pendingRecordSaveAttempt = recordSaving.attempt
+            is RecordSavingState.Saving -> Unit
             is RecordSavingState.Succeeded -> {
                 if (pendingRecordSaveAttempt == recordSaving.attempt) {
                     showAddRecordSheet = false
@@ -127,7 +127,7 @@ fun BookDetailScreen(
             isSaving = uiState.recordSaving is RecordSavingState.Saving,
             onDismissRequest = { showAddRecordSheet = false },
             onSave = { date, time, startPage, endPage ->
-                onAddRecord(date, time, startPage, endPage)
+                pendingRecordSaveAttempt = onAddRecord(date, time, startPage, endPage)
             },
         )
     }
@@ -323,7 +323,7 @@ private fun BookDetailScreenPreview() {
             onRetry = {},
             onStatusSelected = {},
             onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> },
+            onAddRecord = { _, _, _, _ -> null },
             onRecordErrorDismissed = {},
         )
     }
@@ -340,7 +340,7 @@ private fun BookDetailLoadingPreview() {
             onRetry = {},
             onStatusSelected = {},
             onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> },
+            onAddRecord = { _, _, _, _ -> null },
             onRecordErrorDismissed = {},
         )
     }
@@ -357,7 +357,7 @@ private fun BookDetailErrorPreview() {
             onRetry = {},
             onStatusSelected = {},
             onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> },
+            onAddRecord = { _, _, _, _ -> null },
             onRecordErrorDismissed = {},
         )
     }
@@ -379,7 +379,7 @@ private fun BookDetailRefreshErrorPreview() {
             onRetry = {},
             onStatusSelected = {},
             onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> },
+            onAddRecord = { _, _, _, _ -> null },
             onRecordErrorDismissed = {},
         )
     }
@@ -401,7 +401,7 @@ private fun BookDetailRefreshingPreview() {
             onRetry = {},
             onStatusSelected = {},
             onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> },
+            onAddRecord = { _, _, _, _ -> null },
             onRecordErrorDismissed = {},
         )
     }
@@ -422,7 +422,7 @@ private fun BookDetailReviewOnlyPreview() {
             onRetry = {},
             onStatusSelected = {},
             onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> },
+            onAddRecord = { _, _, _, _ -> null },
             onRecordErrorDismissed = {},
         )
     }

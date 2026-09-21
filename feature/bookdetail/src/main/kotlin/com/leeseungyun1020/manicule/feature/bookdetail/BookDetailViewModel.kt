@@ -156,11 +156,11 @@ class BookDetailViewModel
             time: LocalTime,
             startPage: Int,
             endPage: Int,
-        ) {
+        ): Long? {
             if (_uiState.value !is BookDetailUiState.Content ||
                 recordSaving is RecordSavingState.Saving
             ) {
-                return
+                return null
             }
             val attempt = ++recordAttempt
             updateRecordSaving(RecordSavingState.Saving(attempt))
@@ -181,6 +181,7 @@ class BookDetailViewModel
                     updateRecordSaving(RecordSavingState.Failed(attempt))
                 }
             }
+            return attempt
         }
 
         fun dismissRecordError() {
