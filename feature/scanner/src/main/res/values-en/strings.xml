@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="scanner_looking_up">Looking up the book</string>
     <string name="scanner_title">Scan barcode</string>
     <string name="scanner_permission_title">Camera access is needed</string>
     <string name="scanner_permission_description">Allow camera access to scan book barcodes. You can also search for books without granting access.</string>
@@ -9,6 +10,6 @@
     <string name="scanner_search">Search</string>
     <string name="scanner_initializing">Preparing the camera</string>
     <string name="scanner_guide">Align the book barcode with the guide</string>
-    <string name="scanner_failed_title">Could not start the camera</string>
-    <string name="scanner_failed_description">The camera is unavailable. Search for the book by title or author.</string>
+    <string name="scanner_failed_title">Couldn’t recognize the barcode</string>
+    <string name="scanner_failed_description">Try searching by title or author</string>
 </resources>

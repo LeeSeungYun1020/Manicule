@@ -12,7 +12,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
@@ -27,12 +31,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 fun ScannerRoute(
     onNavigateBack: () -> Unit,
     onNavigateToSearch: () -> Unit,
+    onNavigateToBookDetail: (String) -> Unit,
     viewModel: ScannerViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
     val owner = LocalLifecycleOwner.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var isActive by remember(owner) { mutableStateOf(owner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         viewModel.onPermissionResult(
             granted = granted,
@@ -48,16 +54,43 @@ fun ScannerRoute(
             )
         }
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) checkPermission()
+            when (event) {
+                Lifecycle.Event.ON_START -> {
+                    isActive = true
+                    viewModel.onActiveChanged(true)
+                }
+
+                Lifecycle.Event.ON_STOP -> {
+                    isActive = false
+                    viewModel.onActiveChanged(false)
+                }
+                Lifecycle.Event.ON_RESUME -> checkPermission()
+                else -> Unit
+            }
         }
         owner.lifecycle.addObserver(observer)
         checkPermission()
-        onDispose { owner.lifecycle.removeObserver(observer) }
+        isActive = owner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
+        viewModel.onActiveChanged(isActive)
+        onDispose {
+            viewModel.onActiveChanged(false)
+            owner.lifecycle.removeObserver(observer)
+        }
+    }
+    LaunchedEffect(uiState, isActive) {
+        if (!isActive) return@LaunchedEffect
+        viewModel.consumeBookNavigation()?.let(onNavigateToBookDetail)
     }
     ScannerScreen(
         uiState = uiState,
-        onNavigateBack = onNavigateBack,
-        onNavigateToSearch = onNavigateToSearch,
+        onNavigateBack = {
+            viewModel.onExit()
+            onNavigateBack()
+        },
+        onNavigateToSearch = {
+            viewModel.onExit()
+            onNavigateToSearch()
+        },
         onUseCamera = {
             try {
                 if ((uiState as? ScannerUiState.PermissionDenied)?.requiresSettings == true) {

@@ -59,6 +59,11 @@ fun ManiculeNavHost(
                     launchSingleTop = true
                 }
             },
+            onNavigateToBookDetail = { isbn ->
+                appState.navController.navigate(BookDetailRoute(isbn)) {
+                    popUpTo<ScannerRoute> { inclusive = true }
+                }
+            },
         )
         bookDetailScreen(
             onNavigateBack = { appState.navController.popBackStack() },

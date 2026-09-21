@@ -9,6 +9,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.domain)
     implementation(projects.core.scanner)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
@@ -19,4 +20,11 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.truth)
+    androidTestImplementation(projects.core.data)
+    androidTestImplementation(libs.androidx.paging.runtime)
+    androidTestImplementation(libs.kotlinx.datetime)
+
+    testImplementation(projects.core.data)
+    testImplementation(libs.androidx.paging.runtime)
+    testImplementation(libs.kotlinx.datetime)
 }

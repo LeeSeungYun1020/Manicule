@@ -61,12 +61,17 @@ internal fun ScannerScreen(
             onUseCamera = onUseCamera,
             modifier = modifier,
         )
-        ScannerUiState.Initializing, ScannerUiState.Scanning -> Box(
+        ScannerUiState.Initializing, ScannerUiState.Scanning, ScannerUiState.LookingUp -> Box(
             modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim),
         ) {
             cameraPreview()
-            BarcodeScannerOverlay(initializing = uiState == ScannerUiState.Initializing, onNavigateBack = onNavigateBack)
+            BarcodeScannerOverlay(
+                initializing = uiState == ScannerUiState.Initializing,
+                lookingUp = uiState == ScannerUiState.LookingUp,
+                onNavigateBack = onNavigateBack,
+            )
         }
+        is ScannerUiState.Success, ScannerUiState.NavigationDelivered -> Box(modifier = modifier.fillMaxSize())
     }
 }
 
@@ -129,6 +134,7 @@ private fun ScannerMessageScreen(
 @Composable
 private fun BarcodeScannerOverlay(
     initializing: Boolean,
+    lookingUp: Boolean,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -165,12 +171,18 @@ private fun BarcodeScannerOverlay(
                     .testTag("scanner_viewfinder"),
                 contentAlignment = Alignment.Center,
             ) {
-                if (initializing) ManiculeLoading()
+                if (initializing || lookingUp) ManiculeLoading()
             }
         }
         Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surface.copy(alpha = OVERLAY_ALPHA)) {
             Text(
-                text = stringResource(if (initializing) R.string.scanner_initializing else R.string.scanner_guide),
+                text = stringResource(
+                    when {
+                        initializing -> R.string.scanner_initializing
+                        lookingUp -> R.string.scanner_looking_up
+                        else -> R.string.scanner_guide
+                    },
+                ),
                 modifier = Modifier.padding(horizontal = MaterialTheme.spacing.lg, vertical = MaterialTheme.spacing.sm),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
@@ -191,6 +203,9 @@ private class ScannerPreviewStates : PreviewParameterProvider<ScannerUiState> {
         ScannerUiState.PermissionDenied(requiresSettings = true, launchFailed = true),
         ScannerUiState.Initializing,
         ScannerUiState.Scanning,
+        ScannerUiState.LookingUp,
+        ScannerUiState.Success("9780000000000"),
+        ScannerUiState.NavigationDelivered,
         ScannerUiState.Failed,
     )
 }

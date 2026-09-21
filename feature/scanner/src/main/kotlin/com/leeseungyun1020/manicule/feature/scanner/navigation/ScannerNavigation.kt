@@ -11,11 +11,13 @@ object ScannerRoute
 fun NavGraphBuilder.scannerScreen(
     onNavigateBack: () -> Unit,
     onNavigateToSearch: () -> Unit,
+    onNavigateToBookDetail: (String) -> Unit,
 ) {
     composable<ScannerRoute> {
         ScannerRoute(
             onNavigateBack = onNavigateBack,
             onNavigateToSearch = onNavigateToSearch,
+            onNavigateToBookDetail = onNavigateToBookDetail,
         )
     }
 }
