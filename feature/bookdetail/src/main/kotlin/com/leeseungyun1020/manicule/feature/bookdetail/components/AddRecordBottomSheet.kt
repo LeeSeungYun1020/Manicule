@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,26 +70,28 @@ internal fun AddRecordBottomSheet(
     val today = remember { Clock.System.now().toLocalDateTime(timeZone).date }
     val currentTime = remember { Clock.System.now().toLocalDateTime(timeZone).time }
 
-    var dateMode by remember { mutableStateOf(DateSelectionMode.Today) }
-    var customDate by remember { mutableStateOf(today) }
-    var showDatePicker by remember { mutableStateOf(false) }
+    var dateMode by rememberSaveable { mutableStateOf(DateSelectionMode.Today) }
+    var customDateText by rememberSaveable { mutableStateOf(today.toString()) }
+    var showDatePicker by rememberSaveable { mutableStateOf(false) }
 
-    var timeMode by remember { mutableStateOf(TimeSelectionMode.Now) }
-    var customTime by remember { mutableStateOf(LocalTime(currentTime.hour, currentTime.minute)) }
-    var showTimePicker by remember { mutableStateOf(false) }
+    var timeMode by rememberSaveable { mutableStateOf(TimeSelectionMode.Now) }
+    var customTimeText by rememberSaveable {
+        mutableStateOf(LocalTime(currentTime.hour, currentTime.minute).toString())
+    }
+    var showTimePicker by rememberSaveable { mutableStateOf(false) }
 
-    var startPageText by remember { mutableStateOf(initialStartPage.toString()) }
-    var endPageText by remember { mutableStateOf("") }
+    var startPageText by rememberSaveable { mutableStateOf(initialStartPage.toString()) }
+    var endPageText by rememberSaveable { mutableStateOf("") }
 
     val startPage = startPageText.toIntOrNull()
     val endPage = endPageText.toIntOrNull()
     val isPageValid = isPageRangeValid(startPage, endPage)
 
-    val selectedDate = resolveSelectedDate(dateMode, today, customDate)
-    val selectedTime = resolveSelectedTime(timeMode, currentTime, customTime)
+    val selectedDate = resolveSelectedDate(dateMode, today, LocalDate.parse(customDateText))
+    val selectedTime = resolveSelectedTime(timeMode, currentTime, LocalTime.parse(customTimeText))
 
     ManiculeBottomSheet(
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = { if (!isSaving) onDismissRequest() },
         modifier = modifier,
     ) {
         Column(
@@ -107,7 +110,10 @@ internal fun AddRecordBottomSheet(
                     text = stringResource(R.string.book_detail_add_record_title),
                     style = MaterialTheme.typography.titleMedium,
                 )
-                IconButton(onClick = onDismissRequest) {
+                IconButton(
+                    onClick = onDismissRequest,
+                    enabled = !isSaving,
+                ) {
                     Icon(
                         imageVector = ManiculeIcons.Close,
                         contentDescription = stringResource(R.string.book_detail_cancel),
@@ -155,7 +161,7 @@ internal fun AddRecordBottomSheet(
     if (showDatePicker) {
         RecordDatePickerDialog(
             initialDate = selectedDate,
-            onConfirm = { customDate = it },
+            onConfirm = { customDateText = it.toString() },
             onDismiss = { showDatePicker = false },
         )
     }
@@ -163,7 +169,7 @@ internal fun AddRecordBottomSheet(
     if (showTimePicker) {
         RecordTimePickerDialog(
             initialTime = selectedTime,
-            onConfirm = { customTime = it },
+            onConfirm = { customTimeText = it.toString() },
             onDismiss = { showTimePicker = false },
         )
     }

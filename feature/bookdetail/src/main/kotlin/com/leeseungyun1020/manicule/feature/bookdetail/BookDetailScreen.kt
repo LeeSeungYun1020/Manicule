@@ -59,8 +59,8 @@ fun BookDetailScreen(
     onRetry: () -> Unit,
     onStatusSelected: (ReadingStatus) -> Unit,
     onStatusErrorDismissed: () -> Unit,
-    onAddRecord: (LocalDate, LocalTime, Int, Int) -> Unit = { _, _, _, _ -> },
-    onRecordErrorDismissed: () -> Unit = {},
+    onAddRecord: (LocalDate, LocalTime, Int, Int) -> Unit,
+    onRecordErrorDismissed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -72,6 +72,20 @@ fun BookDetailScreen(
         onRecordErrorDismissed = onRecordErrorDismissed,
     )
     var showAddRecordSheet by rememberSaveable { mutableStateOf(false) }
+    var recordSaveStarted by rememberSaveable { mutableStateOf(false) }
+    val recordSaving = (uiState as? BookDetailUiState.Content)?.recordSaving
+
+    LaunchedEffect(recordSaving, recordSaveStarted) {
+        when (recordSaving) {
+            RecordSavingState.Idle -> {
+                if (recordSaveStarted) showAddRecordSheet = false
+                recordSaveStarted = false
+            }
+
+            is RecordSavingState.Failed -> recordSaveStarted = false
+            RecordSavingState.Saving, null -> Unit
+        }
+    }
 
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -110,8 +124,8 @@ fun BookDetailScreen(
             isSaving = uiState.recordSaving is RecordSavingState.Saving,
             onDismissRequest = { showAddRecordSheet = false },
             onSave = { date, time, startPage, endPage ->
+                recordSaveStarted = true
                 onAddRecord(date, time, startPage, endPage)
-                showAddRecordSheet = false
             },
         )
     }
@@ -123,7 +137,7 @@ private fun rememberBookDetailSnackbarHostState(
     onRetry: () -> Unit,
     onStatusSelected: (ReadingStatus) -> Unit,
     onStatusErrorDismissed: () -> Unit,
-    onRecordErrorDismissed: () -> Unit = {},
+    onRecordErrorDismissed: () -> Unit,
 ): SnackbarHostState {
     val currentOnRetry by rememberUpdatedState(onRetry)
     val currentOnStatusSelected by rememberUpdatedState(onStatusSelected)
@@ -305,6 +319,8 @@ private fun BookDetailScreenPreview() {
             onRetry = {},
             onStatusSelected = {},
             onStatusErrorDismissed = {},
+            onAddRecord = { _, _, _, _ -> },
+            onRecordErrorDismissed = {},
         )
     }
 }
@@ -320,6 +336,8 @@ private fun BookDetailLoadingPreview() {
             onRetry = {},
             onStatusSelected = {},
             onStatusErrorDismissed = {},
+            onAddRecord = { _, _, _, _ -> },
+            onRecordErrorDismissed = {},
         )
     }
 }
@@ -335,6 +353,8 @@ private fun BookDetailErrorPreview() {
             onRetry = {},
             onStatusSelected = {},
             onStatusErrorDismissed = {},
+            onAddRecord = { _, _, _, _ -> },
+            onRecordErrorDismissed = {},
         )
     }
 }
@@ -355,6 +375,8 @@ private fun BookDetailRefreshErrorPreview() {
             onRetry = {},
             onStatusSelected = {},
             onStatusErrorDismissed = {},
+            onAddRecord = { _, _, _, _ -> },
+            onRecordErrorDismissed = {},
         )
     }
 }
@@ -375,6 +397,8 @@ private fun BookDetailRefreshingPreview() {
             onRetry = {},
             onStatusSelected = {},
             onStatusErrorDismissed = {},
+            onAddRecord = { _, _, _, _ -> },
+            onRecordErrorDismissed = {},
         )
     }
 }
@@ -394,6 +418,8 @@ private fun BookDetailReviewOnlyPreview() {
             onRetry = {},
             onStatusSelected = {},
             onStatusErrorDismissed = {},
+            onAddRecord = { _, _, _, _ -> },
+            onRecordErrorDismissed = {},
         )
     }
 }
