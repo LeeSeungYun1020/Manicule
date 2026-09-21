@@ -9,8 +9,8 @@ import kotlinx.serialization.Serializable
 object ScannerRoute
 
 fun NavGraphBuilder.scannerScreen(
-    onNavigateBack: () -> Unit = {},
-    onNavigateToSearch: () -> Unit = {},
+    onNavigateBack: () -> Unit,
+    onNavigateToSearch: () -> Unit,
 ) {
     composable<ScannerRoute> {
         ScannerRoute(

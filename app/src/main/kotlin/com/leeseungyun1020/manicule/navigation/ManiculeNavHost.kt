@@ -53,6 +53,12 @@ fun ManiculeNavHost(
         )
         scannerScreen(
             onNavigateBack = { appState.navController.popBackStack() },
+            onNavigateToSearch = {
+                appState.navController.navigate(SearchRoute) {
+                    popUpTo<ScannerRoute> { inclusive = true }
+                    launchSingleTop = true
+                }
+            },
         )
         bookDetailScreen(
             onNavigateBack = { appState.navController.popBackStack() },

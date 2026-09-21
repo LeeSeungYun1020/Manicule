@@ -74,7 +74,14 @@ class BookRepositoryImpl
                 Log.e("BookRepository", "Failed to sync book with ISBN $isbn", it)
             }
 
-        override fun searchBooks(query: String): Flow<PagingData<Book>> =
+        override fun searchBooks(query: String): Flow<PagingData<Book>> = createBookPager(query = query, isIsbnSearch = false)
+
+        override fun searchBooksByIsbn(isbn: String): Flow<PagingData<Book>> = createBookPager(query = isbn, isIsbnSearch = true)
+
+        private fun createBookPager(
+            query: String,
+            isIsbnSearch: Boolean,
+        ): Flow<PagingData<Book>> =
             Pager(
                 config =
                     PagingConfig(
@@ -87,6 +94,7 @@ class BookRepositoryImpl
                         bookRemoteDataSource = bookRemoteDataSource,
                         query = query,
                         pageSize = NETWORK_PAGE_SIZE,
+                        isIsbnSearch = isIsbnSearch,
                     )
                 },
             ).flow

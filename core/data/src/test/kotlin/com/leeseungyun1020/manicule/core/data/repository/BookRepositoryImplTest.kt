@@ -119,6 +119,41 @@ class BookRepositoryImplTest {
         }
 
     @Test
+    fun searchBooksByIsbn_requestsNlkApiWithIsbnParameterAndReturnsPagingData() =
+        runTest {
+            fakeNlkApi.responseProvider = { request ->
+                if (request.isbn == "9788954699914") {
+                    NlkSearchResponseDto(
+                        totalCount = "1",
+                        pageNo = request.pageNo.toString(),
+                        docs =
+                            listOf(
+                                NlkBookDto(
+                                    isbn = "9788954699914",
+                                    title = "Kotlin in Action",
+                                    author = "Author",
+                                ),
+                            ),
+                    )
+                } else {
+                    NlkSearchResponseDto(totalCount = "0", pageNo = request.pageNo.toString())
+                }
+            }
+
+            val books = bookRepository.searchBooksByIsbn("9788954699914").asSnapshot()
+
+            assertThat(books).hasSize(1)
+            assertThat(books.first().isbn).isEqualTo("9788954699914")
+            assertThat(fakeNlkApi.requests).hasSize(1)
+            val request = fakeNlkApi.requests.first()
+            assertThat(request.isbn).isEqualTo("9788954699914")
+            assertThat(request.title).isNull()
+            assertThat(request.author).isNull()
+            assertThat(request.pageNo).isEqualTo(1)
+            assertThat(request.pageSize).isEqualTo(10)
+        }
+
+    @Test
     fun scenario1_local_exists_remote_success() =
         runTest {
             val localEntity =
