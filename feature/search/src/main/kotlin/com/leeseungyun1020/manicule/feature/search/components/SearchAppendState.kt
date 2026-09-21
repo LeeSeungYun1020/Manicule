@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -21,6 +22,7 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.feature.search.R
+import com.leeseungyun1020.manicule.core.designsystem.R as DesignSystemR
 
 @Composable
 internal fun SearchAppendState(
@@ -55,7 +57,8 @@ internal fun SearchAppendState(
                 )
                 ManiculeTextButton(
                     onClick = onRetry,
-                    text = stringResource(R.string.search_retry),
+                    text = stringResource(DesignSystemR.string.core_designsystem_retry),
+                    modifier = Modifier.testTag("search_append_retry"),
                 )
             }
         }

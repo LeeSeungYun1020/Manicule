@@ -328,28 +328,6 @@ class LibraryScreenTest {
     }
 
     @Test
-    fun errorState_callsRetry() {
-        var retried = false
-        composeRule.setContent {
-            ManiculeTheme {
-                LibraryScreen(
-                    uiState = LibraryUiState.Error(ReadingStatus.READING),
-                    onStatusSelected = {},
-                    onSortSelected = {},
-                    onBookSelected = {},
-                    onSearch = {},
-                    onScan = {},
-                    onRetry = { retried = true },
-                )
-            }
-        }
-
-        composeRule.onNodeWithText(context.getString(R.string.library_error_title)).assertIsDisplayed()
-        composeRule.onNodeWithText(context.getString(R.string.library_retry)).performClick()
-        composeRule.runOnIdle { assertThat(retried).isTrue() }
-    }
-
-    @Test
     fun readingTab_showsProgressPercentageAndBookmarkRibbon() {
         composeRule.setContent {
             ManiculeTheme {

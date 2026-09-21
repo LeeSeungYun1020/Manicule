@@ -16,6 +16,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.leeseungyun1020.manicule.core.designsystem.R
+import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import kotlinx.coroutines.CoroutineScope
@@ -29,6 +32,8 @@ import org.junit.runner.RunWith
 class FeedbackStateComponentsTest {
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
     fun emptyState_supportsOneAction() {
@@ -139,5 +144,60 @@ class FeedbackStateComponentsTest {
 
         composeTestRule.onNodeWithText("Undo").performClick()
         composeTestRule.runOnIdle { assertEquals(SnackbarResult.ActionPerformed, secondResult) }
+    }
+
+    @Test
+    fun errorState_withRetry_displaysContentAndCallsRetry() {
+        var retryCount = 0
+        composeTestRule.setContent {
+            ManiculeTheme {
+                ManiculeErrorState(
+                    title = "Failed to load",
+                    icon = ManiculeIcons.NetworkError,
+                    description = "Check your connection",
+                    onRetry = { retryCount++ },
+                    retryText = "Retry now",
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Failed to load").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Check your connection").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Retry now").assertIsDisplayed().performClick()
+        composeTestRule.runOnIdle { assertEquals(1, retryCount) }
+    }
+
+    @Test
+    fun errorState_withoutRetry_displaysOnlyTitleAndDescription() {
+        composeTestRule.setContent {
+            ManiculeTheme {
+                ManiculeErrorState(
+                    title = "Connection error",
+                    icon = ManiculeIcons.NetworkError,
+                    description = "Please try again later",
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Connection error").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Please try again later").assertIsDisplayed()
+        assertEquals(0, composeTestRule.onAllNodesWithText(context.getString(R.string.core_designsystem_retry)).fetchSemanticsNodes().size)
+    }
+
+    @Test
+    fun networkErrorState_withRetry_displaysDefaultTextAndCallsRetry() {
+        var retryCount = 0
+        composeTestRule.setContent {
+            ManiculeTheme {
+                ManiculeNetworkErrorState(
+                    onRetry = { retryCount++ },
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText(context.getString(R.string.core_designsystem_network_error_title)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(R.string.core_designsystem_network_error_description)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(R.string.core_designsystem_retry)).assertIsDisplayed().performClick()
+        composeTestRule.runOnIdle { assertEquals(1, retryCount) }
     }
 }
