@@ -4,7 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -98,7 +101,9 @@ internal fun AddRecordBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = MaterialTheme.spacing.screenHorizontal)
-                .padding(bottom = MaterialTheme.spacing.xl),
+                .padding(bottom = MaterialTheme.spacing.xl)
+                .imePadding()
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
         ) {
             Row(

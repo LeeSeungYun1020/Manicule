@@ -11,6 +11,9 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -300,6 +303,30 @@ class BookDetailScreenTest {
 
         composeRule.onNodeWithText(context.getString(R.string.book_detail_record_date_yesterday)).assertIsSelected()
         composeRule.onNodeWithText("25").assertIsDisplayed()
+    }
+
+    @Test
+    fun addRecordBottomSheet_formIsVerticallyScrollable() {
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = recordsState(ReadingStatus.READING, emptyList()),
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+
+        composeRule.onNode(
+            hasScrollAction() and
+                hasAnyDescendant(hasText(context.getString(R.string.book_detail_add_record_title))),
+            useUnmergedTree = true,
+        ).assertExists()
     }
 
     @Test
