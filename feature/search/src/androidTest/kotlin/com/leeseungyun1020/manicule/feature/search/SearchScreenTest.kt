@@ -57,7 +57,7 @@ class SearchScreenTest {
 
         composeTestRule.onNodeWithText("What book are you looking for?").assertIsDisplayed()
         composeTestRule
-            .onNode(hasText("Search by title or author") and hasSetTextAction())
+            .onNode(hasText("Search by title, author, or ISBN") and hasSetTextAction())
             .assertIsFocused()
         composeTestRule.onNodeWithContentDescription("Navigate back").performClick()
 
@@ -96,7 +96,7 @@ class SearchScreenTest {
 
         composeTestRule.onNodeWithText("What book are you looking for?").assertIsDisplayed()
         composeTestRule
-            .onNode(hasText("Search by title or author") and hasSetTextAction())
+            .onNode(hasText("Search by title, author, or ISBN") and hasSetTextAction())
             .assertIsFocused()
     }
 

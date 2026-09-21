@@ -24,4 +24,6 @@
     <string name="library_sort_cancel">Cancel</string>
     <string name="library_sort_apply">Apply</string>
     <string name="library_sort_caption">%1$s · %2$s</string>
+    <string name="library_book_progress">%1$d%%</string>
+    <string name="library_book_finished_date">%2$d/%3$d/%1$d</string>
 </resources>

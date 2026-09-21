@@ -349,9 +349,286 @@ class LibraryScreenTest {
         composeRule.runOnIdle { assertThat(retried).isTrue() }
     }
 
+    @Test
+    fun readingTab_showsProgressPercentageAndBookmarkRibbon() {
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState =
+                        LibraryUiState.Content(
+                            ReadingStatus.READING,
+                            listOf(
+                                entry(
+                                    status = ReadingStatus.READING,
+                                    totalPages = 300,
+                                    currentPage = 150,
+                                ),
+                            ),
+                        ),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.library_book_progress, 50)).assertIsDisplayed()
+        composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun readingTab_whenZeroProgress_showsZeroPercentAndNoBookmark() {
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState =
+                        LibraryUiState.Content(
+                            ReadingStatus.READING,
+                            listOf(
+                                entry(
+                                    status = ReadingStatus.READING,
+                                    totalPages = 300,
+                                    currentPage = 0,
+                                ),
+                            ),
+                        ),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.library_book_progress, 0)).assertIsDisplayed()
+        composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun readingTab_whenTotalPagesNull_doesNotShowOverlay() {
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState =
+                        LibraryUiState.Content(
+                            ReadingStatus.READING,
+                            listOf(
+                                entry(
+                                    status = ReadingStatus.READING,
+                                    totalPages = null,
+                                    currentPage = 150,
+                                ),
+                            ),
+                        ),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("book_cover_status_overlay", useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun readingTab_whenTotalPagesNotPositive_doesNotShowOverlay() {
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState =
+                        LibraryUiState.Content(
+                            ReadingStatus.READING,
+                            listOf(
+                                entry(
+                                    isbn = "9780000000001",
+                                    totalPages = 0,
+                                    currentPage = 1,
+                                ),
+                                entry(
+                                    isbn = "9780000000002",
+                                    totalPages = -1,
+                                    currentPage = 1,
+                                ),
+                            ),
+                        ),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("book_cover_status_overlay", useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun readingTab_whenCurrentPageNull_showsZeroPercentAndNoBookmark() {
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState =
+                        LibraryUiState.Content(
+                            ReadingStatus.READING,
+                            listOf(
+                                entry(
+                                    totalPages = 300,
+                                    currentPage = null,
+                                ),
+                            ),
+                        ),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.library_book_progress, 0)).assertIsDisplayed()
+        composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun readingTab_whenCurrentPageExceedsTotalPages_clampsToHundredPercent() {
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState =
+                        LibraryUiState.Content(
+                            ReadingStatus.READING,
+                            listOf(
+                                entry(
+                                    totalPages = 300,
+                                    currentPage = 400,
+                                ),
+                            ),
+                        ),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.library_book_progress, 100)).assertIsDisplayed()
+        composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun finishedTab_showsFinishedDateOverlay() {
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState =
+                        LibraryUiState.Content(
+                            ReadingStatus.FINISHED,
+                            listOf(
+                                entry(
+                                    status = ReadingStatus.FINISHED,
+                                    finishedAt = kotlinx.datetime.LocalDate(2026, 7, 8),
+                                ),
+                            ),
+                        ),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule
+            .onNodeWithText(context.getString(R.string.library_book_finished_date, 2026, 7, 8))
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun finishedTab_whenFinishedAtNull_doesNotShowOverlay() {
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState =
+                        LibraryUiState.Content(
+                            ReadingStatus.FINISHED,
+                            listOf(
+                                entry(
+                                    status = ReadingStatus.FINISHED,
+                                    finishedAt = null,
+                                ),
+                            ),
+                        ),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("book_cover_status_overlay", useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun wantTab_doesNotShowOverlay() {
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState =
+                        LibraryUiState.Content(
+                            ReadingStatus.WANT,
+                            listOf(
+                                entry(
+                                    status = ReadingStatus.WANT,
+                                    totalPages = 300,
+                                    currentPage = 150,
+                                ),
+                            ),
+                        ),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("book_cover_status_overlay", useUnmergedTree = true).assertDoesNotExist()
+        composeRule.onNodeWithTag("bookmark_ribbon", useUnmergedTree = true).assertDoesNotExist()
+    }
+
     private fun entry(
         isbn: String = "9780000000001",
         title: String = "테스트 책",
+        status: ReadingStatus = ReadingStatus.READING,
+        totalPages: Int? = null,
+        currentPage: Int? = null,
+        finishedAt: kotlinx.datetime.LocalDate? = null,
     ) = BookEntry(
         book =
             Book(
@@ -361,15 +638,17 @@ class LibraryScreenTest {
                 publisher = "출판사",
                 publishedDate = null,
                 coverUrl = null,
-                totalPages = null,
+                totalPages = totalPages,
                 price = null,
                 category = null,
                 tableOfContentsUrl = null,
                 introductionUrl = null,
                 summaryUrl = null,
             ),
-        status = ReadingStatus.READING,
+        status = status,
         addedAt = Instant.fromEpochMilliseconds(0),
         updatedAt = Instant.fromEpochMilliseconds(0),
+        currentPage = currentPage,
+        finishedAt = finishedAt,
     )
 }

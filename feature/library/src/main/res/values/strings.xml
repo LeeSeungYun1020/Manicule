@@ -24,4 +24,6 @@
     <string name="library_sort_cancel">취소</string>
     <string name="library_sort_apply">적용</string>
     <string name="library_sort_caption">%1$s · %2$s</string>
+    <string name="library_book_progress">%1$d%%</string>
+    <string name="library_book_finished_date">%1$d/%2$d/%3$d</string>
 </resources>
