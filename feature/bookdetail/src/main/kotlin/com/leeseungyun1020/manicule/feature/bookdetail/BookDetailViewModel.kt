@@ -33,17 +33,19 @@ private sealed interface RecordObservation {
         val records: List<ReadingRecord>,
     ) : RecordObservation
 
-    data object Failed : RecordObservation
+    data class Failed(
+        val attempt: Long,
+    ) : RecordObservation
 }
 
 private fun ObserveBookRecordsUseCase.observeWithRetry(
     isbn: String,
     retrySignals: Flow<Long>,
 ): Flow<RecordObservation> =
-    retrySignals.flatMapLatest {
+    retrySignals.flatMapLatest { attempt ->
         this(isbn)
             .map<List<ReadingRecord>, RecordObservation>(RecordObservation::Loaded)
-            .catch { emit(RecordObservation.Failed) }
+            .catch { emit(RecordObservation.Failed(attempt)) }
     }
 
 @HiltViewModel
@@ -221,7 +223,8 @@ class BookDetailViewModel
                                             is RecordObservation.Loaded ->
                                                 recordObservation.records to RecordLoadState.Idle
 
-                                            RecordObservation.Failed -> previousRecords to RecordLoadState.Failed
+                                            is RecordObservation.Failed ->
+                                                previousRecords to RecordLoadState.Failed(recordObservation.attempt)
                                         }
                                     val tab =
                                         selectedTab ?: if (bookDetail.entry != null) {

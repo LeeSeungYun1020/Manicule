@@ -499,7 +499,7 @@ class BookDetailScreenTest {
         composeRule.setContent {
             ManiculeTheme {
                 BookDetailScreen(
-                    uiState = recordsState(ReadingStatus.READING).copy(recordLoadState = RecordLoadState.Failed),
+                    uiState = recordsState(ReadingStatus.READING).copy(recordLoadState = RecordLoadState.Failed(1L)),
                     onNavigateBack = {},
                     onStatusSelected = {},
                     onStatusErrorDismissed = {},
@@ -531,7 +531,7 @@ class BookDetailScreenTest {
         composeRule.setContent {
             ManiculeTheme {
                 BookDetailScreen(
-                    uiState = recordsState(ReadingStatus.READING, listOf(record)).copy(recordLoadState = RecordLoadState.Failed),
+                    uiState = recordsState(ReadingStatus.READING, listOf(record)).copy(recordLoadState = RecordLoadState.Failed(1L)),
                     onNavigateBack = {},
                     onStatusSelected = {},
                     onStatusErrorDismissed = {},
@@ -546,6 +546,45 @@ class BookDetailScreenTest {
         composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
 
         assertThat(retried).isTrue()
+    }
+
+    @Test
+    fun recordLoadFailure_repeatedFailure_rearmsRetrySnackbar() {
+        var retryCount = 0
+        val record =
+            ReadingRecord(
+                id = 1L,
+                isbn = "123",
+                date = LocalDate(2026, 9, 19),
+                time = LocalTime(14, 0),
+                startPage = 1,
+                endPage = 30,
+            )
+        var uiState by mutableStateOf(
+            recordsState(ReadingStatus.READING, listOf(record)).copy(recordLoadState = RecordLoadState.Failed(1L)),
+        )
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {
+                        retryCount++
+                        uiState = uiState.copy(recordLoadState = RecordLoadState.Failed(2L))
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+        assertThat(retryCount).isEqualTo(1)
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+        assertThat(retryCount).isEqualTo(2)
     }
 
     @Composable

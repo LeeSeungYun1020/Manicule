@@ -381,7 +381,7 @@ class BookDetailViewModelTest {
             val content = contentState(viewModel)
             assertThat(content.bookDetail.book).isEqualTo(testBook)
             assertThat(content.records).isEmpty()
-            assertThat(content.recordLoadState).isEqualTo(RecordLoadState.Failed)
+            assertThat(content.recordLoadState).isEqualTo(RecordLoadState.Failed(1L))
             assertThat(recordRepository.observationCount).isEqualTo(1)
 
             recordRepository.recordFlow = recordRepository.records

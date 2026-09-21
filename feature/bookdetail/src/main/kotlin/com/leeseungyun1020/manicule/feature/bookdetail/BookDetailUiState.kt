@@ -28,7 +28,9 @@ sealed interface BookDetailUiState {
 sealed interface RecordLoadState {
     data object Idle : RecordLoadState
 
-    data object Failed : RecordLoadState
+    data class Failed(
+        val attempt: Long = 0L,
+    ) : RecordLoadState
 }
 
 sealed interface StatusChangeState {
