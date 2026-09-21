@@ -42,7 +42,6 @@ object ManiculeIcons {
     val Star: ImageVector = Icons.Default.Star
     val StarBorder: ImageVector = Icons.Default.StarBorder
     val Refresh: ImageVector = Icons.Default.Refresh
-    val Bookmark: ImageVector = Icons.Default.Bookmark
 
     object Tab {
         val HomeFilled: ImageVector = Icons.Filled.Home
@@ -60,4 +59,5 @@ object ManiculeIcons {
     val CameraOff: ImageVector = Icons.Default.NoPhotography
     val Sort: ImageVector = Icons.AutoMirrored.Filled.Sort
     val Close: ImageVector = Icons.Default.Close
+    val Bookmark: ImageVector = Icons.Default.Bookmark
 }
