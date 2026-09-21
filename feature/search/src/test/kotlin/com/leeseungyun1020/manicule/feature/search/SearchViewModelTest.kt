@@ -702,6 +702,33 @@ class SearchViewModelTest {
             }
         }
 
+    @Test
+    fun onSearch_calledMultipleTimesWhileClearAllInFlight_queuesAllSavesBehindClearAll() =
+        runTest(testDispatcher) {
+            val repository =
+                FakeSearchHistoryRepository {
+                    flowOf(listOf(searchQuery("Compose"), searchQuery("Kotlin")))
+                }
+            val viewModel = createViewModel(repository)
+
+            viewModel.uiState.test {
+                assertThat(awaitItem()).isEqualTo(SearchUiState())
+                awaitItem()
+
+                viewModel.onClearAllQueries()
+                awaitItem()
+
+                viewModel.onSearch("Android")
+                viewModel.onSearch("Kotlin")
+                runCurrent()
+
+                assertThat(repository.operations)
+                    .containsExactly("clear", "save:Android", "save:Kotlin")
+                    .inOrder()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
     private fun createViewModel(
         historyRepository: FakeSearchHistoryRepository,
         bookRepository: FakeBookRepository = FakeBookRepository(),

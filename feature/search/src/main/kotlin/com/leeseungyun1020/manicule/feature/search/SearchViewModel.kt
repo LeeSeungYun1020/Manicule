@@ -15,7 +15,6 @@ import com.leeseungyun1020.manicule.core.model.SearchQuery
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +29,10 @@ import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val RECENT_QUERIES_RETRY_DELAY_MILLIS = 500L
 
@@ -43,8 +45,9 @@ class SearchViewModel
         private val deleteRecentQuery: DeleteRecentQueryUseCase,
         private val clearRecentQueries: ClearRecentQueriesUseCase,
         searchBooks: SearchBooksUseCase,
-        @ApplicationScope private val applicationScope: CoroutineScope,
+        @param:ApplicationScope private val applicationScope: CoroutineScope,
     ) : ViewModel() {
+        private val historyMutationMutex = Mutex()
         private val searchInput = MutableStateFlow(SearchInput())
         private val searchRequest = MutableStateFlow<SearchRequest?>(null)
         private val deletionState = MutableStateFlow(DeletionState())
@@ -68,7 +71,7 @@ class SearchViewModel
                     if (cause is CancellationException || attempt > 0L) {
                         false
                     } else {
-                        delay(RECENT_QUERIES_RETRY_DELAY_MILLIS)
+                        delay(RECENT_QUERIES_RETRY_DELAY_MILLIS.milliseconds)
                         true
                     }
                 }
@@ -201,7 +204,7 @@ class SearchViewModel
             }
         }
 
-        private fun commitPendingDelete(): Job? {
+        private fun commitPendingDelete() {
             var pendingToCommit: PendingDelete? = null
             deletionState.update { state ->
                 pendingToCommit = state.pending
@@ -219,17 +222,17 @@ class SearchViewModel
                         )
                 }
             }
-            val pending = pendingToCommit ?: return null
-            return applicationScope.launch {
-                try {
-                    when (pending) {
-                        is PendingDelete.Single -> deleteRecentQuery(pending.query)
-                        is PendingDelete.All -> clearRecentQueries()
+            val pending = pendingToCommit ?: return
+            applicationScope.launch {
+                historyMutationMutex.withLock {
+                    runCatching {
+                        when (pending) {
+                            is PendingDelete.Single -> deleteRecentQuery(pending.query)
+                            is PendingDelete.All -> clearRecentQueries()
+                        }
+                    }.onFailure {
+                        if (it is CancellationException) throw it
                     }
-                } catch (cancellation: CancellationException) {
-                    throw cancellation
-                } catch (_: Exception) {
-                    // 검색 기록 삭제 실패는 검색 화면을 차단하지 않는다.
                 }
             }
         }
@@ -238,7 +241,7 @@ class SearchViewModel
             val normalizedQuery = query.trim()
             if (normalizedQuery.isEmpty()) return
 
-            val commitJob = commitPendingDelete()
+            commitPendingDelete()
             snackbarMessage.value = null
 
             val requestId = nextRequestId++
@@ -255,19 +258,18 @@ class SearchViewModel
                     query = normalizedQuery,
                 )
             applicationScope.launch {
-                try {
-                    commitJob?.join()
-                    deletionState.update { state ->
-                        state.copy(
-                            inFlight = state.inFlight - normalizedQuery,
-                            isClearAllInFlight = false,
-                        )
+                historyMutationMutex.withLock {
+                    runCatching {
+                        deletionState.update { state ->
+                            state.copy(
+                                inFlight = state.inFlight - normalizedQuery,
+                                isClearAllInFlight = false,
+                            )
+                        }
+                        saveRecentQuery(normalizedQuery)
+                    }.onFailure {
+                        if (it is CancellationException) throw it
                     }
-                    saveRecentQuery(normalizedQuery)
-                } catch (cancellation: CancellationException) {
-                    throw cancellation
-                } catch (_: Exception) {
-                    // 검색 기록 저장 실패는 검색 흐름을 차단하지 않는다.
                 }
             }
         }
