@@ -48,8 +48,18 @@ fun SearchRoute(
         searchFieldState = searchFieldState,
         onSearch = submitSearch,
         onQuerySelected = submitSearch,
-        onNavigateBack = onNavigateBack,
-        onBookSelected = onBookSelected,
+        onDeleteQuery = viewModel::onDeleteQuery,
+        onClearAll = viewModel::onClearAllQueries,
+        onUndoDelete = viewModel::onUndoDelete,
+        onSnackbarDismissed = viewModel::onSnackbarDismissed,
+        onNavigateBack = {
+            viewModel.onConfirmDelete()
+            onNavigateBack()
+        },
+        onBookSelected = { isbn ->
+            viewModel.onConfirmDelete()
+            onBookSelected(isbn)
+        },
         scannerAction = scannerAction,
         modifier = modifier,
     )

@@ -128,11 +128,12 @@ class SearchScreenTest {
 
     @Test
     fun recentQueryClick_selectsQuery() {
-        var selectedQuery = ""
+        var selectedQuery: String? = null
         composeTestRule.setSearchContent(
             uiState =
                 SearchUiState(
-                    recentQueriesState = RecentQueriesState.Content(listOf("Compose")),
+                    recentQueriesState =
+                        RecentQueriesState.Content(listOf("Compose")),
                 ),
             onQuerySelected = { selectedQuery = it },
         )
@@ -140,6 +141,89 @@ class SearchScreenTest {
         composeTestRule.onNodeWithText("Compose").performClick()
 
         assertThat(selectedQuery).isEqualTo("Compose")
+    }
+
+    @Test
+    fun deleteButton_invokesOnDeleteQuery() {
+        var deletedQuery: String? = null
+        composeTestRule.setSearchContent(
+            uiState =
+                SearchUiState(
+                    recentQueriesState =
+                        RecentQueriesState.Content(listOf("Compose", "Kotlin")),
+                ),
+            onDeleteQuery = { deletedQuery = it },
+        )
+
+        composeTestRule.onNodeWithContentDescription("Delete Compose").performClick()
+        assertThat(deletedQuery).isEqualTo("Compose")
+    }
+
+    @Test
+    fun clearAllButton_invokesOnClearAll() {
+        var clearAllInvoked = false
+        composeTestRule.setSearchContent(
+            uiState =
+                SearchUiState(
+                    recentQueriesState =
+                        RecentQueriesState.Content(listOf("Compose", "Kotlin")),
+                ),
+            onClearAll = { clearAllInvoked = true },
+        )
+
+        composeTestRule.onNodeWithText("Clear all").performClick()
+        assertThat(clearAllInvoked).isTrue()
+    }
+
+    @Test
+    fun snackbar_displaysQueryDeletedMessageAndUndoButton() {
+        var undoInvoked = false
+        composeTestRule.setSearchContent(
+            uiState =
+                SearchUiState(
+                    recentQueriesState =
+                        RecentQueriesState.Content(listOf("Kotlin")),
+                    snackbarMessage =
+                        SearchSnackbarMessage.QueryDeleted(id = 1L, query = "Compose"),
+                ),
+            onUndoDelete = { undoInvoked = true },
+        )
+
+        composeTestRule.onNodeWithText("Search query deleted").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Undo").assertIsDisplayed().performClick()
+        assertThat(undoInvoked).isTrue()
+    }
+
+    @Test
+    fun snackbar_displaysAllQueriesDeletedMessage() {
+        composeTestRule.setSearchContent(
+            uiState =
+                SearchUiState(
+                    recentQueriesState =
+                        RecentQueriesState.Content(emptyList()),
+                    snackbarMessage =
+                        SearchSnackbarMessage.AllQueriesDeleted(id = 1L),
+                ),
+        )
+
+        composeTestRule.onNodeWithText("All recent searches deleted").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Undo").assertIsDisplayed()
+    }
+
+    @Test
+    fun filteredQueries_doNotShowDeleteButton() {
+        composeTestRule.setSearchContent(
+            uiState =
+                SearchUiState(
+                    query = "Comp",
+                    inputPhase = SearchInputPhase.TYPING,
+                    filteredQueries = listOf("Compose"),
+                ),
+        )
+
+        composeTestRule.onNodeWithText("Compose").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Clear all").assertCountEquals(0)
+        composeTestRule.onNodeWithContentDescription("Delete Compose").assertDoesNotExist()
     }
 
     @Test
@@ -315,6 +399,10 @@ private fun ComposeContentTestRule.setSearchContent(
     initialQuery: String = "",
     onSearch: (String) -> Unit = {},
     onQuerySelected: (String) -> Unit = {},
+    onDeleteQuery: (String) -> Unit = {},
+    onClearAll: () -> Unit = {},
+    onUndoDelete: () -> Unit = {},
+    onSnackbarDismissed: (Long) -> Unit = {},
     onNavigateBack: () -> Unit = {},
     width: Int? = null,
 ) {
@@ -327,6 +415,10 @@ private fun ComposeContentTestRule.setSearchContent(
                     searchFieldState = rememberTextFieldState(initialText = initialQuery),
                     onSearch = onSearch,
                     onQuerySelected = onQuerySelected,
+                    onDeleteQuery = onDeleteQuery,
+                    onClearAll = onClearAll,
+                    onUndoDelete = onUndoDelete,
+                    onSnackbarDismissed = onSnackbarDismissed,
                     onNavigateBack = onNavigateBack,
                     onBookSelected = {},
                     scannerAction = SearchScannerAction.Unavailable,
