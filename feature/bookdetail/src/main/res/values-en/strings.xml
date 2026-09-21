@@ -4,7 +4,6 @@
     <string name="book_detail_tab_information">Book information</string>
     <string name="book_detail_tab_my_records">My records</string>
     <string name="book_detail_refresh_error">Couldn’t get the latest information</string>
-    <string name="book_detail_retry">Retry</string>
     <string name="book_detail_records_stub">My records will be available in the next step</string>
     <string name="book_detail_cover_description">Cover of %1$s</string>
     <string name="book_detail_publication_info">Publication information</string>

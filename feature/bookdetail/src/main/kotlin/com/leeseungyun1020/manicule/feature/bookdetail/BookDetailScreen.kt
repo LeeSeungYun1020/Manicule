@@ -43,6 +43,7 @@ import com.leeseungyun1020.manicule.feature.bookdetail.components.MyRecordTabCon
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
+import com.leeseungyun1020.manicule.core.designsystem.R as DesignSystemR
 
 @OptIn(ExperimentalMaterial3Api::class)
 // 화면 이벤트를 명시적인 콜백으로 노출한다 (LibraryScreen과 동일).
@@ -142,7 +143,7 @@ private fun rememberBookDetailSnackbarHostState(
     val currentOnRecordErrorDismissed by rememberUpdatedState(onRecordErrorDismissed)
     val snackbarHostState = remember { SnackbarHostState() }
     val errorMessage = stringResource(R.string.book_detail_refresh_error)
-    val retryActionLabel = stringResource(R.string.book_detail_retry)
+    val retryActionLabel = stringResource(DesignSystemR.string.core_designsystem_retry)
 
     val statusErrorMessage = stringResource(R.string.book_detail_status_error)
     val recordErrorMessage = stringResource(R.string.book_detail_record_save_error)

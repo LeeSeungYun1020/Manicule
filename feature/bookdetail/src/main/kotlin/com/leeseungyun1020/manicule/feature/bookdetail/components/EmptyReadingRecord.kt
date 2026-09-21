@@ -16,6 +16,7 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.feature.bookdetail.R
+import com.leeseungyun1020.manicule.core.designsystem.R as DesignSystemR
 
 @Composable
 internal fun EmptyReadingRecord(
@@ -82,7 +83,7 @@ internal fun ReadingRecordLoadError(
             actions = {
                 ManiculeButton(
                     onClick = onRetry,
-                    text = stringResource(R.string.book_detail_retry),
+                    text = stringResource(DesignSystemR.string.core_designsystem_retry),
                     leadingIcon = {
                         Icon(
                             imageVector = ManiculeIcons.Refresh,

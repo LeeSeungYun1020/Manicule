@@ -70,17 +70,14 @@ fun ManiculeErrorState(
 @Composable
 fun ManiculeNetworkErrorState(
     modifier: Modifier = Modifier,
-    title: String = stringResource(R.string.core_designsystem_network_error_title),
-    description: String? = stringResource(R.string.core_designsystem_network_error_description),
-    retryText: String = stringResource(R.string.core_designsystem_retry),
     onRetry: (() -> Unit)? = null,
 ) {
     ManiculeErrorState(
-        title = title,
+        title = stringResource(R.string.core_designsystem_network_error_title),
         icon = ManiculeIcons.NetworkError,
         modifier = modifier,
-        description = description,
-        retryText = retryText,
+        description = stringResource(R.string.core_designsystem_network_error_description),
+        retryText = stringResource(R.string.core_designsystem_retry),
         onRetry = onRetry,
     )
 }

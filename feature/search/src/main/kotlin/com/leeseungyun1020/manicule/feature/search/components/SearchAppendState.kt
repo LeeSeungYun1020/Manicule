@@ -21,6 +21,7 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.feature.search.R
+import com.leeseungyun1020.manicule.core.designsystem.R as DesignSystemR
 
 @Composable
 internal fun SearchAppendState(
@@ -55,7 +56,7 @@ internal fun SearchAppendState(
                 )
                 ManiculeTextButton(
                     onClick = onRetry,
-                    text = stringResource(R.string.search_retry),
+                    text = stringResource(DesignSystemR.string.core_designsystem_retry),
                 )
             }
         }

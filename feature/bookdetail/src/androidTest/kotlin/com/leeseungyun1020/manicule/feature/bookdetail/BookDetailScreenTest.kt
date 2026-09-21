@@ -84,7 +84,7 @@ class BookDetailScreenTest {
             }
         }
 
-        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+        composeRule.onNodeWithText(context.getString(DesignSystemR.string.core_designsystem_retry)).performClick()
 
         assertThat(retried).isTrue()
     }
@@ -112,7 +112,7 @@ class BookDetailScreenTest {
         val refreshError = context.getString(R.string.book_detail_refresh_error)
         composeRule.onNodeWithText("Author").assertIsDisplayed()
         composeRule.onNodeWithText(refreshError).assertIsDisplayed()
-        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+        composeRule.onNodeWithText(context.getString(DesignSystemR.string.core_designsystem_retry)).performClick()
 
         assertThat(retried).isTrue()
         composeRule.onAllNodesWithText(refreshError).assertCountEquals(0)
@@ -208,7 +208,7 @@ class BookDetailScreenTest {
         composeRule.runOnIdle { uiState = uiState.copy(statusChange = StatusChangeState.Failed(ReadingStatus.FINISHED, 1)) }
         composeRule.onNodeWithText(context.getString(R.string.book_detail_status_error)).assertIsDisplayed()
         composeRule.onNodeWithText(context.getString(R.string.book_detail_status_reading)).assertIsSelected()
-        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+        composeRule.onNodeWithText(context.getString(DesignSystemR.string.core_designsystem_retry)).performClick()
         assertThat(retriedStatus).isEqualTo(ReadingStatus.FINISHED)
         assertThat(refreshed).isFalse()
         composeRule.onAllNodesWithText(context.getString(R.string.book_detail_status_error)).assertCountEquals(0)
@@ -511,7 +511,7 @@ class BookDetailScreenTest {
 
         composeRule.onNodeWithText(context.getString(R.string.book_detail_status_title)).assertIsDisplayed()
         composeRule.onNodeWithText(context.getString(R.string.book_detail_records_error_title)).assertIsDisplayed()
-        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+        composeRule.onNodeWithText(context.getString(DesignSystemR.string.core_designsystem_retry)).performClick()
 
         assertThat(retried).isTrue()
     }
@@ -543,7 +543,7 @@ class BookDetailScreenTest {
 
         composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).assertIsDisplayed()
         composeRule.onNodeWithText("30p").assertIsDisplayed()
-        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+        composeRule.onNodeWithText(context.getString(DesignSystemR.string.core_designsystem_retry)).performClick()
 
         assertThat(retried).isTrue()
     }
@@ -579,11 +579,11 @@ class BookDetailScreenTest {
             }
         }
 
-        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+        composeRule.onNodeWithText(context.getString(DesignSystemR.string.core_designsystem_retry)).performClick()
         assertThat(retryCount).isEqualTo(1)
 
-        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).assertIsDisplayed()
-        composeRule.onNodeWithText(context.getString(R.string.book_detail_retry)).performClick()
+        composeRule.onNodeWithText(context.getString(DesignSystemR.string.core_designsystem_retry)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(DesignSystemR.string.core_designsystem_retry)).performClick()
         assertThat(retryCount).isEqualTo(2)
     }
 
