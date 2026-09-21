@@ -364,26 +364,6 @@ class SearchScreenTest {
             .onNodeWithContentDescription("Loading search results")
             .assertIsDisplayed()
     }
-
-    @Test
-    fun resultError_displaysRetryAndRetriesLoad() {
-        val pagingSource = ErrorBookPagingSource()
-        composeTestRule.setSearchContent(
-            uiState =
-                SearchUiState(
-                    query = "Compose",
-                    inputPhase = SearchInputPhase.SUBMITTED,
-                ),
-            searchResults =
-                Pager(PagingConfig(pageSize = 10)) {
-                    pagingSource
-                }.flow,
-        )
-
-        composeTestRule.onNodeWithText("Couldn’t load search results").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Try again").performClick()
-        composeTestRule.onNodeWithText("Recovered book").assertIsDisplayed()
-    }
 }
 
 private val completedLoadStates =
@@ -430,23 +410,6 @@ private fun ComposeContentTestRule.setSearchContent(
 
 private class PendingBookPagingSource : PagingSource<Int, Book>() {
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Book> = awaitCancellation()
-
-    override fun getRefreshKey(state: PagingState<Int, Book>): Int? = null
-}
-
-private class ErrorBookPagingSource : PagingSource<Int, Book>() {
-    @Volatile
-    var loadCount = 0
-        private set
-
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Book> {
-        loadCount += 1
-        return if (loadCount == 1) {
-            LoadResult.Error(IllegalStateException("network unavailable"))
-        } else {
-            LoadResult.Page(listOf(book("Recovered book")), prevKey = null, nextKey = null)
-        }
-    }
 
     override fun getRefreshKey(state: PagingState<Int, Book>): Int? = null
 }

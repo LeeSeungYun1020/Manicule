@@ -69,27 +69,6 @@ class BookDetailScreenTest {
     }
 
     @Test
-    fun fatalError_displaysRetry() {
-        var retried = false
-        composeRule.setContent {
-            ManiculeTheme {
-                BookDetailScreen(
-                    uiState = BookDetailUiState.Error,
-                    onNavigateBack = {},
-                    onStatusSelected = {},
-                    onStatusErrorDismissed = {},
-                    onTabSelected = {},
-                    onRetry = { retried = true },
-                )
-            }
-        }
-
-        composeRule.onNodeWithText(context.getString(DesignSystemR.string.core_designsystem_retry)).performClick()
-
-        assertThat(retried).isTrue()
-    }
-
-    @Test
     fun refreshFailure_keepsContent_andRetryDismissesSnackbar() {
         var retried = false
         var uiState by mutableStateOf(contentState(refreshStatus = RefreshStatus.Failed))

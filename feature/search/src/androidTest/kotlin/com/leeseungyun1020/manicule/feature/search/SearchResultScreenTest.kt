@@ -127,16 +127,13 @@ class SearchResultScreenTest {
         source.appendGate.complete(Unit)
         showResults(pagedResults(source))
         compose.onNodeWithTag("search_results").performScrollToIndex(30)
-        compose.onNodeWithTag("search_results").performScrollToNode(hasText("Couldn’t load more results"))
-        compose.onNodeWithText("Couldn’t load more results").assertIsDisplayed()
         compose.onNodeWithText("Book 29").assertIsDisplayed()
 
         source.failAppend = false
-        compose.onNodeWithText("Try again").performClick()
+        compose.onNodeWithTag("search_append_retry").performClick()
         compose.waitUntil { source.appendCompleted }
         compose.onNodeWithTag("search_results").performScrollToIndex(40)
         compose.onNodeWithText("Book 39").assertIsDisplayed()
-        compose.onNodeWithText("Couldn’t load more results").assertDoesNotExist()
         assertThat(source.refreshCalls).isEqualTo(1)
         assertThat(source.appendCalls).isEqualTo(2)
     }

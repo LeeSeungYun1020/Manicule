@@ -16,6 +16,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.leeseungyun1020.manicule.core.designsystem.R
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
@@ -30,6 +32,8 @@ import org.junit.runner.RunWith
 class FeedbackStateComponentsTest {
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
     fun emptyState_supportsOneAction() {
@@ -177,7 +181,7 @@ class FeedbackStateComponentsTest {
 
         composeTestRule.onNodeWithText("Connection error").assertIsDisplayed()
         composeTestRule.onNodeWithText("Please try again later").assertIsDisplayed()
-        assertEquals(0, composeTestRule.onAllNodesWithText("다시 시도").fetchSemanticsNodes().size)
+        assertEquals(0, composeTestRule.onAllNodesWithText(context.getString(R.string.core_designsystem_retry)).fetchSemanticsNodes().size)
     }
 
     @Test
@@ -191,9 +195,9 @@ class FeedbackStateComponentsTest {
             }
         }
 
-        composeTestRule.onNodeWithText("정보를 불러오지 못했어요").assertIsDisplayed()
-        composeTestRule.onNodeWithText("네트워크 연결을 확인하고 다시 시도해 주세요").assertIsDisplayed()
-        composeTestRule.onNodeWithText("다시 시도").assertIsDisplayed().performClick()
+        composeTestRule.onNodeWithText(context.getString(R.string.core_designsystem_network_error_title)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(R.string.core_designsystem_network_error_description)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(context.getString(R.string.core_designsystem_retry)).assertIsDisplayed().performClick()
         composeTestRule.runOnIdle { assertEquals(1, retryCount) }
     }
 }
