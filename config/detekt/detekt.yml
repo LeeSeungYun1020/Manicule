@@ -12,10 +12,13 @@ coroutines:
     active: true
 
 complexity:
+  LargeClass:
+    excludes: [ '**/test/**', '**/androidTest/**' ]
+  LongMethod:
+    excludes: [ '**/test/**', '**/androidTest/**' ]
+    ignoreAnnotated: [ 'Composable' ]
   LongParameterList:
     ignoreDefaultParameters: true
-    ignoreAnnotated: [ 'Composable' ]
-  LongMethod:
     ignoreAnnotated: [ 'Composable' ]
   TooManyFunctions:
     ignoreAnnotatedFunctions: [ 'Preview', 'ManiculePreview' ]

@@ -37,7 +37,6 @@ import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-@Suppress("LargeClass")
 class SearchViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
