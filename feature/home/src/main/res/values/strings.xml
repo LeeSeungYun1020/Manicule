@@ -22,6 +22,8 @@
     <string name="home_choose">고르기</string>
     <string name="home_error_title">홈을 불러오지 못했어요</string>
     <string name="home_error_description">잠시 후 다시 시도해 주세요.</string>
+    <string name="home_summary_error_title">독서 요약을 불러오지 못했어요</string>
+    <string name="home_summary_error_description">다른 홈 정보는 그대로 사용할 수 있어요.</string>
     <string name="home_retry">다시 시도</string>
     <plurals name="home_days"><item quantity="other">%d일</item></plurals>
     <plurals name="home_pages"><item quantity="other">%d쪽</item></plurals>

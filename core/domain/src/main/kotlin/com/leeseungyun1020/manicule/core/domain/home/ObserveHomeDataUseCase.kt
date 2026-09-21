@@ -9,8 +9,10 @@ import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingCalendarDay
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
@@ -22,6 +24,10 @@ data class HomeData(
     val hasReadingRecords: Boolean,
     val readingBooks: List<BookEntry>,
     val wantBookCount: Int,
+    val summary: HomeReadingSummary?,
+)
+
+data class HomeReadingSummary(
     val today: LocalDate,
     val todayPages: Int,
     val currentStreak: Int,
@@ -39,27 +45,37 @@ class ObserveHomeDataUseCase
         operator fun invoke(): Flow<HomeData> =
             clock.observeToday().flatMapLatest { today ->
                 val start = today.minus(DatePeriod(days = 6))
+                val summary =
+                    combine(
+                        statsRepository.observeTotals(today, today),
+                        statsRepository.observeDailyReading(start, today),
+                    ) { todayTotals, dailyReadings -> todayTotals to dailyReadings }
+                        .map { Result.success(it) }
+                        .catch { emit(Result.failure(it)) }
                 combine(
                     getLibraryBooks(),
                     getLibraryBooks(ReadingStatus.READING),
                     statsRepository.observeReadingDatesThrough(today),
-                    statsRepository.observeTotals(today, today),
-                    statsRepository.observeDailyReading(start, today),
-                ) { allBooks, readingBooks, recordDates, todayTotals, dailyReadings ->
-                    val pagesByDate = dailyReadings.associate { it.date to it.pagesRead }
+                    summary,
+                ) { allBooks, readingBooks, recordDates, summaryResult ->
                     HomeData(
                         hasLibraryBooks = allBooks.isNotEmpty(),
                         hasReadingRecords = recordDates.isNotEmpty(),
                         readingBooks = readingBooks,
                         wantBookCount = allBooks.count { it.status == ReadingStatus.WANT },
-                        today = today,
-                        todayPages = todayTotals.pagesRead,
-                        currentStreak = currentStreak(recordDates.distinct().sorted(), today),
-                        recentDays =
-                            (0..6).map { offset ->
-                                val date = start.plus(DatePeriod(days = offset))
-                                ReadingCalendarDay.of(date, pagesByDate[date] ?: 0)
-                            },
+                        summary = summaryResult.getOrNull()?.let { (todayTotals, dailyReadings) ->
+                            val pagesByDate = dailyReadings.associate { it.date to it.pagesRead }
+                            HomeReadingSummary(
+                                today = today,
+                                todayPages = todayTotals.pagesRead,
+                                currentStreak = currentStreak(recordDates.distinct().sorted(), today),
+                                recentDays =
+                                    (0..6).map { offset ->
+                                        val date = start.plus(DatePeriod(days = offset))
+                                        ReadingCalendarDay.of(date, pagesByDate[date] ?: 0)
+                                    },
+                            )
+                        },
                     )
                 }
             }

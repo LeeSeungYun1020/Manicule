@@ -22,6 +22,8 @@
     <string name="home_choose">Choose a book</string>
     <string name="home_error_title">Couldn\'t load home</string>
     <string name="home_error_description">Please try again shortly.</string>
+    <string name="home_summary_error_title">Couldn\'t load reading summary</string>
+    <string name="home_summary_error_description">Other home information is still available.</string>
     <string name="home_retry">Retry</string>
     <plurals name="home_days"><item quantity="one">%d day</item><item quantity="other">%d days</item></plurals>
     <plurals name="home_pages"><item quantity="one">%d page</item><item quantity="other">%d pages</item></plurals>

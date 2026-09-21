@@ -11,6 +11,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.domain.home.HomeData
+import com.leeseungyun1020.manicule.core.domain.home.HomeReadingSummary
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingCalendarDay
@@ -78,6 +79,14 @@ class HomeScreenTest {
         assertThat(retried).isTrue()
     }
 
+    @Test
+    fun summaryFailure_keepsReadingBooksVisible() {
+        setHome(HomeUiState.Content(homeData(readingBooks = listOf(bookEntry())).copy(summary = null)))
+
+        composeRule.onNodeWithText("In progress").assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.home_summary_error_title)).assertIsDisplayed()
+    }
+
     private fun setHome(
         state: HomeUiState,
         onBookSelected: (String) -> Unit = {},
@@ -112,10 +121,13 @@ class HomeScreenTest {
             hasReadingRecords = false,
             readingBooks = readingBooks,
             wantBookCount = wantBookCount,
-            today = today,
-            todayPages = 0,
-            currentStreak = 0,
-            recentDays = (0..6).map { ReadingCalendarDay.of(today, 0) },
+            summary =
+                HomeReadingSummary(
+                    today = today,
+                    todayPages = 0,
+                    currentStreak = 0,
+                    recentDays = (0..6).map { ReadingCalendarDay.of(today, 0) },
+                ),
         )
     }
 

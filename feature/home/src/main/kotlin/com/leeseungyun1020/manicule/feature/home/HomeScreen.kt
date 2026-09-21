@@ -45,6 +45,7 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.domain.home.HomeData
+import com.leeseungyun1020.manicule.core.domain.home.HomeReadingSummary
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingCalendarDay
@@ -86,6 +87,7 @@ fun HomeScreen(
                     onShowReadingBooks = onShowReadingBooks,
                     onChooseWantBook = onChooseWantBook,
                     onShowStats = onShowStats,
+                    onRetry = onRetry,
                     modifier = Modifier.padding(padding),
                 )
         }
@@ -102,6 +104,7 @@ private fun HomeContent(
     onShowReadingBooks: () -> Unit,
     onChooseWantBook: () -> Unit,
     onShowStats: (() -> Unit)?,
+    onRetry: () -> Unit,
     modifier: Modifier,
 ) {
     Column(
@@ -112,7 +115,7 @@ private fun HomeContent(
         if (isFirstUser) {
             OnboardingContent(onSearch, onScan)
         } else {
-            ReadingSummary(data, onShowStats)
+            ReadingSummary(data.summary, onShowStats, onRetry)
             if (data.readingBooks.isEmpty()) {
                 NoReadingBooks(data.wantBookCount, onSearch, onScan, onChooseWantBook)
             } else {
@@ -188,9 +191,18 @@ private fun OnboardingContent(
 
 @Composable
 private fun ReadingSummary(
-    data: HomeData,
+    summary: HomeReadingSummary?,
     onShowStats: (() -> Unit)?,
+    onRetry: () -> Unit,
 ) {
+    if (summary == null) {
+        ManiculeEmptyState(
+            title = stringResource(R.string.home_summary_error_title),
+            description = stringResource(R.string.home_summary_error_description),
+            actions = { ManiculeButton(onClick = onRetry, text = stringResource(R.string.home_retry)) },
+        )
+        return
+    }
     ManiculeCard(
         modifier =
             if (onShowStats != null) Modifier.clickable(onClick = onShowStats) else Modifier,
@@ -200,17 +212,17 @@ private fun ReadingSummary(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
         ) {
             Text(stringResource(R.string.home_reading_summary), style = MaterialTheme.typography.titleMedium)
-            ReadingCalendarGrid(days = data.recentDays, today = data.today)
+            ReadingCalendarGrid(days = summary.recentDays, today = summary.today)
             ReadingCalendarLegend(modifier = Modifier.fillMaxWidth(), compact = true)
             Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
                 ManiculeStatTile(
-                    value = pluralStringResource(R.plurals.home_days, data.currentStreak, data.currentStreak),
+                    value = pluralStringResource(R.plurals.home_days, summary.currentStreak, summary.currentStreak),
                     label = stringResource(R.string.home_streak),
                     modifier = Modifier.weight(1f),
                     icon = { Icon(Icons.Default.LocalFireDepartment, null, modifier = Modifier.width(ManiculeSize.iconSm)) },
                 )
                 ManiculeStatTile(
-                    value = pluralStringResource(R.plurals.home_pages, data.todayPages, data.todayPages),
+                    value = pluralStringResource(R.plurals.home_pages, summary.todayPages, summary.todayPages),
                     label = stringResource(R.string.home_today_pages),
                     modifier = Modifier.weight(1f),
                 )
@@ -325,6 +337,22 @@ private fun HomeNoReadingPreview() {
     }
 }
 
+@ManiculePreview
+@Composable
+private fun HomeLoadingPreview() {
+    ManiculePreviewTheme {
+        HomeScreen(HomeUiState.Loading, {}, null, {}, {}, {}, null, {})
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun HomeErrorPreview() {
+    ManiculePreviewTheme {
+        HomeScreen(HomeUiState.Error, {}, null, {}, {}, {}, null, {})
+    }
+}
+
 private fun previewHomeData(
     hasLibrary: Boolean = false,
     reading: List<BookEntry> = emptyList(),
@@ -336,10 +364,12 @@ private fun previewHomeData(
         false,
         reading,
         wants,
-        today,
-        42,
-        3,
-        (0..6).map { ReadingCalendarDay.of(today, it * 10) },
+        HomeReadingSummary(
+            today = today,
+            todayPages = 42,
+            currentStreak = 3,
+            recentDays = (0..6).map { ReadingCalendarDay.of(today, it * 10) },
+        ),
     )
 }
 
