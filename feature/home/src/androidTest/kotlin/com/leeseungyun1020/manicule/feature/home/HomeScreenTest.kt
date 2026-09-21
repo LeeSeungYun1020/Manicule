@@ -1,0 +1,147 @@
+package com.leeseungyun1020.manicule.feature.home
+
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.google.common.truth.Truth.assertThat
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.domain.home.HomeData
+import com.leeseungyun1020.manicule.core.model.Book
+import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.ReadingCalendarDay
+import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class HomeScreenTest {
+    @get:Rule
+    val composeRule = createComposeRule()
+
+    @Test
+    fun firstUser_showsOnboardingWithoutSummaryOrReadingSection() {
+        setHome(HomeUiState.Content(homeData()))
+
+        composeRule.onNodeWithText(context.getString(R.string.home_onboarding_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.home_reading_summary)).assertDoesNotExist()
+        composeRule
+            .onAllNodesWithText(context.resources.getQuantityString(R.plurals.home_reading_books, 1, 1))
+            .assertCountEquals(0)
+    }
+
+    @Test
+    fun readingBooks_showsCountAndRequestsBookAndLibraryNavigation() {
+        var selectedIsbn: String? = null
+        var showReading = false
+        setHome(
+            HomeUiState.Content(homeData(readingBooks = listOf(bookEntry()))),
+            onBookSelected = { selectedIsbn = it },
+            onShowReadingBooks = { showReading = true },
+        )
+
+        composeRule.onNodeWithText(context.resources.getQuantityString(R.plurals.home_reading_books, 1, 1)).assertIsDisplayed()
+        composeRule.onNodeWithText("In progress").performClick()
+        composeRule.onNodeWithText(context.getString(R.string.home_more)).performClick()
+
+        assertThat(selectedIsbn).isEqualTo("9780000000001")
+        assertThat(showReading).isTrue()
+    }
+
+    @Test
+    fun noReadingBooksWithWant_showsChooseAction() {
+        var choseWantBook = false
+        setHome(
+            HomeUiState.Content(homeData(hasLibraryBooks = true, wantBookCount = 2)),
+            onChooseWantBook = { choseWantBook = true },
+        )
+
+        composeRule.onNodeWithText(context.getString(R.string.home_choose)).performClick()
+
+        assertThat(choseWantBook).isTrue()
+    }
+
+    @Test
+    fun error_showsRetry() {
+        var retried = false
+        setHome(HomeUiState.Error, onRetry = { retried = true })
+
+        composeRule.onNodeWithText(context.getString(R.string.home_retry)).performClick()
+
+        assertThat(retried).isTrue()
+    }
+
+    private fun setHome(
+        state: HomeUiState,
+        onBookSelected: (String) -> Unit = {},
+        onShowReadingBooks: () -> Unit = {},
+        onChooseWantBook: () -> Unit = {},
+        onRetry: () -> Unit = {},
+    ) {
+        composeRule.setContent {
+            ManiculeTheme {
+                HomeScreen(
+                    uiState = state,
+                    onSearch = {},
+                    onScan = {},
+                    onBookSelected = onBookSelected,
+                    onShowReadingBooks = onShowReadingBooks,
+                    onChooseWantBook = onChooseWantBook,
+                    onShowStats = {},
+                    onRetry = onRetry,
+                )
+            }
+        }
+    }
+
+    private fun homeData(
+        hasLibraryBooks: Boolean = false,
+        readingBooks: List<BookEntry> = emptyList(),
+        wantBookCount: Int = 0,
+    ): HomeData {
+        val today = LocalDate(2026, 9, 21)
+        return HomeData(
+            hasLibraryBooks = hasLibraryBooks,
+            hasReadingRecords = false,
+            readingBooks = readingBooks,
+            wantBookCount = wantBookCount,
+            today = today,
+            todayPages = 0,
+            currentStreak = 0,
+            recentDays = (0..6).map { ReadingCalendarDay.of(today, 0) },
+        )
+    }
+
+    private fun bookEntry(): BookEntry =
+        BookEntry(
+            book =
+                Book(
+                    isbn = "9780000000001",
+                    title = "In progress",
+                    author = "Author",
+                    publisher = "Publisher",
+                    publishedDate = null,
+                    coverUrl = null,
+                    totalPages = 100,
+                    price = null,
+                    category = null,
+                    tableOfContentsUrl = null,
+                    introductionUrl = null,
+                    summaryUrl = null,
+                ),
+            status = ReadingStatus.READING,
+            addedAt = Instant.DISTANT_PAST,
+            updatedAt = Instant.DISTANT_PAST,
+            currentPage = 10,
+        )
+
+    private val context
+        get() = InstrumentationRegistry.getInstrumentation().targetContext
+}
