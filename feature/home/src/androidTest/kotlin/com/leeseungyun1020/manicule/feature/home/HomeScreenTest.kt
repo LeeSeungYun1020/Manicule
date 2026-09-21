@@ -39,21 +39,40 @@ class HomeScreenTest {
     }
 
     @Test
-    fun readingBooks_showsCountAndRequestsBookAndLibraryNavigation() {
+    fun readingBook_requestsBookDetail() {
         var selectedIsbn: String? = null
-        var showReading = false
         setHome(
             HomeUiState.Content(homeData(readingBooks = listOf(bookEntry()))),
             onBookSelected = { selectedIsbn = it },
-            onShowReadingBooks = { showReading = true },
         )
 
         composeRule.onNodeWithText(context.resources.getQuantityString(R.plurals.home_reading_books, 1, 1)).assertIsDisplayed()
         composeRule.onNodeWithText("In progress").performClick()
-        composeRule.onNodeWithText(context.getString(R.string.home_more)).performClick()
 
         assertThat(selectedIsbn).isEqualTo("9780000000001")
+    }
+
+    @Test
+    fun readingBooks_more_requestsReadingLibrary() {
+        var showReading = false
+        setHome(
+            HomeUiState.Content(homeData(readingBooks = listOf(bookEntry()))),
+            onShowReadingBooks = { showReading = true },
+        )
+
+        composeRule.onNodeWithText(context.getString(R.string.home_more)).performClick()
+
         assertThat(showReading).isTrue()
+    }
+
+    @Test
+    fun search_requestsSearchNavigation() {
+        var searched = false
+        setHome(HomeUiState.Content(homeData()), onSearch = { searched = true })
+
+        composeRule.onNodeWithText(context.getString(R.string.home_search_placeholder)).performClick()
+
+        assertThat(searched).isTrue()
     }
 
     @Test
@@ -89,6 +108,7 @@ class HomeScreenTest {
 
     private fun setHome(
         state: HomeUiState,
+        onSearch: () -> Unit = {},
         onBookSelected: (String) -> Unit = {},
         onShowReadingBooks: () -> Unit = {},
         onChooseWantBook: () -> Unit = {},
@@ -98,7 +118,7 @@ class HomeScreenTest {
             ManiculeTheme {
                 HomeScreen(
                     uiState = state,
-                    onSearch = {},
+                    onSearch = onSearch,
                     onScan = {},
                     onBookSelected = onBookSelected,
                     onShowReadingBooks = onShowReadingBooks,

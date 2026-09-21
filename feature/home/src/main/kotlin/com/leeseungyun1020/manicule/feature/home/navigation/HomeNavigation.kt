@@ -42,11 +42,11 @@ private fun HomeRoute(
     HomeScreen(
         uiState = uiState,
         onSearch = onNavigateToSearch,
-        onScan = null,
+        onScan = {},
         onBookSelected = onNavigateToBookDetail,
         onShowReadingBooks = onNavigateToReadingBooks,
         onChooseWantBook = onNavigateToWantBooks,
-        onShowStats = null,
+        onShowStats = {},
         onRetry = viewModel::retry,
         modifier = modifier,
     )

@@ -62,11 +62,11 @@ import kotlinx.datetime.LocalDate
 fun HomeScreen(
     uiState: HomeUiState,
     onSearch: () -> Unit,
-    onScan: (() -> Unit)?,
+    onScan: () -> Unit,
     onBookSelected: (String) -> Unit,
     onShowReadingBooks: () -> Unit,
     onChooseWantBook: () -> Unit,
-    onShowStats: (() -> Unit)?,
+    onShowStats: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -99,11 +99,11 @@ private fun HomeContent(
     data: HomeData,
     isFirstUser: Boolean,
     onSearch: () -> Unit,
-    onScan: (() -> Unit)?,
+    onScan: () -> Unit,
     onBookSelected: (String) -> Unit,
     onShowReadingBooks: () -> Unit,
     onChooseWantBook: () -> Unit,
-    onShowStats: (() -> Unit)?,
+    onShowStats: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier,
 ) {
@@ -128,7 +128,7 @@ private fun HomeContent(
 @Composable
 private fun HomeSearchEntry(
     onSearch: () -> Unit,
-    onScan: (() -> Unit)?,
+    onScan: () -> Unit,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
         ManiculeSearchEntry(
@@ -138,8 +138,7 @@ private fun HomeSearchEntry(
             leadingIcon = { Icon(ManiculeIcons.Search, null) },
         )
         ManiculeIconButton(
-            onClick = onScan ?: {},
-            enabled = onScan != null,
+            onClick = onScan,
             icon = {
                 Icon(
                     imageVector = ManiculeIcons.ScanBarcode,
@@ -153,7 +152,7 @@ private fun HomeSearchEntry(
 @Composable
 private fun OnboardingContent(
     onSearch: () -> Unit,
-    onScan: (() -> Unit)?,
+    onScan: () -> Unit,
 ) {
     ManiculeDashedCard {
         Column(
@@ -180,8 +179,7 @@ private fun OnboardingContent(
             Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
                 ManiculeButton(onClick = onSearch, text = stringResource(R.string.home_search))
                 ManiculeOutlinedButton(
-                    onClick = onScan ?: {},
-                    enabled = onScan != null,
+                    onClick = onScan,
                     text = stringResource(R.string.home_scan),
                 )
             }
@@ -192,7 +190,7 @@ private fun OnboardingContent(
 @Composable
 private fun ReadingSummary(
     summary: HomeReadingSummary?,
-    onShowStats: (() -> Unit)?,
+    onShowStats: () -> Unit,
     onRetry: () -> Unit,
 ) {
     if (summary == null) {
@@ -203,10 +201,7 @@ private fun ReadingSummary(
         )
         return
     }
-    ManiculeCard(
-        modifier =
-            if (onShowStats != null) Modifier.clickable(onClick = onShowStats) else Modifier,
-    ) {
+    ManiculeCard(modifier = Modifier.clickable(onClick = onShowStats)) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.lg),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
@@ -279,7 +274,7 @@ private fun ReadingBookCard(
 private fun NoReadingBooks(
     wantBookCount: Int,
     onSearch: () -> Unit,
-    onScan: (() -> Unit)?,
+    onScan: () -> Unit,
     onChooseWantBook: () -> Unit,
 ) {
     ManiculeEmptyState(
@@ -293,7 +288,7 @@ private fun NoReadingBooks(
         actions = {
             if (wantBookCount > 0) ManiculeButton(onClick = onChooseWantBook, text = stringResource(R.string.home_choose))
             ManiculeOutlinedButton(onClick = onSearch, text = stringResource(R.string.home_search))
-            ManiculeOutlinedButton(onClick = onScan ?: {}, enabled = onScan != null, text = stringResource(R.string.home_scan))
+            ManiculeOutlinedButton(onClick = onScan, text = stringResource(R.string.home_scan))
         },
     )
 }
@@ -341,7 +336,7 @@ private fun HomeNoReadingPreview() {
 @Composable
 private fun HomeLoadingPreview() {
     ManiculePreviewTheme {
-        HomeScreen(HomeUiState.Loading, {}, null, {}, {}, {}, null, {})
+        HomeScreen(HomeUiState.Loading, {}, {}, {}, {}, {}, {}, {})
     }
 }
 
@@ -349,7 +344,7 @@ private fun HomeLoadingPreview() {
 @Composable
 private fun HomeErrorPreview() {
     ManiculePreviewTheme {
-        HomeScreen(HomeUiState.Error, {}, null, {}, {}, {}, null, {})
+        HomeScreen(HomeUiState.Error, {}, {}, {}, {}, {}, {}, {})
     }
 }
 
