@@ -401,7 +401,7 @@ class BookDetailViewModelTest {
 
             assertThat(recordRepository.addCalls).isEqualTo(1)
             val content = contentState(viewModel)
-            assertThat(content.recordSaving).isEqualTo(RecordSavingState.Idle)
+            assertThat(content.recordSaving).isEqualTo(RecordSavingState.Succeeded(1L))
             assertThat(content.records).hasSize(1)
             assertThat(content.records.first().startPage).isEqualTo(testRecord.startPage)
             assertThat(content.records.first().endPage).isEqualTo(testRecord.endPage)
@@ -429,13 +429,13 @@ class BookDetailViewModelTest {
             )
             runCurrent()
 
-            assertThat(contentState(viewModel).recordSaving).isEqualTo(RecordSavingState.Saving)
+            assertThat(contentState(viewModel).recordSaving).isEqualTo(RecordSavingState.Saving(1L))
             assertThat(recordRepository.addCalls).isEqualTo(1)
 
             recordRepository.addGate?.complete(Unit)
             advanceUntilIdle()
 
-            assertThat(contentState(viewModel).recordSaving).isEqualTo(RecordSavingState.Idle)
+            assertThat(contentState(viewModel).recordSaving).isEqualTo(RecordSavingState.Succeeded(1L))
             assertThat(recordRepository.addCalls).isEqualTo(1)
         }
 

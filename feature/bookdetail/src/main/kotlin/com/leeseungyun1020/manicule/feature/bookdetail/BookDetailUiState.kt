@@ -40,7 +40,13 @@ sealed interface StatusChangeState {
 sealed interface RecordSavingState {
     data object Idle : RecordSavingState
 
-    data object Saving : RecordSavingState
+    data class Saving(
+        val attempt: Long,
+    ) : RecordSavingState
+
+    data class Succeeded(
+        val attempt: Long,
+    ) : RecordSavingState
 
     data class Failed(
         val attempt: Long,

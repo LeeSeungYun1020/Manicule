@@ -148,7 +148,7 @@ class BookDetailViewModel
                 return
             }
             val attempt = ++recordAttempt
-            updateRecordSaving(RecordSavingState.Saving)
+            updateRecordSaving(RecordSavingState.Saving(attempt))
             viewModelScope.launch {
                 try {
                     addReadingRecord(
@@ -158,7 +158,7 @@ class BookDetailViewModel
                         startPage = startPage,
                         endPage = endPage,
                     )
-                    updateRecordSaving(RecordSavingState.Idle)
+                    updateRecordSaving(RecordSavingState.Succeeded(attempt))
                 } catch (cancelled: CancellationException) {
                     updateRecordSaving(RecordSavingState.Idle)
                     throw cancelled

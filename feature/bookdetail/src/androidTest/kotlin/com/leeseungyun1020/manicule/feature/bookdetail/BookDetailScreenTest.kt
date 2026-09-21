@@ -342,7 +342,7 @@ class BookDetailScreenTest {
                     onTabSelected = {},
                     onRetry = {},
                     onAddRecord = { _, _, _, _ ->
-                        uiState = uiState.copy(recordSaving = RecordSavingState.Saving)
+                        uiState = uiState.copy(recordSaving = RecordSavingState.Saving(1L))
                     },
                 )
             }
@@ -355,9 +355,40 @@ class BookDetailScreenTest {
         composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertIsDisplayed()
         composeRule.onAllNodesWithText(context.getString(R.string.book_detail_add_record_button))[1].assertIsNotEnabled()
 
-        composeRule.runOnIdle { uiState = uiState.copy(recordSaving = RecordSavingState.Idle) }
+        composeRule.runOnIdle { uiState = uiState.copy(recordSaving = RecordSavingState.Succeeded(1L)) }
 
         composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertDoesNotExist()
+    }
+
+    @Test
+    fun addRecordBottomSheet_restoredIdleDoesNotDiscardInFlightDraft() {
+        var uiState by mutableStateOf(recordsState(ReadingStatus.READING, emptyList()))
+        val restorationTester = StateRestorationTester(composeRule)
+        restorationTester.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onAddRecord = { _, _, _, _ ->
+                        uiState = uiState.copy(recordSaving = RecordSavingState.Saving(1L))
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_end_page)).performTextInput("25")
+        composeRule.onAllNodesWithText(context.getString(R.string.book_detail_add_record_button))[1].performClick()
+        composeRule.runOnIdle { uiState = uiState.copy(recordSaving = RecordSavingState.Idle) }
+
+        restorationTester.emulateSavedInstanceStateRestore()
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertIsDisplayed()
+        composeRule.onNodeWithText("25").assertIsDisplayed()
     }
 
     @Test
@@ -373,7 +404,7 @@ class BookDetailScreenTest {
                     onTabSelected = {},
                     onRetry = {},
                     onAddRecord = { _, _, _, _ ->
-                        uiState = uiState.copy(recordSaving = RecordSavingState.Saving)
+                        uiState = uiState.copy(recordSaving = RecordSavingState.Saving(1L))
                     },
                 )
             }

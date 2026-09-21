@@ -72,18 +72,21 @@ fun BookDetailScreen(
         onRecordErrorDismissed = onRecordErrorDismissed,
     )
     var showAddRecordSheet by rememberSaveable { mutableStateOf(false) }
-    var recordSaveStarted by rememberSaveable { mutableStateOf(false) }
+    var pendingRecordSaveAttempt by rememberSaveable { mutableStateOf<Long?>(null) }
     val recordSaving = (uiState as? BookDetailUiState.Content)?.recordSaving
 
-    LaunchedEffect(recordSaving, recordSaveStarted) {
+    LaunchedEffect(recordSaving) {
         when (recordSaving) {
-            RecordSavingState.Idle -> {
-                if (recordSaveStarted) showAddRecordSheet = false
-                recordSaveStarted = false
+            is RecordSavingState.Saving -> pendingRecordSaveAttempt = recordSaving.attempt
+            is RecordSavingState.Succeeded -> {
+                if (pendingRecordSaveAttempt == recordSaving.attempt) {
+                    showAddRecordSheet = false
+                    pendingRecordSaveAttempt = null
+                }
             }
 
-            is RecordSavingState.Failed -> recordSaveStarted = false
-            RecordSavingState.Saving, null -> Unit
+            is RecordSavingState.Failed -> pendingRecordSaveAttempt = null
+            RecordSavingState.Idle, null -> Unit
         }
     }
 
@@ -124,7 +127,6 @@ fun BookDetailScreen(
             isSaving = uiState.recordSaving is RecordSavingState.Saving,
             onDismissRequest = { showAddRecordSheet = false },
             onSave = { date, time, startPage, endPage ->
-                recordSaveStarted = true
                 onAddRecord(date, time, startPage, endPage)
             },
         )
