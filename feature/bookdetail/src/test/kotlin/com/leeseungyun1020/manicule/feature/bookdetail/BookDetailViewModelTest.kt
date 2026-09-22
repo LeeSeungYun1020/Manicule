@@ -554,7 +554,7 @@ class BookDetailViewModelTest {
             bookAfterSync?.let { books.value = it }
             return refreshResult.map { status ->
                 BookSyncResult(
-                    book = books.value ?: error("Book must be available after synchronization."),
+                    book = bookAfterSync ?: books.value ?: testBook,
                     status = status,
                 )
             }
