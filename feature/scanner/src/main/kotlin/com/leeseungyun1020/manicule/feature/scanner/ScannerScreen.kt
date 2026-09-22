@@ -54,7 +54,7 @@ internal fun ScannerScreen(
     cameraPreview: @Composable () -> Unit = {},
 ) {
     when (uiState) {
-        is ScannerUiState.PermissionDenied, ScannerUiState.Failed -> ScannerMessageScreen(
+        is ScannerUiState.PermissionDenied, ScannerUiState.CameraUnavailable, ScannerUiState.Failed -> ScannerMessageScreen(
             uiState = uiState,
             onNavigateBack = onNavigateBack,
             onNavigateToSearch = onNavigateToSearch,
@@ -85,6 +85,37 @@ private fun ScannerMessageScreen(
     modifier: Modifier = Modifier,
 ) {
     val denied = uiState as? ScannerUiState.PermissionDenied
+    val message =
+        when (uiState) {
+            is ScannerUiState.PermissionDenied ->
+                ScannerMessage(
+                    title = R.string.scanner_permission_title,
+                    description =
+                        when {
+                            uiState.launchFailed -> R.string.scanner_permission_launch_failed
+                            uiState.requiresSettings -> R.string.scanner_permission_settings
+                            else -> R.string.scanner_permission_description
+                        },
+                )
+
+            ScannerUiState.CameraUnavailable ->
+                ScannerMessage(
+                    title = R.string.scanner_camera_unavailable_title,
+                    description = R.string.scanner_camera_unavailable_description,
+                )
+
+            ScannerUiState.Failed ->
+                ScannerMessage(
+                    title = R.string.scanner_failed_title,
+                    description = R.string.scanner_failed_description,
+                )
+
+            else ->
+                ScannerMessage(
+                    title = R.string.scanner_failed_title,
+                    description = R.string.scanner_failed_description,
+                )
+        }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -102,15 +133,8 @@ private fun ScannerMessageScreen(
             verticalArrangement = Arrangement.Center,
         ) {
             ManiculeEmptyState(
-                title = stringResource(if (denied != null) R.string.scanner_permission_title else R.string.scanner_failed_title),
-                description = stringResource(
-                    when {
-                        denied == null -> R.string.scanner_failed_description
-                        denied.launchFailed -> R.string.scanner_permission_launch_failed
-                        denied.requiresSettings -> R.string.scanner_permission_settings
-                        else -> R.string.scanner_permission_description
-                    },
-                ),
+                title = stringResource(message.title),
+                description = stringResource(message.description),
                 icon = {
                     Icon(
                         imageVector = ManiculeIcons.CameraOff,
@@ -206,9 +230,15 @@ private class ScannerPreviewStates : PreviewParameterProvider<ScannerUiState> {
         ScannerUiState.LookingUp,
         ScannerUiState.Success("9780000000000"),
         ScannerUiState.NavigationDelivered,
+        ScannerUiState.CameraUnavailable,
         ScannerUiState.Failed,
     )
 }
+
+private data class ScannerMessage(
+    val title: Int,
+    val description: Int,
+)
 
 @ManiculePreview
 @Preview(name = "Phone", widthDp = 360, heightDp = 640)

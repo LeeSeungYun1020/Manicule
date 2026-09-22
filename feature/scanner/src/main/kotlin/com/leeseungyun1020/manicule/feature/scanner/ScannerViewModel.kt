@@ -69,7 +69,7 @@ class ScannerViewModel
             } catch (exception: CancellationException) {
                 throw exception
             } catch (_: Exception) {
-                mutableUiState.value = ScannerUiState.Failed
+                mutableUiState.value = ScannerUiState.CameraUnavailable
             }
         }
 
@@ -101,6 +101,7 @@ class ScannerViewModel
                 is ScannerUiState.PermissionDenied,
                 is ScannerUiState.Success,
                 ScannerUiState.NavigationDelivered,
+                ScannerUiState.CameraUnavailable,
                 ScannerUiState.Failed,
                 -> Unit
             }
@@ -125,7 +126,9 @@ class ScannerViewModel
                 return
             }
             cancelRecognition()
-            if (mutableUiState.value !is ScannerUiState.PermissionDenied) mutableUiState.value = ScannerUiState.Failed
+            if (mutableUiState.value !is ScannerUiState.PermissionDenied) {
+                mutableUiState.value = ScannerUiState.CameraUnavailable
+            }
         }
 
         internal fun onActiveChanged(isActive: Boolean) {

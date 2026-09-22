@@ -19,5 +19,7 @@ sealed interface ScannerUiState {
 
     data object NavigationDelivered : ScannerUiState
 
+    data object CameraUnavailable : ScannerUiState
+
     data object Failed : ScannerUiState
 }

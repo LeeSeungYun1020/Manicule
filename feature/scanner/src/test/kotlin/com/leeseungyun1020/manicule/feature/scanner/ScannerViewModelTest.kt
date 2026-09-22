@@ -117,16 +117,16 @@ class ScannerViewModelTest {
     }
 
     @Test
-    fun readerCreationAndBindingFailuresShowFailure() {
+    fun readerCreationAndBindingFailuresShowCameraUnavailable() {
         factory.failure = IllegalStateException("unavailable")
         viewModel.onPermissionChanged(true)
-        assertThat(viewModel.uiState.value).isEqualTo(ScannerUiState.Failed)
+        assertThat(viewModel.uiState.value).isEqualTo(ScannerUiState.CameraUnavailable)
         assertThat(viewModel.reader).isNull()
         viewModel.onPermissionChanged(false)
         factory.failure = null
         viewModel.onPermissionChanged(true)
         viewModel.onPreviewFailed(viewModel.onPreviewInitializing())
-        assertThat(viewModel.uiState.value).isEqualTo(ScannerUiState.Failed)
+        assertThat(viewModel.uiState.value).isEqualTo(ScannerUiState.CameraUnavailable)
     }
 
     @Test

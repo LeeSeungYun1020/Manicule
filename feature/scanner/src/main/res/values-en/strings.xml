@@ -10,6 +10,8 @@
     <string name="scanner_search">Search</string>
     <string name="scanner_initializing">Preparing the camera</string>
     <string name="scanner_guide">Align the book barcode with the guide</string>
+    <string name="scanner_camera_unavailable_title">Camera unavailable</string>
+    <string name="scanner_camera_unavailable_description">Check the camera, or search by title or author</string>
     <string name="scanner_failed_title">Couldn’t recognize the barcode</string>
     <string name="scanner_failed_description">Try searching by title or author</string>
 </resources>
