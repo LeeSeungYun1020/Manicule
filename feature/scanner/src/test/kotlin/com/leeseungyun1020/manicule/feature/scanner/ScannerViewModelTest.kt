@@ -143,10 +143,11 @@ class ScannerViewModelTest {
     @Test
     fun activeReadyPreviewStartsOneLookupAndDeliversActualBookIsbnOnce() =
         runTest(mainDispatcherRule.dispatcher) {
+            val syncGate = CompletableDeferred<Unit>()
             val viewModel =
                 ScannerViewModel(
                     factory,
-                    GetBookByScanUseCase(SuccessBookRepository()),
+                    GetBookByScanUseCase(SuccessBookRepository(syncGate)),
                     StandardTestDispatcher(testScheduler),
                     SavedStateHandle(),
                 )
@@ -158,9 +159,13 @@ class ScannerViewModelTest {
             viewModel.onActiveChanged(true)
             advanceUntilIdle()
             assertThat(factory.reader.requests).isEqualTo(1)
-            assertThat(viewModel.uiState.value).isEqualTo(ScannerUiState.LookingUp)
+            assertThat(viewModel.uiState.value).isEqualTo(ScannerUiState.Scanning)
 
             factory.reader.barcodes.complete(listOf("raw-barcode"))
+            advanceUntilIdle()
+            assertThat(viewModel.uiState.value).isEqualTo(ScannerUiState.LookingUp)
+
+            syncGate.complete(Unit)
             advanceUntilIdle()
             assertThat(viewModel.uiState.value).isEqualTo(ScannerUiState.Success("actual-isbn"))
 
@@ -225,7 +230,9 @@ class ScannerViewModelTest {
         override fun searchBooks(query: String): Flow<PagingData<Book>> = emptyFlow()
     }
 
-    private class SuccessBookRepository : BookRepository {
+    private class SuccessBookRepository(
+        private val syncGate: CompletableDeferred<Unit>? = null,
+    ) : BookRepository {
         private var synced = false
         private val syncedBook =
             Book(
@@ -253,6 +260,7 @@ class ScannerViewModelTest {
             )
 
         override suspend fun syncBook(isbn: String): Result<BookSyncResult> {
+            syncGate?.await()
             synced = true
             return Result.success(BookSyncResult(book = syncedBook, status = BookSyncStatus.COMPLETE))
         }

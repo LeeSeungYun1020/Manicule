@@ -135,7 +135,7 @@ class ScannerViewModel
             active = isActive
             if (!active) {
                 cancelRecognition()
-                if (mutableUiState.value == ScannerUiState.LookingUp) {
+                if (mutableUiState.value == ScannerUiState.LookingUp || mutableUiState.value == ScannerUiState.Scanning) {
                     mutableUiState.value = ScannerUiState.Initializing
                 }
                 return
@@ -165,7 +165,6 @@ class ScannerViewModel
             if (!canStartRecognition()) return
             val barcodeReader = reader ?: return
             val generation = ++recognitionJobGeneration
-            mutableUiState.value = ScannerUiState.LookingUp
             recognitionJob = viewModelScope.launch { recognizeBook(barcodeReader, generation) }
         }
 
@@ -178,6 +177,8 @@ class ScannerViewModel
         ) {
             try {
                 val candidates = barcodeReader.getBarcodes()
+                if (generation != recognitionJobGeneration || !active || !permissionGranted) return
+                mutableUiState.value = ScannerUiState.LookingUp
                 val isbn = getBookByScan(candidates)
                 if (generation != recognitionJobGeneration || !active || !permissionGranted) return
                 mutableUiState.value = isbn?.let(ScannerUiState::Success) ?: ScannerUiState.Failed
