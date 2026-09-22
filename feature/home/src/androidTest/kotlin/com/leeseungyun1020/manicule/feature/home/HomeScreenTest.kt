@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -58,6 +59,22 @@ class HomeScreenTest {
         composeRule.onNodeWithText("10%").assertDoesNotExist()
 
         assertThat(selectedIsbn).isEqualTo("9780000000001")
+    }
+
+    @Test
+    fun readingBooks_rowUsesFullWidthAndStartsAtScreenInset() {
+        setHome(HomeUiState.Content(homeData(readingBooks = listOf(bookEntry()))))
+
+        val row = composeRule.onNodeWithTag("home_reading_books").fetchSemanticsNode().boundsInRoot
+        val header =
+            composeRule
+                .onNodeWithText(context.resources.getQuantityString(R.plurals.home_reading_books, 1, 1))
+                .fetchSemanticsNode()
+                .boundsInRoot
+        val book = composeRule.onNodeWithText("In progress").fetchSemanticsNode().boundsInRoot
+
+        assertThat(row.left).isLessThan(header.left)
+        assertThat(book.left).isEqualTo(header.left)
     }
 
     @Test
