@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -43,10 +44,14 @@ internal fun HomeSearchTopBar(
     modifier: Modifier = Modifier,
 ) {
     Surface(modifier = modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface) {
-        Box(modifier = Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets)) {
+        Box(
+            modifier = Modifier.fillMaxWidth().windowInsetsPadding(TopAppBarDefaults.windowInsets),
+            contentAlignment = Alignment.TopCenter,
+        ) {
             Row(
                 modifier =
                     Modifier
+                        .widthIn(max = ManiculeSize.contentMaxWidth)
                         .fillMaxWidth()
                         .height(SearchAppBarHeight)
                         .padding(horizontal = ManiculeSpacing.xs),

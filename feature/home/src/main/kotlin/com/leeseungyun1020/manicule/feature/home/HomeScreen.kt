@@ -4,26 +4,39 @@ package com.leeseungyun1020.manicule.feature.home
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
@@ -34,7 +47,7 @@ import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeOutlinedButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSectionHeader
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSectionHeaderAction
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeStatTile
+import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
@@ -49,10 +62,12 @@ import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.ui.book.BookCover
 import com.leeseungyun1020.manicule.core.ui.book.BookCoverSize
 import com.leeseungyun1020.manicule.core.ui.book.BookProgressBar
-import com.leeseungyun1020.manicule.core.ui.calendar.ReadingCalendarGrid
+import com.leeseungyun1020.manicule.core.ui.calendar.ReadingCalendarCell
 import com.leeseungyun1020.manicule.core.ui.calendar.ReadingCalendarLegend
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.minus
 
 @Composable
 fun HomeScreen(
@@ -103,18 +118,29 @@ private fun HomeContent(
     onRetry: () -> Unit,
     modifier: Modifier,
 ) {
-    Column(
-        modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(ManiculeSpacing.screenContent),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xl),
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter,
     ) {
-        if (isFirstUser) {
-            OnboardingContent(onSearch, onScan)
-        } else {
-            ReadingSummary(data.summary, onShowStats, onRetry)
-            if (data.readingBooks.isEmpty()) {
-                NoReadingBooks(data.wantBookCount, onSearch, onScan, onChooseWantBook)
+        Column(
+            modifier =
+                Modifier
+                    .widthIn(max = ManiculeSize.contentMaxWidth)
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
+                    .padding(ManiculeSpacing.screenContent),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xl),
+        ) {
+            if (isFirstUser) {
+                OnboardingContent(onSearch, onScan)
             } else {
-                ReadingBooks(data.readingBooks, onBookSelected, onShowReadingBooks)
+                ReadingSummary(data.summary, onShowStats, onRetry)
+                if (data.readingBooks.isEmpty()) {
+                    NoReadingBooks(data.wantBookCount, onSearch, onScan, onChooseWantBook)
+                } else {
+                    ReadingBooks(data.readingBooks, onBookSelected, onShowReadingBooks)
+                }
             }
         }
     }
@@ -130,11 +156,14 @@ private fun OnboardingContent(
             modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.lg),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
         ) {
-            Text(stringResource(R.string.home_empty_summary_title), style = MaterialTheme.typography.titleMedium)
+            SummaryMetrics(streak = 0, pages = 0, enabled = false)
+            HomeWeekStrip(days = null)
             Text(
                 stringResource(R.string.home_empty_summary_description),
-                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
             )
         }
     }
@@ -143,17 +172,67 @@ private fun OnboardingContent(
             modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.lg),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
         ) {
-            Text(stringResource(R.string.home_onboarding_title), style = MaterialTheme.typography.titleMedium)
-            Text(stringResource(R.string.home_onboarding_step_one), style = MaterialTheme.typography.bodyMedium)
-            Text(stringResource(R.string.home_onboarding_step_two), style = MaterialTheme.typography.bodyMedium)
-            Text(stringResource(R.string.home_onboarding_step_three), style = MaterialTheme.typography.bodyMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
-                ManiculeButton(onClick = onSearch, text = stringResource(R.string.home_search))
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(stringResource(R.string.home_onboarding_heading), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(R.string.home_onboarding_title),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            OnboardingStep(
+                icon = ManiculeIcons.Search,
+                title = stringResource(R.string.home_onboarding_step_one),
+                description = stringResource(R.string.home_onboarding_step_one_description),
+            )
+            OnboardingStep(
+                icon = ManiculeIcons.Edit,
+                title = stringResource(R.string.home_onboarding_step_two),
+                description = stringResource(R.string.home_onboarding_step_two_description),
+            )
+            OnboardingStep(
+                icon = ManiculeIcons.Tab.StatsFilled,
+                title = stringResource(R.string.home_onboarding_step_three),
+                description = stringResource(R.string.home_onboarding_step_three_description),
+            )
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+            ) {
+                ManiculeButton(
+                    onClick = onSearch,
+                    text = stringResource(R.string.home_search),
+                    leadingIcon = { Icon(ManiculeIcons.Search, contentDescription = null) },
+                )
                 ManiculeOutlinedButton(
                     onClick = onScan,
                     text = stringResource(R.string.home_scan),
+                    leadingIcon = { Icon(ManiculeIcons.ScanBarcode, contentDescription = null) },
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun OnboardingStep(
+    icon: ImageVector,
+    title: String,
+    description: String,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md), verticalAlignment = Alignment.Top) {
+        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
+            Box(
+                modifier = Modifier.size(ManiculeSize.iconLg),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(icon, contentDescription = null, modifier = Modifier.size(ManiculeSize.iconXs))
+            }
+        }
+        Column {
+            Text(title, style = MaterialTheme.typography.titleSmall)
+            Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -177,21 +256,53 @@ private fun ReadingSummary(
             modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.lg),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
         ) {
-            Text(stringResource(R.string.home_reading_summary), style = MaterialTheme.typography.titleMedium)
-            ReadingCalendarGrid(days = summary.recentDays, today = summary.today)
-            ReadingCalendarLegend(modifier = Modifier.fillMaxWidth(), compact = true)
-            Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
-                ManiculeStatTile(
-                    value = pluralStringResource(R.plurals.home_days, summary.currentStreak, summary.currentStreak),
-                    label = stringResource(R.string.home_streak),
-                    modifier = Modifier.weight(1f),
-                    icon = { Icon(Icons.Default.LocalFireDepartment, null, modifier = Modifier.width(ManiculeSize.iconSm)) },
+            SummaryMetrics(streak = summary.currentStreak, pages = summary.todayPages)
+            HomeWeekStrip(days = summary.recentDays)
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                ReadingCalendarLegend()
+            }
+        }
+    }
+}
+
+@Composable
+private fun SummaryMetrics(
+    streak: Int,
+    pages: Int,
+    enabled: Boolean = true,
+) {
+    val color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+    Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.lg), verticalAlignment = Alignment.CenterVertically) {
+        Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.LocalFireDepartment, contentDescription = null, modifier = Modifier.size(ManiculeSize.iconXs), tint = color)
+            Text(stringResource(R.string.home_streak), style = MaterialTheme.typography.labelMedium, color = color)
+            Text(pluralStringResource(R.plurals.home_days, streak, streak), style = MaterialTheme.typography.titleSmall, color = color)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs), verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.home_today_pages), style = MaterialTheme.typography.labelMedium, color = color)
+            Text(pluralStringResource(R.plurals.home_pages, pages, pages), style = MaterialTheme.typography.titleSmall, color = color)
+        }
+    }
+}
+
+@Composable
+private fun HomeWeekStrip(days: List<ReadingCalendarDay>?) {
+    val weekdays = stringArrayResource(R.array.home_weekdays)
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
+        repeat(7) { index ->
+            val day = days?.getOrNull(index)
+            Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                ReadingCalendarCell(
+                    intensity = day?.intensity ?: 0,
+                    modifier = Modifier.fillMaxWidth().aspectRatio(1f),
                 )
-                ManiculeStatTile(
-                    value = pluralStringResource(R.plurals.home_pages, summary.todayPages, summary.todayPages),
-                    label = stringResource(R.string.home_today_pages),
-                    modifier = Modifier.weight(1f),
-                )
+                if (day != null) {
+                    Text(
+                        weekdays[day.date.dayOfWeek.value - 1],
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
@@ -230,13 +341,7 @@ private fun ReadingBookCard(
         val currentPage = entry.currentPage
         val totalPages = entry.book.totalPages
         if (currentPage != null && totalPages != null && totalPages > 0) {
-            BookProgressBar(currentPage, totalPages)
-        } else {
-            Text(
-                stringResource(if (currentPage == null) R.string.home_no_progress else R.string.home_no_total_pages),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            BookProgressBar(currentPage, totalPages, showDetails = false)
         }
     }
 }
@@ -256,10 +361,39 @@ private fun NoReadingBooks(
             } else {
                 stringResource(R.string.home_no_reading_description)
             },
+        icon = {
+            Icon(
+                imageVector = ManiculeIcons.Tab.LibraryOutlined,
+                contentDescription = null,
+                modifier = Modifier.size(ManiculeSize.iconLg),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        },
         actions = {
-            if (wantBookCount > 0) ManiculeButton(onClick = onChooseWantBook, text = stringResource(R.string.home_choose))
-            ManiculeOutlinedButton(onClick = onSearch, text = stringResource(R.string.home_search))
-            ManiculeOutlinedButton(onClick = onScan, text = stringResource(R.string.home_scan))
+            if (wantBookCount > 0) {
+                ManiculeButton(
+                    onClick = onChooseWantBook,
+                    text = stringResource(R.string.home_choose),
+                    leadingIcon = { Icon(ManiculeIcons.Bookmark, contentDescription = null) },
+                )
+                OutlinedIconButton(onClick = onSearch, modifier = Modifier.size(ManiculeSize.touchTargetMin)) {
+                    Icon(ManiculeIcons.Search, contentDescription = stringResource(R.string.home_search))
+                }
+                OutlinedIconButton(onClick = onScan, modifier = Modifier.size(ManiculeSize.touchTargetMin)) {
+                    Icon(ManiculeIcons.ScanBarcode, contentDescription = stringResource(R.string.home_scan))
+                }
+            } else {
+                ManiculeButton(
+                    onClick = onSearch,
+                    text = stringResource(R.string.home_search),
+                    leadingIcon = { Icon(ManiculeIcons.Search, contentDescription = null) },
+                )
+                ManiculeOutlinedButton(
+                    onClick = onScan,
+                    text = stringResource(R.string.home_scan),
+                    leadingIcon = { Icon(ManiculeIcons.ScanBarcode, contentDescription = null) },
+                )
+            }
         },
     )
 }
@@ -288,18 +422,27 @@ private fun HomeFirstUserPreview() {
 }
 
 @ManiculePreview
+@Preview(name = "Tablet", widthDp = 900, heightDp = 700, showBackground = true)
 @Composable
 private fun HomeReadingPreview() {
     ManiculePreviewTheme {
-        HomeScreen(HomeUiState.Content(previewHomeData(reading = listOf(previewEntry()))), {}, {}, {}, {}, {}, {}, {})
+        HomeScreen(HomeUiState.Content(previewHomeData(hasLibrary = true, reading = listOf(previewEntry()))), {}, {}, {}, {}, {}, {}, {})
     }
 }
 
 @ManiculePreview
 @Composable
-private fun HomeNoReadingPreview() {
+private fun HomeNoReadingWantPreview() {
     ManiculePreviewTheme {
         HomeScreen(HomeUiState.Content(previewHomeData(hasLibrary = true, wants = 2)), {}, {}, {}, {}, {}, {}, {})
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun HomeNoReadingEmptyPreview() {
+    ManiculePreviewTheme {
+        HomeScreen(HomeUiState.Content(previewHomeData(hasLibrary = true, wants = 0)), {}, {}, {}, {}, {}, {}, {})
     }
 }
 
@@ -334,7 +477,7 @@ private fun previewHomeData(
             today = today,
             todayPages = 42,
             currentStreak = 3,
-            recentDays = (0..6).map { ReadingCalendarDay.of(today, it * 10) },
+            recentDays = (0..6).map { index -> ReadingCalendarDay.of(today.minus(DatePeriod(days = 6 - index)), index * 10) },
         ),
     )
 }

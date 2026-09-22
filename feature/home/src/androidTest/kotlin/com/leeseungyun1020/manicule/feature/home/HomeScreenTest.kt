@@ -3,6 +3,7 @@ package com.leeseungyun1020.manicule.feature.home
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -17,8 +18,10 @@ import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingCalendarDay
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.minus
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,11 +32,13 @@ class HomeScreenTest {
     val composeRule = createComposeRule()
 
     @Test
-    fun firstUser_showsOnboardingWithoutSummaryOrReadingSection() {
+    fun firstUser_showsDisabledSummaryAndOnboarding() {
         setHome(HomeUiState.Content(homeData()))
 
+        composeRule.onNodeWithText(context.getString(R.string.home_onboarding_heading)).assertIsDisplayed()
         composeRule.onNodeWithText(context.getString(R.string.home_onboarding_title)).assertIsDisplayed()
-        composeRule.onNodeWithText(context.getString(R.string.home_reading_summary)).assertDoesNotExist()
+        composeRule.onNodeWithText(context.getString(R.string.home_empty_summary_description)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.resources.getQuantityString(R.plurals.home_days, 0, 0)).assertIsDisplayed()
         composeRule
             .onAllNodesWithText(context.resources.getQuantityString(R.plurals.home_reading_books, 1, 1))
             .assertCountEquals(0)
@@ -49,8 +54,22 @@ class HomeScreenTest {
 
         composeRule.onNodeWithText(context.resources.getQuantityString(R.plurals.home_reading_books, 1, 1)).assertIsDisplayed()
         composeRule.onNodeWithText("In progress").performClick()
+        composeRule.onNodeWithText("10 / 100").assertDoesNotExist()
+        composeRule.onNodeWithText("10%").assertDoesNotExist()
 
         assertThat(selectedIsbn).isEqualTo("9780000000001")
+    }
+
+    @Test
+    fun continuingUser_showsRecentDaysInOneRow() {
+        setHome(HomeUiState.Content(homeData(hasLibraryBooks = true)))
+
+        val weekdays = context.resources.getStringArray(R.array.home_weekdays)
+        val firstDay = composeRule.onNodeWithText(weekdays[1], useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val lastDay = composeRule.onNodeWithText(weekdays[0], useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+
+        assertThat(firstDay.top).isEqualTo(lastDay.top)
+        assertThat(firstDay.right).isLessThan(lastDay.left)
     }
 
     @Test
@@ -105,6 +124,8 @@ class HomeScreenTest {
         )
 
         composeRule.onNodeWithText(context.getString(R.string.home_choose)).performClick()
+        composeRule.onNodeWithContentDescription(context.getString(R.string.home_search)).assertIsDisplayed()
+        composeRule.onAllNodesWithContentDescription(context.getString(R.string.home_scan)).assertCountEquals(2)
 
         assertThat(choseWantBook).isTrue()
     }
@@ -168,7 +189,7 @@ class HomeScreenTest {
                     today = today,
                     todayPages = 0,
                     currentStreak = 0,
-                    recentDays = (0..6).map { ReadingCalendarDay.of(today, 0) },
+                    recentDays = (0..6).map { index -> ReadingCalendarDay.of(today.minus(DatePeriod(days = 6 - index)), 0) },
                 ),
         )
     }
