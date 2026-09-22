@@ -32,9 +32,9 @@ import kotlinx.coroutines.CancellationException
 @Composable
 internal fun CameraPreview(
     reader: BarcodeReader,
-    onInitializing: () -> Unit,
-    onReady: () -> Unit,
-    onFailed: () -> Unit,
+    onInitializing: () -> Long,
+    onReady: (Long) -> Unit,
+    onFailed: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -47,8 +47,8 @@ internal fun CameraPreview(
     val failed by rememberUpdatedState(onFailed)
     AndroidView(factory = { previewView }, modifier = modifier)
     DisposableEffect(reader, lifecycleOwner, previewView) {
-        initializing()
-        val session = CameraPreviewSession(onReady = { ready() }, onFailed = { failed() })
+        val generation = initializing()
+        val session = CameraPreviewSession(onReady = { ready(generation) }, onFailed = { failed(generation) })
         val destroyObserver = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_DESTROY) session.close()
         }

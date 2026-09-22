@@ -16,14 +16,21 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.paging.PagingData
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.google.common.truth.Truth.assertThat
+import com.leeseungyun1020.manicule.core.data.repository.BookRepository
+import com.leeseungyun1020.manicule.core.data.repository.BookSyncResult
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.domain.scanner.GetBookByScanUseCase
+import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.scanner.BarcodeReaderFactory
 import com.leeseungyun1020.manicule.core.scanner.MlKitBarcodeReaderFactory
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -44,12 +51,13 @@ class CameraPreviewBindingTest {
 
     @Test
     fun routeForwardsBackAndSearchCallbacksFromFailureScreen() {
-        val viewModel = ScannerViewModel(BarcodeReaderFactory { error("Unavailable camera") }, Dispatchers.Default, SavedStateHandle())
+        val viewModel =
+            ScannerViewModel(BarcodeReaderFactory { error("Unavailable camera") }, scanUseCase(), Dispatchers.Default, SavedStateHandle())
         viewModel.onPermissionChanged(true)
         var back = false
         var search = false
         compose.setContent {
-            ManiculeTheme { ScannerRoute({ back = true }, { search = true }, viewModel) }
+            ManiculeTheme { ScannerRoute({ back = true }, { search = true }, {}, viewModel) }
         }
         val context = compose.activity
         compose.onNodeWithText(context.getString(R.string.scanner_search)).performClick()
@@ -108,7 +116,7 @@ class CameraPreviewBindingTest {
         val factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                ScannerViewModel(MlKitBarcodeReaderFactory(), Dispatchers.Default, SavedStateHandle()) as T
+                ScannerViewModel(MlKitBarcodeReaderFactory(), scanUseCase(), Dispatchers.Default, SavedStateHandle()) as T
         }
         compose.activityRule.scenario.onActivity { activity ->
             firstViewModel = ViewModelProvider(activity, factory)[ScannerViewModel::class.java]
@@ -133,5 +141,15 @@ class CameraPreviewBindingTest {
             assertThat(analysis.targetRotation).isEqualTo(view.display.rotation)
             binding.close()
         }
+    }
+
+    private fun scanUseCase() = GetBookByScanUseCase(EmptyBookRepository())
+
+    private class EmptyBookRepository : BookRepository {
+        override fun observeBook(isbn: String): Flow<Book?> = emptyFlow()
+
+        override suspend fun syncBook(isbn: String): Result<BookSyncResult> = Result.failure(NoSuchElementException(isbn))
+
+        override fun searchBooks(query: String): Flow<PagingData<Book>> = emptyFlow()
     }
 }

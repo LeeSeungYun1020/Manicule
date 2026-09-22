@@ -154,6 +154,23 @@ class BookRepositoryImplTest {
         }
 
     @Test
+    fun syncBook_returnsCanonicalIsbnWhenItDiffersFromQuery() =
+        runTest {
+            fakeNlkApi.mockResponse =
+                NlkSearchResponseDto(
+                    totalCount = "1",
+                    pageNo = "1",
+                    docs = listOf(NlkBookDto(isbn = "canonical-isbn", title = "Book")),
+                )
+
+            val book = bookRepository.syncBook("scanned-raw-value").getOrThrow().book
+
+            assertThat(book.isbn).isEqualTo("canonical-isbn")
+            assertThat(fakeBookDao.getByIsbn("canonical-isbn")).isNotNull()
+            assertThat(fakeBookDao.getByIsbn("scanned-raw-value")).isNull()
+        }
+
+    @Test
     fun scenario1_local_exists_remote_success() =
         runTest {
             val localEntity =
@@ -378,7 +395,7 @@ class BookRepositoryImplTest {
                         ),
                 )
 
-            assertThat(bookRepository.syncBook("123").getOrThrow()).isEqualTo(BookSyncStatus.COMPLETE)
+            assertThat(bookRepository.syncBook("123").getOrThrow().status).isEqualTo(BookSyncStatus.COMPLETE)
 
             val book = fakeBookDao.getByIsbn("123")
             assertThat(book?.introduction).isEqualTo("Inline introduction")
@@ -406,7 +423,7 @@ class BookRepositoryImplTest {
             fakeContentFetcher.responses[introductionUrl] = NlkContentFetchResult.Success("Fetched introduction")
             fakeContentFetcher.responses[contentsUrl] = NlkContentFetchResult.RetryableFailure
 
-            assertThat(bookRepository.syncBook("123").getOrThrow())
+            assertThat(bookRepository.syncBook("123").getOrThrow().status)
                 .isEqualTo(BookSyncStatus.AUXILIARY_CONTENT_FAILED)
 
             val book = fakeBookDao.getByIsbn("123")
@@ -432,7 +449,7 @@ class BookRepositoryImplTest {
                 )
             fakeContentFetcher.responses[introductionUrl] = NlkContentFetchResult.Unavailable
 
-            assertThat(bookRepository.syncBook("123").getOrThrow()).isEqualTo(BookSyncStatus.COMPLETE)
+            assertThat(bookRepository.syncBook("123").getOrThrow().status).isEqualTo(BookSyncStatus.COMPLETE)
             assertThat(fakeBookDao.getByIsbn("123")?.title).isEqualTo("Book")
             assertThat(fakeBookDao.getByIsbn("123")?.introduction).isNull()
         }
@@ -476,13 +493,62 @@ class BookRepositoryImplTest {
             fakeContentFetcher.responses[introductionUrl] = NlkContentFetchResult.RetryableFailure
             fakeContentFetcher.responses[contentsUrl] = NlkContentFetchResult.RetryableFailure
 
-            assertThat(bookRepository.syncBook("123").getOrThrow())
+            assertThat(bookRepository.syncBook("123").getOrThrow().status)
                 .isEqualTo(BookSyncStatus.AUXILIARY_CONTENT_FAILED)
 
             val book = fakeBookDao.getByIsbn("123")
             assertThat(book?.title).isEqualTo("New Book")
             assertThat(book?.introduction).isEqualTo("Cached introduction")
             assertThat(book?.tableOfContents).isEqualTo("Cached contents")
+        }
+
+    @Test
+    fun syncBook_preservesCanonicalCachedContent_whenAliasScanFailsAuxiliaryRefreshes() =
+        runTest {
+            val canonicalEntity =
+                BookEntity(
+                    isbn = "9788954699914",
+                    title = "Old Book",
+                    author = "Author",
+                    publisher = "Publisher",
+                    publishedDate = null,
+                    coverUrl = null,
+                    totalPages = null,
+                    price = null,
+                    category = null,
+                    tableOfContentsUrl = null,
+                    introductionUrl = null,
+                    summaryUrl = null,
+                    introduction = "Cached canonical intro",
+                    tableOfContents = "Cached canonical contents",
+                )
+            fakeBookDao.upsert(canonicalEntity)
+
+            val introductionUrl = "https://www.nl.go.kr/introduction.txt"
+            val contentsUrl = "https://nl.go.kr/contents.txt"
+            fakeNlkApi.mockResponse =
+                NlkSearchResponseDto(
+                    docs =
+                        listOf(
+                            NlkBookDto(
+                                isbn = "9788954699914",
+                                title = "New Book",
+                                bookIntroductionUrl = introductionUrl,
+                                bookTbCntUrl = contentsUrl,
+                            ),
+                        ),
+                )
+            fakeContentFetcher.responses[introductionUrl] = NlkContentFetchResult.RetryableFailure
+            fakeContentFetcher.responses[contentsUrl] = NlkContentFetchResult.RetryableFailure
+
+            val result = bookRepository.syncBook("978895469991493810").getOrThrow()
+            assertThat(result.book.isbn).isEqualTo("9788954699914")
+            assertThat(result.status).isEqualTo(BookSyncStatus.AUXILIARY_CONTENT_FAILED)
+
+            val book = fakeBookDao.getByIsbn("9788954699914")
+            assertThat(book?.title).isEqualTo("New Book")
+            assertThat(book?.introduction).isEqualTo("Cached canonical intro")
+            assertThat(book?.tableOfContents).isEqualTo("Cached canonical contents")
         }
 
     @Test

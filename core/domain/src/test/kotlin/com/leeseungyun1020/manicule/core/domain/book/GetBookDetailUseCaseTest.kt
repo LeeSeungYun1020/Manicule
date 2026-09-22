@@ -4,6 +4,7 @@ import androidx.paging.PagingData
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
+import com.leeseungyun1020.manicule.core.data.repository.BookSyncResult
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
 import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.model.Book
@@ -56,9 +57,14 @@ class GetBookDetailUseCaseTest {
 
         override fun observeBook(isbn: String): Flow<Book?> = books
 
-        override suspend fun syncBook(isbn: String): Result<BookSyncStatus> {
+        override suspend fun syncBook(isbn: String): Result<BookSyncResult> {
             refreshedIsbn = isbn
-            return refreshResult
+            return refreshResult.map { status ->
+                BookSyncResult(
+                    book = books.value ?: error("Book must be available after synchronization."),
+                    status = status,
+                )
+            }
         }
 
         override fun searchBooks(query: String): Flow<PagingData<Book>> = emptyFlow()

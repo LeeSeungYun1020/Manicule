@@ -54,19 +54,24 @@ internal fun ScannerScreen(
     cameraPreview: @Composable () -> Unit = {},
 ) {
     when (uiState) {
-        is ScannerUiState.PermissionDenied, ScannerUiState.Failed -> ScannerMessageScreen(
+        is ScannerUiState.PermissionDenied, ScannerUiState.CameraUnavailable, ScannerUiState.Failed -> ScannerMessageScreen(
             uiState = uiState,
             onNavigateBack = onNavigateBack,
             onNavigateToSearch = onNavigateToSearch,
             onUseCamera = onUseCamera,
             modifier = modifier,
         )
-        ScannerUiState.Initializing, ScannerUiState.Scanning -> Box(
+        ScannerUiState.Initializing, ScannerUiState.Scanning, ScannerUiState.LookingUp -> Box(
             modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim),
         ) {
             cameraPreview()
-            BarcodeScannerOverlay(initializing = uiState == ScannerUiState.Initializing, onNavigateBack = onNavigateBack)
+            BarcodeScannerOverlay(
+                initializing = uiState == ScannerUiState.Initializing,
+                lookingUp = uiState == ScannerUiState.LookingUp,
+                onNavigateBack = onNavigateBack,
+            )
         }
+        is ScannerUiState.Success, ScannerUiState.NavigationDelivered -> Box(modifier = modifier.fillMaxSize())
     }
 }
 
@@ -80,6 +85,37 @@ private fun ScannerMessageScreen(
     modifier: Modifier = Modifier,
 ) {
     val denied = uiState as? ScannerUiState.PermissionDenied
+    val message =
+        when (uiState) {
+            is ScannerUiState.PermissionDenied ->
+                ScannerMessage(
+                    title = R.string.scanner_permission_title,
+                    description =
+                        when {
+                            uiState.launchFailed -> R.string.scanner_permission_launch_failed
+                            uiState.requiresSettings -> R.string.scanner_permission_settings
+                            else -> R.string.scanner_permission_description
+                        },
+                )
+
+            ScannerUiState.CameraUnavailable ->
+                ScannerMessage(
+                    title = R.string.scanner_camera_unavailable_title,
+                    description = R.string.scanner_camera_unavailable_description,
+                )
+
+            ScannerUiState.Failed ->
+                ScannerMessage(
+                    title = R.string.scanner_failed_title,
+                    description = R.string.scanner_failed_description,
+                )
+
+            else ->
+                ScannerMessage(
+                    title = R.string.scanner_failed_title,
+                    description = R.string.scanner_failed_description,
+                )
+        }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -97,15 +133,8 @@ private fun ScannerMessageScreen(
             verticalArrangement = Arrangement.Center,
         ) {
             ManiculeEmptyState(
-                title = stringResource(if (denied != null) R.string.scanner_permission_title else R.string.scanner_failed_title),
-                description = stringResource(
-                    when {
-                        denied == null -> R.string.scanner_failed_description
-                        denied.launchFailed -> R.string.scanner_permission_launch_failed
-                        denied.requiresSettings -> R.string.scanner_permission_settings
-                        else -> R.string.scanner_permission_description
-                    },
-                ),
+                title = stringResource(message.title),
+                description = stringResource(message.description),
                 icon = {
                     Icon(
                         imageVector = ManiculeIcons.CameraOff,
@@ -129,6 +158,7 @@ private fun ScannerMessageScreen(
 @Composable
 private fun BarcodeScannerOverlay(
     initializing: Boolean,
+    lookingUp: Boolean,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -165,12 +195,18 @@ private fun BarcodeScannerOverlay(
                     .testTag("scanner_viewfinder"),
                 contentAlignment = Alignment.Center,
             ) {
-                if (initializing) ManiculeLoading()
+                if (initializing || lookingUp) ManiculeLoading()
             }
         }
         Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surface.copy(alpha = OVERLAY_ALPHA)) {
             Text(
-                text = stringResource(if (initializing) R.string.scanner_initializing else R.string.scanner_guide),
+                text = stringResource(
+                    when {
+                        initializing -> R.string.scanner_initializing
+                        lookingUp -> R.string.scanner_looking_up
+                        else -> R.string.scanner_guide
+                    },
+                ),
                 modifier = Modifier.padding(horizontal = MaterialTheme.spacing.lg, vertical = MaterialTheme.spacing.sm),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
@@ -191,9 +227,18 @@ private class ScannerPreviewStates : PreviewParameterProvider<ScannerUiState> {
         ScannerUiState.PermissionDenied(requiresSettings = true, launchFailed = true),
         ScannerUiState.Initializing,
         ScannerUiState.Scanning,
+        ScannerUiState.LookingUp,
+        ScannerUiState.Success("9780000000000"),
+        ScannerUiState.NavigationDelivered,
+        ScannerUiState.CameraUnavailable,
         ScannerUiState.Failed,
     )
 }
+
+private data class ScannerMessage(
+    val title: Int,
+    val description: Int,
+)
 
 @ManiculePreview
 @Preview(name = "Phone", widthDp = 360, heightDp = 640)

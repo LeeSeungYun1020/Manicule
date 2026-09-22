@@ -12,8 +12,8 @@ class ScannerNavigationContractTest {
         val scannerScreenMethod = methods.firstOrNull { it.name == "scannerScreen" }
         requireNotNull(scannerScreenMethod) { "scannerScreen extension function not found" }
 
-        // NavGraphBuilder 수신 객체, onNavigateBack 콜백, onNavigateToSearch 콜백
-        assertEquals(3, scannerScreenMethod.parameterTypes.size)
+        // NavGraphBuilder 수신 객체와 세 개의 필수 navigation 콜백
+        assertEquals(4, scannerScreenMethod.parameterTypes.size)
 
         // 기본값이 제거되었으므로 바이트코드에 합성 $default 메서드가 생성되지 않아야 함
         val defaultMethod = methods.firstOrNull { it.name.startsWith("scannerScreen\$default") }
