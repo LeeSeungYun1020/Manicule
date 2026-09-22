@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -76,6 +77,26 @@ class HomeScreenTest {
     }
 
     @Test
+    fun scan_requestsScannerNavigation() {
+        var scanned = false
+        setHome(HomeUiState.Content(homeData()), onScan = { scanned = true })
+
+        composeRule.onNodeWithContentDescription(context.getString(R.string.home_scan)).performClick()
+
+        assertThat(scanned).isTrue()
+    }
+
+    @Test
+    fun search_remainsAvailableWhileHomeLoads() {
+        var searched = false
+        setHome(HomeUiState.Loading, onSearch = { searched = true })
+
+        composeRule.onNodeWithText(context.getString(R.string.home_search_placeholder)).performClick()
+
+        assertThat(searched).isTrue()
+    }
+
+    @Test
     fun noReadingBooksWithWant_showsChooseAction() {
         var choseWantBook = false
         setHome(
@@ -109,6 +130,7 @@ class HomeScreenTest {
     private fun setHome(
         state: HomeUiState,
         onSearch: () -> Unit = {},
+        onScan: () -> Unit = {},
         onBookSelected: (String) -> Unit = {},
         onShowReadingBooks: () -> Unit = {},
         onChooseWantBook: () -> Unit = {},
@@ -119,7 +141,7 @@ class HomeScreenTest {
                 HomeScreen(
                     uiState = state,
                     onSearch = onSearch,
-                    onScan = {},
+                    onScan = onScan,
                     onBookSelected = onBookSelected,
                     onShowReadingBooks = onShowReadingBooks,
                     onChooseWantBook = onChooseWantBook,

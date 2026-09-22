@@ -2,7 +2,7 @@
 <resources>
     <string name="home_title">Reading log</string>
     <string name="home_stub_label">Home screen is being prepared</string>
-    <string name="home_search_placeholder">Find a book</string>
+    <string name="home_search_placeholder">Search books</string>
     <string name="home_search">Search</string>
     <string name="home_scan">Scan barcode</string>
     <string name="home_empty_summary_title">No reading records yet</string>

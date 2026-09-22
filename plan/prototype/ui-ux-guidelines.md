@@ -19,8 +19,9 @@
 
 | 화면 | 프로토타입 | 확정 사항 | 근거 |
 |---|---|---|---|
-| 전체 | 앱바 제목 좌측 정렬 | **중앙 정렬**(`CenterAlignedTopAppBar`) + 스크롤 시 접힘 | M3 가이드라인 우선 |
+| 전체 | 앱바 제목 좌측 정렬 | **중앙 정렬**(`CenterAlignedTopAppBar`) + 스크롤 시 접힘. 홈은 검색 앱 바로 구성 | M3 가이드라인 우선 |
 | 1a 홈 | 우측 상단 원형 아바타 | **구현 제외** | `plan.md` 3.1·§4 에 없는 미기획 요소 |
+| 1a·1b 홈 | 제목 앱바 아래에 검색창·스캔 버튼 | **검색 앱바**에 로고·검색 진입 영역·스캔 버튼 배치. 검색을 탭하면 검색 화면으로 이동 | M3 검색 앱바 가이드와 기존 검색 화면 역할 분리 |
 | 6a 서재 | 앱바 안에 정렬 상태 텍스트 | 앱바는 **정렬 아이콘만**, 상태 텍스트는 **탭 아래·목록 위** | M3 중앙 정렬 앱바는 title + action 1개 구성 |
 | 1a·7a·8a | 제목이 본문 스크롤 영역 안 | **앱바로 통일** | 화면 간 일관성 |
 | 5c 내 기록 | 상태 기본값 '읽고 싶음' | **미등록·UNSET은 미선택**. 상태 탭 시 서재에 추가. WANT 선택 예시는 이미 등록된 책에만 적용 | 사용자 확정: 명시적 상태 선택으로 서재 등록 |
@@ -65,6 +66,7 @@
     3. 2개 이상의 컴포넌트가 공유한다
     - 예: 표지·카메라 오버레이 딤은 `colorScheme.scrim` + 알파, 차트 막대는 `primary`, 격자선은 `outlineVariant`, 축 레이블은 `onSurfaceVariant` 로 해결된다
 - **상단 앱바**: `ManiculeTopAppBar`(중앙 정렬) + `TopAppBarDefaults.enterAlwaysScrollBehavior()` 로 스크롤 시 접힘/복귀. `Scaffold` 에 `Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)` 연결 필수
+    - **홈 화면**: `HomeSearchTopBar`를 `Scaffold.topBar`에 배치. 로고·검색 진입 영역·스캔 버튼을 표시하고, 검색 입력과 결과는 별도 검색 화면에서 처리한다
     - **탭이 있는 화면**(책 정보·서재)은 탭을 앱바 *안*에 넣지 않는다. `Scaffold(topBar = { Column { ManiculeTopAppBar(...); ManiculeTabRow(...) } })` 구조로 두면 앱바만 접히고 탭은 상단에 남는다
     - **앱바를 쓰지 않는 화면**: 검색(2a~3a, 상단이 `ManiculeSearchBar`), 바코드 스캔 카메라 화면(4a, 카메라 위 떠 있는 뒤로가기 버튼). 스캔 실패·권한 거부(4b·4c)는 앱바를 사용한다
 - **컴포넌트 패턴**: M3 표준 컴포넌트 사용 (`TopAppBar`, `BottomSheet`, `SegmentedButton`, `SearchBar`, `Snackbar`, `Card` 등). 커스텀 구현 전 M3 컴포넌트로 대체 가능한지
@@ -148,8 +150,8 @@
 
 | 변형 | 화면 | 구성 컴포넌트 |
 |---|---|---|
-| **1a** 계속 사용자 | 홈 | `ManiculeSearchEntry` · `ManiculeIconButton`(스캔) · `ManiculeCard`(요약, onClick) · `ReadingCalendarGrid`(최근 7일) · `ManiculeStatTile`×2 · `ManiculeSectionHeader`(더보기) · `BookCarouselItem`(f) |
-| **1b** 첫 사용자 · 빈 상태 | 홈 | `ManiculeSearchEntry` · `ManiculeDashedCard`(빈 요약) · `OnboardingGuide`(f) · `ManiculeButton`×2 |
+| **1a** 계속 사용자 | 홈 | `HomeSearchTopBar`(로고·검색·스캔) · `ManiculeCard`(요약, onClick) · `ReadingCalendarGrid`(최근 7일) · `ManiculeStatTile`×2 · `ManiculeSectionHeader`(더보기) · `BookCarouselItem`(f) |
+| **1b** 첫 사용자 · 빈 상태 | 홈 | `HomeSearchTopBar`(로고·검색·스캔) · `ManiculeDashedCard`(빈 요약) · `OnboardingGuide`(f) · `ManiculeButton`×2 |
 | **1c** 읽는 중 없음 | 홈 | 1a 요약부 + `ManiculeEmptyState`(inline, `actions` 1~2개) |
 | **2a** 검색어 없음 | 검색 | `ManiculeSearchBar`(requestInitialFocus) · `ManiculeEmptyState` — 앱바 없음 |
 | **2b** 최근 검색어 리스트 | 검색 | `ManiculeSearchBar` · `ManiculeSectionHeader` · M3 `ListItem`(leading=History, trailing=Delete)×n · `HorizontalDivider` |

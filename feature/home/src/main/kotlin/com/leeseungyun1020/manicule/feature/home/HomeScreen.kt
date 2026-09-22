@@ -30,15 +30,11 @@ import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeCard
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeDashedCard
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeEmptyState
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeIconButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeOutlinedButton
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSearchEntry
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSectionHeader
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSectionHeaderAction
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeStatTile
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTopAppBar
-import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
@@ -72,7 +68,7 @@ fun HomeScreen(
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = { ManiculeTopAppBar(title = stringResource(R.string.home_title)) },
+        topBar = { HomeSearchTopBar(onSearch = onSearch, onScan = onScan) },
     ) { padding ->
         when (uiState) {
             HomeUiState.Loading -> ManiculeLoading(Modifier.fillMaxSize().padding(padding))
@@ -111,7 +107,6 @@ private fun HomeContent(
         modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(ManiculeSpacing.screenContent),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xl),
     ) {
-        HomeSearchEntry(onSearch, onScan)
         if (isFirstUser) {
             OnboardingContent(onSearch, onScan)
         } else {
@@ -122,30 +117,6 @@ private fun HomeContent(
                 ReadingBooks(data.readingBooks, onBookSelected, onShowReadingBooks)
             }
         }
-    }
-}
-
-@Composable
-private fun HomeSearchEntry(
-    onSearch: () -> Unit,
-    onScan: () -> Unit,
-) {
-    Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
-        ManiculeSearchEntry(
-            onClick = onSearch,
-            placeholder = stringResource(R.string.home_search_placeholder),
-            modifier = Modifier.weight(1f),
-            leadingIcon = { Icon(ManiculeIcons.Search, null) },
-        )
-        ManiculeIconButton(
-            onClick = onScan,
-            icon = {
-                Icon(
-                    imageVector = ManiculeIcons.ScanBarcode,
-                    contentDescription = stringResource(R.string.home_scan),
-                )
-            },
-        )
     }
 }
 

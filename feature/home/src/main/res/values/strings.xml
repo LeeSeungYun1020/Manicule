@@ -2,7 +2,7 @@
 <resources>
     <string name="home_title">독서 기록</string>
     <string name="home_stub_label">홈 화면을 준비하고 있어요</string>
-    <string name="home_search_placeholder">책 찾아보기</string>
+    <string name="home_search_placeholder">책 검색</string>
     <string name="home_search">검색</string>
     <string name="home_scan">바코드 스캔</string>
     <string name="home_empty_summary_title">아직 독서 기록이 없어요</string>
