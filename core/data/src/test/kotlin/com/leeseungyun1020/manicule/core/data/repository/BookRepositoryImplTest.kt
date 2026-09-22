@@ -503,6 +503,55 @@ class BookRepositoryImplTest {
         }
 
     @Test
+    fun syncBook_preservesCanonicalCachedContent_whenAliasScanFailsAuxiliaryRefreshes() =
+        runTest {
+            val canonicalEntity =
+                BookEntity(
+                    isbn = "9788954699914",
+                    title = "Old Book",
+                    author = "Author",
+                    publisher = "Publisher",
+                    publishedDate = null,
+                    coverUrl = null,
+                    totalPages = null,
+                    price = null,
+                    category = null,
+                    tableOfContentsUrl = null,
+                    introductionUrl = null,
+                    summaryUrl = null,
+                    introduction = "Cached canonical intro",
+                    tableOfContents = "Cached canonical contents",
+                )
+            fakeBookDao.upsert(canonicalEntity)
+
+            val introductionUrl = "https://www.nl.go.kr/introduction.txt"
+            val contentsUrl = "https://nl.go.kr/contents.txt"
+            fakeNlkApi.mockResponse =
+                NlkSearchResponseDto(
+                    docs =
+                        listOf(
+                            NlkBookDto(
+                                isbn = "9788954699914",
+                                title = "New Book",
+                                bookIntroductionUrl = introductionUrl,
+                                bookTbCntUrl = contentsUrl,
+                            ),
+                        ),
+                )
+            fakeContentFetcher.responses[introductionUrl] = NlkContentFetchResult.RetryableFailure
+            fakeContentFetcher.responses[contentsUrl] = NlkContentFetchResult.RetryableFailure
+
+            val result = bookRepository.syncBook("978895469991493810").getOrThrow()
+            assertThat(result.book.isbn).isEqualTo("9788954699914")
+            assertThat(result.status).isEqualTo(BookSyncStatus.AUXILIARY_CONTENT_FAILED)
+
+            val book = fakeBookDao.getByIsbn("9788954699914")
+            assertThat(book?.title).isEqualTo("New Book")
+            assertThat(book?.introduction).isEqualTo("Cached canonical intro")
+            assertThat(book?.tableOfContents).isEqualTo("Cached canonical contents")
+        }
+
+    @Test
     fun syncBook_usesSummaryUrl_whenIntroductionUrlIsAbsent() =
         runTest {
             val summaryUrl = "https://www.nl.go.kr/summary.txt"

@@ -35,7 +35,7 @@ class BookRepositoryImpl
                     response.docs.firstNotNullOfOrNull { it.asExternalModelOrNull() }
                         ?: throw NoSuchElementException("No valid book found in the API response.")
 
-                val cached = bookLocalDataSource.getByIsbn(isbn)
+                val cached = bookLocalDataSource.getByIsbn(mappedBook.isbn)
                 val auxiliaryContent =
                     supervisorScope {
                         val introduction =
