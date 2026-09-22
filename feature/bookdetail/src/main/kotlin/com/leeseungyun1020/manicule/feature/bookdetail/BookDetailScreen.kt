@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,17 +26,15 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeDialog
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeEmptyState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeNetworkErrorState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSnackbarHost
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTabRow
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTopAppBar
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
-import com.leeseungyun1020.manicule.core.designsystem.theme.size
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookDetail
@@ -49,9 +46,9 @@ import com.leeseungyun1020.manicule.feature.bookdetail.components.MyRecordTabCon
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
+import com.leeseungyun1020.manicule.core.designsystem.R as DesignSystemR
 
 @OptIn(ExperimentalMaterial3Api::class)
-// 화면 이벤트를 명시적인 콜백으로 노출한다 (LibraryScreen과 동일).
 @Composable
 fun BookDetailScreen(
     uiState: BookDetailUiState,
@@ -188,7 +185,7 @@ private fun rememberBookDetailSnackbarHostState(
     val currentOnRecordErrorDismissed by rememberUpdatedState(onRecordErrorDismissed)
     val snackbarHostState = remember { SnackbarHostState() }
     val errorMessage = stringResource(R.string.book_detail_refresh_error)
-    val retryActionLabel = stringResource(R.string.book_detail_retry)
+    val retryActionLabel = stringResource(DesignSystemR.string.core_designsystem_retry)
 
     val statusErrorMessage = stringResource(R.string.book_detail_status_error)
     val recordErrorMessage = stringResource(R.string.book_detail_record_save_error)
@@ -285,32 +282,8 @@ private fun BookDetailBody(
         when (uiState) {
             is BookDetailUiState.Loading -> ManiculeLoading(modifier = Modifier.fillMaxSize())
             is BookDetailUiState.Error ->
-                ManiculeEmptyState(
-                    title = stringResource(R.string.book_detail_error_title),
-                    description = stringResource(R.string.book_detail_error_description),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(MaterialTheme.spacing.lg),
-                    icon = {
-                        Icon(
-                            imageVector = ManiculeIcons.NetworkError,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(MaterialTheme.size.iconEmptyState),
-                        )
-                    },
-                    actions = {
-                        ManiculeButton(
-                            onClick = onRetry,
-                            text = stringResource(R.string.book_detail_retry),
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = ManiculeIcons.Refresh,
-                                    contentDescription = null,
-                                )
-                            },
-                        )
-                    },
+                BookDetailError(
+                    onRetry = onRetry,
                 )
 
             is BookDetailUiState.Content -> {
@@ -333,6 +306,20 @@ private fun BookDetailBody(
             }
         }
     }
+}
+
+@Composable
+private fun BookDetailError(
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    ManiculeNetworkErrorState(
+        onRetry = onRetry,
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(MaterialTheme.spacing.lg),
+    )
 }
 
 private val previewBook =
