@@ -1,4 +1,4 @@
-package com.leeseungyun1020.manicule.core.domain.stats
+package com.leeseungyun1020.manicule.core.domain.time
 
 import com.leeseungyun1020.manicule.core.common.time.Clock
 import kotlinx.coroutines.currentCoroutineContext

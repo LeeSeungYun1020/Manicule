@@ -4,15 +4,17 @@ import com.leeseungyun1020.manicule.core.common.time.Clock
 import com.leeseungyun1020.manicule.core.data.repository.StatsRepository
 import com.leeseungyun1020.manicule.core.domain.library.GetLibraryBooksUseCase
 import com.leeseungyun1020.manicule.core.domain.stats.currentStreak
-import com.leeseungyun1020.manicule.core.domain.stats.observeToday
+import com.leeseungyun1020.manicule.core.domain.time.observeToday
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.ReadingCalendarDay
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
@@ -42,16 +44,20 @@ class ObserveHomeDataUseCase
         private val statsRepository: StatsRepository,
         private val clock: Clock,
     ) {
-        operator fun invoke(): Flow<HomeData> =
+        operator fun invoke(summaryRetries: Flow<Unit> = emptyFlow()): Flow<HomeData> =
             clock.observeToday().flatMapLatest { today ->
                 val start = today.minus(DatePeriod(days = 6))
                 val summary =
-                    combine(
-                        statsRepository.observeTotals(today, today),
-                        statsRepository.observeDailyReading(start, today),
-                    ) { todayTotals, dailyReadings -> todayTotals to dailyReadings }
-                        .map { Result.success(it) }
-                        .catch { emit(Result.failure(it)) }
+                    summaryRetries
+                        .onStart { emit(Unit) }
+                        .flatMapLatest {
+                            combine(
+                                statsRepository.observeTotals(today, today),
+                                statsRepository.observeDailyReading(start, today),
+                            ) { todayTotals, dailyReadings -> todayTotals to dailyReadings }
+                                .map { Result.success(it) }
+                                .catch { emit(Result.failure(it)) }
+                        }
                 combine(
                     getLibraryBooks(),
                     getLibraryBooks(ReadingStatus.READING),

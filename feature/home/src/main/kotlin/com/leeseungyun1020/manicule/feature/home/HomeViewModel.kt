@@ -21,12 +21,13 @@ class HomeViewModel
         private val observeHomeData: ObserveHomeDataUseCase,
     ) : ViewModel() {
         private val retries = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+        private val summaryRetries = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
         val uiState =
             retries
                 .onStart { emit(Unit) }
                 .flatMapLatest {
-                    observeHomeData()
+                    observeHomeData(summaryRetries)
                         .map<HomeData, HomeUiState> { HomeUiState.Content(it) }
                         .onStart { emit(HomeUiState.Loading) }
                         .catch { emit(HomeUiState.Error) }
@@ -37,6 +38,11 @@ class HomeViewModel
                 )
 
         fun retry() {
-            retries.tryEmit(Unit)
+            val state = uiState.value
+            if (state is HomeUiState.Content && state.data.summary == null) {
+                summaryRetries.tryEmit(Unit)
+            } else {
+                retries.tryEmit(Unit)
+            }
         }
     }
