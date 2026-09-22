@@ -5,6 +5,7 @@ import androidx.paging.PagingData
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.common.time.Clock
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
+import com.leeseungyun1020.manicule.core.data.repository.BookSyncResult
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
 import com.leeseungyun1020.manicule.core.data.repository.ReadingRecordRepository
 import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
@@ -548,10 +549,15 @@ class BookDetailViewModelTest {
                 emitAll(bookFlow)
             }
 
-        override suspend fun syncBook(isbn: String): Result<BookSyncStatus> {
+        override suspend fun syncBook(isbn: String): Result<BookSyncResult> {
             refreshGate?.await()
             bookAfterSync?.let { books.value = it }
-            return refreshResult
+            return refreshResult.map { status ->
+                BookSyncResult(
+                    book = books.value ?: error("Book must be available after synchronization."),
+                    status = status,
+                )
+            }
         }
 
         override fun searchBooks(query: String): Flow<PagingData<Book>> = emptyFlow()

@@ -5,6 +5,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.testing.asPagingSourceFactory
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
+import com.leeseungyun1020.manicule.core.data.repository.BookSyncResult
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
 import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.data.repository.SearchHistoryRepository
@@ -46,9 +47,10 @@ class NavigationBooks
 
         override fun observeBook(isbn: String): Flow<Book?> = flowOf(books.find { it.isbn == isbn })
 
-        override suspend fun syncBook(isbn: String): Result<BookSyncStatus> {
+        override suspend fun syncBook(isbn: String): Result<BookSyncResult> {
             syncedIsbn = isbn
-            return Result.success(BookSyncStatus.COMPLETE)
+            val book = books.find { it.isbn == isbn } ?: return Result.failure(NoSuchElementException(isbn))
+            return Result.success(BookSyncResult(book = book, status = BookSyncStatus.COMPLETE))
         }
 
         override fun searchBooks(query: String): Flow<PagingData<Book>> {

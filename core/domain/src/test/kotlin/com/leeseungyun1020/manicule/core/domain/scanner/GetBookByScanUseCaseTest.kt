@@ -3,6 +3,7 @@ package com.leeseungyun1020.manicule.core.domain.scanner
 import androidx.paging.PagingData
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
+import com.leeseungyun1020.manicule.core.data.repository.BookSyncResult
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import kotlinx.coroutines.CancellationException
@@ -48,6 +49,21 @@ class GetBookByScanUseCaseTest {
             val result = GetBookByScanUseCase(repository)(listOf("raw-value"))
 
             assertThat(result).isEqualTo("actual-isbn")
+        }
+
+    @Test
+    fun synchronizedBookReturnsItsCanonicalIsbnWithoutRawValueAlias() =
+        runTest {
+            val repository =
+                FakeBookRepository(
+                    syncResults = mapOf("raw-value" to Result.success(BookSyncStatus.COMPLETE)),
+                    syncedBooks = mapOf("raw-value" to book("canonical-isbn")),
+                    doesNotAliasSyncedBooks = true,
+                )
+
+            val result = GetBookByScanUseCase(repository)(listOf("raw-value"))
+
+            assertThat(result).isEqualTo("canonical-isbn")
         }
 
     @Test
@@ -105,6 +121,7 @@ class GetBookByScanUseCaseTest {
         private val syncResults: Map<String, Result<BookSyncStatus>> = emptyMap(),
         private val syncedBooks: Map<String, Book> = emptyMap(),
         private val localFailures: Set<String> = emptySet(),
+        private val doesNotAliasSyncedBooks: Boolean = false,
     ) : BookRepository {
         val synced = mutableListOf<String>()
         private val availableBooks = books.toMutableMap()
@@ -114,10 +131,19 @@ class GetBookByScanUseCaseTest {
             return flowOf(availableBooks[isbn])
         }
 
-        override suspend fun syncBook(isbn: String): Result<BookSyncStatus> {
+        override suspend fun syncBook(isbn: String): Result<BookSyncResult> {
             synced += isbn
-            syncedBooks[isbn]?.let { availableBooks[isbn] = it }
-            return syncResults[isbn] ?: Result.failure(NoSuchElementException(isbn))
+            syncedBooks[isbn]?.let { book ->
+                if (!doesNotAliasSyncedBooks) availableBooks[isbn] = book
+            }
+            return syncResults[isbn]
+                ?.mapCatching { status ->
+                    BookSyncResult(
+                        book = syncedBooks[isbn] ?: throw NoSuchElementException(isbn),
+                        status = status,
+                    )
+                }
+                ?: Result.failure(NoSuchElementException(isbn))
         }
 
         override fun searchBooks(query: String): Flow<PagingData<Book>> = error("Not used")

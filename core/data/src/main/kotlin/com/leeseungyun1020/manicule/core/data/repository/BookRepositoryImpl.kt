@@ -28,12 +28,12 @@ class BookRepositoryImpl
 
         override fun observeBook(isbn: String): Flow<Book?> = bookLocalDataSource.observeByIsbn(isbn).map { it?.asExternalModel() }
 
-        override suspend fun syncBook(isbn: String): Result<BookSyncStatus> =
+        override suspend fun syncBook(isbn: String): Result<BookSyncResult> =
             runCatching {
                 val response = bookRemoteDataSource.searchBooks(isbn = isbn)
                 val mappedBook =
                     response.docs.firstNotNullOfOrNull { it.asExternalModelOrNull() }
-                        ?: throw NoSuchElementException("API에서 유효한 책 정보를 찾을 수 없습니다.")
+                        ?: throw NoSuchElementException("No valid book found in the API response.")
 
                 val cached = bookLocalDataSource.getByIsbn(isbn)
                 val auxiliaryContent =
@@ -65,11 +65,10 @@ class BookRepositoryImpl
                         tableOfContents = auxiliaryContent.tableOfContents.value,
                     )
                 bookLocalDataSource.save(book.asEntity())
-                if (auxiliaryContent.hasFetchFailure) {
-                    BookSyncStatus.AUXILIARY_CONTENT_FAILED
-                } else {
-                    BookSyncStatus.COMPLETE
-                }
+                BookSyncResult(
+                    book = book,
+                    status = if (auxiliaryContent.hasFetchFailure) BookSyncStatus.AUXILIARY_CONTENT_FAILED else BookSyncStatus.COMPLETE,
+                )
             }.onFailure {
                 Log.e("BookRepository", "Failed to sync book with ISBN $isbn", it)
             }

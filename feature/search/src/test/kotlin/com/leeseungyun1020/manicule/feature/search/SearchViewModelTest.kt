@@ -8,6 +8,7 @@ import androidx.paging.testing.asSnapshot
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
+import com.leeseungyun1020.manicule.core.data.repository.BookSyncResult
 import com.leeseungyun1020.manicule.core.data.repository.SearchHistoryRepository
 import com.leeseungyun1020.manicule.core.domain.search.ClearRecentQueriesUseCase
 import com.leeseungyun1020.manicule.core.domain.search.DeleteRecentQueryUseCase
@@ -15,7 +16,6 @@ import com.leeseungyun1020.manicule.core.domain.search.GetRecentQueriesUseCase
 import com.leeseungyun1020.manicule.core.domain.search.SaveRecentQueryUseCase
 import com.leeseungyun1020.manicule.core.domain.search.SearchBooksUseCase
 import com.leeseungyun1020.manicule.core.model.Book
-import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import com.leeseungyun1020.manicule.core.model.SearchQuery
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -892,7 +892,7 @@ private class FakeBookRepository(
 
     override fun observeBook(isbn: String): Flow<Book?> = flowOf(null)
 
-    override suspend fun syncBook(isbn: String): Result<BookSyncStatus> = Result.failure(NoSuchElementException(isbn))
+    override suspend fun syncBook(isbn: String): Result<BookSyncResult> = Result.failure(NoSuchElementException(isbn))
 
     override fun searchBooks(query: String): Flow<PagingData<Book>> {
         searchQueries += query

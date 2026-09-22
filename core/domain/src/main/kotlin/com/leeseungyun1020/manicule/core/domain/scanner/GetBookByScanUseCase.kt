@@ -21,8 +21,7 @@ class GetBookByScanUseCase
             try {
                 bookRepository.observeBook(candidate).first()?.isbn
                     ?: run {
-                        bookRepository.syncBook(candidate).getOrThrow()
-                        bookRepository.observeBook(candidate).first()?.isbn
+                        bookRepository.syncBook(candidate).getOrThrow().book.isbn
                     }
             } catch (exception: CancellationException) {
                 throw exception

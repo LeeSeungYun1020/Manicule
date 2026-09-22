@@ -22,10 +22,10 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
+import com.leeseungyun1020.manicule.core.data.repository.BookSyncResult
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.domain.scanner.GetBookByScanUseCase
 import com.leeseungyun1020.manicule.core.model.Book
-import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import com.leeseungyun1020.manicule.core.scanner.BarcodeReaderFactory
 import com.leeseungyun1020.manicule.core.scanner.MlKitBarcodeReaderFactory
 import kotlinx.coroutines.Dispatchers
@@ -148,7 +148,7 @@ class CameraPreviewBindingTest {
     private class EmptyBookRepository : BookRepository {
         override fun observeBook(isbn: String): Flow<Book?> = emptyFlow()
 
-        override suspend fun syncBook(isbn: String): Result<BookSyncStatus> = Result.failure(NoSuchElementException(isbn))
+        override suspend fun syncBook(isbn: String): Result<BookSyncResult> = Result.failure(NoSuchElementException(isbn))
 
         override fun searchBooks(query: String): Flow<PagingData<Book>> = emptyFlow()
     }

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelStore
 import androidx.paging.PagingData
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
+import com.leeseungyun1020.manicule.core.data.repository.BookSyncResult
 import com.leeseungyun1020.manicule.core.domain.scanner.GetBookByScanUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
@@ -219,39 +220,41 @@ class ScannerViewModelTest {
     private class EmptyBookRepository : BookRepository {
         override fun observeBook(isbn: String): Flow<Book?> = emptyFlow()
 
-        override suspend fun syncBook(isbn: String): Result<BookSyncStatus> = Result.failure(NoSuchElementException(isbn))
+        override suspend fun syncBook(isbn: String): Result<BookSyncResult> = Result.failure(NoSuchElementException(isbn))
 
         override fun searchBooks(query: String): Flow<PagingData<Book>> = emptyFlow()
     }
 
     private class SuccessBookRepository : BookRepository {
         private var synced = false
+        private val syncedBook =
+            Book(
+                isbn = "actual-isbn",
+                title = "Title",
+                author = "Author",
+                publisher = "Publisher",
+                publishedDate = null,
+                coverUrl = null,
+                totalPages = null,
+                price = null,
+                category = null,
+                tableOfContentsUrl = null,
+                introductionUrl = null,
+                summaryUrl = null,
+            )
 
         override fun observeBook(isbn: String): Flow<Book?> =
             flowOf(
                 if (synced) {
-                    Book(
-                        isbn = "actual-isbn",
-                        title = "Title",
-                        author = "Author",
-                        publisher = "Publisher",
-                        publishedDate = null,
-                        coverUrl = null,
-                        totalPages = null,
-                        price = null,
-                        category = null,
-                        tableOfContentsUrl = null,
-                        introductionUrl = null,
-                        summaryUrl = null,
-                    )
+                    syncedBook
                 } else {
                     null
                 },
             )
 
-        override suspend fun syncBook(isbn: String): Result<BookSyncStatus> {
+        override suspend fun syncBook(isbn: String): Result<BookSyncResult> {
             synced = true
-            return Result.success(BookSyncStatus.COMPLETE)
+            return Result.success(BookSyncResult(book = syncedBook, status = BookSyncStatus.COMPLETE))
         }
 
         override fun searchBooks(query: String): Flow<PagingData<Book>> = emptyFlow()
