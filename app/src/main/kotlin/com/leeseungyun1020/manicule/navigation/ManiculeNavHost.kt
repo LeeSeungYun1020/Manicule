@@ -12,6 +12,8 @@ import com.leeseungyun1020.manicule.feature.bookdetail.navigation.BookDetailRout
 import com.leeseungyun1020.manicule.feature.bookdetail.navigation.bookDetailScreen
 import com.leeseungyun1020.manicule.feature.home.navigation.HomeRoute
 import com.leeseungyun1020.manicule.feature.home.navigation.homeScreen
+import com.leeseungyun1020.manicule.feature.library.navigation.LibraryRoute
+import com.leeseungyun1020.manicule.feature.library.navigation.LibraryTab
 import com.leeseungyun1020.manicule.feature.library.navigation.libraryScreen
 import com.leeseungyun1020.manicule.feature.scanner.navigation.ScannerRoute
 import com.leeseungyun1020.manicule.feature.scanner.navigation.scannerScreen
@@ -41,7 +43,20 @@ fun ManiculeNavHost(
                 .padding(paddingValues)
                 .consumeWindowInsets(paddingValues),
     ) {
-        homeScreen()
+        homeScreen(
+            onNavigateToSearch = {
+                appState.navController.navigate(SearchRoute)
+            },
+            onNavigateToBookDetail = { isbn ->
+                appState.navController.navigate(BookDetailRoute(isbn))
+            },
+            onNavigateToReadingBooks = {
+                appState.navController.navigate(LibraryRoute(LibraryTab.READING))
+            },
+            onNavigateToWantBooks = {
+                appState.navController.navigate(LibraryRoute(LibraryTab.WANT))
+            },
+        )
         searchScreen(
             onNavigateBack = {
                 appState.navController.popBackStack()

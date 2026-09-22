@@ -1,4 +1,4 @@
-package com.leeseungyun1020.manicule.core.domain.stats
+package com.leeseungyun1020.manicule.core.domain.time
 
 import com.leeseungyun1020.manicule.core.common.time.Clock
 import kotlinx.coroutines.currentCoroutineContext
@@ -12,7 +12,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 
-internal fun Clock.observeToday(): Flow<LocalDate> =
+fun Clock.observeToday(): Flow<LocalDate> =
     flow {
         while (currentCoroutineContext().isActive) {
             val today = today()

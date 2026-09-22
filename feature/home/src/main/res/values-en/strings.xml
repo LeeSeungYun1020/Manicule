@@ -1,4 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="home_stub_label">Home\n(stub — implemented in a later phase)</string>
+    <string name="home_title">Reading log</string>
+    <string name="home_stub_label">Home screen is being prepared</string>
+    <string name="home_search_placeholder">Search books</string>
+    <string name="home_search">Search</string>
+    <string name="home_scan">Scan</string>
+    <string name="home_empty_summary_description">Your reading days will appear here</string>
+    <string name="home_onboarding_heading">Build a reading habit with records</string>
+    <string name="home_onboarding_title">Get started</string>
+    <string name="home_onboarding_step_one">Add a book by search or scan</string>
+    <string name="home_onboarding_step_one_description">Find a title or author, or scan its barcode</string>
+    <string name="home_onboarding_step_two">Record as you read</string>
+    <string name="home_onboarding_step_two_description">Log pages and a short review</string>
+    <string name="home_onboarding_step_three">See your habit in statistics</string>
+    <string name="home_onboarding_step_three_description">Fill the calendar and build a streak</string>
+    <string name="home_streak">Streak</string>
+    <string name="home_today_pages">Today</string>
+    <string name="home_more">More</string>
+    <string name="home_no_reading_title">No book in progress</string>
+    <string name="home_no_reading_description">Search or scan to add a book</string>
+    <string name="home_choose">Choose</string>
+    <string name="home_error_title">Couldn\'t load home</string>
+    <string name="home_error_description">Please try again shortly.</string>
+    <string name="home_summary_error_title">Couldn\'t load reading summary</string>
+    <string name="home_summary_error_description">Other home information is still available.</string>
+    <string name="home_retry">Retry</string>
+    <plurals name="home_days"><item quantity="one">%d day</item><item quantity="other">%d days</item></plurals>
+    <plurals name="home_pages"><item quantity="one">%dp</item><item quantity="other">%dp</item></plurals>
+    <plurals name="home_reading_books"><item quantity="one">Reading (%d)</item><item quantity="other">Reading (%d)</item></plurals>
+    <plurals name="home_want_books_description"><item quantity="one">%d book is waiting to be read.\nChoose it from your list to start.</item><item quantity="other">%d books are waiting to be read.\nChoose one from your list to start.</item></plurals>
+    <string-array name="home_weekdays"><item>Mon</item><item>Tue</item><item>Wed</item><item>Thu</item><item>Fri</item><item>Sat</item><item>Sun</item></string-array>
 </resources>

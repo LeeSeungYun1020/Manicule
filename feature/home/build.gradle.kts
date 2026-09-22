@@ -7,3 +7,11 @@ plugins {
 android {
     namespace = "com.leeseungyun1020.manicule.feature.home"
 }
+
+dependencies {
+    implementation(libs.androidx.compose.material.iconsExtended)
+    implementation(libs.kotlinx.datetime)
+
+    androidTestImplementation(libs.androidx.compose.ui.test)
+    androidTestImplementation(libs.truth)
+}

@@ -1,31 +1,53 @@
 package com.leeseungyun1020.manicule.feature.home.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.leeseungyun1020.manicule.feature.home.R
+import com.leeseungyun1020.manicule.feature.home.HomeScreen
+import com.leeseungyun1020.manicule.feature.home.HomeViewModel
 import kotlinx.serialization.Serializable
 
 @Serializable
 object HomeRoute
 
-fun NavGraphBuilder.homeScreen() {
-    composable<HomeRoute> { HomeStubScreen() }
+fun NavGraphBuilder.homeScreen(
+    onNavigateToSearch: () -> Unit,
+    onNavigateToBookDetail: (isbn: String) -> Unit,
+    onNavigateToReadingBooks: () -> Unit,
+    onNavigateToWantBooks: () -> Unit,
+) {
+    composable<HomeRoute> {
+        HomeRoute(
+            onNavigateToSearch = onNavigateToSearch,
+            onNavigateToBookDetail = onNavigateToBookDetail,
+            onNavigateToReadingBooks = onNavigateToReadingBooks,
+            onNavigateToWantBooks = onNavigateToWantBooks,
+        )
+    }
 }
 
 @Composable
-private fun HomeStubScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(
-            text = stringResource(R.string.home_stub_label),
-            style = MaterialTheme.typography.titleMedium,
-        )
-    }
+private fun HomeRoute(
+    onNavigateToSearch: () -> Unit,
+    onNavigateToBookDetail: (isbn: String) -> Unit,
+    onNavigateToReadingBooks: () -> Unit,
+    onNavigateToWantBooks: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: HomeViewModel = hiltViewModel(),
+) {
+    val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
+    HomeScreen(
+        uiState = uiState,
+        onSearch = onNavigateToSearch,
+        onScan = {},
+        onBookSelected = onNavigateToBookDetail,
+        onShowReadingBooks = onNavigateToReadingBooks,
+        onChooseWantBook = onNavigateToWantBooks,
+        onShowStats = {},
+        onRetry = viewModel::retry,
+        modifier = modifier,
+    )
 }

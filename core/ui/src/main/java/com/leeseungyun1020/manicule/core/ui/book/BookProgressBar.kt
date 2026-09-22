@@ -26,6 +26,7 @@ fun BookProgressBar(
     currentPage: Int,
     totalPages: Int,
     modifier: Modifier = Modifier,
+    showDetails: Boolean = true,
 ) {
     if (totalPages <= 0) return
 
@@ -41,21 +42,23 @@ fun BookProgressBar(
                     .fillMaxWidth()
                     .height(ManiculeSize.progressBarThick),
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.xs))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = stringResource(id = R.string.book_progress_text, safeCurrentPage, totalPages),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = stringResource(id = R.string.book_progress_percentage, percentage),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+        if (showDetails) {
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.xs))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = stringResource(id = R.string.book_progress_text, safeCurrentPage, totalPages),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(id = R.string.book_progress_percentage, percentage),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
@@ -70,6 +73,7 @@ private fun BookProgressBarPreview() {
         ) {
             BookProgressBar(currentPage = 132, totalPages = 320)
             BookProgressBar(currentPage = 400, totalPages = 320)
+            BookProgressBar(currentPage = 132, totalPages = 320, showDetails = false)
         }
     }
 }
