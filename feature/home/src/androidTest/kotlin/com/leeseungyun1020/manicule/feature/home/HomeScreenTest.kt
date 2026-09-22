@@ -1,6 +1,7 @@
 package com.leeseungyun1020.manicule.feature.home
 
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
@@ -26,6 +27,7 @@ import kotlinx.datetime.minus
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import com.leeseungyun1020.manicule.core.ui.R as CoreUiR
 
 @RunWith(AndroidJUnit4::class)
 class HomeScreenTest {
@@ -87,6 +89,36 @@ class HomeScreenTest {
 
         assertThat(firstDay.top).isEqualTo(lastDay.top)
         assertThat(firstDay.right).isLessThan(lastDay.left)
+    }
+
+    @Test
+    fun continuingUser_exposesEachRecentDayDateAndPages() {
+        val data = homeData(hasLibraryBooks = true)
+        val summary = requireNotNull(data.summary)
+        val days = summary.recentDays.mapIndexed { index, day -> ReadingCalendarDay.of(day.date, if (index == 1) 25 else 0) }
+        setHome(HomeUiState.Content(data.copy(summary = summary.copy(recentDays = days))))
+
+        val emptyDay = days.first().date
+        val emptyDescription =
+            context.getString(
+                CoreUiR.string.reading_calendar_cell_no_record_content_description,
+                emptyDay.year,
+                emptyDay.monthNumber,
+                emptyDay.dayOfMonth,
+            )
+        val readDay = days[1].date
+        val readDescription =
+            context.resources.getQuantityString(
+                CoreUiR.plurals.reading_calendar_cell_content_description,
+                25,
+                readDay.year,
+                readDay.monthNumber,
+                readDay.dayOfMonth,
+                25,
+            )
+
+        composeRule.onNodeWithContentDescription(emptyDescription).assertIsDisplayed().assertHasNoClickAction()
+        composeRule.onNodeWithContentDescription(readDescription).assertIsDisplayed().assertHasNoClickAction()
     }
 
     @Test

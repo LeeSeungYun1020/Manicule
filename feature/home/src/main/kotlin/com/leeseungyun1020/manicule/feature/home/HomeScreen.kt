@@ -38,6 +38,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -70,6 +72,7 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
+import com.leeseungyun1020.manicule.core.ui.R as CoreUiR
 
 @Composable
 fun HomeScreen(
@@ -299,7 +302,39 @@ private fun HomeWeekStrip(days: List<ReadingCalendarDay>?) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
         repeat(7) { index ->
             val day = days?.getOrNull(index)
-            Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+            val dayDescription =
+                day?.let {
+                    if (it.pages == 0) {
+                        stringResource(
+                            CoreUiR.string.reading_calendar_cell_no_record_content_description,
+                            it.date.year,
+                            it.date.monthNumber,
+                            it.date.dayOfMonth,
+                        )
+                    } else {
+                        pluralStringResource(
+                            CoreUiR.plurals.reading_calendar_cell_content_description,
+                            it.pages,
+                            it.date.year,
+                            it.date.monthNumber,
+                            it.date.dayOfMonth,
+                            it.pages,
+                        )
+                    }
+                }
+            Column(
+                modifier =
+                    Modifier.weight(1f).then(
+                        if (dayDescription == null) {
+                            Modifier
+                        } else {
+                            Modifier.semantics(mergeDescendants = true) {
+                                contentDescription = dayDescription
+                            }
+                        },
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 ReadingCalendarCell(
                     intensity = day?.intensity ?: 0,
                     modifier = Modifier.fillMaxWidth().aspectRatio(1f),
