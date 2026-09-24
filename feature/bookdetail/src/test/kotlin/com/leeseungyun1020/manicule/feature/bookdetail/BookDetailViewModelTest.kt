@@ -11,6 +11,7 @@ import com.leeseungyun1020.manicule.core.data.repository.ReadingRecordRepository
 import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.domain.book.GetBookDetailUseCase
 import com.leeseungyun1020.manicule.core.domain.library.ChangeReadingStatusUseCase
+import com.leeseungyun1020.manicule.core.domain.library.UpdateRatingUseCase
 import com.leeseungyun1020.manicule.core.domain.record.AddReadingRecordUseCase
 import com.leeseungyun1020.manicule.core.domain.record.ObserveBookRecordsUseCase
 import com.leeseungyun1020.manicule.core.model.Book
@@ -360,6 +361,206 @@ class BookDetailViewModelTest {
         }
 
     @Test
+    fun updateRating_unregisteredBook_setsUnsetWithRating() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateRating(4)
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.bookDetail.entry?.status).isEqualTo(ReadingStatus.UNSET)
+            assertThat(content.bookDetail.entry?.rating).isEqualTo(4)
+            assertThat(content.ratingSaving).isEqualTo(RatingSavingState.Idle)
+            assertThat(libraryRepository.ratingCalls).isEqualTo(1)
+        }
+
+    @Test
+    fun updateRating_sameRating_clearsToZeroRating() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(rating = 4)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateRating(4)
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.bookDetail.entry?.rating).isEqualTo(0)
+            assertThat(content.ratingSaving).isEqualTo(RatingSavingState.Idle)
+        }
+
+    @Test
+    fun updateRating_differentRating_updatesToNewRating() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(rating = 3)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateRating(5)
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.bookDetail.entry?.rating).isEqualTo(5)
+            assertThat(content.ratingSaving).isEqualTo(RatingSavingState.Idle)
+        }
+
+    @Test
+    fun updateRating_preservesStatusAndMemo() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value =
+                testEntry.copy(
+                    status = ReadingStatus.READING,
+                    rating = 2,
+                    memo = "Keep memo",
+                )
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateRating(4)
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.bookDetail.entry?.status).isEqualTo(ReadingStatus.READING)
+            assertThat(content.bookDetail.entry?.memo).isEqualTo("Keep memo")
+            assertThat(content.bookDetail.entry?.rating).isEqualTo(4)
+        }
+
+    @Test
+    fun updateRating_saving_blocksDuplicateRequests() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(rating = 1)
+            libraryRepository.ratingGate = CompletableDeferred()
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateRating(4)
+            runCurrent()
+
+            assertThat(contentState(viewModel).ratingSaving).isEqualTo(RatingSavingState.Saving(4))
+
+            viewModel.updateRating(5)
+            runCurrent()
+
+            assertThat(libraryRepository.ratingCalls).isEqualTo(1)
+
+            libraryRepository.ratingGate?.complete(Unit)
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).ratingSaving).isEqualTo(RatingSavingState.Idle)
+            assertThat(contentState(viewModel).bookDetail.entry?.rating).isEqualTo(4)
+        }
+
+    @Test
+    fun updateRating_observationDelay_keepsSavingStateUntilObserved() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(rating = 1)
+            libraryRepository.emitRating = false
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateRating(4)
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).ratingSaving).isEqualTo(RatingSavingState.Saving(4))
+            assertThat(contentState(viewModel).bookDetail.entry?.rating).isEqualTo(1)
+
+            libraryRepository.entry.value = testEntry.copy(rating = 4)
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).ratingSaving).isEqualTo(RatingSavingState.Idle)
+            assertThat(contentState(viewModel).bookDetail.entry?.rating).isEqualTo(4)
+        }
+
+    @Test
+    fun updateRating_failure_showsFailedState_andDismissError() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(rating = 2)
+            libraryRepository.ratingFailure = IllegalStateException("Disk error")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateRating(4)
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.ratingSaving).isEqualTo(RatingSavingState.Failed(4, 1L))
+            assertThat(content.bookDetail.entry?.rating).isEqualTo(2)
+
+            viewModel.dismissRatingError()
+            assertThat(contentState(viewModel).ratingSaving).isEqualTo(RatingSavingState.Idle)
+        }
+
+    @Test
+    fun updateRating_retry_retriesFailedTarget() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(rating = 2)
+            libraryRepository.ratingFailure = IllegalStateException("Disk error")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateRating(4)
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).ratingSaving).isEqualTo(RatingSavingState.Failed(4, 1L))
+
+            libraryRepository.ratingFailure = null
+            viewModel.retryRating()
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).ratingSaving).isEqualTo(RatingSavingState.Idle)
+            assertThat(contentState(viewModel).bookDetail.entry?.rating).isEqualTo(4)
+        }
+
+    @Test
+    fun updateRating_cancellation_doesNotLeaveSavingStateOrShowError() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.ratingFailure = CancellationException("Cancelled")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateRating(4)
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).ratingSaving).isEqualTo(RatingSavingState.Idle)
+            assertThat(contentState(viewModel).bookDetail.entry).isNull()
+        }
+
+    @Test
+    fun updateRating_doesNotOverwriteStatusChangeError() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.statusResult = ReadingStatusChangeResult.BookNotFound
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.changeReadingStatus(ReadingStatus.WANT)
+            advanceUntilIdle()
+
+            val statusFailed = contentState(viewModel).statusChange
+            assertThat(statusFailed).isInstanceOf(StatusChangeState.Failed::class.java)
+
+            libraryRepository.entry.value = testEntry.copy(rating = 1)
+            viewModel.updateRating(4)
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.statusChange).isEqualTo(statusFailed)
+            assertThat(content.ratingSaving).isEqualTo(RatingSavingState.Idle)
+            assertThat(content.bookDetail.entry?.rating).isEqualTo(4)
+        }
+
+    @Test
     fun records_areObserved_andUpdatedInUiState() =
         runTest(dispatcher) {
             bookRepository.books.value = testBook
@@ -677,6 +878,14 @@ class BookDetailViewModelTest {
         BookDetailViewModel(
             getBookDetail = GetBookDetailUseCase(bookRepository, libraryRepository),
             changeStatus = ChangeReadingStatusUseCase(
+                libraryRepository,
+                object : Clock {
+                    override fun now(): Instant = Instant.fromEpochMilliseconds(100)
+
+                    override fun timeZone(): TimeZone = TimeZone.UTC
+                },
+            ),
+            updateRatingUseCase = UpdateRatingUseCase(
                 libraryRepository,
                 object : Clock {
                     override fun now(): Instant = Instant.fromEpochMilliseconds(100)
