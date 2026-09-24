@@ -1,7 +1,6 @@
 package com.leeseungyun1020.manicule.navigation
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -52,12 +51,14 @@ class SearchNavigationTest {
     }
 
     @Test
-    fun emptySearch_showsScannerWithoutNavigatingToStub() {
+    fun emptySearch_opensScannerAndBackRestoresSearch() {
         search("Missing")
         compose.onNodeWithText("No search results").assertIsDisplayed()
-        compose.onNodeWithText("Scan").assertIsDisplayed().assertIsNotEnabled()
-        compose.onNodeWithText("Scan").performClick()
+        compose.onNodeWithText("Scan").assertIsDisplayed().performClick()
+        compose.onNodeWithText("Scan barcode").assertIsDisplayed()
+        pressBack()
         compose.onNodeWithText("No search results").assertIsDisplayed()
+        compose.onNode(hasText("Missing") and hasSetTextAction()).assertIsDisplayed()
     }
 
     private fun search(query: String) {
