@@ -21,7 +21,7 @@
 | 공용 계약·빌드 설정 | 의존 모듈까지 검증 범위 확대 |
 
 - 단위 테스트는 Android 모듈의 `:<모듈>:testDebugUnitTest`, JVM 모듈의 `:<모듈>:test`를 사용한다. 테스트 대상이 없거나 skip된 작업을 테스트 통과로 보고하지 않는다.
-- 전체 검증은 [GitHub Actions](../.github/workflows/check.yml)의 `./gradlew check --console=plain --max-workers=2`로 수행한다. `gh pr checks <PR> --json name,state,link`로 최종 PR의 `Gradle Check` 성공을 확인한다. CI 대기·실패를 통과로 보고하지 않고 로컬에서 전체 검증을 중복 실행하지 않는다. CI 오류 재현 등 필요한 경우에만 같은 명령을 로컬에서 실행한다.
+- 전체 검증은 [GitHub Actions](../.github/workflows/check.yml)의 `./gradlew check --console=plain`으로 수행한다. `gh pr checks <PR> --json name,state,link`로 최종 PR의 `Gradle Check` 성공을 확인한다. CI 대기·실패를 통과로 보고하지 않고 로컬에서 전체 검증을 중복 실행하지 않는다. CI 오류 재현 등 필요한 경우에만 같은 명령을 로컬에서 실행한다.
 - `check`는 기기 테스트와 APK 조립을 대체하지 않는다. 변경에 필요한 `assembleDebug`, instrumented/UI 테스트는 별도로 수행한다.
 - 검증 후 관련 코드·설정·의존성·실행 환경이 바뀌면 영향을 받는 검증을 다시 수행한다. 결과 재사용은 동일 입력·명령의 성공이 확인되는 경우에 한하며, 문서만 추가한 경우 같은 코드 검증을 반복하지 않는다.
 - 로컬 영향 모듈 검증은 `./gradlew :<모듈>:testDebugUnitTest :<모듈>:assembleDebug -q --console=plain > <로그파일> 2>&1`처럼 실행하고 종료 코드를 확인한다. JVM 모듈은 `test`·`assemble`을 사용한다. 실패하면 `tail -n 80 <로그파일>`부터 확인하고 필요한 문맥을 더 읽는다.

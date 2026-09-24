@@ -31,4 +31,4 @@ jobs:
           log-accepted-android-sdk-licenses: false
       - uses: gradle/actions/setup-gradle@v6
       - name: Run checks and unit tests
-        run: ./gradlew check --console=plain --max-workers=2
+        run: ./gradlew check --console=plain
