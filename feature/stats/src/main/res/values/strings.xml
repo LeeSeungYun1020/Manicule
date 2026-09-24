@@ -7,20 +7,20 @@
     <string name="stats_streak">연속 기록</string>
     <string name="stats_pages">읽은 페이지</string>
     <string name="stats_books">읽은 책</string>
-    <string name="stats_days_value">%1$d일</string>
-    <string name="stats_pages_value">%1$d쪽</string>
-    <string name="stats_books_value">%1$d권</string>
+    <plurals name="stats_days_value"><item quantity="other">%d일</item></plurals>
+    <plurals name="stats_pages_value"><item quantity="other">%d쪽</item></plurals>
+    <plurals name="stats_books_value"><item quantity="other">%d권</item></plurals>
     <string name="stats_empty_period">이 기간에는 독서 기록이 없어요.</string>
     <string name="stats_error_title">통계를 불러오지 못했어요</string>
     <string name="stats_error_description">잠시 후 다시 시도해 주세요.</string>
     <string name="stats_refresh_error">통계를 새로고침하지 못했어요.</string>
     <string name="stats_retry">다시 시도</string>
-    <string name="stats_day_title">%1$d년 %2$d월 %3$d일 읽은 책 · %4$d권</string>
+    <plurals name="stats_day_title"><item quantity="other">%1$d년 %2$d월 %3$d일 읽은 책 · %4$d권</item></plurals>
     <string name="stats_day_loading_title">%1$d년 %2$d월 %3$d일 읽은 책</string>
     <string name="stats_day_empty">이 날짜의 독서 기록이 없어요.</string>
     <string name="stats_day_error">이 날짜의 기록을 불러오지 못했어요.</string>
     <string name="stats_book_missing">책 정보 없음</string>
-    <string name="stats_session_count">%1$d회</string>
+    <plurals name="stats_session_count"><item quantity="other">%d회</item></plurals>
     <string name="stats_close">닫기</string>
     <string name="stats_monday">월</string><string name="stats_tuesday">화</string><string name="stats_wednesday">수</string>
     <string name="stats_thursday">목</string><string name="stats_friday">금</string><string name="stats_saturday">토</string><string name="stats_sunday">일</string>

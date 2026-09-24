@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -169,9 +170,10 @@ private fun StatsSummary(
     modifier: Modifier = Modifier,
 ) {
     val tiles = listOf(
-        stringResource(R.string.stats_days_value, summary.longestStreak) to stringResource(R.string.stats_streak),
-        stringResource(R.string.stats_pages_value, summary.pagesRead) to stringResource(R.string.stats_pages),
-        stringResource(R.string.stats_books_value, summary.bookCount) to stringResource(R.string.stats_books),
+        pluralStringResource(R.plurals.stats_days_value, summary.longestStreak, summary.longestStreak) to
+            stringResource(R.string.stats_streak),
+        pluralStringResource(R.plurals.stats_pages_value, summary.pagesRead, summary.pagesRead) to stringResource(R.string.stats_pages),
+        pluralStringResource(R.plurals.stats_books_value, summary.bookCount, summary.bookCount) to stringResource(R.string.stats_books),
     )
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         if (maxWidth < ManiculeSize.coverMediumWidth * 3) {

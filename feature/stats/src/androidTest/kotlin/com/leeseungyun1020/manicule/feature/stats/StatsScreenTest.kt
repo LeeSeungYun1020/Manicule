@@ -70,8 +70,9 @@ class StatsScreenTest {
         )
         composeRule.onNodeWithContentDescription(readDescription).performClick()
         composeRule.onNodeWithText(
-            context.getString(
-                R.string.stats_day_title,
+            context.resources.getQuantityString(
+                R.plurals.stats_day_title,
+                1,
                 readDate.year,
                 readDate.monthNumber,
                 readDate.dayOfMonth,
@@ -79,8 +80,8 @@ class StatsScreenTest {
             ),
         ).assertIsDisplayed()
         composeRule.onNodeWithText(context.getString(R.string.stats_book_missing)).assertIsDisplayed()
-        composeRule.onAllNodesWithText(context.getString(R.string.stats_pages_value, 20)).assertCountEquals(2)
-        composeRule.onNodeWithText(context.getString(R.string.stats_session_count, 2)).assertIsDisplayed()
+        composeRule.onAllNodesWithText(context.resources.getQuantityString(R.plurals.stats_pages_value, 20, 20)).assertCountEquals(2)
+        composeRule.onNodeWithText(context.resources.getQuantityString(R.plurals.stats_session_count, 2, 2)).assertIsDisplayed()
         composeRule.onNodeWithContentDescription(context.getString(R.string.stats_close)).performClick()
         composeRule.onNodeWithText(context.getString(R.string.stats_book_missing)).assertDoesNotExist()
     }
@@ -102,7 +103,7 @@ class StatsScreenTest {
 
         composeRule.onNodeWithText(context.getString(R.string.stats_calendar_title)).assertIsDisplayed()
         composeRule.onNodeWithText(context.getString(R.string.stats_empty_period)).assertIsDisplayed()
-        composeRule.onNodeWithText(context.getString(R.string.stats_books_value, 0)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.resources.getQuantityString(R.plurals.stats_books_value, 0, 0)).assertIsDisplayed()
     }
 
     private fun period(empty: Boolean = false): PeriodState.Content {

@@ -7,20 +7,20 @@
     <string name="stats_streak">Longest streak</string>
     <string name="stats_pages">Pages read</string>
     <string name="stats_books">Books read</string>
-    <string name="stats_days_value">%1$d days</string>
-    <string name="stats_pages_value">%1$d pages</string>
-    <string name="stats_books_value">%1$d books</string>
+    <plurals name="stats_days_value"><item quantity="one">%d day</item><item quantity="other">%d days</item></plurals>
+    <plurals name="stats_pages_value"><item quantity="one">%d page</item><item quantity="other">%d pages</item></plurals>
+    <plurals name="stats_books_value"><item quantity="one">%d book</item><item quantity="other">%d books</item></plurals>
     <string name="stats_empty_period">No reading records in this period.</string>
     <string name="stats_error_title">Could not load statistics</string>
     <string name="stats_error_description">Please try again shortly.</string>
     <string name="stats_refresh_error">Could not refresh statistics.</string>
     <string name="stats_retry">Retry</string>
-    <string name="stats_day_title">Books read on %1$d/%2$d/%3$d · %4$d books</string>
+    <plurals name="stats_day_title"><item quantity="one">Books read on %1$d/%2$d/%3$d · %4$d book</item><item quantity="other">Books read on %1$d/%2$d/%3$d · %4$d books</item></plurals>
     <string name="stats_day_loading_title">Books read on %1$d/%2$d/%3$d</string>
     <string name="stats_day_empty">No reading records on this date.</string>
     <string name="stats_day_error">Could not load records for this date.</string>
     <string name="stats_book_missing">Book information unavailable</string>
-    <string name="stats_session_count">%1$d sessions</string>
+    <plurals name="stats_session_count"><item quantity="one">%d session</item><item quantity="other">%d sessions</item></plurals>
     <string name="stats_close">Close</string>
     <string name="stats_monday">M</string><string name="stats_tuesday">T</string><string name="stats_wednesday">W</string>
     <string name="stats_thursday">T</string><string name="stats_friday">F</string><string name="stats_saturday">S</string><string name="stats_sunday">S</string>

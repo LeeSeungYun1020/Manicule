@@ -26,6 +26,16 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.plus
 
+private val weekdayLabels = listOf(
+    R.string.stats_monday,
+    R.string.stats_tuesday,
+    R.string.stats_wednesday,
+    R.string.stats_thursday,
+    R.string.stats_friday,
+    R.string.stats_saturday,
+    R.string.stats_sunday,
+)
+
 @Composable
 fun StatsCalendarCard(
     days: List<ReadingCalendarDay>,
@@ -42,16 +52,7 @@ fun StatsCalendarCard(
             Text(stringResource(R.string.stats_calendar_title), style = MaterialTheme.typography.titleMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
                 Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.size.calendarCellGap)) {
-                    val labels = listOf(
-                        R.string.stats_monday,
-                        R.string.stats_tuesday,
-                        R.string.stats_wednesday,
-                        R.string.stats_thursday,
-                        R.string.stats_friday,
-                        R.string.stats_saturday,
-                        R.string.stats_sunday,
-                    )
-                    labels.forEach { label ->
+                    weekdayLabels.forEach { label ->
                         Box(modifier = Modifier.size(MaterialTheme.size.calendarCell), contentAlignment = Alignment.Center) {
                             Text(
                                 text = stringResource(label),

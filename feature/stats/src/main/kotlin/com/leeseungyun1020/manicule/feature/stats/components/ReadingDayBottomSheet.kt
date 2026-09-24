@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeBottomSheet
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeErrorState
@@ -64,7 +65,14 @@ private fun ReadingDayContent(
         ) {
             Text(
                 text = if (state is DayState.Content) {
-                    stringResource(R.string.stats_day_title, date.year, date.monthNumber, date.dayOfMonth, state.rows.size)
+                    pluralStringResource(
+                        R.plurals.stats_day_title,
+                        state.rows.size,
+                        date.year,
+                        date.monthNumber,
+                        date.dayOfMonth,
+                        state.rows.size,
+                    )
                 } else {
                     stringResource(R.string.stats_day_loading_title, date.year, date.monthNumber, date.dayOfMonth)
                 },
@@ -99,12 +107,12 @@ private fun ReadingDayContent(
                                 trailingContent = {
                                     Column(horizontalAlignment = Alignment.End) {
                                         Text(
-                                            text = stringResource(R.string.stats_pages_value, row.pagesRead),
+                                            text = pluralStringResource(R.plurals.stats_pages_value, row.pagesRead, row.pagesRead),
                                             style = MaterialTheme.typography.labelLarge,
                                             color = MaterialTheme.colorScheme.primary,
                                         )
                                         Text(
-                                            text = stringResource(R.string.stats_session_count, row.recordCount),
+                                            text = pluralStringResource(R.plurals.stats_session_count, row.recordCount, row.recordCount),
                                             style = MaterialTheme.typography.labelMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
