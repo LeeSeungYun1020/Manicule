@@ -9,6 +9,7 @@ import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
@@ -104,6 +105,19 @@ class LibraryRepositoryImplTest {
             assertThat(entryDataSource.saved).isNull()
         }
 
+    @Test
+    fun updateRating_delegatesWithoutRewritingBookOrEntry() =
+        runTest {
+            val time = Instant.fromEpochMilliseconds(123)
+            for (result in RatingChangeResult.entries) {
+                entryDataSource.ratingResult = result
+                assertThat(repository.updateRating("123", 4, time)).isEqualTo(result)
+                assertThat(entryDataSource.ratingRequest).containsExactly("123", 4, time).inOrder()
+            }
+            assertThat(bookDataSource.saved).isNull()
+            assertThat(entryDataSource.saved).isNull()
+        }
+
     private class RecordingBookLocalDataSource : BookLocalDataSource {
         var saved: BookEntity? = null
 
@@ -128,6 +142,18 @@ class LibraryRepositoryImplTest {
         ): ReadingStatusChangeResult {
             statusRequest = listOf(isbn, status, updatedAt, finishedAt)
             return statusResult
+        }
+
+        var ratingResult = RatingChangeResult.Changed
+        var ratingRequest: List<Any?> = emptyList()
+
+        override suspend fun updateRating(
+            isbn: String,
+            rating: Int,
+            updatedAt: Instant,
+        ): RatingChangeResult {
+            ratingRequest = listOf(isbn, rating, updatedAt)
+            return ratingResult
         }
 
         var saved: BookEntryEntity? = null

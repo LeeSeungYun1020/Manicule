@@ -79,6 +79,12 @@ private class CountingLibraryRepository : LibraryRepository {
         finishedAt: LocalDate?,
     ): ReadingStatusChangeResult = error("Not used")
 
+    override suspend fun updateRating(
+        isbn: String,
+        rating: Int,
+        updatedAt: Instant,
+    ): com.leeseungyun1020.manicule.core.model.RatingChangeResult = error("Not used")
+
     override suspend fun getRecentBooksByStatus(
         status: ReadingStatus,
         limit: Int,

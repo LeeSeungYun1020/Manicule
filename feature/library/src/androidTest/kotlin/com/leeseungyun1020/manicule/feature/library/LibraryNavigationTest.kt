@@ -162,6 +162,12 @@ private class NavigationLibraryRepository : LibraryRepository {
         finishedAt: LocalDate?,
     ): ReadingStatusChangeResult = error("Not used")
 
+    override suspend fun updateRating(
+        isbn: String,
+        rating: Int,
+        updatedAt: Instant,
+    ): com.leeseungyun1020.manicule.core.model.RatingChangeResult = error("Not used")
+
     override fun observeAll(): Flow<List<BookEntry>> = error("Not used")
 
     override fun observeBookEntry(isbn: String): Flow<BookEntry?> = error("Not used")

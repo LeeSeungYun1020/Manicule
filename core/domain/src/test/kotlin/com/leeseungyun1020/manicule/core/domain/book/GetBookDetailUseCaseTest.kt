@@ -82,6 +82,12 @@ class GetBookDetailUseCaseTest {
             finishedAt: kotlinx.datetime.LocalDate?,
         ): ReadingStatusChangeResult = error("Not used by this test")
 
+        override suspend fun updateRating(
+            isbn: String,
+            rating: Int,
+            updatedAt: kotlinx.datetime.Instant,
+        ): com.leeseungyun1020.manicule.core.model.RatingChangeResult = error("Not used by this test")
+
         override fun observeByStatus(
             status: ReadingStatus,
             sort: LibrarySort,

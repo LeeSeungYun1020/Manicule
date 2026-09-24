@@ -17,6 +17,7 @@ import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
@@ -737,6 +738,11 @@ class BookDetailViewModelTest {
         var statusFailure: Exception? = null
         var statusResult = ReadingStatusChangeResult.Changed
         var emitStatus = true
+        var ratingCalls = 0
+        var ratingGate: CompletableDeferred<Unit>? = null
+        var ratingFailure: Exception? = null
+        var ratingResult = RatingChangeResult.Changed
+        var emitRating = true
         val entry = MutableStateFlow<BookEntry?>(null)
 
         override fun observeAll(): Flow<List<BookEntry>> = emptyFlow()
@@ -758,6 +764,23 @@ class BookDetailViewModelTest {
                 )
             }
             return statusResult
+        }
+
+        override suspend fun updateRating(
+            isbn: String,
+            rating: Int,
+            updatedAt: kotlinx.datetime.Instant,
+        ): RatingChangeResult {
+            ratingCalls++
+            ratingGate?.await()
+            ratingFailure?.let { throw it }
+            if (emitRating && ratingResult == RatingChangeResult.Changed) {
+                entry.value = (entry.value ?: testEntry.copy(status = ReadingStatus.UNSET, addedAt = updatedAt)).copy(
+                    rating = rating,
+                    updatedAt = updatedAt,
+                )
+            }
+            return ratingResult
         }
 
         override fun observeByStatus(

@@ -225,6 +225,12 @@ class AddReadingRecordUseCaseTest {
             finishedAt: LocalDate?,
         ): ReadingStatusChangeResult = ReadingStatusChangeResult.Changed
 
+        override suspend fun updateRating(
+            isbn: String,
+            rating: Int,
+            updatedAt: Instant,
+        ): com.leeseungyun1020.manicule.core.model.RatingChangeResult = error("Not used")
+
         override fun observeByStatus(
             status: ReadingStatus,
             sort: LibrarySort,
