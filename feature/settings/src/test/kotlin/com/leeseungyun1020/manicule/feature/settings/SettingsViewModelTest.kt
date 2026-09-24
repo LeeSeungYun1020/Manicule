@@ -6,6 +6,7 @@ import com.leeseungyun1020.manicule.core.data.repository.UserPreferencesReposito
 import com.leeseungyun1020.manicule.core.domain.settings.GetUserPreferencesUseCase
 import com.leeseungyun1020.manicule.core.domain.settings.ReminderScheduler
 import com.leeseungyun1020.manicule.core.domain.settings.SetReminderUseCase
+import com.leeseungyun1020.manicule.core.domain.settings.SetThemeUseCase
 import com.leeseungyun1020.manicule.core.model.ReminderConfig
 import com.leeseungyun1020.manicule.core.model.ThemeMode
 import com.leeseungyun1020.manicule.core.model.UserPreferences
@@ -38,8 +39,8 @@ class SettingsViewModelTest {
             val viewModel = viewModel()
 
             viewModel.uiState.test {
-                assertThat(awaitItem()).isEqualTo(SettingsUiState(ReminderUiState.Loading()))
-                assertThat(awaitItem()).isEqualTo(SettingsUiState(ReminderUiState.Content(reminder)))
+                assertThat(awaitItem().reminder).isEqualTo(ReminderUiState.Loading())
+                assertThat(awaitItem().reminder).isEqualTo(ReminderUiState.Content(reminder))
             }
         }
 
@@ -101,11 +102,9 @@ class SettingsViewModelTest {
 
                 viewModel.setReminderEnabled(true)
                 runCurrent()
-                assertThat(viewModel.uiState.value)
+                assertThat(viewModel.uiState.value.reminder)
                     .isEqualTo(
-                        SettingsUiState(
-                            ReminderUiState.Content(ReminderConfig(enabled = true, time = LocalTime(21, 0)), isUpdating = true),
-                        ),
+                        ReminderUiState.Content(ReminderConfig(enabled = true, time = LocalTime(21, 0)), isUpdating = true),
                     )
 
                 viewModel.setReminderEnabled(false)
@@ -288,13 +287,13 @@ class SettingsViewModelTest {
             val viewModel = viewModel()
 
             viewModel.uiState.test {
-                assertThat(awaitItem()).isEqualTo(SettingsUiState(ReminderUiState.Loading()))
-                assertThat(awaitItem()).isEqualTo(SettingsUiState(ReminderUiState.Error()))
+                assertThat(awaitItem().reminder).isEqualTo(ReminderUiState.Loading())
+                assertThat(awaitItem().reminder).isEqualTo(ReminderUiState.Error())
 
                 viewModel.retryPreferences()
 
-                assertThat(awaitItem()).isEqualTo(SettingsUiState(ReminderUiState.Loading()))
-                assertThat(awaitItem()).isEqualTo(SettingsUiState(ReminderUiState.Content(ReminderConfig.Default)))
+                assertThat(awaitItem().reminder).isEqualTo(ReminderUiState.Loading())
+                assertThat(awaitItem().reminder).isEqualTo(ReminderUiState.Content(ReminderConfig.Default))
                 assertThat(repository.subscriptionCount).isEqualTo(2)
             }
         }
@@ -410,10 +409,79 @@ class SettingsViewModelTest {
             assertThat(viewModel.uiState.value.reminder).isEqualTo(ReminderUiState.Content(ReminderConfig.Default))
         }
 
+    @Test
+    fun themeSelection_savesAndObservesAllModes() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val viewModel = viewModel()
+            runCurrent()
+            assertThat(viewModel.uiState.value.theme).isEqualTo(ThemeUiState.Content(ThemeMode.SYSTEM))
+            listOf(ThemeMode.LIGHT, ThemeMode.DARK, ThemeMode.SYSTEM).forEach { mode ->
+                viewModel.setThemeMode(mode)
+                runCurrent()
+                assertThat(repository.currentTheme).isEqualTo(mode)
+                assertThat(viewModel.uiState.value.theme).isEqualTo(ThemeUiState.Content(mode))
+            }
+        }
+
+    @Test
+    fun rapidThemeSelection_finishesWithLastMode() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val gate = CompletableDeferred<Unit>()
+            repository.themeWriteGate = gate
+            val viewModel = viewModel()
+            runCurrent()
+            viewModel.setThemeMode(ThemeMode.LIGHT)
+            runCurrent()
+            viewModel.setThemeMode(ThemeMode.DARK)
+            viewModel.setThemeMode(ThemeMode.SYSTEM)
+            gate.complete(Unit)
+            runCurrent()
+            assertThat(repository.themeWrites).containsExactly(ThemeMode.LIGHT, ThemeMode.DARK, ThemeMode.SYSTEM).inOrder()
+            assertThat(repository.currentTheme).isEqualTo(ThemeMode.SYSTEM)
+        }
+
+    @Test
+    fun themeWriteFailure_keepsConfirmedValueAndRetries() =
+        runTest(mainDispatcherRule.dispatcher) {
+            repository.themeWriteFailure = IOException("write failed")
+            val viewModel = viewModel()
+            runCurrent()
+            viewModel.themeEvents.test {
+                viewModel.setThemeMode(ThemeMode.DARK)
+                runCurrent()
+                val failure = awaitItem() as ThemeEvent.UpdateFailed
+                assertThat(repository.currentTheme).isEqualTo(ThemeMode.SYSTEM)
+                assertThat(viewModel.uiState.value.theme).isEqualTo(ThemeUiState.Content(ThemeMode.SYSTEM))
+                viewModel.resolveThemeUpdateFailure(failure, retry = true)
+                assertThat(awaitItem()).isEqualTo(ThemeEvent.DismissUpdateFailure)
+                runCurrent()
+                assertThat(repository.currentTheme).isEqualTo(ThemeMode.DARK)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun themeReadFailure_keepsPreviousAndRecovers() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val viewModel = viewModel()
+            runCurrent()
+            repository.readFailure.value = true
+            runCurrent()
+            assertThat(viewModel.uiState.value.theme).isEqualTo(ThemeUiState.Error(ThemeMode.SYSTEM))
+            viewModel.setThemeMode(ThemeMode.DARK)
+            runCurrent()
+            assertThat(repository.themeWrites).isEmpty()
+            repository.readFailure.value = false
+            viewModel.retryPreferences()
+            runCurrent()
+            assertThat(viewModel.uiState.value.theme).isEqualTo(ThemeUiState.Content(ThemeMode.SYSTEM))
+        }
+
     private fun viewModel() =
         SettingsViewModel(
             getUserPreferences = GetUserPreferencesUseCase(repository),
             setReminder = SetReminderUseCase(repository, scheduler),
+            setTheme = SetThemeUseCase(repository),
         )
 }
 
@@ -422,11 +490,17 @@ private class FakeUserPreferencesRepository : UserPreferencesRepository {
     var failedSubscriptions = 0
     var subscriptionCount = 0
     var updates = 0
+    var themeWriteGate: CompletableDeferred<Unit>? = null
+    var themeWriteFailure: Exception? = null
+    val themeWrites = mutableListOf<ThemeMode>()
     var readGate: CompletableDeferred<Unit>? = null
     val readFailure = MutableStateFlow(false)
 
     val currentReminder: ReminderConfig
         get() = preferences.value.reminder
+
+    val currentTheme: ThemeMode
+        get() = preferences.value.themeMode
 
     override val userPreferences: Flow<UserPreferences>
         get() =
@@ -446,6 +520,12 @@ private class FakeUserPreferencesRepository : UserPreferencesRepository {
             }
 
     override suspend fun setThemeMode(themeMode: ThemeMode) {
+        themeWriteGate?.await()
+        themeWriteFailure?.let { failure ->
+            themeWriteFailure = null
+            throw failure
+        }
+        themeWrites += themeMode
         preferences.value = preferences.value.copy(themeMode = themeMode)
     }
 
