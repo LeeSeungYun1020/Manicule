@@ -8,7 +8,7 @@
 리뷰·반영·검수에서 사용하는 조회 명령이다. `<PR>`과 `<thread_id>`는 실제 값으로 치환한다. 스레드와 답글을 각각 페이지네이션해 답글 누락을 방지한다. 필요한 조회만 실행한다.
 
 ```sh
-# PR 정보: 원문은 한 번 읽고 이후에는 필요한 필드만 선택
+# PR 정보와 작업 범위
 gh pr view <PR> --json number,state,url,baseRefName,headRefName,headRefOid,headRepository,headRepositoryOwner,body
 gh pr diff <PR> --name-only
 # 미해결 인라인 스레드

@@ -27,8 +27,8 @@ PR 생성만 요청받으면 `pr-create.md`를 사용한다.
 
 특정 AI 도구의 기능을 전제하지 않고 Git 명령을 기준으로 한다. 명령은 선택한 작업 디렉터리의 루트에서 실행하며 다른 세션이 사용하는 로컬 체크아웃의 브랜치를 전환하지 않는다.
 
-1. `git status --short`, `git branch --show-current`, `git worktree list --porcelain`으로 기존 변경·현재 브랜치·워크트리를 확인한다. PR은 브랜치 이름뿐 아니라 head 저장소와 commit도 대조한다.
-2. PR 작업은 브랜치·워크트리 선택 전에 `git fetch <PR기준원격> pull/<PR>/head`를 수행한다. `git rev-parse FETCH_HEAD`와 조회한 PR head SHA가 일치하는지 확인하고 해당 SHA를 대상으로 사용한다. 다르면 PR head를 다시 조회하고 fetch해 일치시킨다.
+1. `git status --short`, `git branch --show-current`, `git worktree list --porcelain`으로 기존 변경·현재 브랜치·워크트리를 확인한다. PR은 head 저장소도 확인한다.
+2. PR 작업은 브랜치·워크트리 선택 전에 `git fetch <PR기준원격> pull/<PR>/head`를 수행하고, fetch한 commit을 대상 SHA로 사용한다.
 3. 현재 브랜치가 대상 작업/PR 브랜치와 같으면 그대로 진행한다. PR 갱신은 변경이 없는 상태에서 `git merge --ff-only <대상SHA>`를 수행한다. 분기·충돌·미커밋 변경이 있으면 자동 reset·stash로 맞추지 않는다. 자신의 구현 변경은 보존하며, 리뷰·검수에는 미커밋 변경이 섞이지 않은 대상 SHA를 사용한다.
 4. 실행 환경이 이 작업 전용 워크트리를 이미 제공했고 기준 commit이 맞으면 재사용한다. detached HEAD도 정상이다. 구현은 그 안에서 `git switch -c ai/<작업>`으로 브랜치를 만든다.
 5. 다른 브랜치의 로컬에서 시작했다면 `git worktree add --detach <새경로> <대상SHA>`로 별도 워크트리를 만든다. 실행 환경이 동등한 기능을 제공하면 사용할 수 있으며, 이후 명령의 작업 경로는 생성된 경로로 지정한다. 기존 변경은 옮기지 않는다. 이미 잘못된 위치에 작업한 변경이 있으면 이전 범위를 먼저 확인한다.
