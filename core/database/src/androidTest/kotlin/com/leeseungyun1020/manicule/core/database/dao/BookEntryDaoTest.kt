@@ -109,6 +109,43 @@ class BookEntryDaoTest {
         }
 
     @Test
+    fun deleteAndRestore_preservesReadingRecordsAndEntryMetadata() =
+        runTest {
+            val isbn = "restore-book"
+            saveBookEntry(isbn, ReadingStatus.FINISHED, Instant.fromEpochMilliseconds(20))
+            val original = checkNotNull(dao.getEntry(isbn)).copy(
+                rating = 5,
+                memo = "Saved note",
+                addedAt = Instant.fromEpochMilliseconds(10),
+                finishedAt = LocalDate(2026, 9, 1),
+            )
+            dao.upsert(original)
+            val record = ReadingRecordEntity(
+                isbn = isbn,
+                date = LocalDate(2026, 9, 1),
+                time = LocalTime(10, 0),
+                startPage = 1,
+                endPage = 50,
+            )
+            recordDao.upsert(record)
+
+            dao.delete(isbn)
+            assertThat(dao.getEntry(isbn)).isNull()
+            assertThat(bookDao.getByIsbn(isbn)).isNotNull()
+            recordDao.observeByIsbn(isbn).test {
+                assertThat(awaitItem()).hasSize(1)
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            dao.upsert(original)
+            assertThat(dao.getEntry(isbn)).isEqualTo(original)
+            dao.observeByIsbn(isbn).test {
+                assertThat(awaitItem()?.currentPage).isEqualTo(50)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
     fun getRecentBooksByStatus_returnsFiveMostRecentlyUpdatedMatchingBooks() =
         runTest {
             (1..6).forEach { index ->

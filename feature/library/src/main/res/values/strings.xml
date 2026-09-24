@@ -23,4 +23,16 @@
     <string name="library_sort_caption">%1$s · %2$s</string>
     <string name="library_book_progress">%1$d%%</string>
     <string name="library_book_finished_date">%1$d/%2$d/%3$d</string>
+    <string name="library_action_open">책 메뉴 열기</string>
+    <string name="library_action_close">책 메뉴 닫기</string>
+    <string name="library_action_move_want">읽고 싶음으로 이동</string>
+    <string name="library_action_move_reading">읽는 중으로 이동</string>
+    <string name="library_action_move_finished">다 읽음으로 이동</string>
+    <string name="library_action_delete">내 서재에서 삭제</string>
+    <string name="library_status_changed">책 상태를 변경했어요</string>
+    <string name="library_book_deleted">책을 목록에서 삭제했어요</string>
+    <string name="library_action_failed">책을 변경하지 못했어요</string>
+    <string name="library_undo_failed">취소하지 못했어요. 다시 시도해 주세요</string>
+    <string name="library_undo">취소</string>
+    <string name="library_retry">다시 시도</string>
 </resources>

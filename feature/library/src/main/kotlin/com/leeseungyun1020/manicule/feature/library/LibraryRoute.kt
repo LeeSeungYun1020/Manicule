@@ -12,11 +12,17 @@ fun LibraryRoute(
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
+    val actionMessage = viewModel.actionMessage.collectAsStateWithLifecycle().value
     LibraryScreen(
         uiState = uiState,
+        actionMessage = actionMessage,
         onStatusSelected = viewModel::selectStatus,
         onSortSelected = viewModel::selectSort,
         onBookSelected = onNavigateToBookDetail,
+        onChangeStatus = viewModel::changeStatus,
+        onDeleteBook = viewModel::deleteBook,
+        onUndo = viewModel::undo,
+        onMessageDismissed = viewModel::messageDismissed,
         onSearch = onNavigateToSearch,
         onScan = onNavigateToScanner,
         onRetry = viewModel::retry,
