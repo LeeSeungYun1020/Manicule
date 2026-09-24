@@ -26,3 +26,15 @@ sealed interface LibraryUiState {
         override val sort: LibrarySort = LibrarySort.Default,
     ) : LibraryUiState
 }
+
+enum class LibraryActionMessageKind {
+    STATUS_CHANGED,
+    DELETED,
+    ACTION_FAILED,
+    UNDO_FAILED,
+}
+
+data class LibraryActionMessage(
+    val id: Long,
+    val kind: LibraryActionMessageKind,
+)

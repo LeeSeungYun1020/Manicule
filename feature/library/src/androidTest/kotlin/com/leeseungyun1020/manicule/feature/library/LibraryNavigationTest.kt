@@ -19,10 +19,14 @@ import androidx.navigation.toRoute
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
+import com.leeseungyun1020.manicule.core.common.time.SystemClock
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
 import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.domain.library.ChangeReadingStatusUseCase
+import com.leeseungyun1020.manicule.core.domain.library.DeleteBookEntryUseCase
 import com.leeseungyun1020.manicule.core.domain.library.GetLibraryBooksUseCase
+import com.leeseungyun1020.manicule.core.domain.library.RestoreBookEntryUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
@@ -108,7 +112,8 @@ class LibraryNavigationTest {
     }
 
     private fun setContent() {
-        val getLibraryBooks = GetLibraryBooksUseCase(NavigationLibraryRepository())
+        val repository = NavigationLibraryRepository()
+        val getLibraryBooks = GetLibraryBooksUseCase(repository)
         composeRule.setContent {
             navController = rememberNavController()
             ManiculeTheme {
@@ -124,7 +129,13 @@ class LibraryNavigationTest {
                                     factory =
                                         viewModelFactory {
                                             initializer {
-                                                LibraryViewModel(getLibraryBooks, createSavedStateHandle())
+                                                LibraryViewModel(
+                                                    getLibraryBooks,
+                                                    ChangeReadingStatusUseCase(repository, SystemClock()),
+                                                    DeleteBookEntryUseCase(repository),
+                                                    RestoreBookEntryUseCase(repository),
+                                                    createSavedStateHandle(),
+                                                )
                                             }
                                         },
                                 ),
