@@ -1,0 +1,23 @@
+query($id: ID!, $endCursor: String) {
+  node(id: $id) {
+    ... on PullRequestReviewThread {
+      comments(first: 100, after: $endCursor) {
+        nodes {
+          databaseId
+          replyTo { databaseId }
+          body
+          author { login }
+          commit { oid }
+          path
+          line
+          originalLine
+          url
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}

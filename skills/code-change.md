@@ -1,39 +1,27 @@
-# 코드 수정
+# 수정·검증·commit
 
-- 이 문서는 `work.md`의 실행 단계에서 사용하는 파일 수정·검증·commit 세부 절차이며, 독립 작업 절차로 사용하지 않는다.
-- 단계를 제약 사항에 맞추어 실행.
+[공통 규칙](skills.md)을 적용한다. `work.md`에서 정한 PR 범위 또는 `apply-review.md`에서 정한 리뷰 그룹의 수정 절차다.
 
-## 실행 단계
+## 실행
 
-1. `work.md`에서 확정한 PR 작업과 변경 소유 범위에 따라 코드 구현.
-2. android, kotlin 가이드 준수 여부 확인.
-3. 빌드 가능 여부 확인.
-4. 검증 단계 실행.
-5. 수정한 파일에 한정해 git add 진행.
-6. `git log -n 5 --oneline`로 이전 commit 포맷 확인, commit message 결정.
-7. commit 진행.
-8. 새 사용자 의사결정을 확정했고, 그 결정과 이유가 `plan` 문서 또는 예정된 PR 본문에 기록되지 않은 경우에만 기록 단계 실행
+1. 확정한 범위 안에서 수정하고 변경 유형과 영향 모듈을 확인한다. 공용 API 변경은 사용하는 모듈도 영향 범위에 포함한다.
+2. 아래 기준으로 검증하고 범위 밖 변경이 생기면 원인을 확인한다. 다른 작업의 변경을 함께 stage하지 않는다.
+3. `git diff --check` 후 현재 작업 파일만 stage한다. commit 메시지는 `<type>: <변경 요약>`으로 작성한다. 타입은 `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`를 사용하고 타입 뒤 괄호(scope·작업 번호)를 붙이지 않는다.
+4. commit한다. 커밋 시 오류가 발생하면 우회하지 않고 원인을 확인·해결한다.
+5. 새 의사결정 기록이 필요한지는 공통 규칙에 따른다.
 
-## 기록 단계
+## 검증 선택
 
-1. 기록 작성 규칙 `history/README.md` 확인.
-2. `plan`의 요구사항·작업 순서·진행 현황과 PR 본문의 변경 범위·검증 결과는 서술하지 않고, 새 사용자 의사결정과 이유만 기록.
-3. commit 진행.
+| 변경 | 검증 |
+|---|---|
+| Markdown·plan·history·skills | `git diff --check`, 문서 링크·표·지침 일관성 확인. 수동 Gradle 실행은 생략 |
+| CI·스크립트 | 구문과 변경한 실행 경로 확인. Gradle 작업을 바꾸면 작업 그래프도 확인 |
+| Kotlin·Gradle | 변경한 동작의 테스트와 영향 모듈 빌드 |
+| 리소스·Manifest·UI | 영향 모듈 빌드·Lint, 동작에 맞는 UI·기기 검증 |
+| 공용 계약·빌드 설정 | 의존 모듈까지 검증 범위 확대 |
 
-## 검증 단계
-
-1. 변경 파일을 확인하여 코드 변경 여부와 영향 모듈을 결정.
-2. Kotlin 또는 Gradle 스크립트 변경이 있으면 `./gradlew ktlintFormat` 실행. Kotlin, Android 리소스, Manifest 또는 Gradle 변경이 있으면 영향 모듈 테스트·빌드와 `./gradlew check` 수행.
-3. Markdown, GitHub 설정, `plan`, `history`, `skills`만 변경한 경우 Gradle 검증을 생략하고 `git diff --check`와 문서 링크·표 형식을 확인.
-4. 코드와 문서가 함께 변경된 경우 코드 변경 기준으로 Gradle 검증 수행.
-5. 검증 과정에서 `work.md` 준비 단계에서 확정한 변경 소유 범위 밖 파일이 변경되면 해당 변경을 포함하지 않고 원인을 확인.
-
-## 제약 사항
-
-- Android 또는 Kotlin 코드를 변경할 때 android 가이드와 kotlin 가이드를 준수해야 함.
-	- android-cli 스킬 활용. android 가이드 확인 후 계획에 반영
-	- kotlin Documentation(https://kotlinlang.org/docs/coding-conventions.html) 준수
-- 코드, 주석, git commit message를 포함한 모든 텍스트는 간결하고 이해하기 쉽게 작성. 필요하지 않은 부차적인 내용과 미사여구 삭제.
-- 파일 수정 도구(`write_to_file`, `replace_file_content`, `multi_replace_file_content`, `Write`, `Edit` 등) 호출 전 변경 계획과 실제 코드(markdown)를 채팅 텍스트로 반드시 출력
-- 각 파일마다 수정 계획과 코드 변경 사항 출력(다른 내용을 강조하여 알기 쉽게 표시) 후에 사용자 피드백(승인, 수정 지시)을 받아야 파일 수정 도구를 호출 가능
-- 사용자의 수정 인가는 설명 받은 내용과 변경 사항에 한정되며, 다른 파일에 추가 수정이 필요한 경우 중단하고 사용자에 내용 출력.
+- 단위 테스트는 Android 모듈의 `:<모듈>:testDebugUnitTest`, JVM 모듈의 `:<모듈>:test`를 사용한다. 테스트 대상이 없거나 skip된 작업을 테스트 통과로 보고하지 않는다.
+- 전체 검증은 [GitHub Actions](../.github/workflows/check.yml)의 `./gradlew check --console=plain --max-workers=2`로 수행한다. `gh pr checks <PR> --json name,state,link`로 최종 PR의 `Gradle Check` 성공을 확인한다. CI 대기·실패를 통과로 보고하지 않고 로컬에서 전체 검증을 중복 실행하지 않는다. CI 오류 재현 등 필요한 경우에만 같은 명령을 로컬에서 실행한다.
+- `check`는 기기 테스트와 APK 조립을 대체하지 않는다. 변경에 필요한 `assembleDebug`, instrumented/UI 테스트는 별도로 수행한다.
+- 검증 후 관련 코드·설정·의존성·실행 환경이 바뀌면 영향을 받는 검증을 다시 수행한다. 결과 재사용은 동일 입력·명령의 성공이 확인되는 경우에 한하며, 문서만 추가한 경우 같은 코드 검증을 반복하지 않는다.
+- 로컬 영향 모듈 검증은 `./gradlew :<모듈>:testDebugUnitTest :<모듈>:assembleDebug -q --console=plain > <로그파일> 2>&1`처럼 실행하고 종료 코드를 확인한다. JVM 모듈은 `test`·`assemble`을 사용한다. 실패하면 `tail -n 80 <로그파일>`부터 확인하고 필요한 문맥을 더 읽는다.
