@@ -1,6 +1,6 @@
 # 독서 기록 앱 — 모듈 구조
 
-> [plan.md](plan.md) 기능 요구사항 기반, [Android App Architecture](https://developer.android.com/topic/architecture) 준수.
+> 모듈 책임·의존 방향·공용 경계와 현재 주요 파일의 기준. [Android App Architecture](https://developer.android.com/topic/architecture) 준수.
 
 ---
 
@@ -83,7 +83,7 @@ manicule/
 | `feature:stats`      | UI     | 통계(오늘/4주/1년/직접선택, 기간별 달력)                       |
 | `feature:settings`   | UI     | 테마, 알림 설정                                        |
 | `core:designsystem`  | UI     | ManiculeTheme, Color, Typography, 공통 Button/Dialog   |
-| `core:ui`            | UI     | BookCard, ReadingCalendarGrid 등 feature 간 공유 컴포넌트  |
+| `core:ui`            | UI     | BookCover, ReadingCalendarGrid 등 feature 간 공유 컴포넌트  |
 | `core:common`        | -      | Dispatcher 정의, Result 래퍼, 날짜 유틸                  |
 | `core:model`         | Domain | Book, ReadingStatus, ReadingRecord 등             |
 | `core:domain`        | Domain | UseCase (AddReadingRecord, GetStreak 등)          |
@@ -111,10 +111,9 @@ core:data, core:domain, core:ui ──> core:model / core:common
 
 ---
 
-## 3. 모듈별 파일 구조
+## 3. Feature 경계와 주요 파일
 
-> 패키지 루트는 `com.leeseungyun1020.manicule`.
-> 소스 디렉터리는 `src/main/kotlin` 을 기본으로 하되, `core:ui` 는 기존 생성 이력에 따라 `src/main/java` 를 유지한다(신규 파일도 동일 위치에 추가).
+아래는 책임 경계를 찾기 위한 주요 파일이며 전체 파일 목록이나 새 파일명 지시가 아니다. 현재 위치는 `rg --files <모듈>`로 확인한다. 패키지 루트는 `com.leeseungyun1020.manicule`; `core:ui`만 `src/main/java`, 나머지는 `src/main/kotlin`을 사용한다.
 
 ### 3.1 `app`
 
@@ -125,32 +124,17 @@ app/
     ├── AndroidManifest.xml
     └── kotlin/com/leeseungyun1020/manicule/
         ├── ManiculeApplication.kt              # @HiltAndroidApp
-        ├── MainActivity.kt                  # 단일 Activity, UserPreferences 수집과 루트 ManiculeTheme 적용
+        ├── MainActivity.kt                  # 단일 Activity, 루트 ManiculeTheme
         └── navigation/
             ├── ManiculeNavHost.kt               # 최상위 NavHost (NavController 소유 및 실제 stack mutation 조립)
             ├── TopLevelDestination.kt       # feature route를 사용하는 홈/서재/통계/설정 4개 탭
-            └── ManiculeAppState.kt              # rememberManiculeAppState
+            ├── ManiculeApp.kt                # Scaffold·하단 탭 조립
+            └── ManiculeAppState.kt          # rememberManiculeAppState
 ```
 
 ### 3.2 Feature 모듈 공통 구조
 
-각 feature 모듈은 다음 패턴을 따른다.
-
-```
-feature/<name>/
-├── build.gradle.kts
-└── src/main/kotlin/com/leeseungyun1020/manicule/feature/<name>/
-    ├── <Name>Route.kt                      # ViewModel 주입, 상태 수집
-    ├── <Name>Screen.kt                     # @Composable 순수 UI
-    ├── <Name>ViewModel.kt                  # @HiltViewModel, StateFlow
-    ├── <Name>UiState.kt                    # sealed interface or data class
-    ├── <Name>UiEvent.kt                    # 사용자 이벤트(선택)
-    ├── navigation/
-    │   └── <Name>Navigation.kt             # public entry route + NavGraphBuilder.<name>Screen()
-    └── components/                         # 해당 화면 전용 컴포저블
-```
-
-각 `<Name>Navigation.kt`는 해당 feature의 route 타입, destination 및 필수 콜백 계약을 소유한다. C2가 route와 stub을 생성하고, 대응 V 레인이 같은 파일의 destination 구현을 교체한다.
+각 feature의 `navigation/<Name>Navigation.kt`는 public route 타입, destination 및 필수 콜백 계약을 소유한다. 화면이 구현된 feature는 필요에 따라 Route, Screen, ViewModel, UiState와 전용 컴포넌트로 나눈다.
 
 #### Navigation 아키텍처 및 책임 경계
 
@@ -159,479 +143,85 @@ feature/<name>/
 - **Cross-destination 이동**: 다른 destination으로 이동(검색·책 상세 등). source는 의도/인자 콜백, target은 route 타입을 소유하며, 준비 즉시 `app/`의 `ManiculeNavHost`에서 점진 연결한다.
 - **App 계층의 백스택 소유**: `app`의 `ManiculeNavHost`가 `NavController`, 실제 백스택 조작, `popUpTo`, `launchSingleTop`, 상태 복원 정책을 소유한다.
 
-### 3.3 `feature:home` (홈, 1a~1c)
+### 3.3 Feature별 주요 파일
 
-```
-feature/home/
-└── src/main/kotlin/com/leeseungyun1020/manicule/feature/home/
-    ├── HomeRoute.kt
-    ├── HomeScreen.kt
-    ├── HomeViewModel.kt
-    ├── HomeUiState.kt                      # InProgressBooks, Streak, TodayStat
-    ├── navigation/
-    │   └── HomeNavigation.kt               # homeScreen(onNavigateToSearch, onNavigateToScanner, ...)
-    └── components/
-        ├── HomeSearchBar.kt
-        ├── ScanBarcodeButton.kt
-        ├── InProgressSection.kt            # "더보기" 포함
-        ├── EmptyInProgress.kt              # '읽는 중' 책 없을 때 '읽고 싶음' 책 유무에 따른 안내 및 액션 카드 포함
-        └── ReadingSummaryCard.kt           # 독서 요약 카드 (잔디 7일, 연속 기록, 오늘 페이지)
-```
+경로는 각 `feature/<name>/src/main/kotlin/com/leeseungyun1020/manicule/feature/<name>/`를 기준으로 한다. 미구현 화면의 예정 파일은 나열하지 않는다.
 
-### 3.4 `feature:search` (검색, 2a~3b)
-
-```
-feature/search/
-└── src/main/kotlin/com/leeseungyun1020/manicule/feature/search/
-    ├── SearchRoute.kt
-    ├── SearchScreen.kt
-    ├── SearchViewModel.kt
-    ├── SearchUiState.kt                    # query, RecentQueries, filteredQueries(입력 중 로컬 필터), PagingData<Book>, inputPhase(Idle/Typing/Submitted)
-    ├── SearchUiEvent.kt                    # 검색어 삭제, 삭제 Undo 등
-    ├── navigation/
-    │   └── SearchNavigation.kt
-    └── components/
-        ├── SearchTopBar.kt                 # Material 3 SearchBar 패턴
-        ├── RecentQueryList.kt              # 최근 검색어 리스트, 개별 삭제 스낵바 Undo 포함. 입력 중에는 최근 검색어를 입력값으로 로컬 필터링해 노출
-        ├── EmptyRecentQuery.kt             # 최근 검색어 없음(첫 사용/전체 삭제) 검색 유도 안내 카드
-        ├── SearchResultList.kt             # Paging 기반 컴팩트 검색 결과 목록
-        └── EmptySearchResult.kt            # "스캔 화면으로 이동" 버튼 포함
-```
-
-### 3.5 `feature:scanner` (바코드 스캔, 4a)
-
-```
-feature/scanner/
-└── src/main/kotlin/com/leeseungyun1020/manicule/feature/scanner/
-    ├── ScannerRoute.kt
-    ├── ScannerScreen.kt
-    ├── ScannerViewModel.kt
-    ├── ScannerUiState.kt                   # Initializing / Scanning / Recognized / Failed
-    ├── navigation/
-    │   └── ScannerNavigation.kt
-    └── components/
-        ├── CameraPreview.kt                # Preview UseCase 직접 생성, bindToLifecycle, 회전 시 targetRotation 갱신
-        ├── ViewfinderOverlay.kt            # 스캔 영역 가이드 UI 및 안내 문구
-        ├── ScannerErrorState.kt            # "검색" 버튼 포함 (결과 없음/에러)
-        └── PermissionDeniedState.kt        # 카메라 권한 거부 안내
-```
-
-### 3.6 `feature:bookdetail` (책 상세, 5a~5f)
-
-```
-feature/bookdetail/
-└── src/main/kotlin/com/leeseungyun1020/manicule/feature/bookdetail/
-    ├── BookDetailRoute.kt
-    ├── BookDetailScreen.kt
-    ├── BookDetailViewModel.kt
-    ├── BookDetailUiState.kt                # Book + Records + Status + Rating + Memo
-    ├── BookDetailUiEvent.kt                # 상태 변경, 별점/메모 변경, 기록 추가/수정/삭제, 기록 삭제 실행취소 등
-    ├── navigation/
-    │   └── BookDetailNavigation.kt         # 인자: isbn:String
-    └── components/
-        ├── BookDetailTabs.kt               # "책 정보", "내 기록" 탭
-        ├── BookInfoTabContent.kt           # 표지, 정보, 소개, 목차 영역
-        ├── MyRecordTabContent.kt           # 상태, 리뷰, 기록 영역
-        ├── BookHeader.kt                   # 표지·제목·저자 등 (책 정보 탭 내부)
-        ├── BookPublishInfoSection.kt       # 페이지 수·가격·분류
-        ├── BookDescriptionSection.kt       # 책 소개 (introductionUrl fetch)
-        ├── BookTocSection.kt               # 목차 (tableOfContentsUrl fetch)
-        ├── StatusSelector.kt               # 읽고 싶음 / 읽는 중 / 다 읽음
-        ├── RatingMemoEditor.kt             # 별점·메모 인라인 편집 (별 탭 시 즉시 저장, 메모 포커스 아웃 시 자동 저장, 빈 상태는 점선 UI). 별도 시트/다이얼로그 없음
-        ├── BookDetailRatingBar.kt          # 책 상세 전용 별점 입력
-        ├── BookDetailExpandableText.kt     # 책 소개·목차가 공유하는 feature 내부 확장 텍스트
-        ├── ReadingRecordList.kt            # 진행률 프로그레스 바, 날짜별 기록
-        ├── EmptyReadingRecord.kt           # 독서 기록 빈 상태 안내 컴포넌트
-        ├── AddRecordBottomSheet.kt         # 날짜(오늘/어제/직접선택)/시간(지금/직접선택) 세그먼트, 쪽수 입력 바텀시트. '직접 선택' 시 Android 표준 DatePicker/TimePicker 다이얼로그 호출
-        └── FinishConfirmDialog.kt          # 기록 후 남은 페이지 10%/40쪽 이하 시 "혹시 책을 다 읽으셨나요?" 확인, "네" 시 다 읽음 전환
-```
-
-### 3.7 `feature:library` (서재, 6a~6f)
-
-```
-feature/library/
-└── src/main/kotlin/com/leeseungyun1020/manicule/feature/library/
-    ├── LibraryRoute.kt
-    ├── LibraryScreen.kt
-    ├── LibraryViewModel.kt
-    ├── LibraryUiState.kt                   # selectedTab, sort, books
-    ├── LibraryUiEvent.kt                   # 정렬 변경, 상태 필터 변경, 책 삭제, 상태 변경, 실행취소 등
-    ├── navigation/
-    │   └── LibraryNavigation.kt            # LibraryRoute(initialTab = READING), LibraryTab
-    └── components/
-        ├── LibraryTopBar.kt                # 상태 탭, 정렬 진입, 현재 정렬 요약, 책 추가 액션
-        ├── LibrarySortLabels.kt            # 정렬 기준·방향 표시 문자열 변환
-        ├── StatusTabRow.kt                 # 읽고 싶음 / 읽는 중 / 다 읽음
-        ├── SortBottomSheet.kt              # 기준(추가/수정/별점) 및 방향 선택 (적용 버튼으로 확정)
-        ├── LibraryBookCard.kt              # 상태별 표시 (기본, 진도율, 다 읽은 날짜)
-        └── EmptyLibrary.kt                 # 책이 없는 경우 빈 상태 표시 (검색, 스캔 버튼 포함)
-```
+| 모듈 | 현재 주요 파일 | 책임 |
+|---|---|---|
+| `feature:home` | `navigation/HomeNavigation.kt`, `HomeScreen.kt`, `HomeViewModel.kt`, `HomeSearchTopBar.kt` | 홈 상태 조합과 검색·스캔·서재·통계 이동 의도 |
+| `feature:search` | `navigation/SearchNavigation.kt`, `SearchRoute.kt`, `SearchViewModel.kt`, `components/SearchResultList.kt` | 최근 검색어, 입력 필터, Paging 결과 |
+| `feature:scanner` | `navigation/ScannerNavigation.kt`, `ScannerViewModel.kt`, `CameraPreview.kt` | 권한·카메라 수명주기와 도서 조회 결과 |
+| `feature:bookdetail` | `navigation/BookDetailNavigation.kt`, `BookDetailRoute.kt`, `BookDetailViewModel.kt`, `components/AddRecordBottomSheet.kt` | ISBN 진입, 독서 상태·리뷰·기록 편집 |
+| `feature:library` | `navigation/LibraryNavigation.kt`, `LibraryRoute.kt`, `LibraryViewModel.kt`, `components/SortBottomSheet.kt` | 상태 탭, 정렬, 책 변경·삭제 |
+| `feature:stats` | `navigation/StatsNavigation.kt` | `StatsRoute(focus)` 진입 계약 |
+| `feature:settings` | `navigation/SettingsNavigation.kt`, `SettingsRoute.kt`, `SettingsViewModel.kt`, `components/ReminderSection.kt` | 테마·리마인더 설정 |
 
 서재 새 진입은 `LibraryRoute()`의 `READING`을 기본으로 하며, 홈 '고르기'는 `LibraryRoute(LibraryTab.WANT)`로 진입한다. `initialTab`은 새 백스택 항목의 초기값이다. 기존 화면을 복원할 때는 저장된 사용자 선택을 유지하므로, '고르기' 연결 시 기존 항목을 `restoreState`로 복원하지 않는다.
 
-### 3.8 `feature:stats` (통계, 7a~7e)
-
-```
-feature/stats/
-└── src/main/kotlin/com/leeseungyun1020/manicule/feature/stats/
-    ├── StatsRoute.kt
-    ├── StatsScreen.kt
-    ├── StatsViewModel.kt
-    ├── StatsUiState.kt                     # period(오늘/4주/1년/직접선택), summary, calendar, selectedDay
-    ├── navigation/
-    │   └── StatsNavigation.kt              # 인자: focus:String? (잔디 위치 스크롤용)
-    └── components/
-        ├── PeriodSelector.kt               # 오늘 / 4주 / 1년 / 직접 선택
-        ├── PeriodSelectionBottomSheet.kt   # 직접 선택 탭의 시작일/종료일 설정용 바텀 시트
-        ├── SummaryCards.kt                 # 다 읽은 권수, 페이지 수
-        ├── ReadingChart.kt                 # 책(막대) + 페이지(꺾은선) 복합 차트 (좌축=권수, 우축=페이지 눈금 + 격자선, 가로 스크롤 시 좌우 축 고정·가운데만 스크롤)
-        ├── SelectedDayRecords.kt           # 오늘 탭 하단에 표시되는 해당 일 독서 기록 목록
-        └── SelectedDayRecordsBottomSheet.kt # 4주/1년/직접선택 탭 달력에서 특정 날짜 클릭 시 올라오는 독서 기록 바텀 시트
-```
-
-### 3.9 `feature:settings` (설정, 8a)
-
-```
-feature/settings/
-└── src/main/kotlin/com/leeseungyun1020/manicule/feature/settings/
-    ├── SettingsRoute.kt
-    ├── SettingsScreen.kt
-    ├── SettingsViewModel.kt
-    ├── SettingsUiState.kt                  # theme, reminder
-    ├── navigation/
-    │   └── SettingsNavigation.kt
-    └── components/
-        ├── ThemeSegmentedControl.kt        # 시스템/라이트/다크 테마 선택 (세그먼트 컨트롤)
-        ├── ReminderToggle.kt               # 리마인더 on/off 토글 스위치 및 시간 설정 행
-        ├── ReminderTimePicker.kt           # 리마인더 시간 변경 (Android 표준 TimePicker 다이얼로그)
-        └── SupportSection.kt               # 오픈소스 라이선스 및 버전 정보 표기 영역
-```
-
 ---
 
-## 4. Core 모듈 파일 구조
+## 4. Core 모듈 주요 파일
+
+각 절의 파일명은 해당 모듈 소스 패키지를 기준으로 한다. 내부 구현 파일과 전체 컴포넌트 목록은 `rg --files core/<name>`로 확인한다.
 
 ### 4.1 `core:designsystem`
 
-```
-core/designsystem/
-└── src/main/kotlin/com/leeseungyun1020/manicule/core/designsystem/
-    ├── theme/
-    │   ├── Color.kt                        # Material 3 고정 브랜드 컬러 (라이트/다크)
-    │   ├── ExtendedColor.kt                # 확장 색상 토큰
-    │   ├── Type.kt                         # Noto Sans KR (Downloadable Fonts) + 시스템 폰트 fallback
-    │   ├── Dimension.kt                    # 치수 (Spacing, Size, Border)
-    │   ├── Shape.kt
-    │   ├── Motion.kt                       # 애니메이션 시간/이징 곡선 토큰
-    │   └── ManiculeTheme.kt                # MaterialTheme 래퍼, 다크/라이트
-    ├── component/
-    │   ├── ManiculeButton.kt
-    │   ├── ManiculeCard.kt                     # 공통 카드 (기본, Dashed)
-    │   ├── ManiculeTextField.kt
-    │   ├── ManiculeDialog.kt                   # 공통 다이얼로그 (이름·메시지·확인/취소)
-    │   ├── ManiculeTopAppBar.kt
-    │   ├── ManiculeEmptyState.kt               # 빈 상태(Empty State) 공통 화면
-    │   ├── ManiculeBottomSheet.kt              # 공통 바텀시트 레이아웃 (둥근 모서리, 닫기 버튼)
-    │   ├── ManiculeSegmentedButton.kt          # 테두리 있는 둥근 탭 UI (테마, 통계기간 등 공통)
-    │   ├── ManiculeLoading.kt
-    │   ├── ManiculeSearchEntry.kt              # 검색 화면 진입
-    │   ├── ManiculeSearchBar.kt                # 공통 검색 바
-    │   ├── ManiculeSectionHeader.kt            # 섹션 헤더
-    │   ├── ManiculeSnackbarHost.kt             # 스낵바 호스트 및 Undo 지원
-    │   ├── ManiculeTabRow.kt                   # 공통 탭 행
-    │   └── ManiculeStatTile.kt                 # 통계 및 수치 표시 타일
-    ├── icon/
-    │   └── ManiculeIcons.kt
-    └── res/                                # 색상·문자열 등 디자인 토큰
-```
+`theme/ManiculeTheme.kt`가 앱 테마를, `theme/Color.kt`·`Dimension.kt`·`Type.kt`가 공용 토큰을 소유한다. 공용 화면 컴포넌트는 `component/`, 아이콘은 `icon/ManiculeIcons.kt`에 둔다.
 
 ### 4.2 `core:ui`
 
-> feature 간 재사용되는 UI(예: 책 카드, 잔디). designsystem 보다 한 단계 위.
-
-```
-core/ui/
-└── src/main/java/com/leeseungyun1020/manicule/core/ui/
-    ├── book/
-    │   ├── BookCover.kt                    # Coil 3.x AsyncImage 래퍼, 표지 fallback 처리
-    │   ├── BookListItem.kt
-    │   └── BookProgressBar.kt              # 132 / 320쪽 표시
-    ├── calendar/
-    │   ├── ReadingCalendarCell.kt
-    │   ├── ReadingCalendarGrid.kt          # 독서 달력 공통 그리드
-    │   └── ReadingCalendarLegend.kt        # 달력 색상 범례
-    └── preview/                             # @Preview 용 Sample 데이터
-        ├── BookPreviewParameterProvider.kt
-        └── ReadingCalendarPreviewParameterProvider.kt
-```
+소스 위치는 `src/main/java/com/leeseungyun1020/manicule/core/ui/`다. `book/BookCover.kt`·`BookListItem.kt`·`BookProgressBar.kt`와 `calendar/ReadingCalendarGrid.kt`가 feature 간 공유 UI를 소유한다. Preview 데이터는 `preview/`에 둔다.
 
 ### 4.3 `core:common`
 
-```
-core/common/
-└── src/main/kotlin/com/leeseungyun1020/manicule/core/common/
-    ├── di/
-    │   └── DispatchersModule.kt            # @IoDispatcher, @DefaultDispatcher
-    ├── result/
-    │   └── Result.kt                       # sealed Loading/Success/Error + asResult()
-    ├── time/
-    │   ├── Clock.kt                        # 테스트용 Clock 추상화
-    │   └── DateExt.kt                      # LocalDate 확장(주 시작일 등)
-    └── ext/
-        └── FlowExt.kt
-```
+`di/DispatchersModule.kt`와 `time/Clock.kt`가 실행·시간 추상화를 제공한다. 공통 `Result`와 날짜·Flow 확장은 각각 `result/`, `time/`, `ext/`에 둔다.
 
 ### 4.4 `core:model`
 
-```
-core/model/
-└── src/main/kotlin/com/leeseungyun1020/manicule/core/model/
-    ├── Book.kt                             # isbn(EA_ISBN), title, author, publisher, pubDate(PUBLISH_PREDATE), coverUrl(TITLE_URL), totalPages(PAGE), price(PRE_PRICE), category(SUBJECT), tableOfContentsUrl(BOOK_TB_CNT_URL), introductionUrl(BOOK_INTRODUCTION_URL), summaryUrl(BOOK_SUMMARY_URL)
-    ├── BookDetail.kt                       # Book + nullable BookEntry. 미등록은 null, 리뷰-only 등록은 BookEntry.status=UNSET
-    ├── ReadingStatus.kt                    # UNSET / WANT / READING / FINISHED
-    ├── BookEntry.kt                        # Book + Status + rating + memo + finishedAt
-    ├── LibrarySort.kt                      # 서재 정렬 기준(추가/수정/별점)과 방향
-    ├── ReadingRecord.kt                    # id, isbn, date, time, startPage, endPage, 파생 pagesRead
-    ├── DailyReading.kt                     # 통계용 (date, pages)
-    ├── ReadingCalendarDay.kt               # 독서 달력 한 칸 (date, intensity)
-    ├── ReadingStreak.kt
-    ├── PeriodSummary.kt                    # 다 읽은 권수, 페이지 수
-    ├── UserPreferences.kt                  # ThemeMode, ReminderConfig
-    └── SearchQuery.kt
-```
+`Book.kt`, `BookEntry.kt`, `ReadingRecord.kt`, `ReadingCalendarDay.kt`, `UserPreferences.kt` 등 도메인 모델을 소유한다.
 
 ### 4.5 `core:domain`
 
-```
-core/domain/
-└── src/main/kotlin/com/leeseungyun1020/manicule/core/domain/
-    ├── di/
-    │   └── DomainModule.kt
-    ├── book/
-    │   └── GetBookDetailUseCase.kt          # ISBN → BookDetail 관찰, 책 정보 refresh
-    ├── search/
-    │   ├── SearchBooksUseCase.kt           # Flow<PagingData<Book>> 반환 (Paging 3 통합)
-    │   ├── GetRecentQueriesUseCase.kt
-    │   └── SaveRecentQueryUseCase.kt
-    ├── scanner/
-    │   └── GetBookByScanUseCase.kt          # 스캔된 ISBN으로 도서 정보 조회 및 유효성 검증
-    ├── library/
-    │   ├── GetLibraryBooksUseCase.kt        # status, sort 인자
-    │   ├── ObserveBookEntryUseCase.kt       # ISBN → BookEntry(상태/별점/메모) 관찰, 미등록 시 null
-    │   ├── ChangeReadingStatusUseCase.kt    # 다 읽음 시 finishedAt 저장 규칙 포함
-    │   ├── DeleteBookEntryUseCase.kt
-    │   └── UpdateRatingMemoUseCase.kt
-    ├── record/
-    │   ├── AddReadingRecordUseCase.kt       # 읽고싶음→읽는 중 자동 전환(첫 기록 생성 시에만), 남은 페이지 10% 또는 40쪽 이하 신호 반환
-    │   ├── EditReadingRecordUseCase.kt
-    │   ├── DeleteReadingRecordUseCase.kt
-    │   └── ObserveBookRecordsUseCase.kt
-    ├── stats/
-    │   ├── GetTodaySummaryUseCase.kt
-    │   ├── GetPeriodSummaryUseCase.kt       # 지정 기간 (오늘/4주/1년/직접선택)
-    │   ├── GetReadingCalendarUseCase.kt     # 365일 독서 달력
-    │   └── GetReadingStreakUseCase.kt
-    └── settings/
-        ├── ReminderScheduler.kt             # 리마인더 예약·취소 도메인 계약
-        ├── GetReminderContentUseCase.kt     # 최근 읽는 중 책 제목 또는 기본 메시지 생성
-        ├── GetUserPreferencesUseCase.kt
-        ├── SetThemeUseCase.kt
-        └── SetReminderUseCase.kt            # ReminderScheduler를 통한 예약·취소
-```
+`book/`, `search/`, `scanner/`, `library/`, `record/`, `stats/`, `settings/`에 기능별 UseCase를 둔다. 공용 상태 변경은 `library/ChangeReadingStatusUseCase.kt`, 스캔 후보 조회는 `scanner/GetBookByScanUseCase.kt`, 리마인더 계약은 `settings/ReminderScheduler.kt`가 소유한다.
 
 ### 4.6 `core:data`
 
-```
-core/data/
-└── src/main/kotlin/com/leeseungyun1020/manicule/core/data/
-    ├── di/
-    │   └── DataModule.kt                   # Repository 바인딩
-    ├── repository/
-    │   ├── BookRepository.kt               # interface
-    │   ├── BookRepositoryImpl.kt           # network + database 결합
-    │   ├── ReadingRecordRepository.kt
-    │   ├── ReadingRecordRepositoryImpl.kt
-    │   ├── LibraryRepository.kt            # BookEntry CRUD, 정렬·필터
-    │   ├── LibraryRepositoryImpl.kt
-    │   ├── StatsRepository.kt
-    │   ├── StatsRepositoryImpl.kt
-    │   ├── SearchHistoryRepository.kt
-    │   ├── SearchHistoryRepositoryImpl.kt
-    │   ├── UserPreferencesRepository.kt
-    │   └── UserPreferencesRepositoryImpl.kt
-    └── mapper/
-        ├── BookMapper.kt                   # Dto/Entity ↔ Book
-        ├── BookEntryMapper.kt
-        └── ReadingRecordMapper.kt
-```
+`repository/BookRepository.kt`·`LibraryRepository.kt`·`StatsRepository.kt` 등의 공개 계약과 구현, `datasource/`의 로컬·원격 연결, `mapper/`의 DTO/Entity 변환을 소유한다. Repository 밖으로 DTO·Entity를 노출하지 않는다.
 
 ### 4.7 `core:database`
 
-```
-core/database/
-└── src/main/kotlin/com/leeseungyun1020/manicule/core/database/
-    ├── di/
-    │   └── DatabaseModule.kt
-    ├── ManiculeDatabase.kt                     # @Database, version, migrations
-    ├── entity/
-    │   ├── BookEntity.kt                   # @Entity (PK = isbn)
-    │   ├── BookEntryEntity.kt              # status, rating, memo, addedAt, updatedAt, finishedAt
-    │   ├── ReadingRecordEntity.kt          # id, isbn, date, time, startPage, endPage
-    │   └── RecentQueryEntity.kt
-    ├── dao/
-    │   ├── BookDao.kt
-    │   ├── BookEntryDao.kt                 # status별 Flow, 정렬 쿼리
-    │   ├── ReadingRecordDao.kt             # 날짜 범위 조회, 잔디 집계
-    │   └── RecentQueryDao.kt
-    ├── converter/
-    │   └── Converters.kt                   # LocalDate, ReadingStatus
-    └── migration/
-        └── Migrations.kt
-```
+`ManiculeDatabase.kt`, `dao/BookEntryDao.kt`·`ReadingRecordDao.kt`·`ReadingRecordStatsDao.kt`, `entity/`와 `converter/Converters.kt`가 Room 저장소를 구성한다. 실제 쿼리와 스키마는 이 파일들과 생성된 schema JSON을 확인한다.
 
 ### 4.8 `core:datastore`
 
-```
-core/datastore/
-    └── src/main/kotlin/com/leeseungyun1020/manicule/core/datastore/
-        ├── UserPreferencesLocalDataSource.kt   # Theme, Reminder(on/off, time) 등 DataStore 읽기/쓰기
-        └── UserPreferencesDataStore.kt         # DataStore 인스턴스 (실제 구현에 맞춤)
-    └── PreferencesKeys.kt                  # THEME_MODE, REMINDER_ENABLED, REMINDER_TIME
-```
+`UserPreferencesDataStore.kt`와 `PreferencesKeys.kt`가 테마·리마인더 설정을 저장한다. `di/DataStoreModule.kt`가 인스턴스를 제공한다.
 
 ### 4.9 `core:network`
 
-```
-core/network/
-└── src/main/kotlin/com/leeseungyun1020/manicule/core/network/
-    ├── di/
-    │   └── NetworkModule.kt                # Retrofit, OkHttp, Json
-    ├── nlk/                                # 국립중앙도서관 ISBN API
-    │   ├── NlkApi.kt                       # Retrofit interface
-    │   ├── NlkAuthInterceptor.kt           # 발급키 주입
-    │   └── dto/
-    │       ├── NlkSearchResponseDto.kt
-    │       └── NlkBookDto.kt
-    └── BuildConfigKeys.kt                  # 키 이름 상수
-```
+`nlk/NlkApi.kt`가 국립중앙도서관 API 계약을, `nlk/NlkAuthInterceptor.kt`와 `nlk/dto/`가 인증·응답 변환을 소유한다. Retrofit 구성은 `di/NetworkModule.kt`에 둔다.
 
 ### 4.10 `core:scanner`
 
-```
-core/scanner/
-└── src/main/kotlin/com/leeseungyun1020/manicule/core/scanner/
-    ├── BarcodeAnalysisException.kt         # detector 분석 실패
-    ├── BarcodeReader.kt                    # ImageAnalysis와 suspend 인식 API
-    ├── BarcodeReaderFactory.kt             # Reader 생성 계약
-    ├── DemandDrivenBarcodeReader.kt        # 대기 호출 기반 공유·중단
-    └── MlKitBarcodeReaderFactory.kt        # CameraX–ML Kit 구현
-```
+`BarcodeReader.kt`·`BarcodeReaderFactory.kt`가 계약, `DemandDrivenBarcodeReader.kt`·`MlKitBarcodeReaderFactory.kt`가 CameraX–ML Kit 구현을 소유한다.
 
-`core:scanner`의 `BarcodeReader`는 `ImageAnalysis`를 소유한다. 첫 `getBarcodes()` 대기자가 생기면 analyzer를 연결하고, 마지막 대기자가 반환·실패·취소되면 `clearAnalyzer()`로 분석을 중단한다. 동시 호출은 같은 프레임을 공유하여 각 predicate로 평가하고, 과거 결과를 replay하지 않으며 다음 호출에서 분석을 재시작한다. 최초 일치 프레임의 non-null `Barcode.rawValue`를 변경 없이 전달하고, ISBN 체크섬·접두사·정규화와 바코드 포맷 제한은 두지 않는다. 값의 도서 조회 성공 여부는 후속 Domain 흐름이 결정한다.
+`BarcodeReader`는 `ImageAnalysis`를 소유한다. 첫 `getBarcodes()` 대기자가 생기면 analyzer를 연결하고, 마지막 대기자가 반환·실패·취소되면 `clearAnalyzer()`로 중단한다. 동시 호출은 같은 프레임을 각 predicate로 평가하고 과거 결과는 replay하지 않는다. 최초 일치 프레임의 non-null `Barcode.rawValue`를 원문 그대로 전달하며 ISBN 체크섬·접두사·정규화나 바코드 포맷 제한을 적용하지 않는다. 도서 조회 성공 여부는 Domain 흐름이 결정한다.
 
 ### 4.11 `core:notifications`
 
-```
-core/notifications/
-└── src/main/kotlin/com/leeseungyun1020/manicule/core/notifications/
-    ├── di/
-    │   └── NotificationsModule.kt
-    ├── WorkManagerReminderScheduler.kt     # domain ReminderScheduler 구현
-    ├── ReminderWorker.kt                   # GetReminderContentUseCase로 발송 시점 메시지 조회
-    ├── TimeZoneChangedReceiver.kt          # 시간대 변경 시 활성 리마인더 즉시 재예약
-    └── NotificationChannels.kt
-```
+`WorkManagerReminderScheduler.kt`는 도메인 `ReminderScheduler`를 구현한다. `ReminderWorker.kt`는 발송 시점에 `GetReminderContentUseCase`를 호출하고, `ReminderNotificationPublisher.kt`가 메시지를 게시한다. `TimeZoneChangedReceiver.kt`는 시간대 변경 시 재예약한다.
 
-> **의존 방향**: `app → core:notifications → core:domain`. `core:domain`은 `core:notifications`를 알지 않으며,
-> `core:notifications`도 `core:data`의 Repository를 직접 주입하지 않는다. 컨텍스트 메시지는
-> `GetReminderContentUseCase`가 Repository를 통해 생성한다.
+의존 방향은 `app → core:notifications → core:domain`이다. `core:notifications`는 `core:data` Repository를 직접 주입하지 않는다.
 
 ---
 
-## 5. 화면 ↔ 모듈 매핑
+## 5. Gradle 구성
 
-| 화면     | 진입 모듈                | 의존하는 UseCase (core:domain)                                                                                                                                    |
-|--------|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 홈      | `feature:home`       | GetLibraryBooksUseCase(읽는 중), GetTodaySummaryUseCase, GetReadingStreakUseCase, GetReadingCalendarUseCase                                                      |
-| 검색     | `feature:search`     | SearchBooksUseCase, GetRecentQueriesUseCase, SaveRecentQueryUseCase                                                                                           |
-| 바코드 스캔 | `feature:scanner`    | GetBookByScanUseCase (BarcodeReader 계약은 core:scanner, core:domain이 의존)                                                                                          |
-| 책 상세   | `feature:bookdetail` | GetBookDetailUseCase, ObserveBookEntryUseCase, ChangeReadingStatusUseCase, UpdateRatingMemoUseCase, AddReadingRecordUseCase, EditReadingRecordUseCase, DeleteReadingRecordUseCase, ObserveBookRecordsUseCase |
-| 서재     | `feature:library`    | GetLibraryBooksUseCase, DeleteBookEntryUseCase                                                                                                                |
-| 통계     | `feature:stats`      | GetPeriodSummaryUseCase, GetReadingCalendarUseCase                                                                                                            |
-| 설정     | `feature:settings`   | GetUserPreferencesUseCase, SetThemeUseCase, SetReminderUseCase                                                                                                |
+Convention plugin은 `build-logic/convention/src/main/kotlin/`에 둔다. `AndroidFeatureConventionPlugin.kt`, `AndroidApplicationComposeConventionPlugin.kt`, `AndroidLibraryComposeConventionPlugin.kt`, `AndroidHiltConventionPlugin.kt`, `AndroidRoomConventionPlugin.kt`, `AndroidLintConventionPlugin.kt`, `JvmLibraryConventionPlugin.kt`가 주요 진입점이다.
 
----
+모듈별 적용 plugin과 현재 의존성은 각 `build.gradle.kts`에서 확인한다. 의존 방향의 설계 기준은 이 문서의 모듈 의존 그래프다.
 
-## 6. Gradle 구성 가이드
-
-`build-logic` (Convention Plugins) 도입
-
-```
-build-logic/
-└── convention/
-    └── src/main/java/.../
-        ├── AndroidApplicationConventionPlugin.kt
-        ├── AndroidLibraryConventionPlugin.kt
-        ├── AndroidFeatureConventionPlugin.kt        # feature 모듈 공통 설정 + Compose
-        ├── AndroidLibraryComposeConventionPlugin.kt
-        ├── AndroidHiltConventionPlugin.kt
-        ├── AndroidRoomConventionPlugin.kt
-        ├── AndroidLintConventionPlugin.kt           # ktlint(컨벤션) + detekt(비스타일 정적 분석) + Android Lint
-        ├── AndroidApplicationFirebaseConventionPlugin.kt # google-services + Crashlytics gradle plugin
-        └── JvmLibraryConventionPlugin.kt            # core:model (안드로이드 비의존 순수 Kotlin)
-```
-
-플러그인 적용 예:
-
-```kotlin
-// feature/home/build.gradle.kts
-plugins {
-	alias(libs.plugins.manicule.android.feature)
-	alias(libs.plugins.manicule.android.library.compose)
-}
-
-dependencies {
-	implementation(projects.core.designsystem)
-	implementation(projects.core.ui)
-	implementation(projects.core.domain)
-	implementation(projects.core.model)
-	implementation(projects.core.common)
-}
-```
-
-```kotlin
-// app/build.gradle.kts
-dependencies {
-	implementation(projects.core.designsystem)
-	implementation(projects.core.domain)
-	implementation(projects.core.model)
-}
-```
-
-```kotlin
-// core/domain/build.gradle.kts
-plugins {
-	alias(libs.plugins.manicule.android.library)
-	alias(libs.plugins.manicule.android.hilt)
-}
-
-dependencies {
-	implementation(projects.core.model)
-	implementation(projects.core.data)
-	implementation(projects.core.scanner)
-}
-```
-
-```kotlin
-// core/notifications/build.gradle.kts
-dependencies {
-	implementation(projects.core.domain)
-}
-```
-
----
-
-## 7. 테스트 전략
+## 6. 테스트 전략
 
 | 모듈                   | 주요 테스트                                                             |
 |----------------------|--------------------------------------------------------------------|

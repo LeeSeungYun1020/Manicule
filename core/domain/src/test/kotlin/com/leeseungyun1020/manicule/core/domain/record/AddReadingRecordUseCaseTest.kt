@@ -4,6 +4,7 @@ import androidx.paging.PagingData
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.common.time.Clock
 import com.leeseungyun1020.manicule.core.data.repository.BookRepository
+import com.leeseungyun1020.manicule.core.data.repository.BookSyncResult
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
 import com.leeseungyun1020.manicule.core.data.repository.ReadingRecordRepository
 import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
@@ -207,8 +208,7 @@ class AddReadingRecordUseCaseTest {
 
         override fun observeBook(isbn: String): Flow<Book?> = book
 
-        override suspend fun syncBook(isbn: String): Result<com.leeseungyun1020.manicule.core.model.BookSyncStatus> =
-            Result.success(com.leeseungyun1020.manicule.core.model.BookSyncStatus.COMPLETE)
+        override suspend fun syncBook(isbn: String): Result<BookSyncResult> = error("Not used")
 
         override fun searchBooks(query: String): Flow<PagingData<Book>> = emptyFlow()
     }

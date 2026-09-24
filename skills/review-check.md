@@ -1,75 +1,17 @@
 # 리뷰 검수
 
-## 전제 조건
+[공통 규칙](skills.md)을 적용한다. 요청한 PR에 리뷰 답글이 있는지 확인한다. 게시·승인 계정은 `lsy-auto`다.
 
-- 사용자가 리뷰 검수 요청한 PR에 리뷰에 대한 답글이 작성되어 있음
-- `lsy-auto` 계정으로 전환 가능(`gh auth status`)
+## 검수
 
-## 실행 절차
+1. [GitHub 조회 명령](github.md)으로 PR 정보를 확인하고 [작업 디렉터리 규칙](skills.md#작업-디렉터리)에 따라 준비한다. 같은 브랜치는 갱신 후 사용하고, 다른 브랜치이면 별도 워크트리에서 진행한다.
+2. 공통 명령으로 미해결 인라인 스레드와 답글·리뷰 본문·일반 PR 댓글을 `--paginate`로 조회한다. 지적·질문과 후속 답변을 의견 유형·ID·원문 URL로 연결하며, 일반 댓글에 resolve 상태가 없다는 이유로 검수에서 제외하지 않는다.
+3. 각 의견의 답변을 실제 코드·관련 테스트·PR 설명·전체 계획 문서의 관련 요구사항·경계와 대조한다. 로컬 작업 계획 파일은 요구하지 않으며 세부 구현 근거는 구현자의 답글에서 확인한다. 답변이나 근거가 부족하면 미해결로 남긴다. 같은 원인은 함께 분석하되 해결 판단은 의견별로 유지한다.
+4. 계정과 PR head를 재확인한다. head가 바뀌면 영향 부분을 다시 검수한다. 해결된 인라인 스레드는 아래 명령으로 resolve하고 `isResolved: true`를 확인한다. 일반 댓글·리뷰 본문의 해결 판단은 의견 ID와 근거를 처리 결과에 남긴다.
+5. 해결되지 않은 의견에는 구체적인 남은 문제·추가 설명 요청과 필요 시 관련 공식 문서 링크를 [답글 명령](apply-review.md#답글)으로 게시한다. 반려·새 문제가 있어도 나머지 검수를 계속하며 직접 수정하거나 반영 단계로 전환하지 않는다.
+6. 인라인·일반 댓글·리뷰 본문의 모든 지적·질문이 해결되고 새 문제가 없으면 전체 계획과의 정합성 확인한다.
+7. 최신 head를 다시 확인하고 `gh api repos/:owner/:repo/pulls/<PR>/reviews -f event=APPROVE -f commit_id=<검토SHA> --jq '{id,state,commit_id}'`로 메시지 없이 승인한다. 반환된 `APPROVED`와 검토 SHA의 일치를 확인한다. 남은 문제가 있으면 승인하지 않는다. 의견별 처리 결과·승인 여부·남은 제약을 반환하고 종료한다.
 
-### 답글 분석
-
-1. PR 브랜치를 로컬로 패치하여 체크아웃하고, PR 전체 comment와 PR head commit 조회.
-2. 각 리뷰를 번호로 정리하고 각 리뷰마다 다음 단계를 진행. 이미 해결된(resolve) 리뷰는 건너뜀.
-3. 답글 확인하여 타당성 검토 진행.
-4. 실제 답글 내용이 해결되었는지 또는 코드에 반영되었는지 확인.
-5. 리뷰 해결이 가능하면 즉시 리뷰 해결 단계 진행, 불가하면 리뷰 반려 단계 진행.
-6. 반려된 리뷰나 새 문제가 있더라도 남은 리뷰의 검수를 계속하고, 해결 가능한 리뷰는 모두 해결 처리.
-7. 모든 리뷰가 해결되고 새 문제가 없다면 PR 승인 단계 진행. 반려된 리뷰나 새 문제가 있다면 전체 리뷰 처리 결과를 사용자에게 요약하여 출력 후 종료.
-
-### 리뷰 해결
-
-1. 스레드 ID 조회
-2. `lsy-auto` 계정으로 전환(`gh auth switch --user lsy-auto`)
-3. 해당 리뷰 해결(resolve) 처리
-
-스레드 ID 조회 예시
+```sh
+gh api graphql -f query='mutation($id: ID!) { resolveReviewThread(input: {threadId: $id}) { thread { id isResolved } } }' -F id=<thread_id> --jq '.data.resolveReviewThread.thread'
 ```
-gh api graphql -f query='
-  {
-    repository(owner: "$오너", name: "$저장소_이름") {
-      pullRequest(number: $PR번호) {
-        reviewThreads(first: 100) {
-          nodes { id isResolved comments(first: 1) { nodes { body path } } }
-        }
-      }
-    }
-  }'
-```
-
-리뷰 해결 처리 예시
-```
-gh api graphql -f query='
-  mutation {
-    resolveReviewThread(input: {threadId: "$조회한_스레드_ID"}) {
-      thread { isResolved }
-    }
-  }'
-```
-
-### 리뷰 반려
-
-1. 해당 리뷰에서 해결되지 않은 부분 확인
-2. 개선 사항 수집 및 수정 방향 정리. 관련있다면 android developers, kotlin docs 같은 공식 사이트 링크를 포함.
-3. `lsy-auto` 계정으로 전환(`gh auth switch --user lsy-auto`)
-4. 해당 리뷰에 정리한 내용을 답글로 게시(`gh api -X POST /repos/:owner/:repo/pulls/<PR번호>/comments/<조회한_comment_id>/replies`). 별도 comment로 작성되지 않도록 유의.
-
-### PR 승인
-
-1. `plan` 디렉토리 내 계획 준수 여부와 전체 리뷰 처리 결과 검토
-2. `lsy-auto` 계정으로 전환(`gh auth switch --user lsy-auto`)
-3. PR approve, 메시지 없이 approve 처리.
-
-## 제약 사항
-
-- PR 요약 시 필요하지 않은 부차적인 내용과 미사여구 삭제.
-- 에러 방지를 위해 모든 gh 명령, git push 명령은 &&로 묶어 실행하지 말고, 단계별로 분리하여 안전하게 순차 실행.
-
-## 예외(에러) 대응
-
-- 계정 변경, 권한 문제, PR 생성에 실패하면 중단하고 사용자에 표시.
-- 각 진행 중인 단계 표시(예: `<CHECK-답글 분석-6>`, `<CHECK-리뷰 반려-3>`)
-
-## 최종 완료 및 검증
-
-- github PR 상태 조회(`gh pr status`)하여 PR 등록 여부 확인.

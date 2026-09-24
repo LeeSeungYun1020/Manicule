@@ -15,6 +15,9 @@ build/
 local.properties
 *.log
 
+# Local implementation plans
+/plan/tasks/
+
 # OS
 .DS_Store
 Thumbs.db
