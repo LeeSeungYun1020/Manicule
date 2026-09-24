@@ -115,6 +115,7 @@ private fun SettingsScreenContainer(
         onReminderEnabledChange = onToggle,
         onReminderTimeChange = viewModel::setReminderTime,
         onRetryPreferences = viewModel::retryPreferences,
+        onThemeSelected = viewModel::setThemeMode,
     )
 }
 
@@ -161,6 +162,7 @@ private fun SettingsSnackbarEffect(
     snackbarHostState: SnackbarHostState,
 ) {
     val updateFailedMessage = stringResource(R.string.settings_reminder_update_failed)
+    val themeUpdateFailedMessage = stringResource(R.string.settings_theme_update_failed)
     val retryLabel = stringResource(R.string.settings_retry)
     LaunchedEffect(viewModel, snackbarHostState) {
         viewModel.events.collectLatest { event ->
@@ -178,7 +180,31 @@ private fun SettingsSnackbarEffect(
                     }
                 }
                 SettingsEvent.DismissReminderUpdateFailure -> {
-                    snackbarHostState.currentSnackbarData?.dismiss()
+                    snackbarHostState.currentSnackbarData
+                        ?.takeIf { it.visuals.message == updateFailedMessage }
+                        ?.dismiss()
+                }
+            }
+        }
+    }
+    LaunchedEffect(viewModel, snackbarHostState) {
+        viewModel.themeEvents.collectLatest { event ->
+            when (event) {
+                is ThemeEvent.UpdateFailed -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = themeUpdateFailedMessage,
+                        actionLabel = retryLabel,
+                        duration = SnackbarDuration.Indefinite,
+                    )
+                    when (result) {
+                        SnackbarResult.ActionPerformed -> viewModel.resolveThemeUpdateFailure(event, retry = true)
+                        SnackbarResult.Dismissed -> viewModel.resolveThemeUpdateFailure(event, retry = false)
+                    }
+                }
+                ThemeEvent.DismissUpdateFailure -> {
+                    snackbarHostState.currentSnackbarData
+                        ?.takeIf { it.visuals.message == themeUpdateFailedMessage }
+                        ?.dismiss()
                 }
             }
         }
