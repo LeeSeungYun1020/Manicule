@@ -118,7 +118,6 @@ class SettingsViewModel
             retry: Boolean,
         ) {
             if (pendingThemeRetry !== failure) return
-            if (retry) _themeEvents.tryEmit(ThemeEvent.DismissUpdateFailure)
             pendingThemeRetry = null
             _themeEvents.resetReplayCache()
             if (retry && uiState.value.theme is ThemeUiState.Content) {

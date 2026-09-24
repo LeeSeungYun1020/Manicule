@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -30,46 +31,53 @@ internal fun ThemeSection(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val mode = state.displayedMode
-    val labels = mapOf(
-        ThemeMode.SYSTEM to stringResource(R.string.settings_theme_system),
-        ThemeMode.LIGHT to stringResource(R.string.settings_theme_light),
-        ThemeMode.DARK to stringResource(R.string.settings_theme_dark),
-    )
+    val systemLabel = stringResource(R.string.settings_theme_system)
+    val lightLabel = stringResource(R.string.settings_theme_light)
+    val darkLabel = stringResource(R.string.settings_theme_dark)
+    val labels = remember(systemLabel, lightLabel, darkLabel) {
+        mapOf(
+            ThemeMode.SYSTEM to systemLabel,
+            ThemeMode.LIGHT to lightLabel,
+            ThemeMode.DARK to darkLabel,
+        )
+    }
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
         ManiculeSectionHeader(title = stringResource(R.string.settings_appearance_section))
         Text(
             text = stringResource(R.string.settings_theme),
             style = MaterialTheme.typography.bodyMedium,
         )
-        if (state is ThemeUiState.Content) {
-            ManiculeSegmentedButton(
-                options = ThemeMode.entries,
-                selectedOption = mode!!,
-                onOptionSelected = onThemeSelected,
-                itemLabel = { labels.getValue(it) },
-            )
-        } else {
-            Row(modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.sm)) {
-                Text(
-                    text = when (state) {
-                        is ThemeUiState.Loading -> stringResource(R.string.settings_theme_loading)
-                        is ThemeUiState.Error -> stringResource(R.string.settings_theme_load_error)
-                        is ThemeUiState.Content -> error("unreachable")
-                    },
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyMedium,
+        when (state) {
+            is ThemeUiState.Content -> {
+                ManiculeSegmentedButton(
+                    options = ThemeMode.entries,
+                    selectedOption = state.mode,
+                    onOptionSelected = onThemeSelected,
+                    itemLabel = { labels.getValue(it) },
                 )
-                if (state is ThemeUiState.Error) {
-                    ManiculeTextButton(onClick = onRetry, text = stringResource(R.string.settings_retry))
-                }
             }
-            if (mode != null) {
-                Text(
-                    text = stringResource(R.string.settings_theme_previous, labels.getValue(mode)),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            is ThemeUiState.Loading, is ThemeUiState.Error -> {
+                Row(modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.sm)) {
+                    Text(
+                        text = if (state is ThemeUiState.Loading) {
+                            stringResource(R.string.settings_theme_loading)
+                        } else {
+                            stringResource(R.string.settings_theme_load_error)
+                        },
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    if (state is ThemeUiState.Error) {
+                        ManiculeTextButton(onClick = onRetry, text = stringResource(R.string.settings_retry))
+                    }
+                }
+                state.displayedMode?.let { mode ->
+                    Text(
+                        text = stringResource(R.string.settings_theme_previous, labels.getValue(mode)),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }

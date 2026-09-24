@@ -453,9 +453,9 @@ class SettingsViewModelTest {
                 assertThat(repository.currentTheme).isEqualTo(ThemeMode.SYSTEM)
                 assertThat(viewModel.uiState.value.theme).isEqualTo(ThemeUiState.Content(ThemeMode.SYSTEM))
                 viewModel.resolveThemeUpdateFailure(failure, retry = true)
-                assertThat(awaitItem()).isEqualTo(ThemeEvent.DismissUpdateFailure)
                 runCurrent()
                 assertThat(repository.currentTheme).isEqualTo(ThemeMode.DARK)
+                expectNoEvents()
                 cancelAndIgnoreRemainingEvents()
             }
         }
