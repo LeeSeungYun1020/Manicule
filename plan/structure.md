@@ -154,7 +154,7 @@ app/
 | `feature:scanner` | `navigation/ScannerNavigation.kt`, `ScannerViewModel.kt`, `CameraPreview.kt` | 권한·카메라 수명주기와 도서 조회 결과 |
 | `feature:bookdetail` | `navigation/BookDetailNavigation.kt`, `BookDetailRoute.kt`, `BookDetailViewModel.kt`, `components/AddRecordBottomSheet.kt` | ISBN 진입, 독서 상태·리뷰·기록 편집 |
 | `feature:library` | `navigation/LibraryNavigation.kt`, `LibraryRoute.kt`, `LibraryViewModel.kt`, `components/SortBottomSheet.kt` | 상태 탭, 정렬, 책 변경·삭제 |
-| `feature:stats` | `navigation/StatsNavigation.kt` | `StatsRoute(focus)` 진입 계약 |
+| `feature:stats` | `navigation/StatsNavigation.kt`, `StatsScreen.kt`, `StatsViewModel.kt`, `components/StatsCalendarCard.kt`, `components/ReadingDayBottomSheet.kt` | `StatsRoute(focus)` 진입 계약, 최근 4주 집계·달력·날짜 기록 상태와 화면 |
 | `feature:settings` | `navigation/SettingsNavigation.kt`, `SettingsRoute.kt`, `SettingsViewModel.kt`, `components/ReminderSection.kt` | 테마·리마인더 설정 |
 
 서재 새 진입은 `LibraryRoute()`의 `READING`을 기본으로 하며, 홈 '고르기'는 `LibraryRoute(LibraryTab.WANT)`로 진입한다. `initialTab`은 새 백스택 항목의 초기값이다. 기존 화면을 복원할 때는 저장된 사용자 선택을 유지하므로, '고르기' 연결 시 기존 항목을 `restoreState`로 복원하지 않는다.
