@@ -57,20 +57,26 @@ fun BookDetailScreen(
     onRetry: () -> Unit,
     onStatusSelected: (ReadingStatus) -> Unit,
     onStatusErrorDismissed: () -> Unit,
-    onAddRecord: (LocalDate, LocalTime, Int, Int) -> Long?,
-    onRecordErrorDismissed: () -> Unit,
-    onFinishCheckConfirmed: (Long) -> Unit,
-    onFinishCheckDismissed: () -> Unit,
+    onRatingSelected: (Int) -> Unit = {},
+    onRatingErrorDismissed: () -> Unit = {},
+    onRetryRating: () -> Unit = {},
+    onAddRecord: (LocalDate, LocalTime, Int, Int) -> Long? = { _, _, _, _ -> null },
+    onRecordErrorDismissed: () -> Unit = {},
+    onFinishCheckConfirmed: (Long) -> Unit = {},
+    onFinishCheckDismissed: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    val snackbarHostState = rememberBookDetailSnackbarHostState(
-        content = uiState as? BookDetailUiState.Content,
-        onRetry = onRetry,
-        onStatusSelected = onStatusSelected,
-        onStatusErrorDismissed = onStatusErrorDismissed,
-        onRecordErrorDismissed = onRecordErrorDismissed,
-    )
+    val snackbarHostState =
+        rememberBookDetailSnackbarHostState(
+            content = uiState as? BookDetailUiState.Content,
+            onRetry = onRetry,
+            onStatusSelected = onStatusSelected,
+            onStatusErrorDismissed = onStatusErrorDismissed,
+            onRatingErrorDismissed = onRatingErrorDismissed,
+            onRetryRating = onRetryRating,
+            onRecordErrorDismissed = onRecordErrorDismissed,
+        )
     var showAddRecordSheet by rememberSaveable { mutableStateOf(false) }
     var pendingRecordSaveAttempt by rememberSaveable { mutableStateOf<Long?>(null) }
     val recordSaving = (uiState as? BookDetailUiState.Content)?.recordSaving
@@ -113,10 +119,12 @@ fun BookDetailScreen(
             uiState = uiState,
             onRetry = onRetry,
             onStatusSelected = onStatusSelected,
+            onRatingSelected = onRatingSelected,
             onAddRecord = { showAddRecordSheet = true },
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
         )
     }
 
@@ -177,32 +185,39 @@ private fun rememberBookDetailSnackbarHostState(
     onRetry: () -> Unit,
     onStatusSelected: (ReadingStatus) -> Unit,
     onStatusErrorDismissed: () -> Unit,
+    onRatingErrorDismissed: () -> Unit,
+    onRetryRating: () -> Unit,
     onRecordErrorDismissed: () -> Unit,
 ): SnackbarHostState {
     val currentOnRetry by rememberUpdatedState(onRetry)
     val currentOnStatusSelected by rememberUpdatedState(onStatusSelected)
     val currentOnStatusErrorDismissed by rememberUpdatedState(onStatusErrorDismissed)
+    val currentOnRatingErrorDismissed by rememberUpdatedState(onRatingErrorDismissed)
+    val currentOnRetryRating by rememberUpdatedState(onRetryRating)
     val currentOnRecordErrorDismissed by rememberUpdatedState(onRecordErrorDismissed)
     val snackbarHostState = remember { SnackbarHostState() }
     val errorMessage = stringResource(R.string.book_detail_refresh_error)
     val retryActionLabel = stringResource(DesignSystemR.string.core_designsystem_retry)
 
     val statusErrorMessage = stringResource(R.string.book_detail_status_error)
+    val ratingErrorMessage = stringResource(R.string.book_detail_rating_error)
     val recordErrorMessage = stringResource(R.string.book_detail_record_save_error)
     val recordLoadErrorMessage = stringResource(R.string.book_detail_records_error_title)
     val statusChange = content?.statusChange
+    val ratingSaving = content?.ratingSaving
     val recordSaving = content?.recordSaving
     val refreshStatus = content?.refreshStatus
     val recordLoadState = content?.recordLoadState
     val hasRecords = content?.records?.isNotEmpty() == true
     LaunchedEffect(refreshStatus, statusChange) {
         if (statusChange is StatusChangeState.Failed) {
-            val result = snackbarHostState.showSnackbar(
-                message = statusErrorMessage,
-                actionLabel = retryActionLabel,
-                withDismissAction = true,
-                duration = SnackbarDuration.Indefinite,
-            )
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = statusErrorMessage,
+                    actionLabel = retryActionLabel,
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Indefinite,
+                )
             if (result == SnackbarResult.ActionPerformed) {
                 currentOnStatusSelected(statusChange.target)
             } else {
@@ -217,6 +232,23 @@ private fun rememberBookDetailSnackbarHostState(
                 )
             if (result == SnackbarResult.ActionPerformed) {
                 currentOnRetry()
+            }
+        }
+    }
+
+    LaunchedEffect(ratingSaving) {
+        if (ratingSaving is RatingSavingState.Failed) {
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = ratingErrorMessage,
+                    actionLabel = retryActionLabel,
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Indefinite,
+                )
+            if (result == SnackbarResult.ActionPerformed) {
+                currentOnRetryRating()
+            } else {
+                currentOnRatingErrorDismissed()
             }
         }
     }
@@ -272,6 +304,7 @@ private fun BookDetailBody(
     uiState: BookDetailUiState,
     onRetry: () -> Unit,
     onStatusSelected: (ReadingStatus) -> Unit,
+    onRatingSelected: (Int) -> Unit,
     onAddRecord: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -295,10 +328,14 @@ private fun BookDetailBody(
                         MyRecordTabContent(
                             status = uiState.bookDetail.entry?.status,
                             isSaving = uiState.statusChange is StatusChangeState.Saving,
+                            rating = uiState.bookDetail.entry?.rating ?: 0,
+                            memo = uiState.bookDetail.entry?.memo,
+                            isRatingSaving = uiState.ratingSaving is RatingSavingState.Saving,
                             records = uiState.records,
                             recordLoadState = uiState.recordLoadState,
                             totalPages = uiState.bookDetail.book.totalPages,
                             onStatusSelected = onStatusSelected,
+                            onRatingSelected = onRatingSelected,
                             onAddRecord = onAddRecord,
                             onRetryRecords = onRetry,
                         )

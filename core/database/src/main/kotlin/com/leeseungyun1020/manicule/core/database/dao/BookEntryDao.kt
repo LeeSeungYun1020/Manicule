@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import com.leeseungyun1020.manicule.core.database.dao.projection.BookEntryWithCurrentPage
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
@@ -39,6 +40,27 @@ interface BookEntryDao {
         return ReadingStatusChangeResult.Changed
     }
 
+    /** 존재 확인, 최초 등록, 별점 변경을 하나의 트랜잭션으로 처리한다. */
+    @Transaction
+    @Suppress("ReturnCount") // 상태별 조기 반환으로 트랜잭션의 쓰기 경로를 구분한다.
+    suspend fun updateRating(
+        isbn: String,
+        rating: Int,
+        updatedAt: Instant,
+    ): RatingChangeResult {
+        if (rating !in MIN_RATING..MAX_RATING) return RatingChangeResult.InvalidRating
+        if (!bookExists(isbn)) return RatingChangeResult.BookNotFound
+        val entry = getEntry(isbn)
+        if (entry == null) {
+            if (rating == 0) return RatingChangeResult.Unchanged
+            upsert(BookEntryEntity(isbn, ReadingStatus.UNSET, rating, null, updatedAt, updatedAt, null))
+            return RatingChangeResult.Changed
+        }
+        if (entry.rating == rating) return RatingChangeResult.Unchanged
+        setRating(isbn, rating, updatedAt)
+        return RatingChangeResult.Changed
+    }
+
     @Query("SELECT EXISTS(SELECT 1 FROM books WHERE isbn = :isbn)")
     suspend fun bookExists(isbn: String): Boolean
 
@@ -51,6 +73,13 @@ interface BookEntryDao {
         status: ReadingStatus,
         updatedAt: Instant,
         finishedAt: LocalDate?,
+    )
+
+    @Query("UPDATE book_entries SET rating = :rating, updatedAt = :updatedAt WHERE isbn = :isbn")
+    suspend fun setRating(
+        isbn: String,
+        rating: Int,
+        updatedAt: Instant,
     )
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -190,3 +219,6 @@ interface BookEntryDao {
     )
     fun observeAll(): Flow<List<BookEntryWithCurrentPage>>
 }
+
+private const val MIN_RATING = 0
+private const val MAX_RATING = 5

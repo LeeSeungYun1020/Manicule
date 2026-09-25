@@ -10,6 +10,7 @@ import com.leeseungyun1020.manicule.core.database.dao.projection.BookEntryWithCu
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
 import com.leeseungyun1020.manicule.core.database.entity.ReadingRecordEntity
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
@@ -449,5 +450,176 @@ class BookEntryDaoTest {
                 ),
             ).isEqualTo(0)
             assertThat(dao.getEntry(isbn)).isEqualTo(newer)
+        }
+
+    @Test
+    fun updateRating_unregisteredBook_setsUnsetWithRating_whenRatingIsPositive() =
+        runTest {
+            val isbn = "unregistered"
+            bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+            val now = Instant.parse("2026-09-05T01:00:00Z")
+
+            val result = dao.updateRating(isbn, 4, now)
+
+            assertThat(result).isEqualTo(RatingChangeResult.Changed)
+            assertThat(dao.getEntry(isbn)).isEqualTo(
+                BookEntryEntity(
+                    isbn = isbn,
+                    status = ReadingStatus.UNSET,
+                    rating = 4,
+                    memo = null,
+                    addedAt = now,
+                    updatedAt = now,
+                    finishedAt = null,
+                ),
+            )
+        }
+
+    @Test
+    fun updateRating_unregisteredBook_zeroRating_returnsUnchanged_withoutWriting() =
+        runTest {
+            val isbn = "unregistered"
+            bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+            val now = Instant.parse("2026-09-05T01:00:00Z")
+
+            val result = dao.updateRating(isbn, 0, now)
+
+            assertThat(result).isEqualTo(RatingChangeResult.Unchanged)
+            assertThat(dao.getEntry(isbn)).isNull()
+        }
+
+    @Test
+    fun updateRating_preservesExistingFieldsAndFinishedDate() =
+        runTest {
+            val isbn = "123"
+            val t1 = Instant.fromEpochMilliseconds(10)
+            val t2 = Instant.fromEpochMilliseconds(20)
+            val t3 = Instant.fromEpochMilliseconds(30)
+            val finishDate = LocalDate(2026, 9, 1)
+            bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+            val original =
+                BookEntryEntity(
+                    isbn = isbn,
+                    status = ReadingStatus.FINISHED,
+                    rating = 3,
+                    memo = "Great book",
+                    addedAt = t1,
+                    updatedAt = t2,
+                    finishedAt = finishDate,
+                )
+            dao.upsert(original)
+
+            val result = dao.updateRating(isbn, 5, t3)
+
+            assertThat(result).isEqualTo(RatingChangeResult.Changed)
+            assertThat(dao.getEntry(isbn)).isEqualTo(
+                original.copy(rating = 5, updatedAt = t3),
+            )
+        }
+
+    @Test
+    fun updateRating_sameRating_returnsUnchanged_andPreservesUpdatedAt() =
+        runTest {
+            val isbn = "123"
+            val t1 = Instant.fromEpochMilliseconds(10)
+            val t2 = Instant.fromEpochMilliseconds(20)
+            val t3 = Instant.fromEpochMilliseconds(30)
+            bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+            dao.upsert(
+                BookEntryEntity(
+                    isbn = isbn,
+                    status = ReadingStatus.READING,
+                    rating = 4,
+                    memo = "Memo",
+                    addedAt = t1,
+                    updatedAt = t2,
+                    finishedAt = null,
+                ),
+            )
+
+            val result = dao.updateRating(isbn, 4, t3)
+
+            assertThat(result).isEqualTo(RatingChangeResult.Unchanged)
+            assertThat(dao.getEntry(isbn)?.updatedAt).isEqualTo(t2)
+        }
+
+    @Test
+    fun updateRating_zeroRating_clearsRating_andUpdatesTimestamp() =
+        runTest {
+            val isbn = "123"
+            val t1 = Instant.fromEpochMilliseconds(10)
+            val t2 = Instant.fromEpochMilliseconds(20)
+            val t3 = Instant.fromEpochMilliseconds(30)
+            bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+            dao.upsert(
+                BookEntryEntity(
+                    isbn = isbn,
+                    status = ReadingStatus.READING,
+                    rating = 4,
+                    memo = "Memo",
+                    addedAt = t1,
+                    updatedAt = t2,
+                    finishedAt = null,
+                ),
+            )
+
+            val result = dao.updateRating(isbn, 0, t3)
+
+            assertThat(result).isEqualTo(RatingChangeResult.Changed)
+            val updated = dao.getEntry(isbn)
+            assertThat(updated?.rating).isEqualTo(0)
+            assertThat(updated?.updatedAt).isEqualTo(t3)
+            assertThat(updated?.status).isEqualTo(ReadingStatus.READING)
+            assertThat(updated?.memo).isEqualTo("Memo")
+        }
+
+    @Test
+    fun updateRating_missingBook_returnsBookNotFound_withoutWriting() =
+        runTest {
+            val now = Instant.fromEpochMilliseconds(10)
+            val result = dao.updateRating("missing", 4, now)
+
+            assertThat(result).isEqualTo(RatingChangeResult.BookNotFound)
+            assertThat(dao.getEntry("missing")).isNull()
+        }
+
+    @Test
+    fun updateRating_invalidRating_returnsInvalidRating_withoutWriting() =
+        runTest {
+            val isbn = "123"
+            bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+            val now = Instant.fromEpochMilliseconds(10)
+            listOf(-1, 6).forEach { rating ->
+                val result = dao.updateRating(isbn, rating, now)
+                assertThat(result).isEqualTo(RatingChangeResult.InvalidRating)
+                assertThat(dao.getEntry(isbn)).isNull()
+            }
+        }
+
+    @Test
+    fun updateRating_and_changeReadingStatus_preserveEachOther() =
+        runTest {
+            val isbn = "123"
+            val t1 = Instant.fromEpochMilliseconds(10)
+            val t2 = Instant.fromEpochMilliseconds(20)
+            val t3 = Instant.fromEpochMilliseconds(30)
+            bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+
+            dao.updateRating(isbn, 4, t1)
+            val entryAfterRating = dao.getEntry(isbn)
+            assertThat(entryAfterRating?.status).isEqualTo(ReadingStatus.UNSET)
+            assertThat(entryAfterRating?.rating).isEqualTo(4)
+
+            dao.changeReadingStatus(isbn, ReadingStatus.READING, t2, null)
+            val entryAfterStatus = dao.getEntry(isbn)
+            assertThat(entryAfterStatus?.status).isEqualTo(ReadingStatus.READING)
+            assertThat(entryAfterStatus?.rating).isEqualTo(4)
+            assertThat(entryAfterStatus?.updatedAt).isEqualTo(t2)
+
+            dao.updateRating(isbn, 5, t3)
+            val entryFinal = dao.getEntry(isbn)
+            assertThat(entryFinal?.status).isEqualTo(ReadingStatus.READING)
+            assertThat(entryFinal?.rating).isEqualTo(5)
+            assertThat(entryFinal?.updatedAt).isEqualTo(t3)
         }
 }

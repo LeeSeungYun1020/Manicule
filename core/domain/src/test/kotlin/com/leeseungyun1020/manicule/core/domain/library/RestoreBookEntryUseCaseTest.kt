@@ -6,6 +6,7 @@ import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
@@ -76,6 +77,12 @@ class RestoreBookEntryUseCaseTest {
         var changedStatus: ReadingStatus? = null
         var changedAt: Instant? = null
         var restoreResult = true
+
+        override suspend fun updateRating(
+            isbn: String,
+            rating: Int,
+            updatedAt: Instant,
+        ): RatingChangeResult = error("Unused")
 
         override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean {
             deletedEntry = entry

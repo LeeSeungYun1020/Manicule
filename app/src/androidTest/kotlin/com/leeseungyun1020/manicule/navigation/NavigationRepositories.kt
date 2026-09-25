@@ -13,6 +13,7 @@ import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import com.leeseungyun1020.manicule.core.model.SearchQuery
@@ -74,6 +75,12 @@ class NavigationLibrary
             updatedAt: Instant,
             finishedAt: LocalDate?,
         ): ReadingStatusChangeResult = ReadingStatusChangeResult.Changed
+
+        override suspend fun updateRating(
+            isbn: String,
+            rating: Int,
+            updatedAt: Instant,
+        ): RatingChangeResult = RatingChangeResult.Changed
 
         override fun observeAll(): Flow<List<BookEntry>> = flowOf(emptyList())
 

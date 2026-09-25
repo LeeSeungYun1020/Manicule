@@ -2,6 +2,7 @@ package com.leeseungyun1020.manicule.core.data.mapper
 
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
+import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkBookDto
 import kotlinx.datetime.LocalDate
 import org.junit.Test
@@ -126,7 +127,7 @@ class BookMapperTest {
     @Test
     fun book_asEntity_mapsCorrectly() {
         val book =
-            com.leeseungyun1020.manicule.core.model.Book(
+            Book(
                 isbn = "123",
                 title = "Test",
                 author = "Auth",

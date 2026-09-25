@@ -11,6 +11,7 @@ import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
@@ -27,19 +28,18 @@ import org.junit.Test
 
 class AddReadingRecordUseCaseTest {
     private val recordRepo = RecordRepository()
-    private val bookRepo = BookRepository()
-    private val libraryRepo = LibraryRepository()
+    private val bookRepo = FakeBookRepository()
+    private val libraryRepo = FakeLibraryRepository()
     private val now = Instant.parse("2026-09-16T12:00:00Z")
     private var clockReads = 0
-    private val clock =
-        object : Clock {
-            override fun now(): Instant {
-                clockReads++
-                return now
-            }
-
-            override fun timeZone(): TimeZone = TimeZone.UTC
+    private val clock = object : Clock {
+        override fun now(): Instant {
+            clockReads++
+            return now
         }
+
+        override fun timeZone(): TimeZone = TimeZone.UTC
+    }
     private val useCase = AddReadingRecordUseCase(recordRepo, bookRepo, libraryRepo, clock)
     private val date = LocalDate(2026, 9, 15)
     private val time = LocalTime(21, 30)
@@ -203,7 +203,7 @@ class AddReadingRecordUseCaseTest {
         override suspend fun getMaxEndPage(isbn: String): Int? = maxEndPage
     }
 
-    private inner class BookRepository : com.leeseungyun1020.manicule.core.data.repository.BookRepository {
+    private class FakeBookRepository : BookRepository {
         val book = MutableStateFlow<Book?>(null)
 
         override fun observeBook(isbn: String): Flow<Book?> = book
@@ -213,7 +213,7 @@ class AddReadingRecordUseCaseTest {
         override fun searchBooks(query: String): Flow<PagingData<Book>> = emptyFlow()
     }
 
-    private inner class LibraryRepository : com.leeseungyun1020.manicule.core.data.repository.LibraryRepository {
+    private inner class FakeLibraryRepository : LibraryRepository {
         var status: ReadingStatus? = null
 
         override fun observeAll(): Flow<List<BookEntry>> = emptyFlow()
@@ -224,6 +224,12 @@ class AddReadingRecordUseCaseTest {
             updatedAt: Instant,
             finishedAt: LocalDate?,
         ): ReadingStatusChangeResult = ReadingStatusChangeResult.Changed
+
+        override suspend fun updateRating(
+            isbn: String,
+            rating: Int,
+            updatedAt: Instant,
+        ): RatingChangeResult = error("Not used")
 
         override fun observeByStatus(
             status: ReadingStatus,

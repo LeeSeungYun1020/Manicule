@@ -26,6 +26,7 @@ import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -574,7 +575,7 @@ class LibraryScreenTest {
                             listOf(
                                 entry(
                                     status = ReadingStatus.FINISHED,
-                                    finishedAt = kotlinx.datetime.LocalDate(2026, 7, 8),
+                                    finishedAt = LocalDate(2026, 7, 8),
                                 ),
                             ),
                         ),
@@ -659,7 +660,7 @@ class LibraryScreenTest {
         status: ReadingStatus = ReadingStatus.READING,
         totalPages: Int? = null,
         currentPage: Int? = null,
-        finishedAt: kotlinx.datetime.LocalDate? = null,
+        finishedAt: LocalDate? = null,
     ) = BookEntry(
         book =
             Book(
