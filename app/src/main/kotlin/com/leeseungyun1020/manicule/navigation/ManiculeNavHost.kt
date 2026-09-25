@@ -64,7 +64,10 @@ fun ManiculeNavHost(
             onBookSelected = { isbn ->
                 appState.navController.navigate(BookDetailRoute(isbn))
             },
-            scannerAction = SearchScannerAction.Unavailable,
+            scannerAction =
+                SearchScannerAction.Available {
+                    appState.navController.navigate(ScannerRoute)
+                },
         )
         scannerScreen(
             onNavigateBack = { appState.navController.popBackStack() },
