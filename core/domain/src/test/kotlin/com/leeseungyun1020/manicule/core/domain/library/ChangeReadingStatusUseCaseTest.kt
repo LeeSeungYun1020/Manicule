@@ -7,6 +7,7 @@ import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.CancellationException
@@ -106,7 +107,7 @@ class ChangeReadingStatusUseCaseTest {
             isbn: String,
             rating: Int,
             updatedAt: Instant,
-        ): com.leeseungyun1020.manicule.core.model.RatingChangeResult = error("Not used")
+        ): RatingChangeResult = error("Not used")
 
         override fun observeAll(): Flow<List<BookEntry>> = emptyFlow()
 

@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import org.junit.Before
 import org.junit.Test
 
@@ -95,7 +96,7 @@ class LibraryRepositoryImplTest {
     fun changeStatus_delegatesWithoutRewritingBookOrEntry() =
         runTest {
             val time = Instant.fromEpochMilliseconds(123)
-            val date = kotlinx.datetime.LocalDate(2026, 9, 5)
+            val date = LocalDate(2026, 9, 5)
             for (result in ReadingStatusChangeResult.entries) {
                 entryDataSource.statusResult = result
                 assertThat(repository.changeReadingStatus("123", ReadingStatus.FINISHED, time, date)).isEqualTo(result)
@@ -138,7 +139,7 @@ class LibraryRepositoryImplTest {
             isbn: String,
             status: ReadingStatus,
             updatedAt: Instant,
-            finishedAt: kotlinx.datetime.LocalDate?,
+            finishedAt: LocalDate?,
         ): ReadingStatusChangeResult {
             statusRequest = listOf(isbn, status, updatedAt, finishedAt)
             return statusResult

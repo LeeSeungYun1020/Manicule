@@ -959,8 +959,8 @@ class BookDetailViewModelTest {
         override suspend fun changeReadingStatus(
             isbn: String,
             status: ReadingStatus,
-            updatedAt: kotlinx.datetime.Instant,
-            finishedAt: kotlinx.datetime.LocalDate?,
+            updatedAt: Instant,
+            finishedAt: LocalDate?,
         ): ReadingStatusChangeResult {
             statusCalls++
             statusGate?.await()
@@ -978,7 +978,7 @@ class BookDetailViewModelTest {
         override suspend fun updateRating(
             isbn: String,
             rating: Int,
-            updatedAt: kotlinx.datetime.Instant,
+            updatedAt: Instant,
         ): RatingChangeResult {
             ratingCalls++
             ratingGate?.await()

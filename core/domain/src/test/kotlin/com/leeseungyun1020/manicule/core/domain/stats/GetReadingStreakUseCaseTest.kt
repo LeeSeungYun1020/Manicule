@@ -59,7 +59,7 @@ class GetReadingStreakUseCaseTest {
     fun empty_dates_return_empty_streak() =
         runTest {
             assertThat(GetReadingStreakUseCase(FakeStatsRepository(), clock)().first())
-                .isEqualTo(com.leeseungyun1020.manicule.core.model.ReadingStreak.Empty)
+                .isEqualTo(ReadingStreak.Empty)
         }
 
     @Test
