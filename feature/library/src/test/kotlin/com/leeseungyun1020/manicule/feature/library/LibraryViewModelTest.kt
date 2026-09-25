@@ -9,6 +9,7 @@ import com.leeseungyun1020.manicule.core.domain.library.GetLibraryBooksUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import com.leeseungyun1020.manicule.feature.library.navigation.LibraryTab
@@ -16,6 +17,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -228,9 +231,15 @@ private class ControllableLibraryRepository : LibraryRepository {
     override suspend fun changeReadingStatus(
         isbn: String,
         status: ReadingStatus,
-        updatedAt: kotlinx.datetime.Instant,
-        finishedAt: kotlinx.datetime.LocalDate?,
+        updatedAt: Instant,
+        finishedAt: LocalDate?,
     ): ReadingStatusChangeResult = error("Not used by this test")
+
+    override suspend fun updateRating(
+        isbn: String,
+        rating: Int,
+        updatedAt: Instant,
+    ): RatingChangeResult = error("Not used by this test")
 
     override fun observeByStatus(
         status: ReadingStatus,

@@ -26,6 +26,7 @@ import com.leeseungyun1020.manicule.core.domain.library.GetLibraryBooksUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import com.leeseungyun1020.manicule.feature.library.navigation.LibraryTab
@@ -161,6 +162,12 @@ private class NavigationLibraryRepository : LibraryRepository {
         updatedAt: Instant,
         finishedAt: LocalDate?,
     ): ReadingStatusChangeResult = error("Not used")
+
+    override suspend fun updateRating(
+        isbn: String,
+        rating: Int,
+        updatedAt: Instant,
+    ): RatingChangeResult = error("Not used")
 
     override fun observeAll(): Flow<List<BookEntry>> = error("Not used")
 

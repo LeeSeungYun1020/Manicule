@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.leeseungyun1020.manicule.core.domain.book.GetBookDetailUseCase
 import com.leeseungyun1020.manicule.core.domain.library.ChangeReadingStatusUseCase
+import com.leeseungyun1020.manicule.core.domain.library.UpdateRatingUseCase
 import com.leeseungyun1020.manicule.core.domain.record.AddReadingRecordUseCase
 import com.leeseungyun1020.manicule.core.domain.record.ObserveBookRecordsUseCase
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
@@ -52,12 +54,39 @@ private inline fun MutableStateFlow<BookDetailUiState>.updateContent(transform: 
     update { state -> if (state is BookDetailUiState.Content) transform(state) else state }
 }
 
+private fun resolveRecordObservation(
+    previousRecords: List<ReadingRecord>,
+    observation: RecordObservation,
+): Pair<List<ReadingRecord>, RecordLoadState> =
+    when (observation) {
+        is RecordObservation.Loaded -> observation.records to RecordLoadState.Idle
+        is RecordObservation.Failed -> previousRecords to RecordLoadState.Failed(observation.attempt)
+    }
+
+private fun resolveRatingSaving(
+    previousRatingSaving: RatingSavingState?,
+    entryRating: Int,
+): RatingSavingState =
+    when (previousRatingSaving) {
+        is RatingSavingState.Saving -> {
+            if (entryRating == previousRatingSaving.target) {
+                RatingSavingState.Idle
+            } else {
+                previousRatingSaving
+            }
+        }
+
+        else -> previousRatingSaving ?: RatingSavingState.Idle
+    }
+
+@Suppress("TooManyFunctions")
 @HiltViewModel
 class BookDetailViewModel
     @Inject
     constructor(
         private val getBookDetail: GetBookDetailUseCase,
         private val changeStatus: ChangeReadingStatusUseCase,
+        private val updateRatingUseCase: UpdateRatingUseCase,
         private val observeBookRecords: ObserveBookRecordsUseCase,
         private val addReadingRecord: AddReadingRecordUseCase,
         private val savedStateHandle: SavedStateHandle,
@@ -71,6 +100,7 @@ class BookDetailViewModel
         private var refreshStatus: RefreshStatus = RefreshStatus.Idle
         private var observationJob: Job? = null
         private var statusAttempt = 0L
+        private var ratingAttempt = 0L
         private var recordAttempt = 0L
         private val recordRetrySignals = MutableStateFlow(0L)
         private val _uiState = MutableStateFlow<BookDetailUiState>(BookDetailUiState.Loading)
@@ -146,6 +176,63 @@ class BookDetailViewModel
         fun dismissStatusError() {
             _uiState.updateContent {
                 if (it.statusChange is StatusChangeState.Failed) it.copy(statusChange = StatusChangeState.Idle) else it
+            }
+        }
+
+        fun updateRating(star: Int) {
+            val content = _uiState.value as? BookDetailUiState.Content ?: return
+            if (content.ratingSaving is RatingSavingState.Saving) return
+            val currentRating = content.bookDetail.entry?.rating ?: 0
+            val target = if (star == currentRating) 0 else star
+            saveRating(target)
+        }
+
+        fun retryRating() {
+            val content = _uiState.value as? BookDetailUiState.Content ?: return
+            val failed = content.ratingSaving as? RatingSavingState.Failed ?: return
+            saveRating(failed.target)
+        }
+
+        fun dismissRatingError() {
+            _uiState.updateContent {
+                if (it.ratingSaving is RatingSavingState.Failed) it.copy(ratingSaving = RatingSavingState.Idle) else it
+            }
+        }
+
+        private fun saveRating(target: Int) {
+            val attempt = ++ratingAttempt
+            _uiState.updateContent { it.copy(ratingSaving = RatingSavingState.Saving(target)) }
+            viewModelScope.launch {
+                runCatching { updateRatingUseCase(isbn, target) }
+                    .onSuccess { result ->
+                        _uiState.updateContent { state ->
+                            when (result) {
+                                RatingChangeResult.Changed -> {
+                                    val currentRating = state.bookDetail.entry?.rating ?: 0
+                                    if (currentRating == target) {
+                                        state.copy(ratingSaving = RatingSavingState.Idle)
+                                    } else {
+                                        state
+                                    }
+                                }
+
+                                RatingChangeResult.Unchanged -> {
+                                    state.copy(ratingSaving = RatingSavingState.Idle)
+                                }
+
+                                RatingChangeResult.BookNotFound, RatingChangeResult.InvalidRating -> {
+                                    state.copy(ratingSaving = RatingSavingState.Failed(target, attempt))
+                                }
+                            }
+                        }
+                    }
+                    .onFailure { e ->
+                        if (e is CancellationException) {
+                            _uiState.updateContent { it.copy(ratingSaving = RatingSavingState.Idle) }
+                            throw e
+                        }
+                        _uiState.updateContent { it.copy(ratingSaving = RatingSavingState.Failed(target, attempt)) }
+                    }
             }
         }
 
@@ -256,15 +343,8 @@ class BookDetailViewModel
                             _uiState.update { state ->
                                 if (bookDetail != null) {
                                     val previous = state as? BookDetailUiState.Content
-                                    val previousRecords = previous?.records.orEmpty()
                                     val (records, recordLoadState) =
-                                        when (recordObservation) {
-                                            is RecordObservation.Loaded ->
-                                                recordObservation.records to RecordLoadState.Idle
-
-                                            is RecordObservation.Failed ->
-                                                previousRecords to RecordLoadState.Failed(recordObservation.attempt)
-                                        }
+                                        resolveRecordObservation(previous?.records.orEmpty(), recordObservation)
                                     val tab =
                                         selectedTab ?: if (bookDetail.entry != null) {
                                             BookDetailTab.MyRecords
@@ -272,6 +352,8 @@ class BookDetailViewModel
                                             BookDetailTab.Information
                                         }
                                     selectedTab = tab
+                                    val ratingSaving =
+                                        resolveRatingSaving(previous?.ratingSaving, bookDetail.entry?.rating ?: 0)
                                     BookDetailUiState.Content(
                                         bookDetail = bookDetail,
                                         records = records,
@@ -281,6 +363,7 @@ class BookDetailViewModel
                                         recordSaving = previous?.recordSaving ?: RecordSavingState.Idle,
                                         recordLoadState = recordLoadState,
                                         finishCheck = previous?.finishCheck ?: FinishCheckState.Idle,
+                                        ratingSaving = ratingSaving,
                                     )
                                 } else {
                                     state

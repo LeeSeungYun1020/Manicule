@@ -3,6 +3,7 @@ package com.leeseungyun1020.manicule.core.data.paging
 import androidx.paging.PagingSource
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.datasource.BookRemoteDataSource
+import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkBookDto
 import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkSearchResponseDto
 import kotlinx.coroutines.test.runTest
@@ -65,7 +66,7 @@ class NlkBookPagingSourceTest {
                 )
 
             assertThat(result).isInstanceOf(PagingSource.LoadResult.Page::class.java)
-            val pageResult = result as PagingSource.LoadResult.Page<Int, com.leeseungyun1020.manicule.core.model.Book>
+            val pageResult = result as PagingSource.LoadResult.Page<Int, Book>
 
             // 111, 222, 333 세 권의 책이 중복 없이 반환되어야 함 (222 중복 제거)
             assertThat(pageResult.data).hasSize(3)
@@ -116,7 +117,7 @@ class NlkBookPagingSourceTest {
                 )
 
             assertThat(result).isInstanceOf(PagingSource.LoadResult.Page::class.java)
-            val pageResult = result as PagingSource.LoadResult.Page<Int, com.leeseungyun1020.manicule.core.model.Book>
+            val pageResult = result as PagingSource.LoadResult.Page<Int, Book>
             assertThat(pageResult.data.map { it.isbn }).containsExactly("123")
         }
 
@@ -141,7 +142,7 @@ class NlkBookPagingSourceTest {
                 )
 
             assertThat(result).isInstanceOf(PagingSource.LoadResult.Page::class.java)
-            val pageResult = result as PagingSource.LoadResult.Page<Int, com.leeseungyun1020.manicule.core.model.Book>
+            val pageResult = result as PagingSource.LoadResult.Page<Int, Book>
 
             assertThat(pageResult.data).isEmpty()
             assertThat(pageResult.nextKey).isNull()

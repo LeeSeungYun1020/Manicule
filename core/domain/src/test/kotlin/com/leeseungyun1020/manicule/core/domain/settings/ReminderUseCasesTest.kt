@@ -7,6 +7,7 @@ import com.leeseungyun1020.manicule.core.data.repository.UserPreferencesReposito
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import com.leeseungyun1020.manicule.core.model.ReminderConfig
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import org.junit.Test
 
@@ -106,21 +108,19 @@ class ReminderUseCasesTest {
     @Test
     fun reminderContent_returnsFiveMostRecentlyUpdatedReadingBooks() =
         runTest {
-            val entries =
-                (1..6).map { day ->
-                    bookEntry("Book $day", Instant.parse("2026-08-0${day}T00:00:00Z"))
-                }
+            val entries = (1..6).map { day ->
+                bookEntry("Book $day", Instant.parse("2026-08-0${day}T00:00:00Z"))
+            }
 
             val content = GetReminderContentUseCase(FakeLibraryRepository(entries))()
 
-            assertThat(content)
-                .containsExactly(
-                    ReminderContent.Book("Book 6"),
-                    ReminderContent.Book("Book 5"),
-                    ReminderContent.Book("Book 4"),
-                    ReminderContent.Book("Book 3"),
-                    ReminderContent.Book("Book 2"),
-                ).inOrder()
+            assertThat(content).containsExactly(
+                ReminderContent.Book("Book 6"),
+                ReminderContent.Book("Book 5"),
+                ReminderContent.Book("Book 4"),
+                ReminderContent.Book("Book 3"),
+                ReminderContent.Book("Book 2"),
+            ).inOrder()
         }
 
     @Test
@@ -134,11 +134,10 @@ class ReminderUseCasesTest {
     @Test
     fun reminderContent_excludesBlankTitles() =
         runTest {
-            val entries =
-                listOf(
-                    bookEntry("", Instant.parse("2026-08-02T00:00:00Z")),
-                    bookEntry("Book", Instant.parse("2026-08-01T00:00:00Z")),
-                )
+            val entries = listOf(
+                bookEntry("", Instant.parse("2026-08-02T00:00:00Z")),
+                bookEntry("Book", Instant.parse("2026-08-01T00:00:00Z")),
+            )
 
             val content = GetReminderContentUseCase(FakeLibraryRepository(entries))()
 
@@ -193,9 +192,15 @@ private class FakeLibraryRepository(
     override suspend fun changeReadingStatus(
         isbn: String,
         status: ReadingStatus,
-        updatedAt: kotlinx.datetime.Instant,
-        finishedAt: kotlinx.datetime.LocalDate?,
+        updatedAt: Instant,
+        finishedAt: LocalDate?,
     ): ReadingStatusChangeResult = error("Not used by this test")
+
+    override suspend fun updateRating(
+        isbn: String,
+        rating: Int,
+        updatedAt: Instant,
+    ): RatingChangeResult = error("Not used by this test")
 
     override fun observeByStatus(
         status: ReadingStatus,
@@ -223,21 +228,20 @@ private fun bookEntry(
     title: String,
     updatedAt: Instant,
 ) = BookEntry(
-    book =
-        Book(
-            isbn = title,
-            title = title,
-            author = "Author",
-            publisher = "Publisher",
-            publishedDate = null,
-            coverUrl = null,
-            totalPages = null,
-            price = null,
-            category = null,
-            tableOfContentsUrl = null,
-            introductionUrl = null,
-            summaryUrl = null,
-        ),
+    book = Book(
+        isbn = title,
+        title = title,
+        author = "Author",
+        publisher = "Publisher",
+        publishedDate = null,
+        coverUrl = null,
+        totalPages = null,
+        price = null,
+        category = null,
+        tableOfContentsUrl = null,
+        introductionUrl = null,
+        summaryUrl = null,
+    ),
     status = ReadingStatus.READING,
     addedAt = updatedAt,
     updatedAt = updatedAt,

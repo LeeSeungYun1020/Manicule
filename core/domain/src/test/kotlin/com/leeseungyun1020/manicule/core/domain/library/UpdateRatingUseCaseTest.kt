@@ -19,95 +19,93 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import org.junit.Test
 
-class ChangeReadingStatusUseCaseTest {
-    private val repository = StatusRepository()
+class UpdateRatingUseCaseTest {
+    private val repository = RatingRepository()
     private val now = Instant.parse("2026-09-04T16:00:00Z")
     private var clockReads = 0
-    private val clock = object : Clock {
-        override fun now(): Instant {
-            clockReads++
-            return now
-        }
+    private val clock =
+        object : Clock {
+            override fun now(): Instant {
+                clockReads++
+                return now
+            }
 
-        override fun timeZone(): TimeZone = TimeZone.of("Asia/Seoul")
-    }
-    private val useCase = ChangeReadingStatusUseCase(repository, clock)
+            override fun timeZone(): TimeZone = TimeZone.of("Asia/Seoul")
+        }
+    private val useCase = UpdateRatingUseCase(repository, clock)
 
     @Test
-    fun finished_usesLocalDateFromOneInstant() =
+    fun validRatings_callRepository_withCurrentTime() =
         runTest {
-            assertThat(useCase("123", ReadingStatus.FINISHED)).isEqualTo(ReadingStatusChangeResult.Changed)
-            assertThat(repository.request).isEqualTo(Request("123", ReadingStatus.FINISHED, now, LocalDate(2026, 9, 5)))
-            assertThat(clockReads).isEqualTo(1)
+            (0..5).forEach { rating ->
+                val result = useCase("123", rating)
+                assertThat(result).isEqualTo(RatingChangeResult.Changed)
+                assertThat(repository.request).isEqualTo(RatingRequest("123", rating, now))
+            }
+            assertThat(clockReads).isEqualTo(6)
         }
 
     @Test
-    fun unfinishedStatuses_clearFinishedDate() =
+    fun invalidRating_returnsInvalidRating_withoutAccessingClockOrRepository() =
         runTest {
-            listOf(ReadingStatus.WANT, ReadingStatus.READING).forEach { status ->
-                useCase("123", status)
-                assertThat(repository.request).isEqualTo(Request("123", status, now, null))
+            listOf(-1, 6, 10).forEach { rating ->
+                val result = useCase("123", rating)
+                assertThat(result).isEqualTo(RatingChangeResult.InvalidRating)
+                assertThat(repository.request).isNull()
+                assertThat(clockReads).isEqualTo(0)
             }
         }
 
     @Test
-    fun unset_isRejectedWithoutStorageOrClockAccess() =
+    fun repositoryResults_areForwarded() =
         runTest {
-            assertThat(useCase("123", ReadingStatus.UNSET)).isEqualTo(ReadingStatusChangeResult.InvalidStatus)
-            assertThat(repository.request).isNull()
-            assertThat(clockReads).isEqualTo(0)
-        }
-
-    @Test
-    fun storageResults_arePreserved() =
-        runTest {
-            listOf(ReadingStatusChangeResult.Unchanged, ReadingStatusChangeResult.BookNotFound).forEach {
+            listOf(RatingChangeResult.Unchanged, RatingChangeResult.BookNotFound).forEach {
                 repository.result = it
-                assertThat(useCase("123", ReadingStatus.READING)).isEqualTo(it)
+                val result = useCase("123", 4)
+                assertThat(result).isEqualTo(it)
             }
         }
 
     @Test
-    fun cancellation_isNotConvertedToFailure() =
+    fun cancellation_isNotCaught() =
         runTest {
             val cancellation = CancellationException("Cancelled")
             repository.failure = cancellation
             try {
-                useCase("123", ReadingStatus.READING)
+                useCase("123", 4)
                 error("Expected cancellation")
             } catch (actual: CancellationException) {
                 assertThat(actual).isSameInstanceAs(cancellation)
             }
         }
 
-    private data class Request(
+    private data class RatingRequest(
         val isbn: String,
-        val status: ReadingStatus,
+        val rating: Int,
         val updatedAt: Instant,
-        val finishedAt: LocalDate?,
     )
 
-    private class StatusRepository : LibraryRepository {
-        var request: Request? = null
-        var result = ReadingStatusChangeResult.Changed
+    private class RatingRepository : LibraryRepository {
+        var request: RatingRequest? = null
+        var result = RatingChangeResult.Changed
         var failure: Exception? = null
+
+        override suspend fun updateRating(
+            isbn: String,
+            rating: Int,
+            updatedAt: Instant,
+        ): RatingChangeResult {
+            failure?.let { throw it }
+            request = RatingRequest(isbn, rating, updatedAt)
+            return result
+        }
 
         override suspend fun changeReadingStatus(
             isbn: String,
             status: ReadingStatus,
             updatedAt: Instant,
             finishedAt: LocalDate?,
-        ): ReadingStatusChangeResult {
-            failure?.let { throw it }
-            request = Request(isbn, status, updatedAt, finishedAt)
-            return result
-        }
-
-        override suspend fun updateRating(
-            isbn: String,
-            rating: Int,
-            updatedAt: Instant,
-        ): RatingChangeResult = error("Not used")
+        ): ReadingStatusChangeResult = error("Not used")
 
         override fun observeAll(): Flow<List<BookEntry>> = emptyFlow()
 
