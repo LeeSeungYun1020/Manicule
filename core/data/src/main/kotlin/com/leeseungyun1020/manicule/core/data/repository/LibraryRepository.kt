@@ -54,5 +54,13 @@ interface LibraryRepository {
 
     suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult
 
+    suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean
+
+    suspend fun restoreReadingStatusIfUnchanged(
+        original: BookEntry,
+        changedStatus: ReadingStatus,
+        changedAt: Instant,
+    ): Boolean
+
     suspend fun removeBookEntry(isbn: String)
 }

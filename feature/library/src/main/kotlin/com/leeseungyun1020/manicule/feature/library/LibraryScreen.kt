@@ -12,14 +12,20 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,6 +34,8 @@ import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeEmptySta
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeNetworkErrorState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeOutlinedButton
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSnackbarHost
+import com.leeseungyun1020.manicule.core.designsystem.component.showUndoSnackbar
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
@@ -38,6 +46,7 @@ import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import com.leeseungyun1020.manicule.feature.library.components.LibraryActionBottomSheet
 import com.leeseungyun1020.manicule.feature.library.components.LibraryBookCard
 import com.leeseungyun1020.manicule.feature.library.components.LibraryTopBar
 import com.leeseungyun1020.manicule.feature.library.components.SortBottomSheet
@@ -56,10 +65,24 @@ fun LibraryScreen(
     onScan: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    actionMessage: LibraryActionMessage? = null,
+    onChangeStatus: (String, ReadingStatus) -> Unit = { _, _ -> },
+    onDeleteBook: (String) -> Unit = {},
+    onUndo: (Long) -> Unit = {},
+    onMessageDismissed: (Long) -> Unit = {},
 ) {
     var showSortSheet by rememberSaveable { mutableStateOf(false) }
     var draftSortCriterion by rememberSaveable { mutableStateOf(uiState.sort.criterion) }
     var draftSortDirection by rememberSaveable { mutableStateOf(uiState.sort.direction) }
+    var selectedBookIsbn by rememberSaveable { mutableStateOf<String?>(null) }
+    val selectedEntry = (uiState as? LibraryUiState.Content)?.books?.firstOrNull { it.book.isbn == selectedBookIsbn }
+    LaunchedEffect(selectedBookIsbn, uiState) {
+        if (uiState is LibraryUiState.Content && selectedBookIsbn != null && selectedEntry == null) {
+            selectedBookIsbn = null
+        }
+    }
+    val snackbarHostState = remember { SnackbarHostState() }
+    LibraryActionFeedback(actionMessage, snackbarHostState, onUndo, onMessageDismissed)
 
     LibraryScaffold(
         uiState = uiState,
@@ -70,6 +93,8 @@ fun LibraryScreen(
             showSortSheet = true
         },
         onBookSelected = onBookSelected,
+        onBookLongPressed = { selectedBookIsbn = it },
+        snackbarHostState = snackbarHostState,
         onSearch = onSearch,
         onScan = onScan,
         onRetry = onRetry,
@@ -91,6 +116,53 @@ fun LibraryScreen(
             },
         )
     }
+    if (selectedEntry != null) {
+        LibraryActionBottomSheet(
+            entry = selectedEntry,
+            onStatusSelected = { status ->
+                selectedBookIsbn = null
+                onChangeStatus(selectedEntry.book.isbn, status)
+            },
+            onDelete = {
+                selectedBookIsbn = null
+                onDeleteBook(selectedEntry.book.isbn)
+            },
+            onDismissRequest = { selectedBookIsbn = null },
+        )
+    }
+}
+
+@Composable
+private fun LibraryActionFeedback(
+    actionMessage: LibraryActionMessage?,
+    snackbarHostState: SnackbarHostState,
+    onUndo: (Long) -> Unit,
+    onMessageDismissed: (Long) -> Unit,
+) {
+    val context = LocalContext.current
+    LaunchedEffect(actionMessage?.revision) {
+        val message = actionMessage ?: return@LaunchedEffect
+        val messageRes = when (message.kind) {
+            LibraryActionMessageKind.STATUS_CHANGED -> R.string.library_status_changed
+            LibraryActionMessageKind.DELETED -> R.string.library_book_deleted
+            LibraryActionMessageKind.ACTION_FAILED -> R.string.library_action_failed
+            LibraryActionMessageKind.UNDO_FAILED -> R.string.library_undo_failed
+            LibraryActionMessageKind.UNDO_CONFLICT -> R.string.library_undo_conflict
+        }
+        val result = when (message.kind) {
+            LibraryActionMessageKind.STATUS_CHANGED, LibraryActionMessageKind.DELETED ->
+                snackbarHostState.showUndoSnackbar(context.getString(messageRes), context.getString(R.string.library_undo))
+            LibraryActionMessageKind.UNDO_FAILED ->
+                snackbarHostState.showUndoSnackbar(
+                    context.getString(messageRes),
+                    context.getString(R.string.library_retry),
+                    SnackbarDuration.Indefinite,
+                )
+            LibraryActionMessageKind.ACTION_FAILED, LibraryActionMessageKind.UNDO_CONFLICT ->
+                snackbarHostState.showSnackbar(context.getString(messageRes))
+        }
+        if (result == SnackbarResult.ActionPerformed) onUndo(message.id) else onMessageDismissed(message.id)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,6 +172,8 @@ private fun LibraryScaffold(
     onStatusSelected: (ReadingStatus) -> Unit,
     onSortClick: () -> Unit,
     onBookSelected: (String) -> Unit,
+    onBookLongPressed: (String) -> Unit,
+    snackbarHostState: SnackbarHostState,
     onSearch: () -> Unit,
     onScan: () -> Unit,
     onRetry: () -> Unit,
@@ -120,8 +194,9 @@ private fun LibraryScaffold(
                 scrollBehavior = scrollBehavior,
             )
         },
+        snackbarHost = { ManiculeSnackbarHost(hostState = snackbarHostState) },
     ) { contentPadding ->
-        LibraryBody(uiState, contentPadding, onBookSelected, onSearch, onScan, onRetry)
+        LibraryBody(uiState, contentPadding, onBookSelected, onBookLongPressed, onSearch, onScan, onRetry)
     }
 }
 
@@ -130,6 +205,7 @@ private fun LibraryBody(
     uiState: LibraryUiState,
     contentPadding: PaddingValues,
     onBookSelected: (String) -> Unit,
+    onBookLongPressed: (String) -> Unit,
     onSearch: () -> Unit,
     onScan: () -> Unit,
     onRetry: () -> Unit,
@@ -141,7 +217,7 @@ private fun LibraryBody(
             if (uiState.books.isEmpty()) {
                 EmptyLibrary(contentPadding, onSearch, onScan)
             } else {
-                LibraryGrid(contentPadding, uiState.books, onBookSelected)
+                LibraryGrid(contentPadding, uiState.books, onBookSelected, onBookLongPressed)
             }
         }
     }
@@ -152,6 +228,7 @@ private fun LibraryGrid(
     scaffoldPadding: PaddingValues,
     books: List<BookEntry>,
     onBookSelected: (String) -> Unit,
+    onBookLongPressed: (String) -> Unit,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(ManiculeSize.coverMediumWidth),
@@ -168,6 +245,7 @@ private fun LibraryGrid(
             LibraryBookCard(
                 entry = entry,
                 onClick = { onBookSelected(entry.book.isbn) },
+                onLongClick = { onBookLongPressed(entry.book.isbn) },
             )
         }
     }

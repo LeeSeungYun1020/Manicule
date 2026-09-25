@@ -42,6 +42,14 @@ class ChangeReadingStatusUseCaseTest {
         }
 
     @Test
+    fun changeForUndo_returnsPersistedTimestamp() =
+        runTest {
+            assertThat(useCase.changeForUndo("123", ReadingStatus.FINISHED))
+                .isEqualTo(StatusChangeOutcome(ReadingStatusChangeResult.Changed, now))
+            assertThat(repository.request?.updatedAt).isEqualTo(now)
+        }
+
+    @Test
     fun unfinishedStatuses_clearFinishedDate() =
         runTest {
             listOf(ReadingStatus.WANT, ReadingStatus.READING).forEach { status ->
@@ -126,5 +134,13 @@ class ChangeReadingStatusUseCaseTest {
         override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = error("Not used")
 
         override suspend fun removeBookEntry(isbn: String) = Unit
+
+        override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean = error("Not used")
+
+        override suspend fun restoreReadingStatusIfUnchanged(
+            original: BookEntry,
+            changedStatus: ReadingStatus,
+            changedAt: Instant,
+        ): Boolean = error("Not used")
     }
 }

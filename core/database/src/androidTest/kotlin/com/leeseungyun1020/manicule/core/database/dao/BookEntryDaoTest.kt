@@ -110,6 +110,43 @@ class BookEntryDaoTest {
         }
 
     @Test
+    fun deleteAndRestore_preservesReadingRecordsAndEntryMetadata() =
+        runTest {
+            val isbn = "restore-book"
+            saveBookEntry(isbn, ReadingStatus.FINISHED, Instant.fromEpochMilliseconds(20))
+            val original = checkNotNull(dao.getEntry(isbn)).copy(
+                rating = 5,
+                memo = "Saved note",
+                addedAt = Instant.fromEpochMilliseconds(10),
+                finishedAt = LocalDate(2026, 9, 1),
+            )
+            dao.upsert(original)
+            val record = ReadingRecordEntity(
+                isbn = isbn,
+                date = LocalDate(2026, 9, 1),
+                time = LocalTime(10, 0),
+                startPage = 1,
+                endPage = 50,
+            )
+            recordDao.upsert(record)
+
+            dao.delete(isbn)
+            assertThat(dao.getEntry(isbn)).isNull()
+            assertThat(bookDao.getByIsbn(isbn)).isNotNull()
+            recordDao.observeByIsbn(isbn).test {
+                assertThat(awaitItem()).hasSize(1)
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            dao.upsert(original)
+            assertThat(dao.getEntry(isbn)).isEqualTo(original)
+            dao.observeByIsbn(isbn).test {
+                assertThat(awaitItem()?.currentPage).isEqualTo(50)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
     fun getRecentBooksByStatus_returnsFiveMostRecentlyUpdatedMatchingBooks() =
         runTest {
             (1..6).forEach { index ->
@@ -324,6 +361,95 @@ class BookEntryDaoTest {
             val before = dao.getEntry("123")
             assertThat(dao.changeReadingStatus("123", ReadingStatus.UNSET, now, null)).isEqualTo(ReadingStatusChangeResult.InvalidStatus)
             assertThat(dao.getEntry("123")).isEqualTo(before)
+        }
+
+    @Test
+    fun restoreDeletedEntry_preservesRefreshedBookAndNewerEntry() =
+        runTest {
+            val isbn = "restore-conditional"
+            val originalBook = BookEntity(isbn, "Original", "Author", "Pub", null, null, null, null, null, null, null, null)
+            val refreshedBook = originalBook.copy(title = "Refreshed")
+            val original =
+                BookEntryEntity(
+                    isbn,
+                    ReadingStatus.READING,
+                    4,
+                    "Original memo",
+                    Instant.fromEpochMilliseconds(1),
+                    Instant.fromEpochMilliseconds(2),
+                    null,
+                )
+            bookDao.upsert(originalBook)
+            dao.upsert(original)
+            dao.delete(isbn)
+            bookDao.upsert(refreshedBook)
+
+            assertThat(dao.insertIfAbsent(original)).isNotEqualTo(-1L)
+            assertThat(dao.getEntry(isbn)).isEqualTo(original)
+            assertThat(bookDao.getByIsbn(isbn)).isEqualTo(refreshedBook)
+
+            val newer = original.copy(status = ReadingStatus.FINISHED, memo = "New memo")
+            dao.upsert(newer)
+            assertThat(dao.insertIfAbsent(original)).isEqualTo(-1L)
+            assertThat(dao.getEntry(isbn)).isEqualTo(newer)
+        }
+
+    @Test
+    fun restoreStatus_changesOnlyStatusFieldsAndRejectsNewerVersion() =
+        runTest {
+            val isbn = "restore-status"
+            bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+            val original =
+                BookEntryEntity(
+                    isbn,
+                    ReadingStatus.READING,
+                    4,
+                    "Original memo",
+                    Instant.fromEpochMilliseconds(1),
+                    Instant.fromEpochMilliseconds(2),
+                    null,
+                )
+            val changedAt = Instant.fromEpochMilliseconds(3)
+            dao.upsert(
+                original.copy(
+                    status = ReadingStatus.FINISHED,
+                    rating = 5,
+                    memo = "New memo",
+                    updatedAt = changedAt,
+                    finishedAt = LocalDate(2026, 9, 5),
+                ),
+            )
+
+            assertThat(
+                dao.restoreStatusIfUnchanged(
+                    isbn,
+                    ReadingStatus.FINISHED,
+                    changedAt,
+                    original.status,
+                    original.updatedAt,
+                    original.finishedAt,
+                ),
+            ).isEqualTo(1)
+            assertThat(dao.getEntry(isbn)).isEqualTo(original.copy(rating = 5, memo = "New memo"))
+
+            val newer = original.copy(
+                status = ReadingStatus.FINISHED,
+                rating = 5,
+                memo = "New memo",
+                updatedAt = Instant.fromEpochMilliseconds(4),
+            )
+            dao.upsert(newer)
+            assertThat(
+                dao.restoreStatusIfUnchanged(
+                    isbn,
+                    ReadingStatus.FINISHED,
+                    changedAt,
+                    original.status,
+                    original.updatedAt,
+                    original.finishedAt,
+                ),
+            ).isEqualTo(0)
+            assertThat(dao.getEntry(isbn)).isEqualTo(newer)
         }
 
     @Test

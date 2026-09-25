@@ -123,6 +123,14 @@ class UpdateRatingUseCaseTest {
 
         override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = error("Not used")
 
+        override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean = error("Not used")
+
+        override suspend fun restoreReadingStatusIfUnchanged(
+            original: BookEntry,
+            changedStatus: ReadingStatus,
+            changedAt: Instant,
+        ): Boolean = error("Not used")
+
         override suspend fun removeBookEntry(isbn: String) = Unit
     }
 }

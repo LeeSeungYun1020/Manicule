@@ -33,6 +33,26 @@ class RoomBookEntryLocalDataSource
 
         override suspend fun save(entry: BookEntryEntity) = bookEntryDao.upsert(entry)
 
+        override suspend fun insertIfAbsent(entry: BookEntryEntity): Boolean = bookEntryDao.insertIfAbsent(entry) != -1L
+
+        @Suppress("LongParameterList") // Room 쿼리의 조건과 복구 열을 그대로 전달한다.
+        override suspend fun restoreStatusIfUnchanged(
+            isbn: String,
+            changedStatus: ReadingStatus,
+            changedAt: Instant,
+            originalStatus: ReadingStatus,
+            originalUpdatedAt: Instant,
+            originalFinishedAt: LocalDate?,
+        ): Boolean =
+            bookEntryDao.restoreStatusIfUnchanged(
+                isbn,
+                changedStatus,
+                changedAt,
+                originalStatus,
+                originalUpdatedAt,
+                originalFinishedAt,
+            ) == 1
+
         override suspend fun remove(isbn: String) = bookEntryDao.delete(isbn)
 
         override fun observeByIsbn(isbn: String): Flow<BookEntryWithCurrentPage?> = bookEntryDao.observeByIsbn(isbn)
