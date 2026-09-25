@@ -1,5 +1,6 @@
 package com.leeseungyun1020.manicule.navigation
 
+import android.os.Build
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -8,6 +9,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.core.view.WindowCompat
 import com.leeseungyun1020.manicule.APP_THEME_SURFACE_TAG
+import com.leeseungyun1020.manicule.DARK_NAVIGATION_BAR_SCRIM
+import com.leeseungyun1020.manicule.LIGHT_NAVIGATION_BAR_SCRIM
 import com.leeseungyun1020.manicule.MainActivity
 import com.leeseungyun1020.manicule.R
 import com.leeseungyun1020.manicule.core.data.repository.UserPreferencesRepository
@@ -92,10 +95,12 @@ class ThemeNavigationTest {
     }
 
     private fun awaitSystemBars(lightIcons: Boolean) {
+        val expectedNavigationBarColor = if (lightIcons) LIGHT_NAVIGATION_BAR_SCRIM else DARK_NAVIGATION_BAR_SCRIM
         compose.waitUntil(5_000) {
             WindowCompat.getInsetsController(compose.activity.window, compose.activity.window.decorView).let { controller ->
                 controller.isAppearanceLightStatusBars == lightIcons &&
-                    controller.isAppearanceLightNavigationBars == lightIcons
+                    controller.isAppearanceLightNavigationBars == lightIcons &&
+                    (Build.VERSION.SDK_INT > 28 || compose.activity.window.navigationBarColor == expectedNavigationBarColor)
             }
         }
     }

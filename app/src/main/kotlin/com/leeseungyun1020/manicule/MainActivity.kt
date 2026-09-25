@@ -1,7 +1,9 @@
 package com.leeseungyun1020.manicule
 
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -17,7 +19,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -62,10 +63,18 @@ class MainActivity : ComponentActivity() {
                 else -> systemDark
             }
             SideEffect {
-                WindowCompat.getInsetsController(window, window.decorView).apply {
-                    isAppearanceLightStatusBars = !darkTheme
-                    isAppearanceLightNavigationBars = !darkTheme
-                }
+                enableEdgeToEdge(
+                    statusBarStyle = if (darkTheme) {
+                        SystemBarStyle.dark(Color.TRANSPARENT)
+                    } else {
+                        SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+                    },
+                    navigationBarStyle = if (darkTheme) {
+                        SystemBarStyle.dark(DARK_NAVIGATION_BAR_SCRIM)
+                    } else {
+                        SystemBarStyle.light(LIGHT_NAVIGATION_BAR_SCRIM, DARK_NAVIGATION_BAR_SCRIM)
+                    },
+                )
             }
             ManiculeTheme(
                 darkTheme = darkTheme,
@@ -84,3 +93,6 @@ class MainActivity : ComponentActivity() {
 }
 
 internal const val APP_THEME_SURFACE_TAG = "app_theme_surface"
+
+internal val LIGHT_NAVIGATION_BAR_SCRIM = 0xE6FFFFFF.toInt()
+internal val DARK_NAVIGATION_BAR_SCRIM = 0x801B1B1B.toInt()
