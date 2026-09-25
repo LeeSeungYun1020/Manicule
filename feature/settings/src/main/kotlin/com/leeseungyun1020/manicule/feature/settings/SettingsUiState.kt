@@ -5,4 +5,5 @@ import androidx.compose.runtime.Immutable
 @Immutable
 data class SettingsUiState(
     val reminder: ReminderUiState = ReminderUiState.Loading(),
+    val theme: ThemeUiState = ThemeUiState.Loading(),
 )

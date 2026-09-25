@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">설정</string>
+    <string name="settings_appearance_section">화면</string>
+    <string name="settings_theme">테마</string>
+    <string name="settings_theme_system">시스템</string>
+    <string name="settings_theme_light">라이트</string>
+    <string name="settings_theme_dark">다크</string>
+    <string name="settings_theme_loading">테마 설정을 불러오는 중</string>
+    <string name="settings_theme_load_error">테마 설정을 불러오지 못했어요</string>
+    <string name="settings_theme_previous">마지막으로 확인한 선택: %1$s</string>
+    <string name="settings_theme_update_failed">테마 설정을 변경하지 못했어요.</string>
     <string name="settings_notifications_section">알림</string>
     <string name="settings_reading_reminder">독서 리마인더</string>
     <string name="settings_reminder_time">리마인더 시간</string>

@@ -1,5 +1,6 @@
 package com.leeseungyun1020.manicule.feature.settings
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -29,8 +30,10 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.size
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
+import com.leeseungyun1020.manicule.core.model.ThemeMode
 import com.leeseungyun1020.manicule.feature.settings.components.ReminderSection
 import com.leeseungyun1020.manicule.feature.settings.components.ReminderUiStatePreviewProvider
+import com.leeseungyun1020.manicule.feature.settings.components.ThemeSection
 import kotlinx.datetime.LocalTime
 
 internal const val SETTINGS_CONTENT_TEST_TAG = "settings_content"
@@ -43,6 +46,7 @@ fun SettingsScreen(
     onReminderEnabledChange: (Boolean) -> Unit,
     onReminderTimeChange: (LocalTime) -> Unit,
     onRetryPreferences: () -> Unit,
+    onThemeSelected: (ThemeMode) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -68,7 +72,13 @@ fun SettingsScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(MaterialTheme.spacing.screenContent)
                     .testTag(SETTINGS_CONTENT_TEST_TAG),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.lg),
             ) {
+                ThemeSection(
+                    state = uiState.theme,
+                    onThemeSelected = onThemeSelected,
+                    onRetry = onRetryPreferences,
+                )
                 ReminderSection(
                     state = uiState.reminder,
                     onEnabledChange = onReminderEnabledChange,
@@ -90,11 +100,12 @@ private fun SettingsScreenPreview(
 ) {
     ManiculePreviewTheme {
         SettingsScreen(
-            uiState = SettingsUiState(reminder),
+            uiState = SettingsUiState(reminder, ThemeUiState.Content(ThemeMode.SYSTEM)),
             snackbarHostState = SnackbarHostState(),
             onReminderEnabledChange = {},
             onReminderTimeChange = {},
             onRetryPreferences = {},
+            onThemeSelected = {},
         )
     }
 }

@@ -48,7 +48,7 @@ dependencies {
 
     // 후속 단계에서 활성화
     // implementation(projects.core.ui)
-    // implementation(projects.core.domain)
+    implementation(projects.core.domain)
     // implementation(projects.core.data)
     // implementation(projects.core.datastore)
     // implementation(projects.core.database)

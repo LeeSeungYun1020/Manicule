@@ -15,6 +15,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
@@ -33,6 +34,7 @@ import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.model.ReminderConfig
+import com.leeseungyun1020.manicule.core.model.ThemeMode
 import com.leeseungyun1020.manicule.feature.settings.components.NotificationPermissionRationale
 import com.leeseungyun1020.manicule.feature.settings.components.ReminderUiStatePreviewProvider
 import kotlinx.datetime.LocalTime
@@ -44,6 +46,38 @@ import org.junit.runner.RunWith
 class SettingsScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    @Test
+    fun themeOptions_showSavedSelectionAndSendChoice() {
+        var selected: ThemeMode? = null
+        composeRule.setSettingsContent(
+            state = SettingsUiState(
+                reminder = ReminderUiState.Content(ReminderConfig.Default),
+                theme = ThemeUiState.Content(ThemeMode.SYSTEM),
+            ),
+            onThemeSelected = { selected = it },
+        )
+        composeRule.onNodeWithText(context.getString(R.string.settings_theme_system)).assertIsSelected()
+        composeRule.onNodeWithText(context.getString(R.string.settings_theme_dark)).performClick()
+        assertThat(selected).isEqualTo(ThemeMode.DARK)
+    }
+
+    @Test
+    fun themeError_showsPreviousButBlocksSelectionUntilRetry() {
+        var retried = false
+        composeRule.setSettingsContent(
+            state = SettingsUiState(
+                reminder = ReminderUiState.Content(ReminderConfig.Default),
+                theme = ThemeUiState.Error(ThemeMode.LIGHT),
+            ),
+            onRetryPreferences = { retried = true },
+        )
+        composeRule.onNodeWithText(context.getString(R.string.settings_theme_light)).assertDoesNotExist()
+        composeRule.onNodeWithText(context.getString(R.string.settings_theme_previous, context.getString(R.string.settings_theme_light)))
+            .assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.settings_retry)).performClick()
+        assertThat(retried).isTrue()
+    }
 
     @Test
     fun permissionRationale_cancelDoesNotRequestPermission() {
@@ -207,6 +241,7 @@ class SettingsScreenTest {
                         onReminderEnabledChange = {},
                         onReminderTimeChange = {},
                         onRetryPreferences = {},
+                        onThemeSelected = {},
                     )
                 }
             }
@@ -250,6 +285,7 @@ class SettingsScreenTest {
                     onReminderEnabledChange = { changes++ },
                     onReminderTimeChange = { changes++ },
                     onRetryPreferences = {},
+                    onThemeSelected = {},
                 )
             }
         }
@@ -282,6 +318,7 @@ class SettingsScreenTest {
                         onReminderEnabledChange = {},
                         onReminderTimeChange = {},
                         onRetryPreferences = {},
+                        onThemeSelected = {},
                     )
                 }
             }
@@ -308,6 +345,7 @@ private fun androidx.compose.ui.test.junit4.ComposeContentTestRule.setSettingsCo
     onReminderEnabledChange: (Boolean) -> Unit = {},
     onReminderTimeChange: (LocalTime) -> Unit = {},
     onRetryPreferences: () -> Unit = {},
+    onThemeSelected: (ThemeMode) -> Unit = {},
     width: Int? = null,
 ) {
     setContent {
@@ -319,6 +357,7 @@ private fun androidx.compose.ui.test.junit4.ComposeContentTestRule.setSettingsCo
                     onReminderEnabledChange = onReminderEnabledChange,
                     onReminderTimeChange = onReminderTimeChange,
                     onRetryPreferences = onRetryPreferences,
+                    onThemeSelected = onThemeSelected,
                 )
             }
         }

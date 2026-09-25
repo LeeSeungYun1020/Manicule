@@ -29,6 +29,7 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.domain.settings.GetUserPreferencesUseCase
 import com.leeseungyun1020.manicule.core.domain.settings.ReminderScheduler
 import com.leeseungyun1020.manicule.core.domain.settings.SetReminderUseCase
+import com.leeseungyun1020.manicule.core.domain.settings.SetThemeUseCase
 import com.leeseungyun1020.manicule.core.model.ReminderConfig
 import com.leeseungyun1020.manicule.core.model.ThemeMode
 import com.leeseungyun1020.manicule.core.model.UserPreferences
@@ -75,7 +76,11 @@ class SettingsRoutePermissionTest {
         val registryOwner = object : ActivityResultRegistryOwner {
             override val activityResultRegistry: ActivityResultRegistry = registry
         }
-        val viewModel = SettingsViewModel(GetUserPreferencesUseCase(repository), SetReminderUseCase(repository, scheduler))
+        val viewModel = SettingsViewModel(
+            GetUserPreferencesUseCase(repository),
+            SetReminderUseCase(repository, scheduler),
+            SetThemeUseCase(repository),
+        )
         composeRule.setContent {
             CompositionLocalProvider(
                 LocalContext provides permissionContext,

@@ -4,10 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.leeseungyun1020.manicule.core.domain.settings.GetUserPreferencesUseCase
 import com.leeseungyun1020.manicule.core.domain.settings.SetReminderUseCase
+import com.leeseungyun1020.manicule.core.domain.settings.SetThemeUseCase
 import com.leeseungyun1020.manicule.core.model.ReminderConfig
+import com.leeseungyun1020.manicule.core.model.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -27,6 +30,7 @@ class SettingsViewModel
     constructor(
         getUserPreferences: GetUserPreferencesUseCase,
         private val setReminder: SetReminderUseCase,
+        private val setTheme: SetThemeUseCase,
     ) : ViewModel() {
         private val retryRequests = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
         private var isUpdating = false
@@ -36,8 +40,13 @@ class SettingsViewModel
         val uiState = _uiState.asStateFlow()
         private val _events = MutableSharedFlow<SettingsEvent>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
         private var pendingRetry: SettingsEvent.ReminderUpdateFailed? = null
+        private val themeUpdates = Channel<Pair<Long, ThemeMode>>(Channel.UNLIMITED)
+        private var themeSelectionGeneration = 0L
+        private val _themeEvents = MutableSharedFlow<ThemeEvent>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+        private var pendingThemeRetry: ThemeEvent.UpdateFailed? = null
 
         val events: SharedFlow<SettingsEvent> = _events.asSharedFlow()
+        val themeEvents: SharedFlow<ThemeEvent> = _themeEvents.asSharedFlow()
 
         init {
             viewModelScope.launch {
@@ -48,22 +57,71 @@ class SettingsViewModel
                             .onStart {
                                 retryRequested = false
                                 _uiState.update { state ->
-                                    state.copy(reminder = ReminderUiState.Loading(state.reminder.displayedReminder))
+                                    state.copy(
+                                        reminder = ReminderUiState.Loading(state.reminder.displayedReminder),
+                                        theme = ThemeUiState.Loading(state.theme.displayedMode),
+                                    )
                                 }
                             }
                             .catch {
                                 readGeneration++
                                 invalidateReminderRetry()
+                                if (pendingThemeRetry != null) _themeEvents.tryEmit(ThemeEvent.DismissUpdateFailure)
+                                pendingThemeRetry?.let { resolveThemeUpdateFailure(it, retry = false) }
                                 _uiState.update { state ->
-                                    state.copy(reminder = ReminderUiState.Error(state.reminder.displayedReminder))
+                                    state.copy(
+                                        reminder = ReminderUiState.Error(state.reminder.displayedReminder),
+                                        theme = ThemeUiState.Error(state.theme.displayedMode),
+                                    )
                                 }
                             }
                     }
                     .collect { preferences ->
                         _uiState.update { state ->
-                            state.copy(reminder = ReminderUiState.Content(preferences.reminder, isUpdating))
+                            state.copy(
+                                reminder = ReminderUiState.Content(preferences.reminder, isUpdating),
+                                theme = ThemeUiState.Content(preferences.themeMode),
+                            )
                         }
                     }
+            }
+            viewModelScope.launch {
+                for ((selection, mode) in themeUpdates) {
+                    val generation = readGeneration
+                    try {
+                        setTheme(mode)
+                    } catch (cancellation: CancellationException) {
+                        throw cancellation
+                    } catch (_: Throwable) {
+                        if (generation == readGeneration &&
+                            selection == themeSelectionGeneration &&
+                            uiState.value.theme is ThemeUiState.Content
+                        ) {
+                            val failure = ThemeEvent.UpdateFailed(mode)
+                            pendingThemeRetry = failure
+                            _themeEvents.tryEmit(failure)
+                        }
+                    }
+                }
+            }
+        }
+
+        fun setThemeMode(mode: ThemeMode) {
+            if (uiState.value.theme !is ThemeUiState.Content) return
+            if (pendingThemeRetry != null) _themeEvents.tryEmit(ThemeEvent.DismissUpdateFailure)
+            pendingThemeRetry?.let { resolveThemeUpdateFailure(it, retry = false) }
+            themeUpdates.trySend(++themeSelectionGeneration to mode)
+        }
+
+        fun resolveThemeUpdateFailure(
+            failure: ThemeEvent.UpdateFailed,
+            retry: Boolean,
+        ) {
+            if (pendingThemeRetry !== failure) return
+            pendingThemeRetry = null
+            _themeEvents.resetReplayCache()
+            if (retry && uiState.value.theme is ThemeUiState.Content) {
+                themeUpdates.trySend(++themeSelectionGeneration to failure.desiredMode)
             }
         }
 
@@ -90,7 +148,7 @@ class SettingsViewModel
         }
 
         fun retryPreferences() {
-            if (retryRequested || uiState.value.reminder !is ReminderUiState.Error) return
+            if (retryRequested || (uiState.value.reminder !is ReminderUiState.Error && uiState.value.theme !is ThemeUiState.Error)) return
             retryRequested = retryRequests.tryEmit(Unit)
         }
 
