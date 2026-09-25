@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
@@ -20,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -172,25 +175,70 @@ private fun StatsContent(
     }
 }
 
+private data class StatTileItem(
+    val value: String,
+    val label: String,
+    val icon: ImageVector,
+)
+
 @Composable
 private fun StatsSummary(
     summary: PeriodSummary,
     modifier: Modifier = Modifier,
 ) {
     val tiles = listOf(
-        pluralStringResource(R.plurals.stats_days_value, summary.longestStreak, summary.longestStreak) to
-            stringResource(R.string.stats_streak),
-        pluralStringResource(R.plurals.stats_pages_value, summary.pagesRead, summary.pagesRead) to stringResource(R.string.stats_pages),
-        pluralStringResource(R.plurals.stats_books_value, summary.bookCount, summary.bookCount) to stringResource(R.string.stats_books),
+        StatTileItem(
+            value = pluralStringResource(R.plurals.stats_days_value, summary.longestStreak, summary.longestStreak),
+            label = stringResource(R.string.stats_streak),
+            icon = ManiculeIcons.Streak,
+        ),
+        StatTileItem(
+            value = pluralStringResource(R.plurals.stats_pages_value, summary.pagesRead, summary.pagesRead),
+            label = stringResource(R.string.stats_pages),
+            icon = ManiculeIcons.Pages,
+        ),
+        StatTileItem(
+            value = pluralStringResource(R.plurals.stats_books_value, summary.bookCount, summary.bookCount),
+            label = stringResource(R.string.stats_books),
+            icon = ManiculeIcons.Book,
+        ),
     )
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         if (maxWidth < ManiculeSize.coverMediumWidth * 3) {
             Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
-                tiles.forEach { (value, label) -> ManiculeStatTile(value, label, modifier = Modifier.fillMaxWidth()) }
+                tiles.forEach { tile ->
+                    ManiculeStatTile(
+                        value = tile.value,
+                        label = tile.label,
+                        modifier = Modifier.fillMaxWidth(),
+                        icon = {
+                            Icon(
+                                imageVector = tile.icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(ManiculeSize.iconSm),
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        },
+                    )
+                }
             }
         } else {
             Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
-                tiles.forEach { (value, label) -> ManiculeStatTile(value, label, modifier = Modifier.weight(1f)) }
+                tiles.forEach { tile ->
+                    ManiculeStatTile(
+                        value = tile.value,
+                        label = tile.label,
+                        modifier = Modifier.weight(1f),
+                        icon = {
+                            Icon(
+                                imageVector = tile.icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(ManiculeSize.iconSm),
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        },
+                    )
+                }
             }
         }
     }
