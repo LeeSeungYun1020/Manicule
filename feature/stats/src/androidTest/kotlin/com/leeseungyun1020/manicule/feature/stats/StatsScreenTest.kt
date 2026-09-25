@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -21,6 +22,7 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,6 +38,7 @@ class StatsScreenTest {
     @Test
     fun recorded_date_opens_matching_sheet_and_close_dismisses_it() {
         var day by mutableStateOf<DayState>(DayState.Closed)
+        var selectedIsbn: String? = null
         composeRule.setContent {
             ManiculeTheme {
                 StatsScreen(
@@ -46,6 +49,7 @@ class StatsScreenTest {
                     onDismissDay = { day = DayState.Closed },
                     onRetryPeriod = {},
                     onRetryDay = {},
+                    onBookSelected = { selectedIsbn = it },
                     consumeRefreshError = { true },
                 )
             }
@@ -82,6 +86,8 @@ class StatsScreenTest {
         composeRule.onNodeWithText(context.getString(R.string.stats_book_missing)).assertIsDisplayed()
         composeRule.onAllNodesWithText(context.resources.getQuantityString(R.plurals.stats_pages_value, 20, 20)).assertCountEquals(2)
         composeRule.onNodeWithText(context.resources.getQuantityString(R.plurals.stats_session_count, 2, 2)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.stats_book_missing)).assertHasClickAction().performClick()
+        assertEquals("isbn", selectedIsbn)
         composeRule.onNodeWithContentDescription(context.getString(R.string.stats_close)).performClick()
         composeRule.onNodeWithText(context.getString(R.string.stats_book_missing)).assertDoesNotExist()
     }
@@ -96,6 +102,7 @@ class StatsScreenTest {
                     onDismissDay = {},
                     onRetryPeriod = {},
                     onRetryDay = {},
+                    onBookSelected = {},
                     consumeRefreshError = { true },
                 )
             }

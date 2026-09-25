@@ -1,5 +1,6 @@
 package com.leeseungyun1020.manicule.feature.stats.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeBottomSheet
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeErrorState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
@@ -36,11 +38,12 @@ fun ReadingDayBottomSheet(
     state: DayState,
     onDismiss: () -> Unit,
     onRetry: () -> Unit,
+    onBookSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (state == DayState.Closed) return
     ManiculeBottomSheet(onDismissRequest = onDismiss, modifier = modifier) {
-        ReadingDayContent(state = state, onDismiss = onDismiss, onRetry = onRetry)
+        ReadingDayContent(state = state, onDismiss = onDismiss, onRetry = onRetry, onBookSelected = onBookSelected)
     }
 }
 
@@ -49,6 +52,7 @@ private fun ReadingDayContent(
     state: DayState,
     onDismiss: () -> Unit,
     onRetry: () -> Unit,
+    onBookSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val date = when (state) {
@@ -104,6 +108,7 @@ private fun ReadingDayContent(
                                 publisher = book?.publisher.orEmpty(),
                                 pubDate = book?.publishedDate?.toString().orEmpty(),
                                 imageUrl = book?.coverUrl,
+                                modifier = Modifier.clickable(role = Role.Button) { onBookSelected(row.isbn) },
                                 trailingContent = {
                                     Column(horizontalAlignment = Alignment.End) {
                                         Text(
@@ -143,6 +148,6 @@ private fun DayError(onRetry: () -> Unit) {
 @Composable
 private fun ReadingDayContentPreview() {
     ManiculePreviewTheme {
-        ReadingDayContent(DayState.Content(LocalDate(2026, 9, 24), emptyList()), {}, {})
+        ReadingDayContent(DayState.Content(LocalDate(2026, 9, 24), emptyList()), {}, {}, {})
     }
 }

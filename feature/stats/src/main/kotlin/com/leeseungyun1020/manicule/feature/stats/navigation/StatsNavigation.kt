@@ -10,6 +10,6 @@ data class StatsRoute(
     val focus: String? = null,
 )
 
-fun NavGraphBuilder.statsScreen() {
-    composable<StatsRoute> { StatsScreenRoute() }
+fun NavGraphBuilder.statsScreen(onBookSelected: (String) -> Unit) {
+    composable<StatsRoute> { StatsScreenRoute(onBookSelected = onBookSelected) }
 }

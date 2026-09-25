@@ -43,7 +43,10 @@ import com.leeseungyun1020.manicule.feature.stats.components.StatsCalendarCard
 import kotlinx.datetime.LocalDate
 
 @Composable
-fun StatsScreenRoute(viewModel: StatsViewModel = hiltViewModel()) {
+fun StatsScreenRoute(
+    onBookSelected: (String) -> Unit,
+    viewModel: StatsViewModel = hiltViewModel(),
+) {
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
     StatsScreen(
         state = state,
@@ -51,6 +54,10 @@ fun StatsScreenRoute(viewModel: StatsViewModel = hiltViewModel()) {
         onDismissDay = viewModel::dismissDay,
         onRetryPeriod = viewModel::retryPeriod,
         onRetryDay = viewModel::retryDay,
+        onBookSelected = { isbn ->
+            viewModel.dismissDay()
+            onBookSelected(isbn)
+        },
         consumeRefreshError = viewModel::consumeRefreshError,
     )
 }
@@ -63,6 +70,7 @@ fun StatsScreen(
     onDismissDay: () -> Unit,
     onRetryPeriod: () -> Unit,
     onRetryDay: () -> Unit,
+    onBookSelected: (String) -> Unit,
     consumeRefreshError: (Int) -> Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -113,7 +121,7 @@ fun StatsScreen(
         }
     }
     if (state.day != DayState.Closed) {
-        ReadingDayBottomSheet(state.day, onDismissDay, onRetryDay)
+        ReadingDayBottomSheet(state.day, onDismissDay, onRetryDay, onBookSelected)
     }
 }
 
@@ -205,6 +213,7 @@ private fun StatsScreenPreview() {
             onDismissDay = {},
             onRetryPeriod = {},
             onRetryDay = {},
+            onBookSelected = {},
             consumeRefreshError = { true },
         )
     }
