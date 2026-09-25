@@ -32,6 +32,7 @@ enum class LibraryActionMessageKind {
     DELETED,
     ACTION_FAILED,
     UNDO_FAILED,
+    UNDO_CONFLICT,
 }
 
 data class LibraryActionMessage(

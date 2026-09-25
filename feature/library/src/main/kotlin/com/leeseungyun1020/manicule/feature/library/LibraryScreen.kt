@@ -147,6 +147,7 @@ private fun LibraryActionFeedback(
             LibraryActionMessageKind.DELETED -> R.string.library_book_deleted
             LibraryActionMessageKind.ACTION_FAILED -> R.string.library_action_failed
             LibraryActionMessageKind.UNDO_FAILED -> R.string.library_undo_failed
+            LibraryActionMessageKind.UNDO_CONFLICT -> R.string.library_undo_conflict
         }
         val result = when (message.kind) {
             LibraryActionMessageKind.STATUS_CHANGED, LibraryActionMessageKind.DELETED ->
@@ -157,7 +158,7 @@ private fun LibraryActionFeedback(
                     context.getString(R.string.library_retry),
                     SnackbarDuration.Indefinite,
                 )
-            LibraryActionMessageKind.ACTION_FAILED ->
+            LibraryActionMessageKind.ACTION_FAILED, LibraryActionMessageKind.UNDO_CONFLICT ->
                 snackbarHostState.showSnackbar(context.getString(messageRes))
         }
         if (result == SnackbarResult.ActionPerformed) onUndo(message.id) else onMessageDismissed(message.id)

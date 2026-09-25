@@ -295,6 +295,30 @@ class LibraryViewModelTest {
         }
 
     @Test
+    fun undoConflict_doesNotOfferRetry() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val entry = testEntry()
+            val viewModel = createViewModel()
+            viewModel.uiState.test {
+                awaitItem()
+                repository.flow(ReadingStatus.READING).emit(listOf(entry))
+                awaitItem()
+                viewModel.deleteBook(entry.book.isbn)
+                advanceUntilIdle()
+                val id = checkNotNull(viewModel.actionMessage.value).id
+                repository.restoreResult = false
+
+                viewModel.undo(id)
+                advanceUntilIdle()
+                assertThat(viewModel.actionMessage.value?.kind).isEqualTo(LibraryActionMessageKind.UNDO_CONFLICT)
+                viewModel.undo(id)
+                advanceUntilIdle()
+                assertThat(repository.savedEntry).isNull()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
     fun nextAction_invalidatesPreviousUndoId() =
         runTest(mainDispatcherRule.dispatcher) {
             val first = testEntry()
@@ -421,6 +445,7 @@ private class ControllableLibraryRepository : LibraryRepository {
     var statusResult = ReadingStatusChangeResult.Changed
     var deleteFailure: Exception? = null
     var saveFailure: Exception? = null
+    var restoreResult = true
     var saveGate: CompletableDeferred<Unit>? = null
     var savedEntry: BookEntry? = null
 
@@ -458,10 +483,24 @@ private class ControllableLibraryRepository : LibraryRepository {
     ): List<Book> = emptyList()
 
     override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult {
-        saveFailure?.let { throw it }
-        saveGate?.await()
         savedEntry = entry
         return SaveBookEntryResult.Saved
+    }
+
+    override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean = restore(entry)
+
+    override suspend fun restoreReadingStatusIfUnchanged(
+        original: BookEntry,
+        changedStatus: ReadingStatus,
+        changedAt: Instant,
+    ): Boolean = restore(original)
+
+    private suspend fun restore(entry: BookEntry): Boolean {
+        saveFailure?.let { throw it }
+        saveGate?.await()
+        if (!restoreResult) return false
+        savedEntry = entry
+        return true
     }
 
     override suspend fun removeBookEntry(isbn: String) {

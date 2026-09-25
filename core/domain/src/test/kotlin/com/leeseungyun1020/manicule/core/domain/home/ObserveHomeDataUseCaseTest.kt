@@ -89,6 +89,14 @@ private class CountingLibraryRepository : LibraryRepository {
     override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = error("Not used")
 
     override suspend fun removeBookEntry(isbn: String) = error("Not used")
+
+    override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean = error("Not used")
+
+    override suspend fun restoreReadingStatusIfUnchanged(
+        original: BookEntry,
+        changedStatus: ReadingStatus,
+        changedAt: kotlinx.datetime.Instant,
+    ): Boolean = error("Not used")
 }
 
 private class RetryingStatsRepository : StatsRepository {

@@ -186,6 +186,14 @@ private class NavigationLibraryRepository : LibraryRepository {
 
     override suspend fun removeBookEntry(isbn: String): Unit = error("Not used")
 
+    override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean = error("Not used")
+
+    override suspend fun restoreReadingStatusIfUnchanged(
+        original: BookEntry,
+        changedStatus: ReadingStatus,
+        changedAt: kotlinx.datetime.Instant,
+    ): Boolean = error("Not used")
+
     private fun entry(status: ReadingStatus) =
         BookEntry(
             book =

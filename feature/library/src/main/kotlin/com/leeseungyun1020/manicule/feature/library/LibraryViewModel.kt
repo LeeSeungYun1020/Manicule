@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Instant
 import javax.inject.Inject
 
 @HiltViewModel
@@ -90,8 +91,13 @@ class LibraryViewModel
             val actionId = beginAction()
             viewModelScope.launch {
                 try {
-                    if (changeReadingStatus(isbn, status) == ReadingStatusChangeResult.Changed) {
-                        completeAction(actionId, entry, LibraryActionMessageKind.STATUS_CHANGED)
+                    val outcome = changeReadingStatus.changeForUndo(isbn, status)
+                    if (outcome.result == ReadingStatusChangeResult.Changed) {
+                        completeAction(
+                            actionId,
+                            PendingUndo(actionId, entry, UndoAction.StatusChanged(status, checkNotNull(outcome.updatedAt))),
+                            LibraryActionMessageKind.STATUS_CHANGED,
+                        )
                     } else {
                         showMessage(LibraryActionMessageKind.ACTION_FAILED, actionId)
                     }
@@ -112,7 +118,7 @@ class LibraryViewModel
             viewModelScope.launch {
                 try {
                     deleteBookEntry(isbn)
-                    completeAction(actionId, entry, LibraryActionMessageKind.DELETED)
+                    completeAction(actionId, PendingUndo(actionId, entry, UndoAction.Deleted), LibraryActionMessageKind.DELETED)
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (_: Exception) {
@@ -128,11 +134,17 @@ class LibraryViewModel
             if (!busyIsbns.add(pending.entry.book.isbn)) return
             viewModelScope.launch {
                 try {
-                    if (restoreBookEntry(pending.entry)) {
+                    val restored = when (val action = pending.action) {
+                        UndoAction.Deleted -> restoreBookEntry.deletedEntry(pending.entry)
+                        is UndoAction.StatusChanged ->
+                            restoreBookEntry.readingStatus(pending.entry, action.status, action.updatedAt)
+                    }
+                    if (restored) {
                         if (pendingUndo?.id == id) pendingUndo = null
                         if (_actionMessage.value?.id == id) _actionMessage.value = null
                     } else {
-                        showMessage(LibraryActionMessageKind.UNDO_FAILED, id)
+                        if (pendingUndo?.id == id) pendingUndo = null
+                        showMessage(LibraryActionMessageKind.UNDO_CONFLICT, id)
                     }
                 } catch (exception: CancellationException) {
                     throw exception
@@ -163,11 +175,11 @@ class LibraryViewModel
 
         private fun completeAction(
             id: Long,
-            entry: BookEntry,
+            undo: PendingUndo,
             kind: LibraryActionMessageKind,
         ) {
             if (id != nextActionId) return
-            pendingUndo = PendingUndo(id, entry)
+            pendingUndo = undo
             _actionMessage.value = LibraryActionMessage(id, kind, ++nextMessageRevision)
         }
 
@@ -182,7 +194,17 @@ class LibraryViewModel
         private data class PendingUndo(
             val id: Long,
             val entry: BookEntry,
+            val action: UndoAction,
         )
+
+        private sealed interface UndoAction {
+            data object Deleted : UndoAction
+
+            data class StatusChanged(
+                val status: ReadingStatus,
+                val updatedAt: Instant,
+            ) : UndoAction
+        }
 
         private companion object {
             const val SELECTED_TAB_KEY = "librarySelectedTab"

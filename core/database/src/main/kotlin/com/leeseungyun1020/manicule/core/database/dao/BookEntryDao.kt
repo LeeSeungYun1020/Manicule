@@ -56,6 +56,28 @@ interface BookEntryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entry: BookEntryEntity)
 
+    /** 삭제 이후 다시 등록된 항목은 보존하고, 캐시된 책 정보는 건드리지 않는다. */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertIfAbsent(entry: BookEntryEntity): Long
+
+    /** 상태 변경 이후 다른 수정이 없을 때만 그 변경이 건드린 열을 되돌린다. */
+    @Query(
+        """
+        UPDATE book_entries
+        SET status = :originalStatus, updatedAt = :originalUpdatedAt, finishedAt = :originalFinishedAt
+        WHERE isbn = :isbn AND status = :changedStatus AND updatedAt = :changedAt
+        """,
+    )
+    @Suppress("LongParameterList") // 조건부 UPDATE의 각 열을 SQL 바인딩으로 전달한다.
+    suspend fun restoreStatusIfUnchanged(
+        isbn: String,
+        changedStatus: ReadingStatus,
+        changedAt: Instant,
+        originalStatus: ReadingStatus,
+        originalUpdatedAt: Instant,
+        originalFinishedAt: LocalDate?,
+    ): Int
+
     @Query("DELETE FROM book_entries WHERE isbn = :isbn")
     suspend fun delete(isbn: String)
 

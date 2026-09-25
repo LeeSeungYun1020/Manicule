@@ -3,6 +3,7 @@ package com.leeseungyun1020.manicule.core.data.repository
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.data.datasource.BookEntryLocalDataSource
 import com.leeseungyun1020.manicule.core.data.datasource.BookLocalDataSource
+import com.leeseungyun1020.manicule.core.data.mapper.asEntity
 import com.leeseungyun1020.manicule.core.database.dao.projection.BookEntryWithCurrentPage
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
@@ -51,6 +52,28 @@ class LibraryRepositoryImplTest {
 
             assertThat(bookDataSource.saved).isNull()
             assertThat(entryDataSource.saved).isNull()
+        }
+
+    @Test
+    fun undoOperations_doNotRewriteBookMetadata() =
+        runTest {
+            val original = entry(rating = 4)
+            val changedAt = Instant.fromEpochMilliseconds(3)
+
+            assertThat(repository.restoreDeletedEntryIfAbsent(original)).isTrue()
+            assertThat(entryDataSource.saved).isEqualTo(original.asEntity())
+            assertThat(repository.restoreReadingStatusIfUnchanged(original, ReadingStatus.FINISHED, changedAt)).isTrue()
+            assertThat(entryDataSource.restoredStatusRequest)
+                .containsExactly(
+                    original.book.isbn,
+                    ReadingStatus.FINISHED,
+                    changedAt,
+                    original.status,
+                    original.updatedAt,
+                    original.finishedAt,
+                )
+                .inOrder()
+            assertThat(bookDataSource.saved).isNull()
         }
 
     @Test
@@ -133,9 +156,27 @@ class LibraryRepositoryImplTest {
         var saved: BookEntryEntity? = null
         var observedStatus: ReadingStatus? = null
         var observedSort: LibrarySort? = null
+        var restoredStatusRequest: List<Any?> = emptyList()
 
         override suspend fun save(entry: BookEntryEntity) {
             saved = entry
+        }
+
+        override suspend fun insertIfAbsent(entry: BookEntryEntity): Boolean {
+            saved = entry
+            return true
+        }
+
+        override suspend fun restoreStatusIfUnchanged(
+            isbn: String,
+            changedStatus: ReadingStatus,
+            changedAt: Instant,
+            originalStatus: ReadingStatus,
+            originalUpdatedAt: Instant,
+            originalFinishedAt: kotlinx.datetime.LocalDate?,
+        ): Boolean {
+            restoredStatusRequest = listOf(isbn, changedStatus, changedAt, originalStatus, originalUpdatedAt, originalFinishedAt)
+            return true
         }
 
         override suspend fun remove(isbn: String) = Unit

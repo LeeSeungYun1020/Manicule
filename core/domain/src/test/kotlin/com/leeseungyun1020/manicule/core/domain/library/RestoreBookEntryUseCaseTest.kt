@@ -20,18 +20,29 @@ class RestoreBookEntryUseCaseTest {
     private val useCase = RestoreBookEntryUseCase(repository)
 
     @Test
-    fun restore_passesWholeSnapshotToRepository() =
+    fun deletedEntry_usesConditionalInsert() =
         runTest {
             val entry = snapshot()
-            assertThat(useCase(entry)).isTrue()
-            assertThat(repository.saved).isEqualTo(entry)
+            assertThat(useCase.deletedEntry(entry)).isTrue()
+            assertThat(repository.deletedEntry).isEqualTo(entry)
         }
 
     @Test
-    fun invalidSave_doesNotReportRestoreSuccess() =
+    fun readingStatus_usesOriginalAndChangedVersion() =
         runTest {
-            repository.result = SaveBookEntryResult.InvalidRating(6)
-            assertThat(useCase(snapshot())).isFalse()
+            val original = snapshot()
+            val changedAt = Instant.fromEpochMilliseconds(3)
+            assertThat(useCase.readingStatus(original, ReadingStatus.READING, changedAt)).isTrue()
+            assertThat(repository.original).isEqualTo(original)
+            assertThat(repository.changedStatus).isEqualTo(ReadingStatus.READING)
+            assertThat(repository.changedAt).isEqualTo(changedAt)
+        }
+
+    @Test
+    fun conflictingChange_doesNotReportRestoreSuccess() =
+        runTest {
+            repository.restoreResult = false
+            assertThat(useCase.deletedEntry(snapshot())).isFalse()
         }
 
     private fun snapshot() =
@@ -60,13 +71,29 @@ class RestoreBookEntryUseCaseTest {
         )
 
     private class RestoreRepository : LibraryRepository {
-        var saved: BookEntry? = null
-        var result: SaveBookEntryResult = SaveBookEntryResult.Saved
+        var deletedEntry: BookEntry? = null
+        var original: BookEntry? = null
+        var changedStatus: ReadingStatus? = null
+        var changedAt: Instant? = null
+        var restoreResult = true
 
-        override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult {
-            saved = entry
-            return result
+        override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean {
+            deletedEntry = entry
+            return restoreResult
         }
+
+        override suspend fun restoreReadingStatusIfUnchanged(
+            original: BookEntry,
+            changedStatus: ReadingStatus,
+            changedAt: Instant,
+        ): Boolean {
+            this.original = original
+            this.changedStatus = changedStatus
+            this.changedAt = changedAt
+            return restoreResult
+        }
+
+        override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = error("Unused")
 
         override suspend fun changeReadingStatus(
             isbn: String,

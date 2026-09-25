@@ -62,6 +62,25 @@ class LibraryRepositoryImpl
             return SaveBookEntryResult.Saved
         }
 
+        override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean {
+            if (entry.rating !in 0..MAX_RATING) return false
+            return bookEntryLocalDataSource.insertIfAbsent(entry.asEntity())
+        }
+
+        override suspend fun restoreReadingStatusIfUnchanged(
+            original: BookEntry,
+            changedStatus: ReadingStatus,
+            changedAt: Instant,
+        ): Boolean =
+            bookEntryLocalDataSource.restoreStatusIfUnchanged(
+                original.book.isbn,
+                changedStatus,
+                changedAt,
+                original.status,
+                original.updatedAt,
+                original.finishedAt,
+            )
+
         override suspend fun removeBookEntry(isbn: String) {
             bookEntryLocalDataSource.remove(isbn)
         }

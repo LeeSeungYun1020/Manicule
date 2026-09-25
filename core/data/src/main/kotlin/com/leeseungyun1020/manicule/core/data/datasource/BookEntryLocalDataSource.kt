@@ -20,6 +20,18 @@ interface BookEntryLocalDataSource {
 
     suspend fun save(entry: BookEntryEntity)
 
+    suspend fun insertIfAbsent(entry: BookEntryEntity): Boolean
+
+    @Suppress("LongParameterList") // Room 쿼리의 조건과 복구 열을 그대로 전달한다.
+    suspend fun restoreStatusIfUnchanged(
+        isbn: String,
+        changedStatus: ReadingStatus,
+        changedAt: Instant,
+        originalStatus: ReadingStatus,
+        originalUpdatedAt: Instant,
+        originalFinishedAt: LocalDate?,
+    ): Boolean
+
     suspend fun remove(isbn: String)
 
     fun observeByIsbn(isbn: String): Flow<BookEntryWithCurrentPage?>
