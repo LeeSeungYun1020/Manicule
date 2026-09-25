@@ -95,11 +95,13 @@ class ThemeNavigationTest {
     }
 
     private fun awaitSystemBars(lightIcons: Boolean) {
-        val expectedNavigationBarColor = if (lightIcons) LIGHT_NAVIGATION_BAR_SCRIM else DARK_NAVIGATION_BAR_SCRIM
+        val expectedLightNavigationBars = Build.VERSION.SDK_INT >= 26 && lightIcons
+        val expectedNavigationBarColor =
+            if (expectedLightNavigationBars) LIGHT_NAVIGATION_BAR_SCRIM else DARK_NAVIGATION_BAR_SCRIM
         compose.waitUntil(5_000) {
             WindowCompat.getInsetsController(compose.activity.window, compose.activity.window.decorView).let { controller ->
                 controller.isAppearanceLightStatusBars == lightIcons &&
-                    controller.isAppearanceLightNavigationBars == lightIcons &&
+                    controller.isAppearanceLightNavigationBars == expectedLightNavigationBars &&
                     (Build.VERSION.SDK_INT > 28 || compose.activity.window.navigationBarColor == expectedNavigationBarColor)
             }
         }
