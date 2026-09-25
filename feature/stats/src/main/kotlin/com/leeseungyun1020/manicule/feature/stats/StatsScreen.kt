@@ -80,13 +80,22 @@ fun StatsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val period = state.period
-    val refreshErrorId = (period as? PeriodState.Content)?.refreshErrorId ?: 0
+    val periodRefreshErrorId = (period as? PeriodState.Content)?.refreshErrorId ?: 0
+    val day = state.day
+    val dayRefreshErrorId = (day as? DayState.Content)?.refreshErrorId ?: 0
     val refreshErrorText = stringResource(R.string.stats_refresh_error)
     val retryText = stringResource(R.string.stats_retry)
-    LaunchedEffect(refreshErrorId) {
-        if (refreshErrorId > 0 && consumeRefreshError(refreshErrorId)) {
+    LaunchedEffect(periodRefreshErrorId) {
+        if (periodRefreshErrorId > 0 && consumeRefreshError(periodRefreshErrorId)) {
             if (snackbarHostState.showSnackbar(refreshErrorText, retryText) == SnackbarResult.ActionPerformed) {
                 onRetryPeriod()
+            }
+        }
+    }
+    LaunchedEffect(dayRefreshErrorId) {
+        if (dayRefreshErrorId > 0 && consumeRefreshError(dayRefreshErrorId)) {
+            if (snackbarHostState.showSnackbar(refreshErrorText, retryText) == SnackbarResult.ActionPerformed) {
+                onRetryDay()
             }
         }
     }
@@ -112,10 +121,10 @@ fun StatsScreen(
             )
             is PeriodState.Content -> StatsContent(
                 period = period,
-                selectedDate = when (val day = state.day) {
-                    is DayState.Loading -> day.date
-                    is DayState.Content -> day.date
-                    is DayState.Error -> day.date
+                selectedDate = when (val selectedDay = state.day) {
+                    is DayState.Loading -> selectedDay.date
+                    is DayState.Content -> selectedDay.date
+                    is DayState.Error -> selectedDay.date
                     DayState.Closed -> null
                 },
                 onDateSelected = onDateSelected,
@@ -124,7 +133,13 @@ fun StatsScreen(
         }
     }
     if (state.day != DayState.Closed) {
-        ReadingDayBottomSheet(state.day, onDismissDay, onRetryDay, onBookSelected)
+        ReadingDayBottomSheet(
+            state = state.day,
+            onDismiss = onDismissDay,
+            onRetry = onRetryDay,
+            onBookSelected = onBookSelected,
+            snackbarHostState = snackbarHostState,
+        )
     }
 }
 

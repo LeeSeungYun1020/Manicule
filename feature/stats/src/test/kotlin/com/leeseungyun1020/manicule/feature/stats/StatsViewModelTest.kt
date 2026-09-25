@@ -141,6 +141,41 @@ class StatsViewModelTest {
             job.cancel()
         }
 
+    @Test
+    fun day_refresh_failure_retains_prior_rows_with_refresh_error_id_and_recovers_on_retry() =
+        runTest(dispatcherRule.dispatcher) {
+            val date = LocalDate(2024, 2, 29)
+            repository.records.value = listOf(record(1, date, "a", 1, 10))
+            val viewModel = viewModel()
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            viewModel.selectDate(date)
+            runCurrent()
+            val contentBefore = viewModel.uiState.value.day as DayState.Content
+            assertThat(contentBefore.rows).hasSize(1)
+            assertThat(contentBefore.refreshErrorId).isEqualTo(0)
+
+            repository.failDay = true
+            repository.records.value = listOf(record(1, date, "a", 1, 20))
+            runCurrent()
+
+            val contentDuring = viewModel.uiState.value.day as DayState.Content
+            assertThat(contentDuring.rows.single().pagesRead).isEqualTo(10)
+            assertThat(contentDuring.refreshErrorId).isGreaterThan(0)
+            assertThat(viewModel.consumeRefreshError(contentDuring.refreshErrorId)).isTrue()
+            assertThat(viewModel.consumeRefreshError(contentDuring.refreshErrorId)).isFalse()
+
+            repository.failDay = false
+            viewModel.retryDay()
+            runCurrent()
+
+            val contentAfter = viewModel.uiState.value.day as DayState.Content
+            assertThat(contentAfter.rows.single().pagesRead).isEqualTo(20)
+            assertThat(contentAfter.refreshErrorId).isEqualTo(0)
+            job.cancel()
+        }
+
     private fun viewModel(handle: SavedStateHandle = SavedStateHandle()) =
         StatsViewModel(
             GetReadingCalendarUseCase(repository),

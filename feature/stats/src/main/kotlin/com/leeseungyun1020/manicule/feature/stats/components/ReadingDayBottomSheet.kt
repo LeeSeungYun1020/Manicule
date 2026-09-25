@@ -2,6 +2,7 @@ package com.leeseungyun1020.manicule.feature.stats.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,6 +14,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,6 +25,7 @@ import androidx.compose.ui.semantics.Role
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeBottomSheet
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeErrorState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSnackbarHost
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
@@ -40,10 +43,19 @@ fun ReadingDayBottomSheet(
     onRetry: () -> Unit,
     onBookSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState? = null,
 ) {
     if (state == DayState.Closed) return
     ManiculeBottomSheet(onDismissRequest = onDismiss, modifier = modifier) {
-        ReadingDayContent(state = state, onDismiss = onDismiss, onRetry = onRetry, onBookSelected = onBookSelected)
+        Box(modifier = Modifier.fillMaxWidth()) {
+            ReadingDayContent(state = state, onDismiss = onDismiss, onRetry = onRetry, onBookSelected = onBookSelected)
+            if (snackbarHostState != null) {
+                ManiculeSnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                )
+            }
+        }
     }
 }
 
@@ -91,7 +103,6 @@ private fun ReadingDayContent(
             is DayState.Loading -> ManiculeLoading(modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.xl))
             is DayState.Error -> DayError(onRetry)
             is DayState.Content -> {
-                if (state.refreshFailed) DayError(onRetry)
                 if (state.rows.isEmpty()) {
                     Text(
                         text = stringResource(R.string.stats_day_empty),

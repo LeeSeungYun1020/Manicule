@@ -42,7 +42,7 @@ class StatsViewModel
         private val periodRetries = MutableStateFlow(0)
         private val dayRetries = MutableStateFlow(0)
         private val selectedDate = savedStateHandle.getStateFlow<String?>(SELECTED_DATE_KEY, null)
-        private var consumedRefreshErrorId = 0
+        private val consumedRefreshErrorIds = java.util.concurrent.ConcurrentHashMap.newKeySet<Int>()
         private var nextRefreshErrorId = 0
 
         init {
@@ -100,7 +100,11 @@ class StatsViewModel
                         is DayEvent.Ready -> DayState.Content(event.date, event.rows)
                         is DayEvent.Failed -> {
                             val prior = previous as? DayState.Content
-                            if (prior?.date == event.date) prior.copy(refreshFailed = true) else DayState.Error(event.date)
+                            if (prior?.date == event.date) {
+                                prior.copy(refreshErrorId = ++nextRefreshErrorId)
+                            } else {
+                                DayState.Error(event.date)
+                            }
                         }
                     }
                 }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DayState.Closed)
@@ -138,9 +142,8 @@ class StatsViewModel
         }
 
         fun consumeRefreshError(id: Int): Boolean {
-            if (id <= consumedRefreshErrorId) return false
-            consumedRefreshErrorId = id
-            return true
+            if (id <= 0) return false
+            return consumedRefreshErrorIds.add(id)
         }
 
         private fun inRange(

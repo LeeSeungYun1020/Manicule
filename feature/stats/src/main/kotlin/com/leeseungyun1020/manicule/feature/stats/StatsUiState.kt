@@ -37,7 +37,7 @@ sealed interface DayState {
     data class Content(
         val date: LocalDate,
         val rows: List<ReadingDayBook>,
-        val refreshFailed: Boolean = false,
+        val refreshErrorId: Int = 0,
     ) : DayState
 
     data class Error(
