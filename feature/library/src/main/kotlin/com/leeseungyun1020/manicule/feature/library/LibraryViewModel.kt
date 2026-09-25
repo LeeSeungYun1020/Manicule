@@ -19,6 +19,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -45,8 +47,9 @@ class LibraryViewModel
         private val selectedSort = MutableStateFlow(LibrarySort.Default)
         private val retries = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
         private val _actionMessage = MutableStateFlow<LibraryActionMessage?>(null)
-        val actionMessage = _actionMessage
+        val actionMessage: StateFlow<LibraryActionMessage?> = _actionMessage.asStateFlow()
         private var nextActionId = 0L
+        private var nextMessageRevision = 0L
         private var pendingUndo: PendingUndo? = null
         private val busyIsbns = mutableSetOf<String>()
 
@@ -82,7 +85,7 @@ class LibraryViewModel
             isbn: String,
             status: ReadingStatus,
         ) {
-            val entry = currentEntry(isbn) ?: return
+            val entry = (uiState.value as? LibraryUiState.Content)?.books?.firstOrNull { it.book.isbn == isbn } ?: return
             if (status == ReadingStatus.UNSET || status == entry.status || !busyIsbns.add(isbn)) return
             val actionId = beginAction()
             viewModelScope.launch {
@@ -103,7 +106,7 @@ class LibraryViewModel
         }
 
         fun deleteBook(isbn: String) {
-            val entry = currentEntry(isbn) ?: return
+            val entry = (uiState.value as? LibraryUiState.Content)?.books?.firstOrNull { it.book.isbn == isbn } ?: return
             if (!busyIsbns.add(isbn)) return
             val actionId = beginAction()
             viewModelScope.launch {
@@ -143,13 +146,14 @@ class LibraryViewModel
 
         fun messageDismissed(id: Long) {
             if (_actionMessage.value?.id == id) {
+                if (_actionMessage.value?.kind == LibraryActionMessageKind.UNDO_FAILED && pendingUndo?.id == id) {
+                    showMessage(LibraryActionMessageKind.UNDO_FAILED, id)
+                    return
+                }
                 _actionMessage.value = null
                 if (pendingUndo?.id == id) pendingUndo = null
             }
         }
-
-        private fun currentEntry(isbn: String): BookEntry? =
-            (uiState.value as? LibraryUiState.Content)?.books?.firstOrNull { it.book.isbn == isbn }
 
         private fun beginAction(): Long {
             pendingUndo = null
@@ -164,15 +168,15 @@ class LibraryViewModel
         ) {
             if (id != nextActionId) return
             pendingUndo = PendingUndo(id, entry)
-            _actionMessage.value = LibraryActionMessage(id, kind)
+            _actionMessage.value = LibraryActionMessage(id, kind, ++nextMessageRevision)
         }
 
         private fun showMessage(
             kind: LibraryActionMessageKind,
-            id: Long = ++nextActionId,
+            id: Long,
         ) {
             if (id != nextActionId) return
-            _actionMessage.value = LibraryActionMessage(id, kind)
+            _actionMessage.value = LibraryActionMessage(id, kind, ++nextMessageRevision)
         }
 
         private data class PendingUndo(

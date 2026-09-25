@@ -12,7 +12,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeBottomSheet
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeIconButton
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
@@ -48,7 +50,10 @@ private fun LibraryActionSheetContent(
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = MaterialTheme.spacing.lg),
+            modifier = Modifier.fillMaxWidth().padding(
+                horizontal = MaterialTheme.spacing.lg,
+                vertical = MaterialTheme.spacing.sm,
+            ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             BookCover(
@@ -60,6 +65,8 @@ private fun LibraryActionSheetContent(
                 text = entry.book.title,
                 modifier = Modifier.weight(1f).padding(horizontal = MaterialTheme.spacing.md),
                 style = MaterialTheme.typography.titleMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
             ManiculeIconButton(onClick = onDismissRequest) {
                 Icon(ManiculeIcons.Close, contentDescription = stringResource(R.string.library_action_close))
@@ -70,7 +77,7 @@ private fun LibraryActionSheetContent(
             .forEach { status ->
                 ListItem(
                     headlineContent = { Text(status.actionLabel()) },
-                    leadingContent = { Icon(ManiculeIcons.Tab.LibraryOutlined, contentDescription = null) },
+                    leadingContent = { Icon(status.actionIcon(), contentDescription = null) },
                     modifier = Modifier.fillMaxWidth().clickable { onStatusSelected(status) },
                 )
             }
@@ -88,6 +95,14 @@ private fun ReadingStatus.actionLabel(): String =
         ReadingStatus.WANT -> stringResource(R.string.library_action_move_want)
         ReadingStatus.READING -> stringResource(R.string.library_action_move_reading)
         ReadingStatus.FINISHED -> stringResource(R.string.library_action_move_finished)
+        ReadingStatus.UNSET -> error("UNSET is not a library action")
+    }
+
+private fun ReadingStatus.actionIcon(): ImageVector =
+    when (this) {
+        ReadingStatus.WANT -> ManiculeIcons.Bookmark
+        ReadingStatus.READING -> ManiculeIcons.Tab.LibraryOutlined
+        ReadingStatus.FINISHED -> ManiculeIcons.DoneAll
         ReadingStatus.UNSET -> error("UNSET is not a library action")
     }
 

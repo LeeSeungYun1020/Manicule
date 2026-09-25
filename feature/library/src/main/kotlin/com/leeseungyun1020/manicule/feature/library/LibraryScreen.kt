@@ -76,33 +76,13 @@ fun LibraryScreen(
     var draftSortDirection by rememberSaveable { mutableStateOf(uiState.sort.direction) }
     var selectedBookIsbn by rememberSaveable { mutableStateOf<String?>(null) }
     val selectedEntry = (uiState as? LibraryUiState.Content)?.books?.firstOrNull { it.book.isbn == selectedBookIsbn }
-    LaunchedEffect(selectedBookIsbn, selectedEntry) {
-        if (selectedBookIsbn != null && selectedEntry == null) selectedBookIsbn = null
+    LaunchedEffect(selectedBookIsbn, uiState) {
+        if (uiState is LibraryUiState.Content && selectedBookIsbn != null && selectedEntry == null) {
+            selectedBookIsbn = null
+        }
     }
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
-    LaunchedEffect(actionMessage?.id, actionMessage?.kind) {
-        val message = actionMessage ?: return@LaunchedEffect
-        val messageRes = when (message.kind) {
-            LibraryActionMessageKind.STATUS_CHANGED -> R.string.library_status_changed
-            LibraryActionMessageKind.DELETED -> R.string.library_book_deleted
-            LibraryActionMessageKind.ACTION_FAILED -> R.string.library_action_failed
-            LibraryActionMessageKind.UNDO_FAILED -> R.string.library_undo_failed
-        }
-        val result = when (message.kind) {
-            LibraryActionMessageKind.STATUS_CHANGED, LibraryActionMessageKind.DELETED ->
-                snackbarHostState.showUndoSnackbar(context.getString(messageRes), context.getString(R.string.library_undo))
-            LibraryActionMessageKind.UNDO_FAILED ->
-                snackbarHostState.showUndoSnackbar(
-                    context.getString(messageRes),
-                    context.getString(R.string.library_retry),
-                    SnackbarDuration.Indefinite,
-                )
-            LibraryActionMessageKind.ACTION_FAILED ->
-                snackbarHostState.showSnackbar(context.getString(messageRes))
-        }
-        if (result == SnackbarResult.ActionPerformed) onUndo(message.id) else onMessageDismissed(message.id)
-    }
+    LibraryActionFeedback(actionMessage, snackbarHostState, onUndo, onMessageDismissed)
 
     LibraryScaffold(
         uiState = uiState,
@@ -149,6 +129,38 @@ fun LibraryScreen(
             },
             onDismissRequest = { selectedBookIsbn = null },
         )
+    }
+}
+
+@Composable
+private fun LibraryActionFeedback(
+    actionMessage: LibraryActionMessage?,
+    snackbarHostState: SnackbarHostState,
+    onUndo: (Long) -> Unit,
+    onMessageDismissed: (Long) -> Unit,
+) {
+    val context = LocalContext.current
+    LaunchedEffect(actionMessage?.revision) {
+        val message = actionMessage ?: return@LaunchedEffect
+        val messageRes = when (message.kind) {
+            LibraryActionMessageKind.STATUS_CHANGED -> R.string.library_status_changed
+            LibraryActionMessageKind.DELETED -> R.string.library_book_deleted
+            LibraryActionMessageKind.ACTION_FAILED -> R.string.library_action_failed
+            LibraryActionMessageKind.UNDO_FAILED -> R.string.library_undo_failed
+        }
+        val result = when (message.kind) {
+            LibraryActionMessageKind.STATUS_CHANGED, LibraryActionMessageKind.DELETED ->
+                snackbarHostState.showUndoSnackbar(context.getString(messageRes), context.getString(R.string.library_undo))
+            LibraryActionMessageKind.UNDO_FAILED ->
+                snackbarHostState.showUndoSnackbar(
+                    context.getString(messageRes),
+                    context.getString(R.string.library_retry),
+                    SnackbarDuration.Indefinite,
+                )
+            LibraryActionMessageKind.ACTION_FAILED ->
+                snackbarHostState.showSnackbar(context.getString(messageRes))
+        }
+        if (result == SnackbarResult.ActionPerformed) onUndo(message.id) else onMessageDismissed(message.id)
     }
 }
 

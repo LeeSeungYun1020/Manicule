@@ -65,6 +65,30 @@ class LibraryScreenTest {
     }
 
     @Test
+    fun loadingDuringOpenActionSheet_keepsSelectionUntilBooksReturn() {
+        val state = mutableStateOf<LibraryUiState>(LibraryUiState.Content(ReadingStatus.READING, listOf(entry())))
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState = state.value,
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("테스트 책").performSemanticsAction(SemanticsActions.OnLongClick)
+        composeRule.onNodeWithText(context.getString(R.string.library_action_delete)).assertIsDisplayed()
+        composeRule.runOnIdle { state.value = LibraryUiState.Loading(ReadingStatus.READING) }
+        composeRule.runOnIdle { state.value = LibraryUiState.Content(ReadingStatus.READING, listOf(entry())) }
+        composeRule.onNodeWithText(context.getString(R.string.library_action_delete)).assertIsDisplayed()
+    }
+
+    @Test
     fun content_showsThreeTabsAndSelectsBook() {
         var selectedIsbn: String? = null
         composeRule.setContent {

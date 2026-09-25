@@ -37,4 +37,5 @@ enum class LibraryActionMessageKind {
 data class LibraryActionMessage(
     val id: Long,
     val kind: LibraryActionMessageKind,
+    val revision: Long,
 )

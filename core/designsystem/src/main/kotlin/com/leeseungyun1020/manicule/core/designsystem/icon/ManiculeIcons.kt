@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.NoPhotography
@@ -40,6 +41,7 @@ object ManiculeIcons {
     val ScanBarcode: ImageVector = Icons.Default.QrCodeScanner
     val Edit: ImageVector = Icons.Default.Edit
     val Delete: ImageVector = Icons.Default.Delete
+    val DoneAll: ImageVector = Icons.Default.DoneAll
     val Star: ImageVector = Icons.Default.Star
     val StarBorder: ImageVector = Icons.Default.StarBorder
     val Refresh: ImageVector = Icons.Default.Refresh
