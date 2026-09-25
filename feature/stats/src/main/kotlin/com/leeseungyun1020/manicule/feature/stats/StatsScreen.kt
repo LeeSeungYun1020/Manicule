@@ -80,25 +80,19 @@ fun StatsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val period = state.period
-    val periodRefreshErrorId = (period as? PeriodState.Content)?.refreshErrorId ?: 0
-    val day = state.day
-    val dayRefreshErrorId = (day as? DayState.Content)?.refreshErrorId ?: 0
-    val refreshErrorText = stringResource(R.string.stats_refresh_error)
-    val retryText = stringResource(R.string.stats_retry)
-    LaunchedEffect(periodRefreshErrorId) {
-        if (periodRefreshErrorId > 0 && consumeRefreshError(periodRefreshErrorId)) {
-            if (snackbarHostState.showSnackbar(refreshErrorText, retryText) == SnackbarResult.ActionPerformed) {
-                onRetryPeriod()
-            }
-        }
-    }
-    LaunchedEffect(dayRefreshErrorId) {
-        if (dayRefreshErrorId > 0 && consumeRefreshError(dayRefreshErrorId)) {
-            if (snackbarHostState.showSnackbar(refreshErrorText, retryText) == SnackbarResult.ActionPerformed) {
-                onRetryDay()
-            }
-        }
-    }
+
+    HandleRefreshError(
+        errorId = period.refreshErrorId,
+        consumeRefreshError = consumeRefreshError,
+        snackbarHostState = snackbarHostState,
+        onRetry = onRetryPeriod,
+    )
+    HandleRefreshError(
+        errorId = state.day.refreshErrorId,
+        consumeRefreshError = consumeRefreshError,
+        snackbarHostState = snackbarHostState,
+        onRetry = onRetryDay,
+    )
 
     Scaffold(
         modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -121,12 +115,7 @@ fun StatsScreen(
             )
             is PeriodState.Content -> StatsContent(
                 period = period,
-                selectedDate = when (val selectedDay = state.day) {
-                    is DayState.Loading -> selectedDay.date
-                    is DayState.Content -> selectedDay.date
-                    is DayState.Error -> selectedDay.date
-                    DayState.Closed -> null
-                },
+                selectedDate = state.day.selectedDate,
                 onDateSelected = onDateSelected,
                 modifier = Modifier.fillMaxSize().padding(padding),
             )
@@ -142,6 +131,38 @@ fun StatsScreen(
         )
     }
 }
+
+@Composable
+private fun HandleRefreshError(
+    errorId: Int,
+    consumeRefreshError: (Int) -> Boolean,
+    snackbarHostState: SnackbarHostState,
+    onRetry: () -> Unit,
+) {
+    val refreshErrorText = stringResource(R.string.stats_refresh_error)
+    val retryText = stringResource(R.string.stats_retry)
+    LaunchedEffect(errorId) {
+        if (errorId > 0 && consumeRefreshError(errorId)) {
+            if (snackbarHostState.showSnackbar(refreshErrorText, retryText) == SnackbarResult.ActionPerformed) {
+                onRetry()
+            }
+        }
+    }
+}
+
+private val PeriodState.refreshErrorId: Int
+    get() = (this as? PeriodState.Content)?.refreshErrorId ?: 0
+
+private val DayState.refreshErrorId: Int
+    get() = (this as? DayState.Content)?.refreshErrorId ?: 0
+
+private val DayState.selectedDate: LocalDate?
+    get() = when (this) {
+        is DayState.Loading -> date
+        is DayState.Content -> date
+        is DayState.Error -> date
+        DayState.Closed -> null
+    }
 
 @Composable
 private fun StatsContent(
