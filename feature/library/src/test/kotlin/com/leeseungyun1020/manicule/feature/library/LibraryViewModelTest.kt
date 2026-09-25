@@ -16,6 +16,7 @@ import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import com.leeseungyun1020.manicule.feature.library.navigation.LibraryTab
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
@@ -321,6 +322,42 @@ class LibraryViewModelTest {
         }
 
     @Test
+    fun olderRestoreCompletion_keepsNewerUndoAvailable() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val first = testEntry()
+            val second = first.copy(book = first.book.copy(isbn = "9780000000002"))
+            val viewModel = createViewModel()
+            viewModel.uiState.test {
+                awaitItem()
+                repository.flow(ReadingStatus.READING).emit(listOf(first, second))
+                awaitItem()
+                viewModel.deleteBook(first.book.isbn)
+                advanceUntilIdle()
+                val oldId = checkNotNull(viewModel.actionMessage.value).id
+
+                val restoreGate = CompletableDeferred<Unit>()
+                repository.saveGate = restoreGate
+                viewModel.undo(oldId)
+                advanceUntilIdle()
+
+                viewModel.deleteBook(second.book.isbn)
+                advanceUntilIdle()
+                val newId = checkNotNull(viewModel.actionMessage.value).id
+                assertThat(newId).isNotEqualTo(oldId)
+
+                repository.saveGate = null
+                restoreGate.complete(Unit)
+                advanceUntilIdle()
+                assertThat(viewModel.actionMessage.value?.id).isEqualTo(newId)
+
+                viewModel.undo(newId)
+                advanceUntilIdle()
+                assertThat(repository.savedEntry).isEqualTo(second)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
     fun unchangedStatus_doesNotCreateUndo() =
         runTest(mainDispatcherRule.dispatcher) {
             val entry = testEntry()
@@ -384,6 +421,7 @@ private class ControllableLibraryRepository : LibraryRepository {
     var statusResult = ReadingStatusChangeResult.Changed
     var deleteFailure: Exception? = null
     var saveFailure: Exception? = null
+    var saveGate: CompletableDeferred<Unit>? = null
     var savedEntry: BookEntry? = null
 
     fun flow(status: ReadingStatus): MutableSharedFlow<List<BookEntry>> = checkNotNull(flows[status])
@@ -421,6 +459,7 @@ private class ControllableLibraryRepository : LibraryRepository {
 
     override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult {
         saveFailure?.let { throw it }
+        saveGate?.await()
         savedEntry = entry
         return SaveBookEntryResult.Saved
     }

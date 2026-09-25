@@ -129,7 +129,7 @@ class LibraryViewModel
             viewModelScope.launch {
                 try {
                     if (restoreBookEntry(pending.entry)) {
-                        pendingUndo = null
+                        if (pendingUndo?.id == id) pendingUndo = null
                         if (_actionMessage.value?.id == id) _actionMessage.value = null
                     } else {
                         showMessage(LibraryActionMessageKind.UNDO_FAILED, id)
