@@ -13,6 +13,7 @@ import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import com.leeseungyun1020.manicule.core.model.SearchQuery
@@ -75,6 +76,12 @@ class NavigationLibrary
             finishedAt: LocalDate?,
         ): ReadingStatusChangeResult = ReadingStatusChangeResult.Changed
 
+        override suspend fun updateRating(
+            isbn: String,
+            rating: Int,
+            updatedAt: Instant,
+        ): RatingChangeResult = RatingChangeResult.Changed
+
         override fun observeAll(): Flow<List<BookEntry>> = flowOf(emptyList())
 
         override fun observeByStatus(
@@ -92,6 +99,14 @@ class NavigationLibrary
         override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = SaveBookEntryResult.Saved
 
         override suspend fun removeBookEntry(isbn: String) = Unit
+
+        override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean = error("Not used")
+
+        override suspend fun restoreReadingStatusIfUnchanged(
+            original: BookEntry,
+            changedStatus: ReadingStatus,
+            changedAt: kotlinx.datetime.Instant,
+        ): Boolean = error("Not used")
     }
 
 class NavigationHistory

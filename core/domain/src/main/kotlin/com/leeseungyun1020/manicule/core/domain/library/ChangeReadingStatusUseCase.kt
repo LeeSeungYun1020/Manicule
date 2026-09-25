@@ -4,6 +4,7 @@ import com.leeseungyun1020.manicule.core.common.time.Clock
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
+import kotlinx.datetime.Instant
 import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
 
@@ -19,14 +20,27 @@ class ChangeReadingStatusUseCase
         suspend operator fun invoke(
             isbn: String,
             status: ReadingStatus,
-        ): ReadingStatusChangeResult {
-            if (status == ReadingStatus.UNSET) return ReadingStatusChangeResult.InvalidStatus
+        ): ReadingStatusChangeResult = changeForUndo(isbn, status).result
+
+        suspend fun changeForUndo(
+            isbn: String,
+            status: ReadingStatus,
+        ): StatusChangeOutcome {
+            if (status == ReadingStatus.UNSET) return StatusChangeOutcome(ReadingStatusChangeResult.InvalidStatus, null)
             val now = clock.now()
-            return libraryRepository.changeReadingStatus(
-                isbn = isbn,
-                status = status,
+            return StatusChangeOutcome(
+                result = libraryRepository.changeReadingStatus(
+                    isbn = isbn,
+                    status = status,
+                    updatedAt = now,
+                    finishedAt = if (status == ReadingStatus.FINISHED) now.toLocalDateTime(clock.timeZone()).date else null,
+                ),
                 updatedAt = now,
-                finishedAt = if (status == ReadingStatus.FINISHED) now.toLocalDateTime(clock.timeZone()).date else null,
             )
         }
     }
+
+data class StatusChangeOutcome(
+    val result: ReadingStatusChangeResult,
+    val updatedAt: Instant?,
+)

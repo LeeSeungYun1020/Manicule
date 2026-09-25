@@ -3,6 +3,7 @@ package com.leeseungyun1020.manicule.core.data.repository
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +29,15 @@ interface LibraryRepository {
         finishedAt: LocalDate?,
     ): ReadingStatusChangeResult
 
+    /** 별점과 시각만 원자적으로 변경한다. 최초 등록은 UNSET 상태로 캐시된 책이 있어야 한다.
+     * 같은 별점은 시각을 보존하며, 항목이 없고 0점이면 변경하지 않는다.
+     */
+    suspend fun updateRating(
+        isbn: String,
+        rating: Int,
+        updatedAt: Instant,
+    ): RatingChangeResult
+
     fun observeAll(): Flow<List<BookEntry>>
 
     fun observeByStatus(
@@ -43,6 +53,14 @@ interface LibraryRepository {
     fun observeBookEntry(isbn: String): Flow<BookEntry?>
 
     suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult
+
+    suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean
+
+    suspend fun restoreReadingStatusIfUnchanged(
+        original: BookEntry,
+        changedStatus: ReadingStatus,
+        changedAt: Instant,
+    ): Boolean
 
     suspend fun removeBookEntry(isbn: String)
 }

@@ -4,6 +4,7 @@ import com.leeseungyun1020.manicule.core.database.dao.projection.BookEntryWithCu
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
@@ -18,7 +19,25 @@ interface BookEntryLocalDataSource {
         finishedAt: LocalDate?,
     ): ReadingStatusChangeResult
 
+    suspend fun updateRating(
+        isbn: String,
+        rating: Int,
+        updatedAt: Instant,
+    ): RatingChangeResult
+
     suspend fun save(entry: BookEntryEntity)
+
+    suspend fun insertIfAbsent(entry: BookEntryEntity): Boolean
+
+    @Suppress("LongParameterList") // Room 쿼리의 조건과 복구 열을 그대로 전달한다.
+    suspend fun restoreStatusIfUnchanged(
+        isbn: String,
+        changedStatus: ReadingStatus,
+        changedAt: Instant,
+        originalStatus: ReadingStatus,
+        originalUpdatedAt: Instant,
+        originalFinishedAt: LocalDate?,
+    ): Boolean
 
     suspend fun remove(isbn: String)
 

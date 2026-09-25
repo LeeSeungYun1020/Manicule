@@ -58,4 +58,13 @@
     <string name="book_detail_finish_check_message">You\'ve recorded up to p. %1$d of %2$d. Mark it as finished?</string>
     <string name="book_detail_finish_check_confirm">Yes</string>
     <string name="book_detail_finish_check_dismiss">No</string>
+    <string name="book_detail_review_title">My review</string>
+    <string name="book_detail_rating_empty_prompt">Leave a rating and your thoughts after reading</string>
+    <string name="book_detail_rating_error">Couldn’t save rating</string>
+    <string name="book_detail_rating_saving">Saving rating…</string>
+    <string name="book_detail_rating_action_select">Select %1$d stars</string>
+    <string name="book_detail_rating_action_clear">Clear rating</string>
+    <string name="book_detail_rating_star_description">%1$d star</string>
+    <string name="book_detail_rating_current_state">%1$d stars</string>
+    <string name="book_detail_rating_empty_state">No rating</string>
 </resources>

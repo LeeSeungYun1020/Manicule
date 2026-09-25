@@ -11,6 +11,7 @@ import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.DailyReading
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
@@ -32,12 +33,11 @@ class ObserveHomeDataUseCaseTest {
             val library = CountingLibraryRepository()
             val stats = RetryingStatsRepository()
             val retries = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
-            val useCase =
-                ObserveHomeDataUseCase(
-                    GetLibraryBooksUseCase(library),
-                    stats,
-                    FixedClock(Instant.parse("2026-09-22T00:00:00Z"), TimeZone.UTC),
-                )
+            val useCase = ObserveHomeDataUseCase(
+                GetLibraryBooksUseCase(library),
+                stats,
+                FixedClock(Instant.parse("2026-09-22T00:00:00Z"), TimeZone.UTC),
+            )
 
             useCase(retries).test {
                 assertThat(awaitItem().summary).isNull()
@@ -79,6 +79,12 @@ private class CountingLibraryRepository : LibraryRepository {
         finishedAt: LocalDate?,
     ): ReadingStatusChangeResult = error("Not used")
 
+    override suspend fun updateRating(
+        isbn: String,
+        rating: Int,
+        updatedAt: Instant,
+    ): RatingChangeResult = error("Not used")
+
     override suspend fun getRecentBooksByStatus(
         status: ReadingStatus,
         limit: Int,
@@ -89,6 +95,14 @@ private class CountingLibraryRepository : LibraryRepository {
     override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = error("Not used")
 
     override suspend fun removeBookEntry(isbn: String) = error("Not used")
+
+    override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean = error("Not used")
+
+    override suspend fun restoreReadingStatusIfUnchanged(
+        original: BookEntry,
+        changedStatus: ReadingStatus,
+        changedAt: kotlinx.datetime.Instant,
+    ): Boolean = error("Not used")
 }
 
 private class RetryingStatsRepository : StatsRepository {

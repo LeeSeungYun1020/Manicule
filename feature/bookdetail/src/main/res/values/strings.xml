@@ -58,4 +58,13 @@
     <string name="book_detail_finish_check_message">%1$d / %2$d쪽까지 기록했어요. 다 읽었다면 \'다 읽음\'으로 표시할게요</string>
     <string name="book_detail_finish_check_confirm">네</string>
     <string name="book_detail_finish_check_dismiss">아니요</string>
+    <string name="book_detail_review_title">내 리뷰</string>
+    <string name="book_detail_rating_empty_prompt">읽고 난 감상을 별점과 함께 남겨 보세요</string>
+    <string name="book_detail_rating_error">별점을 저장하지 못했어요</string>
+    <string name="book_detail_rating_saving">별점을 저장하고 있어요</string>
+    <string name="book_detail_rating_action_select">%1$d점 선택</string>
+    <string name="book_detail_rating_action_clear">별점 지우기</string>
+    <string name="book_detail_rating_star_description">별 %1$d</string>
+    <string name="book_detail_rating_current_state">%1$d점</string>
+    <string name="book_detail_rating_empty_state">별점 없음</string>
 </resources>

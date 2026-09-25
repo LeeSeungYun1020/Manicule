@@ -1,6 +1,6 @@
 package com.leeseungyun1020.manicule.feature.library.components
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
@@ -31,8 +33,11 @@ import kotlin.math.roundToInt
 fun LibraryBookCard(
     entry: BookEntry,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val haptics = LocalHapticFeedback.current
+    val longClickLabel = stringResource(R.string.library_action_open)
     val totalPages = entry.book.totalPages
     val progress =
         if (totalPages != null && totalPages > 0) {
@@ -64,7 +69,14 @@ fun LibraryBookCard(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clickable(onClick = onClick),
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClickLabel = longClickLabel,
+                    onLongClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onLongClick()
+                    },
+                ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
@@ -134,6 +146,7 @@ private fun LibraryBookCardReadingPreview() {
                     currentPage = 192,
                 ),
             onClick = {},
+            onLongClick = {},
             modifier = Modifier.padding(MaterialTheme.spacing.lg),
         )
     }
@@ -167,6 +180,7 @@ private fun LibraryBookCardFinishedPreview() {
                     finishedAt = LocalDate(2026, 7, 8),
                 ),
             onClick = {},
+            onLongClick = {},
             modifier = Modifier.padding(MaterialTheme.spacing.lg),
         )
     }
@@ -199,6 +213,7 @@ private fun LibraryBookCardWantPreview() {
                     updatedAt = Instant.fromEpochMilliseconds(0),
                 ),
             onClick = {},
+            onLongClick = {},
             modifier = Modifier.padding(MaterialTheme.spacing.lg),
         )
     }

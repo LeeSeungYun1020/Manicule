@@ -6,6 +6,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -592,6 +596,156 @@ class BookDetailScreenTest {
         assertThat(confirmedAttempt).isEqualTo(1L)
     }
 
+    @Test
+    fun ratingBar_emptyRating_displaysEmptyPrompt_andSemantics() {
+        val uiState = recordsState(status = null, rating = 0, memo = null)
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_review_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_rating_empty_prompt)).assertIsDisplayed()
+
+        val emptyStateDescription = context.getString(R.string.book_detail_rating_empty_state)
+        for (star in 1..5) {
+            val starDesc = context.getString(R.string.book_detail_rating_star_description, star)
+            val actionLabel = context.getString(R.string.book_detail_rating_action_select, star)
+            composeRule.onNodeWithContentDescription(starDesc)
+                .assertIsDisplayed()
+                .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, emptyStateDescription))
+                .assert(
+                    SemanticsMatcher("has onClick label: $actionLabel") { node ->
+                        node.config.getOrElseNullable(SemanticsActions.OnClick) { null }?.label == actionLabel
+                    },
+                )
+        }
+    }
+
+    @Test
+    fun ratingBar_selectRating_triggersCallback() {
+        var selectedRating: Int? = null
+        val uiState = recordsState(status = null, rating = 0, memo = null)
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onRatingSelected = { selectedRating = it },
+                )
+            }
+        }
+
+        val star4Desc = context.getString(R.string.book_detail_rating_star_description, 4)
+        composeRule.onNodeWithContentDescription(star4Desc).performClick()
+        assertThat(selectedRating).isEqualTo(4)
+    }
+
+    @Test
+    fun ratingBar_ratedBook_displaysCurrentRating_andClearAction() {
+        var selectedRating: Int? = null
+        val uiState = recordsState(status = ReadingStatus.READING, rating = 4, memo = "Keep review")
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onRatingSelected = { selectedRating = it },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Keep review").assertIsDisplayed()
+
+        val star4Desc = context.getString(R.string.book_detail_rating_star_description, 4)
+        val currentStateDescription = context.getString(R.string.book_detail_rating_current_state, 4)
+        val clearActionLabel = context.getString(R.string.book_detail_rating_action_clear)
+
+        composeRule.onNodeWithContentDescription(star4Desc)
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, currentStateDescription))
+            .assert(
+                SemanticsMatcher("has clear onClick label: $clearActionLabel") { node ->
+                    node.config.getOrElseNullable(SemanticsActions.OnClick) { null }?.label == clearActionLabel
+                },
+            )
+            .performClick()
+
+        assertThat(selectedRating).isEqualTo(4)
+    }
+
+    @Test
+    fun ratingBar_savingState_disablesButtons_andDisplaysSavingState() {
+        val uiState =
+            recordsState(status = ReadingStatus.READING, rating = 4)
+                .copy(ratingSaving = RatingSavingState.Saving(target = 5))
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                )
+            }
+        }
+
+        val savingStateDescription = context.getString(R.string.book_detail_rating_saving)
+        for (star in 1..5) {
+            val starDesc = context.getString(R.string.book_detail_rating_star_description, star)
+            composeRule.onNodeWithContentDescription(starDesc)
+                .assertIsNotEnabled()
+                .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, savingStateDescription))
+        }
+    }
+
+    @Test
+    fun ratingBar_failureState_showsSnackbar_andRetryTriggersCallback() {
+        var retried = false
+        var dismissed = false
+        val uiState =
+            recordsState(status = ReadingStatus.READING, rating = 4)
+                .copy(ratingSaving = RatingSavingState.Failed(target = 2, attempt = 1L))
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onRatingErrorDismissed = { dismissed = true },
+                    onRetryRating = { retried = true },
+                )
+            }
+        }
+
+        val ratingError = context.getString(R.string.book_detail_rating_error)
+        composeRule.onNodeWithText(ratingError).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(DesignSystemR.string.core_designsystem_retry)).performClick()
+
+        assertThat(retried).isTrue()
+        assertThat(dismissed).isFalse()
+    }
+
     @Composable
     private fun BookDetailScreen(
         uiState: BookDetailUiState,
@@ -600,6 +754,9 @@ class BookDetailScreenTest {
         onRetry: () -> Unit,
         onStatusSelected: (ReadingStatus) -> Unit,
         onStatusErrorDismissed: () -> Unit,
+        onRatingSelected: (Int) -> Unit = {},
+        onRatingErrorDismissed: () -> Unit = {},
+        onRetryRating: () -> Unit = {},
         onAddRecord: (LocalDate, LocalTime, Int, Int) -> Long? = { _, _, _, _ -> null },
         onRecordErrorDismissed: () -> Unit = {},
         onFinishCheckConfirmed: (Long) -> Unit = {},
@@ -612,6 +769,9 @@ class BookDetailScreenTest {
             onRetry = onRetry,
             onStatusSelected = onStatusSelected,
             onStatusErrorDismissed = onStatusErrorDismissed,
+            onRatingSelected = onRatingSelected,
+            onRatingErrorDismissed = onRatingErrorDismissed,
+            onRetryRating = onRetryRating,
             onAddRecord = onAddRecord,
             onRecordErrorDismissed = onRecordErrorDismissed,
             onFinishCheckConfirmed = onFinishCheckConfirmed,
@@ -626,22 +786,27 @@ class BookDetailScreenTest {
         fun recordsState(
             status: ReadingStatus?,
             records: List<ReadingRecord> = emptyList(),
+            rating: Int = 4,
+            memo: String? = "Keep review",
         ) = contentState().copy(
             selectedTab = BookDetailTab.MyRecords,
             records = records,
-            bookDetail = BookDetail(
-                testBook,
-                status?.let {
-                    BookEntry(
-                        testBook,
-                        it,
-                        rating = 4,
-                        memo = "Keep review",
-                        addedAt = Instant.fromEpochMilliseconds(1),
-                        updatedAt = Instant.fromEpochMilliseconds(1),
-                    )
-                },
-            ),
+            bookDetail =
+                BookDetail(
+                    testBook,
+                    if (status != null || rating > 0 || memo != null) {
+                        BookEntry(
+                            testBook,
+                            status ?: ReadingStatus.UNSET,
+                            rating = rating,
+                            memo = memo,
+                            addedAt = Instant.fromEpochMilliseconds(1),
+                            updatedAt = Instant.fromEpochMilliseconds(1),
+                        )
+                    } else {
+                        null
+                    },
+                ),
         )
 
         val context = InstrumentationRegistry.getInstrumentation().targetContext

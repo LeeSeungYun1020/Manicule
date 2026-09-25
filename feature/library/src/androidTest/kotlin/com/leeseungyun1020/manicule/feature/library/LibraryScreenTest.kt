@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsSelected
@@ -14,6 +15,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -24,6 +26,7 @@ import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,6 +37,57 @@ class LibraryScreenTest {
     val composeRule = createComposeRule()
 
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
+
+    @Test
+    fun longPress_opensOnlyOtherStatusesAndDelete() {
+        var changedTo: ReadingStatus? = null
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState = LibraryUiState.Content(ReadingStatus.READING, listOf(entry())),
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                    onChangeStatus = { _, status -> changedTo = status },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("테스트 책").performSemanticsAction(SemanticsActions.OnLongClick)
+        composeRule.onNodeWithText(context.getString(R.string.library_action_move_want)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.library_action_move_finished)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.library_action_move_reading)).assertDoesNotExist()
+        composeRule.onNodeWithText(context.getString(R.string.library_action_delete)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.library_action_move_finished)).performClick()
+        composeRule.runOnIdle { assertThat(changedTo).isEqualTo(ReadingStatus.FINISHED) }
+    }
+
+    @Test
+    fun loadingDuringOpenActionSheet_keepsSelectionUntilBooksReturn() {
+        val state = mutableStateOf<LibraryUiState>(LibraryUiState.Content(ReadingStatus.READING, listOf(entry())))
+        composeRule.setContent {
+            ManiculeTheme {
+                LibraryScreen(
+                    uiState = state.value,
+                    onStatusSelected = {},
+                    onSortSelected = {},
+                    onBookSelected = {},
+                    onSearch = {},
+                    onScan = {},
+                    onRetry = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("테스트 책").performSemanticsAction(SemanticsActions.OnLongClick)
+        composeRule.onNodeWithText(context.getString(R.string.library_action_delete)).assertIsDisplayed()
+        composeRule.runOnIdle { state.value = LibraryUiState.Loading(ReadingStatus.READING) }
+        composeRule.runOnIdle { state.value = LibraryUiState.Content(ReadingStatus.READING, listOf(entry())) }
+        composeRule.onNodeWithText(context.getString(R.string.library_action_delete)).assertIsDisplayed()
+    }
 
     @Test
     fun content_showsThreeTabsAndSelectsBook() {
@@ -521,7 +575,7 @@ class LibraryScreenTest {
                             listOf(
                                 entry(
                                     status = ReadingStatus.FINISHED,
-                                    finishedAt = kotlinx.datetime.LocalDate(2026, 7, 8),
+                                    finishedAt = LocalDate(2026, 7, 8),
                                 ),
                             ),
                         ),
@@ -606,7 +660,7 @@ class LibraryScreenTest {
         status: ReadingStatus = ReadingStatus.READING,
         totalPages: Int? = null,
         currentPage: Int? = null,
-        finishedAt: kotlinx.datetime.LocalDate? = null,
+        finishedAt: LocalDate? = null,
     ) = BookEntry(
         book =
             Book(

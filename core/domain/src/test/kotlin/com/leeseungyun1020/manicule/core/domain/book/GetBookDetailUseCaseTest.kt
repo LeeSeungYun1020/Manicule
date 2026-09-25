@@ -12,6 +12,7 @@ import com.leeseungyun1020.manicule.core.model.BookDetail
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import org.junit.Test
 
 class GetBookDetailUseCaseTest {
@@ -78,9 +80,15 @@ class GetBookDetailUseCaseTest {
         override suspend fun changeReadingStatus(
             isbn: String,
             status: ReadingStatus,
-            updatedAt: kotlinx.datetime.Instant,
-            finishedAt: kotlinx.datetime.LocalDate?,
+            updatedAt: Instant,
+            finishedAt: LocalDate?,
         ): ReadingStatusChangeResult = error("Not used by this test")
+
+        override suspend fun updateRating(
+            isbn: String,
+            rating: Int,
+            updatedAt: Instant,
+        ): RatingChangeResult = error("Not used by this test")
 
         override fun observeByStatus(
             status: ReadingStatus,
@@ -97,32 +105,38 @@ class GetBookDetailUseCaseTest {
         override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = SaveBookEntryResult.Saved
 
         override suspend fun removeBookEntry(isbn: String) = Unit
+
+        override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean = error("Not used")
+
+        override suspend fun restoreReadingStatusIfUnchanged(
+            original: BookEntry,
+            changedStatus: ReadingStatus,
+            changedAt: kotlinx.datetime.Instant,
+        ): Boolean = error("Not used")
     }
 
     private companion object {
-        val testBook =
-            Book(
-                isbn = "123",
-                title = "Book",
-                author = "Author",
-                publisher = "Publisher",
-                publishedDate = null,
-                coverUrl = null,
-                totalPages = null,
-                price = null,
-                category = null,
-                tableOfContentsUrl = null,
-                introductionUrl = null,
-                summaryUrl = null,
-            )
-        val testEntry =
-            BookEntry(
-                book = testBook,
-                status = ReadingStatus.UNSET,
-                rating = 4,
-                memo = "Review only",
-                addedAt = Instant.fromEpochMilliseconds(1),
-                updatedAt = Instant.fromEpochMilliseconds(1),
-            )
+        val testBook = Book(
+            isbn = "123",
+            title = "Book",
+            author = "Author",
+            publisher = "Publisher",
+            publishedDate = null,
+            coverUrl = null,
+            totalPages = null,
+            price = null,
+            category = null,
+            tableOfContentsUrl = null,
+            introductionUrl = null,
+            summaryUrl = null,
+        )
+        val testEntry = BookEntry(
+            book = testBook,
+            status = ReadingStatus.UNSET,
+            rating = 4,
+            memo = "Review only",
+            addedAt = Instant.fromEpochMilliseconds(1),
+            updatedAt = Instant.fromEpochMilliseconds(1),
+        )
     }
 }

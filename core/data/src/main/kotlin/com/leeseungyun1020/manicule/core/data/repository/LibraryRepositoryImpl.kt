@@ -7,6 +7,7 @@ import com.leeseungyun1020.manicule.core.data.mapper.asExternalModel
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +28,12 @@ class LibraryRepositoryImpl
             updatedAt: Instant,
             finishedAt: LocalDate?,
         ): ReadingStatusChangeResult = bookEntryLocalDataSource.changeReadingStatus(isbn, status, updatedAt, finishedAt)
+
+        override suspend fun updateRating(
+            isbn: String,
+            rating: Int,
+            updatedAt: Instant,
+        ): RatingChangeResult = bookEntryLocalDataSource.updateRating(isbn, rating, updatedAt)
 
         override fun observeAll(): Flow<List<BookEntry>> =
             bookEntryLocalDataSource.observeAll().map { list ->
@@ -61,6 +68,25 @@ class LibraryRepositoryImpl
             bookEntryLocalDataSource.save(entry.asEntity())
             return SaveBookEntryResult.Saved
         }
+
+        override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean {
+            if (entry.rating !in 0..MAX_RATING) return false
+            return bookEntryLocalDataSource.insertIfAbsent(entry.asEntity())
+        }
+
+        override suspend fun restoreReadingStatusIfUnchanged(
+            original: BookEntry,
+            changedStatus: ReadingStatus,
+            changedAt: Instant,
+        ): Boolean =
+            bookEntryLocalDataSource.restoreStatusIfUnchanged(
+                original.book.isbn,
+                changedStatus,
+                changedAt,
+                original.status,
+                original.updatedAt,
+                original.finishedAt,
+            )
 
         override suspend fun removeBookEntry(isbn: String) {
             bookEntryLocalDataSource.remove(isbn)

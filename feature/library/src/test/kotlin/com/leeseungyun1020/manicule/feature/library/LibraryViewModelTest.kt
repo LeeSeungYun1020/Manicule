@@ -3,19 +3,28 @@ package com.leeseungyun1020.manicule.feature.library
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.leeseungyun1020.manicule.core.common.time.SystemClock
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
 import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
+import com.leeseungyun1020.manicule.core.domain.library.ChangeReadingStatusUseCase
+import com.leeseungyun1020.manicule.core.domain.library.DeleteBookEntryUseCase
 import com.leeseungyun1020.manicule.core.domain.library.GetLibraryBooksUseCase
+import com.leeseungyun1020.manicule.core.domain.library.RestoreBookEntryUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import com.leeseungyun1020.manicule.feature.library.navigation.LibraryTab
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -210,8 +219,222 @@ class LibraryViewModelTest {
             }
         }
 
+    @Test
+    fun changedStatus_canUndoCompleteEntrySnapshot() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val entry = testEntry()
+            val viewModel = createViewModel()
+            viewModel.uiState.test {
+                awaitItem()
+                repository.flow(ReadingStatus.READING).emit(listOf(entry))
+                awaitItem()
+                viewModel.changeStatus(entry.book.isbn, ReadingStatus.FINISHED)
+                advanceUntilIdle()
+                val message = checkNotNull(viewModel.actionMessage.value)
+                assertThat(message.kind).isEqualTo(LibraryActionMessageKind.STATUS_CHANGED)
+                assertThat(repository.changedStatus).isEqualTo(ReadingStatus.FINISHED)
+                viewModel.undo(message.id)
+                advanceUntilIdle()
+                assertThat(repository.savedEntry).isEqualTo(entry)
+                assertThat(viewModel.actionMessage.value).isNull()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun deleteFailure_doesNotOfferUndo() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val entry = testEntry()
+            repository.deleteFailure = IOException("delete failed")
+            val viewModel = createViewModel()
+            viewModel.uiState.test {
+                awaitItem()
+                repository.flow(ReadingStatus.READING).emit(listOf(entry))
+                awaitItem()
+                viewModel.deleteBook(entry.book.isbn)
+                advanceUntilIdle()
+                val message = checkNotNull(viewModel.actionMessage.value)
+                assertThat(message.kind).isEqualTo(LibraryActionMessageKind.ACTION_FAILED)
+                viewModel.undo(message.id)
+                advanceUntilIdle()
+                assertThat(repository.savedEntry).isNull()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun undoFailure_retainsSnapshotForRetry() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val entry = testEntry()
+            val viewModel = createViewModel()
+            viewModel.uiState.test {
+                awaitItem()
+                repository.flow(ReadingStatus.READING).emit(listOf(entry))
+                awaitItem()
+                viewModel.deleteBook(entry.book.isbn)
+                advanceUntilIdle()
+                val id = checkNotNull(viewModel.actionMessage.value).id
+                repository.saveFailure = IOException("restore failed")
+                viewModel.undo(id)
+                advanceUntilIdle()
+                val firstFailure = checkNotNull(viewModel.actionMessage.value)
+                assertThat(firstFailure.kind).isEqualTo(LibraryActionMessageKind.UNDO_FAILED)
+                viewModel.undo(id)
+                advanceUntilIdle()
+                val secondFailure = checkNotNull(viewModel.actionMessage.value)
+                assertThat(secondFailure.kind).isEqualTo(LibraryActionMessageKind.UNDO_FAILED)
+                assertThat(secondFailure.revision).isGreaterThan(firstFailure.revision)
+                viewModel.messageDismissed(id)
+                val redisplayed = checkNotNull(viewModel.actionMessage.value)
+                assertThat(redisplayed.revision).isGreaterThan(secondFailure.revision)
+                repository.saveFailure = null
+                viewModel.undo(id)
+                advanceUntilIdle()
+                assertThat(repository.savedEntry).isEqualTo(entry)
+                assertThat(viewModel.actionMessage.value).isNull()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun undoConflict_doesNotOfferRetry() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val entry = testEntry()
+            val viewModel = createViewModel()
+            viewModel.uiState.test {
+                awaitItem()
+                repository.flow(ReadingStatus.READING).emit(listOf(entry))
+                awaitItem()
+                viewModel.deleteBook(entry.book.isbn)
+                advanceUntilIdle()
+                val id = checkNotNull(viewModel.actionMessage.value).id
+                repository.restoreResult = false
+
+                viewModel.undo(id)
+                advanceUntilIdle()
+                assertThat(viewModel.actionMessage.value?.kind).isEqualTo(LibraryActionMessageKind.UNDO_CONFLICT)
+                viewModel.undo(id)
+                advanceUntilIdle()
+                assertThat(repository.savedEntry).isNull()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun nextAction_invalidatesPreviousUndoId() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val first = testEntry()
+            val second = testEntry().copy(book = testEntry().book.copy(isbn = "9780000000002"))
+            val viewModel = createViewModel()
+            viewModel.uiState.test {
+                awaitItem()
+                repository.flow(ReadingStatus.READING).emit(listOf(first, second))
+                awaitItem()
+                viewModel.deleteBook(first.book.isbn)
+                advanceUntilIdle()
+                val oldId = checkNotNull(viewModel.actionMessage.value).id
+                viewModel.deleteBook(second.book.isbn)
+                advanceUntilIdle()
+                val newId = checkNotNull(viewModel.actionMessage.value).id
+                assertThat(newId).isNotEqualTo(oldId)
+                viewModel.undo(oldId)
+                advanceUntilIdle()
+                assertThat(repository.savedEntry).isNull()
+                viewModel.undo(newId)
+                advanceUntilIdle()
+                assertThat(repository.savedEntry).isEqualTo(second)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun olderRestoreCompletion_keepsNewerUndoAvailable() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val first = testEntry()
+            val second = first.copy(book = first.book.copy(isbn = "9780000000002"))
+            val viewModel = createViewModel()
+            viewModel.uiState.test {
+                awaitItem()
+                repository.flow(ReadingStatus.READING).emit(listOf(first, second))
+                awaitItem()
+                viewModel.deleteBook(first.book.isbn)
+                advanceUntilIdle()
+                val oldId = checkNotNull(viewModel.actionMessage.value).id
+
+                val restoreGate = CompletableDeferred<Unit>()
+                repository.saveGate = restoreGate
+                viewModel.undo(oldId)
+                advanceUntilIdle()
+
+                viewModel.deleteBook(second.book.isbn)
+                advanceUntilIdle()
+                val newId = checkNotNull(viewModel.actionMessage.value).id
+                assertThat(newId).isNotEqualTo(oldId)
+
+                repository.saveGate = null
+                restoreGate.complete(Unit)
+                advanceUntilIdle()
+                assertThat(viewModel.actionMessage.value?.id).isEqualTo(newId)
+
+                viewModel.undo(newId)
+                advanceUntilIdle()
+                assertThat(repository.savedEntry).isEqualTo(second)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun unchangedStatus_doesNotCreateUndo() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val entry = testEntry()
+            repository.statusResult = ReadingStatusChangeResult.Unchanged
+            val viewModel = createViewModel()
+            viewModel.uiState.test {
+                awaitItem()
+                repository.flow(ReadingStatus.READING).emit(listOf(entry))
+                awaitItem()
+                viewModel.changeStatus(entry.book.isbn, ReadingStatus.WANT)
+                advanceUntilIdle()
+                val message = checkNotNull(viewModel.actionMessage.value)
+                assertThat(message.kind).isEqualTo(LibraryActionMessageKind.ACTION_FAILED)
+                viewModel.undo(message.id)
+                advanceUntilIdle()
+                assertThat(repository.savedEntry).isNull()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    private fun testEntry(): BookEntry =
+        BookEntry(
+            book = Book(
+                isbn = "9780000000001",
+                title = "Test",
+                author = "Author",
+                publisher = "Publisher",
+                publishedDate = null,
+                coverUrl = null,
+                totalPages = null,
+                price = null,
+                category = null,
+                tableOfContentsUrl = null,
+                introductionUrl = null,
+                summaryUrl = null,
+            ),
+            status = ReadingStatus.READING,
+            rating = 4,
+            memo = "Review",
+            addedAt = Instant.fromEpochMilliseconds(1),
+            updatedAt = Instant.fromEpochMilliseconds(2),
+        )
+
     private fun createViewModel(savedStateHandle: SavedStateHandle = SavedStateHandle()): LibraryViewModel =
-        LibraryViewModel(GetLibraryBooksUseCase(repository), savedStateHandle)
+        LibraryViewModel(
+            GetLibraryBooksUseCase(repository),
+            ChangeReadingStatusUseCase(repository, SystemClock()),
+            DeleteBookEntryUseCase(repository),
+            RestoreBookEntryUseCase(repository),
+            savedStateHandle,
+        )
 }
 
 private class ControllableLibraryRepository : LibraryRepository {
@@ -220,6 +443,13 @@ private class ControllableLibraryRepository : LibraryRepository {
     var lastSort: LibrarySort? = null
     var subscriptionCount = 0
     var fail = false
+    var changedStatus: ReadingStatus? = null
+    var statusResult = ReadingStatusChangeResult.Changed
+    var deleteFailure: Exception? = null
+    var saveFailure: Exception? = null
+    var restoreResult = true
+    var saveGate: CompletableDeferred<Unit>? = null
+    var savedEntry: BookEntry? = null
 
     fun flow(status: ReadingStatus): MutableSharedFlow<List<BookEntry>> = checkNotNull(flows[status])
 
@@ -228,9 +458,18 @@ private class ControllableLibraryRepository : LibraryRepository {
     override suspend fun changeReadingStatus(
         isbn: String,
         status: ReadingStatus,
-        updatedAt: kotlinx.datetime.Instant,
-        finishedAt: kotlinx.datetime.LocalDate?,
-    ): ReadingStatusChangeResult = error("Not used by this test")
+        updatedAt: Instant,
+        finishedAt: LocalDate?,
+    ): ReadingStatusChangeResult {
+        changedStatus = status
+        return statusResult
+    }
+
+    override suspend fun updateRating(
+        isbn: String,
+        rating: Int,
+        updatedAt: Instant,
+    ): RatingChangeResult = error("Not used by this test")
 
     override fun observeByStatus(
         status: ReadingStatus,
@@ -251,7 +490,28 @@ private class ControllableLibraryRepository : LibraryRepository {
         limit: Int,
     ): List<Book> = emptyList()
 
-    override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = SaveBookEntryResult.Saved
+    override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult {
+        savedEntry = entry
+        return SaveBookEntryResult.Saved
+    }
 
-    override suspend fun removeBookEntry(isbn: String) = Unit
+    override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean = restore(entry)
+
+    override suspend fun restoreReadingStatusIfUnchanged(
+        original: BookEntry,
+        changedStatus: ReadingStatus,
+        changedAt: Instant,
+    ): Boolean = restore(original)
+
+    private suspend fun restore(entry: BookEntry): Boolean {
+        saveFailure?.let { throw it }
+        saveGate?.await()
+        if (!restoreResult) return false
+        savedEntry = entry
+        return true
+    }
+
+    override suspend fun removeBookEntry(isbn: String) {
+        deleteFailure?.let { throw it }
+    }
 }

@@ -19,13 +19,18 @@ import androidx.navigation.toRoute
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
+import com.leeseungyun1020.manicule.core.common.time.SystemClock
 import com.leeseungyun1020.manicule.core.data.repository.LibraryRepository
 import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.domain.library.ChangeReadingStatusUseCase
+import com.leeseungyun1020.manicule.core.domain.library.DeleteBookEntryUseCase
 import com.leeseungyun1020.manicule.core.domain.library.GetLibraryBooksUseCase
+import com.leeseungyun1020.manicule.core.domain.library.RestoreBookEntryUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import com.leeseungyun1020.manicule.feature.library.navigation.LibraryTab
@@ -108,7 +113,8 @@ class LibraryNavigationTest {
     }
 
     private fun setContent() {
-        val getLibraryBooks = GetLibraryBooksUseCase(NavigationLibraryRepository())
+        val repository = NavigationLibraryRepository()
+        val getLibraryBooks = GetLibraryBooksUseCase(repository)
         composeRule.setContent {
             navController = rememberNavController()
             ManiculeTheme {
@@ -124,7 +130,13 @@ class LibraryNavigationTest {
                                     factory =
                                         viewModelFactory {
                                             initializer {
-                                                LibraryViewModel(getLibraryBooks, createSavedStateHandle())
+                                                LibraryViewModel(
+                                                    getLibraryBooks,
+                                                    ChangeReadingStatusUseCase(repository, SystemClock()),
+                                                    DeleteBookEntryUseCase(repository),
+                                                    RestoreBookEntryUseCase(repository),
+                                                    createSavedStateHandle(),
+                                                )
                                             }
                                         },
                                 ),
@@ -162,6 +174,12 @@ private class NavigationLibraryRepository : LibraryRepository {
         finishedAt: LocalDate?,
     ): ReadingStatusChangeResult = error("Not used")
 
+    override suspend fun updateRating(
+        isbn: String,
+        rating: Int,
+        updatedAt: Instant,
+    ): RatingChangeResult = error("Not used")
+
     override fun observeAll(): Flow<List<BookEntry>> = error("Not used")
 
     override fun observeBookEntry(isbn: String): Flow<BookEntry?> = error("Not used")
@@ -174,6 +192,14 @@ private class NavigationLibraryRepository : LibraryRepository {
     override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = error("Not used")
 
     override suspend fun removeBookEntry(isbn: String): Unit = error("Not used")
+
+    override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean = error("Not used")
+
+    override suspend fun restoreReadingStatusIfUnchanged(
+        original: BookEntry,
+        changedStatus: ReadingStatus,
+        changedAt: kotlinx.datetime.Instant,
+    ): Boolean = error("Not used")
 
     private fun entry(status: ReadingStatus) =
         BookEntry(

@@ -2,18 +2,24 @@ package com.leeseungyun1020.manicule.feature.bookdetail.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeCard
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeDashedCard
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
@@ -24,6 +30,7 @@ import com.leeseungyun1020.manicule.feature.bookdetail.RecordLoadState
 
 private enum class MyRecordContentType {
     Status,
+    Review,
     EmptyRecords,
     RecordError,
 }
@@ -32,10 +39,14 @@ private enum class MyRecordContentType {
 internal fun MyRecordTabContent(
     status: ReadingStatus?,
     isSaving: Boolean,
+    rating: Int,
+    memo: String?,
+    isRatingSaving: Boolean,
     records: List<ReadingRecord>,
     recordLoadState: RecordLoadState,
     totalPages: Int?,
     onStatusSelected: (ReadingStatus) -> Unit,
+    onRatingSelected: (Int) -> Unit,
     onAddRecord: () -> Unit,
     onRetryRecords: () -> Unit,
     modifier: Modifier = Modifier,
@@ -79,6 +90,28 @@ internal fun MyRecordTabContent(
             }
         }
 
+        item(
+            key = "book-detail-review",
+            contentType = MyRecordContentType.Review,
+        ) {
+            Column(
+                modifier = Modifier.padding(bottom = MaterialTheme.spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+            ) {
+                Text(
+                    text = stringResource(R.string.book_detail_review_title),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                BookDetailReviewCard(
+                    rating = rating,
+                    memo = memo,
+                    isSaving = isRatingSaving,
+                    onRatingSelected = onRatingSelected,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+
         if (records.isEmpty() && recordLoadState is RecordLoadState.Failed) {
             item(
                 key = "reading-records-error",
@@ -104,32 +137,136 @@ internal fun MyRecordTabContent(
     }
 }
 
+@Composable
+internal fun BookDetailReviewCard(
+    rating: Int,
+    memo: String?,
+    isSaving: Boolean,
+    onRatingSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val isReviewEmpty = rating == 0 && memo.isNullOrBlank()
+    val cardContent: @Composable ColumnScope.() -> Unit = {
+        Column(
+            modifier = Modifier.padding(MaterialTheme.spacing.md),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+        ) {
+            BookDetailRatingBar(
+                rating = rating,
+                isSaving = isSaving,
+                onRatingSelected = onRatingSelected,
+            )
+            val reviewText =
+                if (!memo.isNullOrBlank()) {
+                    memo
+                } else {
+                    stringResource(R.string.book_detail_rating_empty_prompt)
+                }
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+            )
+            Text(
+                text = reviewText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+
+    if (isReviewEmpty) {
+        ManiculeDashedCard(
+            modifier = modifier,
+            horizontalAlignment = Alignment.Start,
+            content = cardContent,
+        )
+    } else {
+        ManiculeCard(
+            modifier = modifier,
+            content = cardContent,
+        )
+    }
+}
+
 @ManiculePreview
 @Composable
-private fun MyRecordUnregisteredPreview() {
-    ManiculePreviewTheme { MyRecordTabContent(null, false, emptyList(), RecordLoadState.Idle, null, {}, {}, {}) }
+private fun MyRecordUnregisteredEmptyRatingPreview() {
+    ManiculePreviewTheme {
+        MyRecordTabContent(
+            status = null,
+            isSaving = false,
+            rating = 0,
+            memo = null,
+            isRatingSaving = false,
+            records = emptyList(),
+            recordLoadState = RecordLoadState.Idle,
+            totalPages = null,
+            onStatusSelected = {},
+            onRatingSelected = {},
+            onAddRecord = {},
+            onRetryRecords = {},
+        )
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun MyRecordRatedWithMemoPreview() {
+    ManiculePreviewTheme {
+        MyRecordTabContent(
+            status = ReadingStatus.READING,
+            isSaving = false,
+            rating = 4,
+            memo = "담담한 문장이 오래 남는 책. 다시 읽고 싶다.",
+            isRatingSaving = false,
+            records = emptyList(),
+            recordLoadState = RecordLoadState.Idle,
+            totalPages = 264,
+            onStatusSelected = {},
+            onRatingSelected = {},
+            onAddRecord = {},
+            onRetryRecords = {},
+        )
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun MyRecordRatingSavingPreview() {
+    ManiculePreviewTheme {
+        MyRecordTabContent(
+            status = ReadingStatus.READING,
+            isSaving = false,
+            rating = 4,
+            memo = null,
+            isRatingSaving = true,
+            records = emptyList(),
+            recordLoadState = RecordLoadState.Idle,
+            totalPages = 264,
+            onStatusSelected = {},
+            onRatingSelected = {},
+            onAddRecord = {},
+            onRetryRecords = {},
+        )
+    }
 }
 
 @ManiculePreview
 @Composable
 private fun MyRecordReviewOnlyPreview() {
     ManiculePreviewTheme {
-        MyRecordTabContent(ReadingStatus.UNSET, false, emptyList(), RecordLoadState.Idle, null, {}, {}, {})
-    }
-}
-
-@ManiculePreview
-@Composable
-private fun MyRecordSavingPreview() {
-    ManiculePreviewTheme {
-        MyRecordTabContent(ReadingStatus.READING, true, emptyList(), RecordLoadState.Idle, null, {}, {}, {})
-    }
-}
-
-@ManiculePreview
-@Composable
-private fun MyRecordRegisteredPreview() {
-    ManiculePreviewTheme {
-        MyRecordTabContent(ReadingStatus.FINISHED, false, emptyList(), RecordLoadState.Idle, null, {}, {}, {})
+        MyRecordTabContent(
+            status = ReadingStatus.UNSET,
+            isSaving = false,
+            rating = 5,
+            memo = null,
+            isRatingSaving = false,
+            records = emptyList(),
+            recordLoadState = RecordLoadState.Idle,
+            totalPages = null,
+            onStatusSelected = {},
+            onRatingSelected = {},
+            onAddRecord = {},
+            onRetryRecords = {},
+        )
     }
 }
