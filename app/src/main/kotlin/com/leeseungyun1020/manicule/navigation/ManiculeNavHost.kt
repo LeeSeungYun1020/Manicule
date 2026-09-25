@@ -97,7 +97,11 @@ fun ManiculeNavHost(
                 appState.navController.navigate(ScannerRoute)
             },
         )
-        statsScreen()
+        statsScreen(
+            onBookSelected = { isbn ->
+                appState.navController.navigate(BookDetailRoute(isbn, openMyRecords = true))
+            },
+        )
         settingsScreen()
     }
 }

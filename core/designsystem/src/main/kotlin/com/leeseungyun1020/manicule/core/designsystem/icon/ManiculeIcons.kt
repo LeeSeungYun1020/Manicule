@@ -6,6 +6,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CameraAlt
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.NoPhotography
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Refresh
@@ -64,4 +66,7 @@ object ManiculeIcons {
     val Close: ImageVector = Icons.Default.Close
     val Bookmark: ImageVector = Icons.Default.Bookmark
     val Celebration: ImageVector = Icons.Filled.Celebration
+    val Streak: ImageVector = Icons.Default.LocalFireDepartment
+    val Pages: ImageVector = Icons.Default.AutoStories
+    val Book: ImageVector = Icons.AutoMirrored.Filled.MenuBook
 }
