@@ -24,12 +24,6 @@
     "url": "https://github.com/material-components/material-components-android"
   },
   {
-    "name": "Google ML Kit Barcode Scanning",
-    "copyright": "Copyright Google LLC",
-    "license": "Apache License 2.0",
-    "url": "https://developers.google.com/ml-kit/vision/barcode-scanning"
-  },
-  {
     "name": "Retrofit & OkHttp",
     "copyright": "Copyright Square, Inc.",
     "license": "Apache License 2.0",
