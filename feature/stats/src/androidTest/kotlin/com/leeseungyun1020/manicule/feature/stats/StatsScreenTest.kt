@@ -43,6 +43,7 @@ class StatsScreenTest {
             ManiculeTheme {
                 StatsScreen(
                     state = StatsUiState(period(), day),
+                    onPeriodSelected = {},
                     onDateSelected = { date ->
                         day = DayState.Content(date, listOf(ReadingDayBook("isbn", null, 2, 20)))
                     },
@@ -98,6 +99,7 @@ class StatsScreenTest {
             ManiculeTheme {
                 StatsScreen(
                     state = StatsUiState(period(empty = true)),
+                    onPeriodSelected = {},
                     onDateSelected = {},
                     onDismissDay = {},
                     onRetryPeriod = {},
@@ -141,6 +143,63 @@ class StatsScreenTest {
 
         composeRule.onNodeWithText(context.getString(R.string.stats_period_one_year)).performClick()
         assertEquals(StatsPeriod.ONE_YEAR, selectedPeriod)
+
+        // 직접 선택(CUSTOM)은 날짜 선택기/바텀시트가 구현될 때까지 탭해도 콜백이 호출되지 않는다.
+        composeRule.onNodeWithText(context.getString(R.string.stats_period_custom)).performClick()
+        assertEquals(StatsPeriod.ONE_YEAR, selectedPeriod)
+    }
+
+    @Test
+    fun today_period_renders_horizontal_strip_and_recorded_date_opens_sheet() {
+        var day by mutableStateOf<DayState>(DayState.Closed)
+        val todayRecordDate = today.minus(DatePeriod(days = 1))
+        val todayPeriodContent = PeriodState.Content(
+            today = today,
+            selectedPeriod = StatsPeriod.TODAY,
+            days = (0..6).map { index ->
+                val date = today.minus(DatePeriod(days = 6 - index))
+                ReadingCalendarDay.of(date, if (date == todayRecordDate) 35 else 0)
+            },
+            summary = PeriodSummary(today, today, 1, 35, 1),
+        )
+        composeRule.setContent {
+            ManiculeTheme {
+                StatsScreen(
+                    state = StatsUiState(todayPeriodContent, day),
+                    onPeriodSelected = {},
+                    onDateSelected = { date ->
+                        day = DayState.Content(date, listOf(ReadingDayBook("isbn-today", null, 1, 35)))
+                    },
+                    onDismissDay = { day = DayState.Closed },
+                    onRetryPeriod = {},
+                    onRetryDay = {},
+                    onBookSelected = {},
+                    consumeRefreshError = { true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.stats_monday)).assertIsDisplayed()
+
+        val readDescription = context.resources.getQuantityString(
+            CoreUiR.plurals.reading_calendar_cell_content_description,
+            35,
+            todayRecordDate.year,
+            todayRecordDate.monthNumber,
+            todayRecordDate.dayOfMonth,
+            35,
+        )
+        composeRule.onNodeWithContentDescription(readDescription).performClick()
+        composeRule.onNodeWithText(
+            context.resources.getQuantityString(
+                R.plurals.stats_day_title,
+                1,
+                todayRecordDate.year,
+                todayRecordDate.monthNumber,
+                todayRecordDate.dayOfMonth,
+                1,
+            ),
+        ).assertIsDisplayed()
     }
 
     @Test

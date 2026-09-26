@@ -71,6 +71,7 @@ fun StatsScreenRoute(
 @Composable
 fun StatsScreen(
     state: StatsUiState,
+    onPeriodSelected: (StatsPeriod) -> Unit,
     onDateSelected: (LocalDate) -> Unit,
     onDismissDay: () -> Unit,
     onRetryPeriod: () -> Unit,
@@ -78,7 +79,6 @@ fun StatsScreen(
     onBookSelected: (String) -> Unit,
     consumeRefreshError: (Int) -> Boolean,
     modifier: Modifier = Modifier,
-    onPeriodSelected: (StatsPeriod) -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -187,7 +187,11 @@ private fun StatsContent(
         ManiculeSegmentedButton(
             options = StatsPeriod.entries,
             selectedOption = period.selectedPeriod,
-            onOptionSelected = onPeriodSelected,
+            onOptionSelected = { option ->
+                if (option != StatsPeriod.CUSTOM) {
+                    onPeriodSelected(option)
+                }
+            },
             itemLabel = { option ->
                 when (option) {
                     StatsPeriod.TODAY -> todayLabel
@@ -231,6 +235,7 @@ private fun StatsContent(
             today = period.today,
             selectedDate = selectedDate,
             onDateSelected = onDateSelected,
+            isTodayPeriod = period.selectedPeriod == StatsPeriod.TODAY,
         )
         StatsSummary(period.summary)
         if (period.summary.pagesRead == 0) {

@@ -137,6 +137,24 @@ class StatsViewModelTest {
         }
 
     @Test
+    fun custom_period_selection_is_ignored_until_picker_is_implemented() =
+        runTest(dispatcherRule.dispatcher) {
+            val viewModel = viewModel()
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            val initialContent = viewModel.uiState.value.period as PeriodState.Content
+            assertThat(initialContent.selectedPeriod).isEqualTo(StatsPeriod.TODAY)
+
+            viewModel.selectPeriod(StatsPeriod.CUSTOM)
+            runCurrent()
+
+            val afterContent = viewModel.uiState.value.period as PeriodState.Content
+            assertThat(afterContent.selectedPeriod).isEqualTo(StatsPeriod.TODAY)
+            job.cancel()
+        }
+
+    @Test
     fun only_read_dates_open_and_removing_last_record_keeps_empty_sheet() =
         runTest(dispatcherRule.dispatcher) {
             val date = LocalDate(2024, 2, 29)

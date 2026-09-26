@@ -137,6 +137,7 @@ class StatsViewModel
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), StatsUiState())
 
         fun selectPeriod(period: StatsPeriod) {
+            if (period == StatsPeriod.CUSTOM) return
             if (selectedPeriod.value == period) return
             savedStateHandle[SELECTED_PERIOD_KEY] = period
             val currentToday = (periodState.value as? PeriodState.Content)?.today ?: clock.today()
