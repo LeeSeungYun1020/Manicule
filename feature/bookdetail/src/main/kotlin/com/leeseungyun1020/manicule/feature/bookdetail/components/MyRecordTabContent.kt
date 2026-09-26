@@ -188,7 +188,7 @@ internal fun BookDetailReviewCard(
                 placeholder = stringResource(R.string.book_detail_rating_empty_prompt),
                 enabled = !isMemoSaving,
                 singleLine = false,
-                maxLines = 5,
+                borderless = true,
                 modifier =
                     Modifier
                         .fillMaxWidth()
