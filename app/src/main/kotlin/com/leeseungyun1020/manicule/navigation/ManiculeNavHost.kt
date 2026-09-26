@@ -56,6 +56,12 @@ fun ManiculeNavHost(
             onNavigateToWantBooks = {
                 appState.navController.navigate(LibraryRoute(LibraryTab.WANT))
             },
+            onNavigateToScanner = {
+                appState.navController.navigate(ScannerRoute)
+            },
+            onNavigateToStats = {
+                appState.navigateToTopLevelDestination(TopLevelDestination.STATS)
+            },
         )
         searchScreen(
             onNavigateBack = {
