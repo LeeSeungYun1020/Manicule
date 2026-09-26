@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.Dialog
@@ -52,10 +53,17 @@ fun LicensesRoute(
     viewModel: LicensesViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uriHandler = LocalUriHandler.current
     LicensesScreen(
         uiState = uiState,
         onNavigateBack = onNavigateBack,
         onRetry = viewModel::retry,
+        onOpenUrl = { url ->
+            try {
+                uriHandler.openUri(url)
+            } catch (_: Exception) {
+            }
+        },
     )
 }
 
@@ -65,6 +73,7 @@ fun LicensesScreen(
     uiState: LicensesUiState,
     onNavigateBack: () -> Unit,
     onRetry: () -> Unit,
+    onOpenUrl: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -128,6 +137,7 @@ fun LicensesScreen(
                             LicenseItemCard(
                                 library = library,
                                 onViewFullText = { selectedLibrary = library.name },
+                                onOpenUrl = onOpenUrl,
                             )
                         }
                     }
@@ -148,6 +158,7 @@ fun LicensesScreen(
 private fun LicenseItemCard(
     library: OpenSourceLibrary,
     onViewFullText: () -> Unit,
+    onOpenUrl: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     ManiculeCard(modifier = modifier.fillMaxWidth()) {
@@ -182,8 +193,15 @@ private fun LicenseItemCard(
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
+                if (library.url != null) {
+                    ManiculeTextButton(
+                        onClick = { onOpenUrl(library.url) },
+                        text = stringResource(R.string.settings_licenses_view_details),
+                    )
+                }
                 ManiculeTextButton(
                     onClick = onViewFullText,
                     text = stringResource(R.string.settings_licenses_view_full_text),
@@ -271,6 +289,7 @@ private fun LicensesScreenSuccessPreview() {
                 ),
             onNavigateBack = {},
             onRetry = {},
+            onOpenUrl = {},
         )
     }
 }
@@ -283,6 +302,7 @@ private fun LicensesScreenLoadingPreview() {
             uiState = LicensesUiState.Loading,
             onNavigateBack = {},
             onRetry = {},
+            onOpenUrl = {},
         )
     }
 }
@@ -295,6 +315,7 @@ private fun LicensesScreenErrorPreview() {
             uiState = LicensesUiState.Error,
             onNavigateBack = {},
             onRetry = {},
+            onOpenUrl = {},
         )
     }
 }

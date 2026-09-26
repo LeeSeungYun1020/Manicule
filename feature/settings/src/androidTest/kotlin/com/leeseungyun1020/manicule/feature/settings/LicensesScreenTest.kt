@@ -40,6 +40,7 @@ class LicensesScreenTest {
                     uiState = LicensesUiState.Loading,
                     onNavigateBack = { backPressed = true },
                     onRetry = {},
+                    onOpenUrl = {},
                 )
             }
         }
@@ -63,6 +64,7 @@ class LicensesScreenTest {
                         ),
                     onNavigateBack = {},
                     onRetry = {},
+                    onOpenUrl = {},
                 )
             }
         }
@@ -86,6 +88,7 @@ class LicensesScreenTest {
                         ),
                     onNavigateBack = {},
                     onRetry = {},
+                    onOpenUrl = {},
                 )
             }
         }
@@ -101,6 +104,59 @@ class LicensesScreenTest {
     }
 
     @Test
+    fun licensesScreen_libraryWithUrl_showsDetailsButton_andTriggersCallback() {
+        var openedUrl: String? = null
+        composeRule.setContent {
+            ManiculeTheme {
+                LicensesScreen(
+                    uiState =
+                        LicensesUiState.Success(
+                            libraries = testLibraries,
+                            licenseText = testLicenseText,
+                        ),
+                    onNavigateBack = {},
+                    onRetry = {},
+                    onOpenUrl = { openedUrl = it },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.settings_licenses_view_details)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.settings_licenses_view_details)).performClick()
+
+        assertThat(openedUrl).isEqualTo("https://example.com/test")
+    }
+
+    @Test
+    fun licensesScreen_libraryWithoutUrl_doesNotShowDetailsButton() {
+        val librariesWithoutUrl =
+            listOf(
+                OpenSourceLibrary(
+                    name = "No Url Library",
+                    copyright = "Copyright 2026 Test Authors",
+                    license = "Apache License 2.0",
+                    url = null,
+                ),
+            )
+        composeRule.setContent {
+            ManiculeTheme {
+                LicensesScreen(
+                    uiState =
+                        LicensesUiState.Success(
+                            libraries = librariesWithoutUrl,
+                            licenseText = testLicenseText,
+                        ),
+                    onNavigateBack = {},
+                    onRetry = {},
+                    onOpenUrl = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.settings_licenses_view_details)).assertDoesNotExist()
+    }
+
+    @Test
     fun licensesScreen_errorState_showsErrorAndRetries() {
         var retried = false
         composeRule.setContent {
@@ -109,6 +165,7 @@ class LicensesScreenTest {
                     uiState = LicensesUiState.Error,
                     onNavigateBack = {},
                     onRetry = { retried = true },
+                    onOpenUrl = {},
                 )
             }
         }
