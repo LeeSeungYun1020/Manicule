@@ -86,20 +86,16 @@ private fun SettingsRouteContent(
     }
 
     val appVersion = remember(context) {
-        try {
-            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 context.packageManager.getPackageInfo(
                     context.packageName,
                     PackageManager.PackageInfoFlags.of(0),
                 )
             } else {
-                @Suppress("DEPRECATION")
                 context.packageManager.getPackageInfo(context.packageName, 0)
-            }
-            packageInfo.versionName ?: ""
-        } catch (_: Exception) {
-            ""
-        }
+            }.versionName ?: ""
+        }.getOrDefault("")
     }
 
     SettingsScreenContainer(

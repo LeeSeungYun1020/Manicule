@@ -31,17 +31,19 @@ class LicensesViewModel
         private fun loadLicenses() {
             _uiState.value = LicensesUiState.Loading
             viewModelScope.launch {
-                try {
+                runCatching {
                     val libraries = licenseLoader.loadLibraries()
                     val licenseText = licenseLoader.loadLicenseText()
                     _uiState.value = LicensesUiState.Success(
                         libraries = libraries,
                         licenseText = licenseText,
                     )
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (_: Exception) {
-                    _uiState.value = LicensesUiState.Error
+                }.onFailure {
+                    if (it is CancellationException) {
+                        throw it
+                    } else {
+                        _uiState.value = LicensesUiState.Error
+                    }
                 }
             }
         }

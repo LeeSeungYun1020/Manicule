@@ -59,10 +59,7 @@ fun LicensesRoute(
         onNavigateBack = onNavigateBack,
         onRetry = viewModel::retry,
         onOpenUrl = { url ->
-            try {
-                uriHandler.openUri(url)
-            } catch (_: Exception) {
-            }
+            runCatching { uriHandler.openUri(url) }
         },
     )
 }
