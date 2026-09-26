@@ -97,7 +97,7 @@ private fun resolveMemoSaving(
         else -> previousMemoSaving ?: MemoSavingState.Idle
     }
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 @HiltViewModel
 class BookDetailViewModel
     @Inject
@@ -281,22 +281,25 @@ class BookDetailViewModel
         }
 
         suspend fun saveMemoAndCheckSuccess(): Boolean {
-            memoSaveJob?.let { job ->
-                if (job.isActive) {
-                    job.join()
-                    val state = _uiState.value as? BookDetailUiState.Content
-                    return state?.memoSaving !is MemoSavingState.Failed
+            val activeJob = memoSaveJob
+            if (activeJob != null && activeJob.isActive) {
+                activeJob.join()
+                val state = _uiState.value as? BookDetailUiState.Content
+                return state?.memoSaving !is MemoSavingState.Failed
+            }
+            val content = _uiState.value as? BookDetailUiState.Content
+            val draft = content?.memoDraft
+            val normalizedDraft = draft?.trim()?.ifEmpty { null }
+            val currentMemo = content?.bookDetail?.entry?.memo
+            return when {
+                draft == null -> true
+                normalizedDraft == currentMemo -> {
+                    clearMemoDraft()
+                    true
                 }
+
+                else -> saveMemoInternal(normalizedDraft)
             }
-            val content = _uiState.value as? BookDetailUiState.Content ?: return true
-            val draft = content.memoDraft ?: return true
-            val currentMemo = content.bookDetail.entry?.memo
-            val normalizedDraft = draft.trim().ifEmpty { null }
-            if (normalizedDraft == currentMemo) {
-                clearMemoDraft()
-                return true
-            }
-            return saveMemoInternal(normalizedDraft)
         }
 
         fun retryMemo() {

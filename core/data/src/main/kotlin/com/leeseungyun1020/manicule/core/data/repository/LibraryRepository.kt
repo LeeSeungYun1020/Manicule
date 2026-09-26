@@ -19,6 +19,7 @@ sealed interface SaveBookEntryResult {
     ) : SaveBookEntryResult
 }
 
+@Suppress("TooManyFunctions")
 interface LibraryRepository {
     /** 상태와 시각만 원자적으로 변경한다. 최초 등록은 캐시된 책이 있어야 한다.
      * 같은 상태는 시각을 보존하며, FINISHED일 때만 finishedAt을 전달한다.
