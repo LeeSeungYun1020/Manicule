@@ -30,6 +30,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeErrorState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSegmentedButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSnackbarHost
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeStatTile
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTopAppBar
@@ -53,6 +54,7 @@ fun StatsScreenRoute(
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
     StatsScreen(
         state = state,
+        onPeriodSelected = viewModel::selectPeriod,
         onDateSelected = viewModel::selectDate,
         onDismissDay = viewModel::dismissDay,
         onRetryPeriod = viewModel::retryPeriod,
@@ -69,6 +71,7 @@ fun StatsScreenRoute(
 @Composable
 fun StatsScreen(
     state: StatsUiState,
+    onPeriodSelected: (StatsPeriod) -> Unit,
     onDateSelected: (LocalDate) -> Unit,
     onDismissDay: () -> Unit,
     onRetryPeriod: () -> Unit,
@@ -116,6 +119,7 @@ fun StatsScreen(
             is PeriodState.Content -> StatsContent(
                 period = period,
                 selectedDate = state.day.selectedDate,
+                onPeriodSelected = onPeriodSelected,
                 onDateSelected = onDateSelected,
                 modifier = Modifier.fillMaxSize().padding(padding),
             )
@@ -168,6 +172,7 @@ private val DayState.selectedDate: LocalDate?
 private fun StatsContent(
     period: PeriodState.Content,
     selectedDate: LocalDate?,
+    onPeriodSelected: (StatsPeriod) -> Unit,
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -175,30 +180,59 @@ private fun StatsContent(
         modifier = modifier.verticalScroll(rememberScrollState()).padding(ManiculeSpacing.screenContent),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.lg),
     ) {
-        Text(
-            text = stringResource(R.string.stats_recent_four_weeks),
-            style = MaterialTheme.typography.titleMedium,
+        val todayLabel = stringResource(R.string.stats_period_today)
+        val fourWeeksLabel = stringResource(R.string.stats_period_four_weeks)
+        val oneYearLabel = stringResource(R.string.stats_period_one_year)
+        val customLabel = stringResource(R.string.stats_period_custom)
+        ManiculeSegmentedButton(
+            options = StatsPeriod.entries,
+            selectedOption = period.selectedPeriod,
+            onOptionSelected = onPeriodSelected,
+            disabledOptions = setOf(StatsPeriod.CUSTOM),
+            itemLabel = { option ->
+                when (option) {
+                    StatsPeriod.TODAY -> todayLabel
+                    StatsPeriod.FOUR_WEEKS -> fourWeeksLabel
+                    StatsPeriod.ONE_YEAR -> oneYearLabel
+                    StatsPeriod.CUSTOM -> customLabel
+                }
+            },
         )
-        val start = period.summary.rangeStart
-        val end = period.summary.rangeEnd
-        Text(
-            text = stringResource(
-                R.string.stats_date_range,
-                start.year,
-                start.monthNumber,
-                start.dayOfMonth,
-                end.year,
-                end.monthNumber,
-                end.dayOfMonth,
-            ),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        if (period.selectedPeriod == StatsPeriod.TODAY) {
+            val today = period.today
+            Text(
+                text = stringResource(
+                    R.string.stats_single_date,
+                    today.year,
+                    today.monthNumber,
+                    today.dayOfMonth,
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            val start = period.summary.rangeStart
+            val end = period.summary.rangeEnd
+            Text(
+                text = stringResource(
+                    R.string.stats_date_range,
+                    start.year,
+                    start.monthNumber,
+                    start.dayOfMonth,
+                    end.year,
+                    end.monthNumber,
+                    end.dayOfMonth,
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         StatsCalendarCard(
             days = period.days,
             today = period.today,
             selectedDate = selectedDate,
             onDateSelected = onDateSelected,
+            isTodayPeriod = period.selectedPeriod == StatsPeriod.TODAY,
         )
         StatsSummary(period.summary)
         if (period.summary.pagesRead == 0) {
@@ -289,10 +323,38 @@ private fun StatsScreenPreview() {
             state = StatsUiState(
                 period = PeriodState.Content(
                     today = today,
+                    selectedPeriod = StatsPeriod.TODAY,
                     days = listOf(ReadingCalendarDay.of(today, 25)),
                     summary = PeriodSummary(today, today, 1, 25, 1),
                 ),
             ),
+            onPeriodSelected = {},
+            onDateSelected = {},
+            onDismissDay = {},
+            onRetryPeriod = {},
+            onRetryDay = {},
+            onBookSelected = {},
+            consumeRefreshError = { true },
+        )
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun StatsScreenFourWeeksPreview() {
+    val today = LocalDate(2026, 9, 24)
+    val start = LocalDate(2026, 8, 28)
+    ManiculePreviewTheme {
+        StatsScreen(
+            state = StatsUiState(
+                period = PeriodState.Content(
+                    today = today,
+                    selectedPeriod = StatsPeriod.FOUR_WEEKS,
+                    days = listOf(ReadingCalendarDay.of(today, 25)),
+                    summary = PeriodSummary(start, today, 5, 250, 3),
+                ),
+            ),
+            onPeriodSelected = {},
             onDateSelected = {},
             onDismissDay = {},
             onRetryPeriod = {},

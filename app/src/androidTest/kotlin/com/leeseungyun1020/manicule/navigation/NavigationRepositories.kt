@@ -20,6 +20,7 @@ import com.leeseungyun1020.manicule.core.model.SearchQuery
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import javax.inject.Inject
@@ -66,9 +67,12 @@ class NavigationBooks
         }
     }
 
+@Singleton
 class NavigationLibrary
     @Inject
     constructor() : LibraryRepository {
+        val entries = MutableStateFlow<List<BookEntry>>(emptyList())
+
         override suspend fun changeReadingStatus(
             isbn: String,
             status: ReadingStatus,
@@ -88,23 +92,28 @@ class NavigationLibrary
             updatedAt: Instant,
         ): com.leeseungyun1020.manicule.core.model.MemoChangeResult = com.leeseungyun1020.manicule.core.model.MemoChangeResult.Changed
 
-        override fun observeAll(): Flow<List<BookEntry>> = flowOf(emptyList())
+        override fun observeAll(): Flow<List<BookEntry>> = entries
 
         override fun observeByStatus(
             status: ReadingStatus,
             sort: LibrarySort,
-        ): Flow<List<BookEntry>> = flowOf(emptyList())
+        ): Flow<List<BookEntry>> = entries.map { list -> list.filter { it.status == status } }
 
         override suspend fun getRecentBooksByStatus(
             status: ReadingStatus,
             limit: Int,
-        ): List<Book> = emptyList()
+        ): List<Book> = entries.value.filter { it.status == status }.take(limit).map { it.book }
 
-        override fun observeBookEntry(isbn: String): Flow<BookEntry?> = flowOf(null)
+        override fun observeBookEntry(isbn: String): Flow<BookEntry?> = entries.map { list -> list.find { it.book.isbn == isbn } }
 
-        override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult = SaveBookEntryResult.Saved
+        override suspend fun saveBookEntry(entry: BookEntry): SaveBookEntryResult {
+            entries.value = entries.value.filterNot { it.book.isbn == entry.book.isbn } + entry
+            return SaveBookEntryResult.Saved
+        }
 
-        override suspend fun removeBookEntry(isbn: String) = Unit
+        override suspend fun removeBookEntry(isbn: String) {
+            entries.value = entries.value.filterNot { it.book.isbn == isbn }
+        }
 
         override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean = error("Not used")
 

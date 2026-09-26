@@ -18,6 +18,8 @@ fun NavGraphBuilder.homeScreen(
     onNavigateToBookDetail: (isbn: String) -> Unit,
     onNavigateToReadingBooks: () -> Unit,
     onNavigateToWantBooks: () -> Unit,
+    onNavigateToScanner: () -> Unit,
+    onNavigateToStats: () -> Unit,
 ) {
     composable<HomeRoute> {
         HomeRoute(
@@ -25,6 +27,8 @@ fun NavGraphBuilder.homeScreen(
             onNavigateToBookDetail = onNavigateToBookDetail,
             onNavigateToReadingBooks = onNavigateToReadingBooks,
             onNavigateToWantBooks = onNavigateToWantBooks,
+            onNavigateToScanner = onNavigateToScanner,
+            onNavigateToStats = onNavigateToStats,
         )
     }
 }
@@ -35,6 +39,8 @@ private fun HomeRoute(
     onNavigateToBookDetail: (isbn: String) -> Unit,
     onNavigateToReadingBooks: () -> Unit,
     onNavigateToWantBooks: () -> Unit,
+    onNavigateToScanner: () -> Unit,
+    onNavigateToStats: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
@@ -42,11 +48,11 @@ private fun HomeRoute(
     HomeScreen(
         uiState = uiState,
         onSearch = onNavigateToSearch,
-        onScan = {},
+        onScan = onNavigateToScanner,
         onBookSelected = onNavigateToBookDetail,
         onShowReadingBooks = onNavigateToReadingBooks,
         onChooseWantBook = onNavigateToWantBooks,
-        onShowStats = {},
+        onShowStats = onNavigateToStats,
         onRetry = viewModel::retry,
         modifier = modifier,
     )

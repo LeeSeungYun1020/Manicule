@@ -28,6 +28,7 @@ import kotlinx.datetime.minus
 import javax.inject.Inject
 
 private const val SELECTED_DATE_KEY = "selected_date"
+private const val SELECTED_PERIOD_KEY = "selected_period"
 
 @HiltViewModel
 class StatsViewModel
@@ -41,38 +42,48 @@ class StatsViewModel
     ) : ViewModel() {
         private val periodRetries = MutableStateFlow(0)
         private val dayRetries = MutableStateFlow(0)
+        private val selectedPeriod = savedStateHandle.getStateFlow(SELECTED_PERIOD_KEY, StatsPeriod.TODAY)
         private val selectedDate = savedStateHandle.getStateFlow<String?>(SELECTED_DATE_KEY, null)
         private val consumedRefreshErrorIds = java.util.concurrent.ConcurrentHashMap.newKeySet<Int>()
         private var nextRefreshErrorId = 0
 
         init {
             val restored = selectedDate.value?.let { parseDate(it) }
-            if (selectedDate.value != null && (restored == null || !inRange(restored, clock.today()))) {
+            if (selectedDate.value != null && (restored == null || !inCalendarRange(restored, clock.today(), selectedPeriod.value))) {
                 savedStateHandle[SELECTED_DATE_KEY] = null
             }
         }
 
         private val periodState =
-            combine(clock.observeToday(), periodRetries) { today, _ -> today }
-                .flatMapLatest { today ->
-                    val start = today.minus(DatePeriod(days = 27))
-                    combine(getCalendar(start, today), getSummary(start, today)) { days, summary ->
-                        PeriodEvent.Ready(today, days, summary) as PeriodEvent
-                    }.onStart { emit(PeriodEvent.Started(today)) }
-                        .catch { emit(PeriodEvent.Failed(today)) }
+            combine(clock.observeToday(), selectedPeriod, periodRetries) { today, period, _ -> today to period }
+                .flatMapLatest { (today, period) ->
+                    val (calStart, calEnd) = calendarRange(today, period)
+                    val (sumStart, sumEnd) = summaryRange(today, period)
+                    combine(getCalendar(calStart, calEnd), getSummary(sumStart, sumEnd)) { days, summary ->
+                        PeriodEvent.Ready(today, period, days, summary) as PeriodEvent
+                    }.onStart { emit(PeriodEvent.Started(today, period)) }
+                        .catch { emit(PeriodEvent.Failed(today, period)) }
                 }.onEach { event ->
                     val today = event.today
+                    val period = event.period
                     val selected = selectedDate.value?.let { parseDate(it) }
-                    if (selected != null && !inRange(selected, today)) dismissDay()
+                    if (selected != null && !inCalendarRange(selected, today, period)) dismissDay()
                 }.scan<PeriodEvent, PeriodState>(PeriodState.Loading) { previous, event ->
                     when (event) {
                         is PeriodEvent.Started ->
-                            previous.takeIf { it is PeriodState.Content && it.today == event.today }
-                                ?: PeriodState.Loading
-                        is PeriodEvent.Ready -> PeriodState.Content(event.today, event.days, event.summary)
+                            previous.takeIf {
+                                it is PeriodState.Content && it.today == event.today && it.selectedPeriod == event.period
+                            } ?: PeriodState.Loading
+                        is PeriodEvent.Ready ->
+                            PeriodState.Content(
+                                today = event.today,
+                                days = event.days,
+                                summary = event.summary,
+                                selectedPeriod = event.period,
+                            )
                         is PeriodEvent.Failed -> {
                             val prior = previous as? PeriodState.Content
-                            if (prior?.today == event.today) {
+                            if (prior?.today == event.today && prior.selectedPeriod == event.period) {
                                 prior.copy(refreshErrorId = ++nextRefreshErrorId)
                             } else {
                                 PeriodState.Error
@@ -114,14 +125,27 @@ class StatsViewModel
                 val visibleDay = when (period) {
                     is PeriodState.Content -> when (day) {
                         DayState.Closed -> day
-                        is DayState.Loading -> day.takeIf { inRange(it.date, period.today) } ?: DayState.Closed
-                        is DayState.Content -> day.takeIf { inRange(it.date, period.today) } ?: DayState.Closed
-                        is DayState.Error -> day.takeIf { inRange(it.date, period.today) } ?: DayState.Closed
+                        is DayState.Loading -> day.takeIf { inCalendarRange(it.date, period.today, period.selectedPeriod) }
+                            ?: DayState.Closed
+                        is DayState.Content -> day.takeIf { inCalendarRange(it.date, period.today, period.selectedPeriod) }
+                            ?: DayState.Closed
+                        is DayState.Error -> day.takeIf { inCalendarRange(it.date, period.today, period.selectedPeriod) } ?: DayState.Closed
                     }
                     else -> DayState.Closed
                 }
                 StatsUiState(period, visibleDay)
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), StatsUiState())
+
+        fun selectPeriod(period: StatsPeriod) {
+            if (period == StatsPeriod.CUSTOM) return
+            if (selectedPeriod.value == period) return
+            savedStateHandle[SELECTED_PERIOD_KEY] = period
+            val currentToday = (periodState.value as? PeriodState.Content)?.today ?: clock.today()
+            val selected = selectedDate.value?.let { parseDate(it) }
+            if (selected != null && !inCalendarRange(selected, currentToday, period)) {
+                dismissDay()
+            }
+        }
 
         fun selectDate(date: LocalDate) {
             val period = uiState.value.period as? PeriodState.Content ?: return
@@ -146,28 +170,64 @@ class StatsViewModel
             return consumedRefreshErrorIds.add(id)
         }
 
-        private fun inRange(
+        private fun calendarRange(
+            today: LocalDate,
+            period: StatsPeriod,
+        ): Pair<LocalDate, LocalDate> {
+            val start =
+                when (period) {
+                    StatsPeriod.TODAY -> today.minus(DatePeriod(days = 6))
+                    StatsPeriod.FOUR_WEEKS -> today.minus(DatePeriod(days = 27))
+                    StatsPeriod.ONE_YEAR -> today.minus(DatePeriod(days = 363))
+                    StatsPeriod.CUSTOM -> today.minus(DatePeriod(days = 27))
+                }
+            return start to today
+        }
+
+        private fun summaryRange(
+            today: LocalDate,
+            period: StatsPeriod,
+        ): Pair<LocalDate, LocalDate> {
+            val start =
+                when (period) {
+                    StatsPeriod.TODAY -> today
+                    StatsPeriod.FOUR_WEEKS -> today.minus(DatePeriod(days = 27))
+                    StatsPeriod.ONE_YEAR -> today.minus(DatePeriod(days = 363))
+                    StatsPeriod.CUSTOM -> today.minus(DatePeriod(days = 27))
+                }
+            return start to today
+        }
+
+        private fun inCalendarRange(
             date: LocalDate,
             today: LocalDate,
-        ): Boolean = date >= today.minus(DatePeriod(days = 27)) && date <= today
+            period: StatsPeriod,
+        ): Boolean {
+            val (start, end) = calendarRange(today, period)
+            return date in start..end
+        }
 
         private fun parseDate(raw: String): LocalDate? = runCatching { LocalDate.parse(raw) }.getOrNull()
 
         private sealed interface PeriodEvent {
             val today: LocalDate
+            val period: StatsPeriod
 
             data class Started(
                 override val today: LocalDate,
+                override val period: StatsPeriod,
             ) : PeriodEvent
 
             data class Ready(
                 override val today: LocalDate,
+                override val period: StatsPeriod,
                 val days: List<ReadingCalendarDay>,
                 val summary: PeriodSummary,
             ) : PeriodEvent
 
             data class Failed(
                 override val today: LocalDate,
+                override val period: StatsPeriod,
             ) : PeriodEvent
         }
 

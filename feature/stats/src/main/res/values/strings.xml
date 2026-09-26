@@ -2,6 +2,11 @@
 <resources>
     <string name="stats_title">통계</string>
     <string name="stats_recent_four_weeks">최근 4주</string>
+    <string name="stats_period_today">오늘</string>
+    <string name="stats_period_four_weeks">4주</string>
+    <string name="stats_period_one_year">1년</string>
+    <string name="stats_period_custom">직접 선택</string>
+    <string name="stats_single_date">%1$d년 %2$d월 %3$d일</string>
     <string name="stats_date_range">%1$d년 %2$d월 %3$d일 ~ %4$d년 %5$d월 %6$d일</string>
     <string name="stats_calendar_title">독서 달력</string>
     <string name="stats_streak">연속 기록</string>

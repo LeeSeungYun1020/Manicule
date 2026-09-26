@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -31,15 +32,23 @@ import com.leeseungyun1020.manicule.feature.settings.components.NotificationPerm
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
-fun SettingsRoute(viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsRoute(
+    onNavigateToLicenses: () -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel(),
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    SettingsRouteContent(uiState = uiState, viewModel = viewModel)
+    SettingsRouteContent(
+        uiState = uiState,
+        viewModel = viewModel,
+        onNavigateToLicenses = onNavigateToLicenses,
+    )
 }
 
 @Composable
 private fun SettingsRouteContent(
     uiState: SettingsUiState,
     viewModel: SettingsViewModel,
+    onNavigateToLicenses: () -> Unit,
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
@@ -76,10 +85,25 @@ private fun SettingsRouteContent(
         )
     }
 
+    val appVersion = remember(context) {
+        runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(
+                    context.packageName,
+                    PackageManager.PackageInfoFlags.of(0),
+                )
+            } else {
+                context.packageManager.getPackageInfo(context.packageName, 0)
+            }.versionName ?: ""
+        }.getOrDefault("")
+    }
+
     SettingsScreenContainer(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         viewModel = viewModel,
+        appVersion = appVersion,
+        onNavigateToLicenses = onNavigateToLicenses,
         onToggle = { enabled ->
             permissionSnackbar.dismiss()
             if (!enabled) {
@@ -106,6 +130,8 @@ private fun SettingsScreenContainer(
     uiState: SettingsUiState,
     snackbarHostState: SnackbarHostState,
     viewModel: SettingsViewModel,
+    appVersion: String,
+    onNavigateToLicenses: () -> Unit,
     onToggle: (Boolean) -> Unit,
 ) {
     SettingsSnackbarEffect(viewModel = viewModel, snackbarHostState = snackbarHostState)
@@ -116,6 +142,8 @@ private fun SettingsScreenContainer(
         onReminderTimeChange = viewModel::setReminderTime,
         onRetryPreferences = viewModel::retryPreferences,
         onThemeSelected = viewModel::setThemeMode,
+        appVersion = appVersion,
+        onNavigateToLicenses = onNavigateToLicenses,
     )
 }
 
