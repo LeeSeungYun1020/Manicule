@@ -788,6 +788,34 @@ class BookDetailViewModelTest {
         }
 
     @Test
+    fun retryMemo_withClearedBlankDraft_savesNullInsteadOfFailedTarget() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = "Old memo")
+            libraryRepository.memoFailure = IllegalStateException("Disk error")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("Failed memo target")
+            viewModel.saveMemo()
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoSaving).isInstanceOf(MemoSavingState.Failed::class.java)
+
+            // 사용자가 실패 스낵바가 노출된 상태에서 내용을 모두 지움 (빈 문자열)
+            viewModel.updateMemoDraft("")
+
+            libraryRepository.memoFailure = null
+            viewModel.retryMemo()
+            advanceUntilIdle()
+
+            // 실패 타겟이 아닌 null(삭제)이 저장되어야 함
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Idle)
+            assertThat(contentState(viewModel).memoDraft).isNull()
+            assertThat(contentState(viewModel).bookDetail.entry?.memo).isNull()
+        }
+
+    @Test
     fun saveMemo_whenUserTypesNewDraftDuringObservation_preservesNewDraft() =
         runTest(dispatcher) {
             bookRepository.books.value = testBook

@@ -306,8 +306,12 @@ class BookDetailViewModel
             val content = _uiState.value as? BookDetailUiState.Content ?: return
             val failed = content.memoSaving as? MemoSavingState.Failed ?: return
             val currentDraft = content.memoDraft
-            val normalizedDraft = currentDraft?.trim()?.ifEmpty { null }
-            val targetToSave = normalizedDraft ?: failed.target
+            val targetToSave =
+                if (currentDraft != null) {
+                    currentDraft.trim().ifEmpty { null }
+                } else {
+                    failed.target
+                }
             memoSaveJob =
                 viewModelScope.launch {
                     saveMemoInternal(targetToSave)

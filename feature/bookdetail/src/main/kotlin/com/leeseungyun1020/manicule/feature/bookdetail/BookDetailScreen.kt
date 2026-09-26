@@ -1,6 +1,7 @@
 package com.leeseungyun1020.manicule.feature.bookdetail
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,7 +26,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -48,6 +48,7 @@ import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.feature.bookdetail.components.AddRecordBottomSheet
 import com.leeseungyun1020.manicule.feature.bookdetail.components.BookInfoTabContent
 import com.leeseungyun1020.manicule.feature.bookdetail.components.MyRecordTabContent
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -80,17 +81,22 @@ fun BookDetailScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
-    var isNavigatingBack by rememberSaveable { mutableStateOf(false) }
+    var isNavigatingBack by remember { mutableStateOf(false) }
 
     val onBackWithSave = {
         if (!isNavigatingBack) {
             focusManager.clearFocus()
             coroutineScope.launch {
                 isNavigatingBack = true
-                if (onSaveMemoAndCheckSuccess()) {
-                    onNavigateBack()
-                } else {
+                try {
+                    if (onSaveMemoAndCheckSuccess()) {
+                        onNavigateBack()
+                    } else {
+                        isNavigatingBack = false
+                    }
+                } catch (e: CancellationException) {
                     isNavigatingBack = false
+                    throw e
                 }
             }
         }
@@ -152,14 +158,9 @@ fun BookDetailScreen(
             modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .pointerInput(Unit) {
-                    awaitPointerEventScope {
-                        while (true) {
-                            val event = awaitPointerEvent(PointerEventPass.Initial)
-                            if (event.changes.any { it.pressed }) {
-                                focusManager.clearFocus()
-                            }
-                        }
-                    }
+                    detectTapGestures(onTap = {
+                        focusManager.clearFocus()
+                    })
                 },
         topBar = {
             BookDetailScreenTopBar(
