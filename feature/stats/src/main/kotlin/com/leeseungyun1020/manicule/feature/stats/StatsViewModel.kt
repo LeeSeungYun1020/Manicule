@@ -178,7 +178,7 @@ class StatsViewModel
                 when (period) {
                     StatsPeriod.TODAY -> today.minus(DatePeriod(days = 6))
                     StatsPeriod.FOUR_WEEKS -> today.minus(DatePeriod(days = 27))
-                    StatsPeriod.ONE_YEAR -> today.minus(DatePeriod(days = 364))
+                    StatsPeriod.ONE_YEAR -> today.minus(DatePeriod(days = 363))
                     StatsPeriod.CUSTOM -> today.minus(DatePeriod(days = 27))
                 }
             return start to today
@@ -192,7 +192,7 @@ class StatsViewModel
                 when (period) {
                     StatsPeriod.TODAY -> today
                     StatsPeriod.FOUR_WEEKS -> today.minus(DatePeriod(days = 27))
-                    StatsPeriod.ONE_YEAR -> today.minus(DatePeriod(days = 364))
+                    StatsPeriod.ONE_YEAR -> today.minus(DatePeriod(days = 363))
                     StatsPeriod.CUSTOM -> today.minus(DatePeriod(days = 27))
                 }
             return start to today

@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -144,9 +145,8 @@ class StatsScreenTest {
         composeRule.onNodeWithText(context.getString(R.string.stats_period_one_year)).performClick()
         assertEquals(StatsPeriod.ONE_YEAR, selectedPeriod)
 
-        // 직접 선택(CUSTOM)은 날짜 선택기/바텀시트가 구현될 때까지 탭해도 콜백이 호출되지 않는다.
-        composeRule.onNodeWithText(context.getString(R.string.stats_period_custom)).performClick()
-        assertEquals(StatsPeriod.ONE_YEAR, selectedPeriod)
+        // 직접 선택(CUSTOM)은 날짜 선택기/바텀시트가 구현될 때까지 비활성화(disabled) 상태로 표시된다.
+        composeRule.onNodeWithText(context.getString(R.string.stats_period_custom)).assertIsNotEnabled()
     }
 
     @Test

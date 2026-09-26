@@ -187,11 +187,8 @@ private fun StatsContent(
         ManiculeSegmentedButton(
             options = StatsPeriod.entries,
             selectedOption = period.selectedPeriod,
-            onOptionSelected = { option ->
-                if (option != StatsPeriod.CUSTOM) {
-                    onPeriodSelected(option)
-                }
-            },
+            onOptionSelected = onPeriodSelected,
+            disabledOptions = setOf(StatsPeriod.CUSTOM),
             itemLabel = { option ->
                 when (option) {
                     StatsPeriod.TODAY -> todayLabel

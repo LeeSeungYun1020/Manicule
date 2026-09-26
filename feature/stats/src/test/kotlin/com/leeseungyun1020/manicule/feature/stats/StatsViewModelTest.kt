@@ -93,8 +93,8 @@ class StatsViewModelTest {
 
             val oneYear = viewModel.uiState.value.period as PeriodState.Content
             assertThat(oneYear.selectedPeriod).isEqualTo(StatsPeriod.ONE_YEAR)
-            assertThat(oneYear.days).hasSize(365)
-            assertThat(oneYear.days.first().date).isEqualTo(LocalDate(2023, 3, 3))
+            assertThat(oneYear.days).hasSize(364)
+            assertThat(oneYear.days.first().date).isEqualTo(LocalDate(2023, 3, 4))
             assertThat(oneYear.days.last().date).isEqualTo(today)
             job.cancel()
         }
@@ -132,7 +132,7 @@ class StatsViewModelTest {
 
             val content = viewModel.uiState.value.period as PeriodState.Content
             assertThat(content.selectedPeriod).isEqualTo(StatsPeriod.ONE_YEAR)
-            assertThat(content.days).hasSize(365)
+            assertThat(content.days).hasSize(364)
             job.cancel()
         }
 
