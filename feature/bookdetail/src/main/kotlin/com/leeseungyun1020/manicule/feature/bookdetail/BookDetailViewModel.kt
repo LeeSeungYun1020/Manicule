@@ -79,7 +79,6 @@ private fun resolveRatingSaving(
         else -> previousRatingSaving ?: RatingSavingState.Idle
     }
 
-@Suppress("TooManyFunctions")
 @HiltViewModel
 class BookDetailViewModel
     @Inject
