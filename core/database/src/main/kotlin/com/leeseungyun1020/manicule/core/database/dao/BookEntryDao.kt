@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import com.leeseungyun1020.manicule.core.database.dao.projection.BookEntryWithCurrentPage
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
+import com.leeseungyun1020.manicule.core.model.MemoChangeResult
 import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
@@ -61,6 +62,26 @@ interface BookEntryDao {
         return RatingChangeResult.Changed
     }
 
+    /** 존재 확인, 최초 등록, 메모 변경을 하나의 트랜잭션으로 처리한다. */
+    @Transaction
+    @Suppress("ReturnCount") // 상태별 조기 반환으로 트랜잭션의 쓰기 경로를 구분한다.
+    suspend fun updateMemo(
+        isbn: String,
+        memo: String?,
+        updatedAt: Instant,
+    ): MemoChangeResult {
+        if (!bookExists(isbn)) return MemoChangeResult.BookNotFound
+        val entry = getEntry(isbn)
+        if (entry == null) {
+            if (memo.isNullOrEmpty()) return MemoChangeResult.Unchanged
+            upsert(BookEntryEntity(isbn, ReadingStatus.UNSET, 0, memo, updatedAt, updatedAt, null))
+            return MemoChangeResult.Changed
+        }
+        if (entry.memo == memo) return MemoChangeResult.Unchanged
+        setMemo(isbn, memo, updatedAt)
+        return MemoChangeResult.Changed
+    }
+
     @Query("SELECT EXISTS(SELECT 1 FROM books WHERE isbn = :isbn)")
     suspend fun bookExists(isbn: String): Boolean
 
@@ -79,6 +100,13 @@ interface BookEntryDao {
     suspend fun setRating(
         isbn: String,
         rating: Int,
+        updatedAt: Instant,
+    )
+
+    @Query("UPDATE book_entries SET memo = :memo, updatedAt = :updatedAt WHERE isbn = :isbn")
+    suspend fun setMemo(
+        isbn: String,
+        memo: String?,
         updatedAt: Instant,
     )
 

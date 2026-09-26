@@ -18,6 +18,7 @@ import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.MemoChangeResult
 import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
@@ -952,6 +953,11 @@ class BookDetailViewModelTest {
         var ratingFailure: Exception? = null
         var ratingResult = RatingChangeResult.Changed
         var emitRating = true
+        var memoCalls = 0
+        var memoGate: CompletableDeferred<Unit>? = null
+        var memoFailure: Exception? = null
+        var memoResult = MemoChangeResult.Changed
+        var emitMemo = true
         val entry = MutableStateFlow<BookEntry?>(null)
 
         override fun observeAll(): Flow<List<BookEntry>> = emptyFlow()
@@ -990,6 +996,23 @@ class BookDetailViewModelTest {
                 )
             }
             return ratingResult
+        }
+
+        override suspend fun updateMemo(
+            isbn: String,
+            memo: String?,
+            updatedAt: Instant,
+        ): MemoChangeResult {
+            memoCalls++
+            memoGate?.await()
+            memoFailure?.let { throw it }
+            if (emitMemo && memoResult == MemoChangeResult.Changed) {
+                entry.value = (entry.value ?: testEntry.copy(status = ReadingStatus.UNSET, addedAt = updatedAt)).copy(
+                    memo = memo,
+                    updatedAt = updatedAt,
+                )
+            }
+            return memoResult
         }
 
         override fun observeByStatus(

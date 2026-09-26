@@ -85,6 +85,12 @@ private class CountingLibraryRepository : LibraryRepository {
         updatedAt: Instant,
     ): RatingChangeResult = error("Not used")
 
+    override suspend fun updateMemo(
+        isbn: String,
+        memo: String?,
+        updatedAt: Instant,
+    ): com.leeseungyun1020.manicule.core.model.MemoChangeResult = error("Not used")
+
     override suspend fun getRecentBooksByStatus(
         status: ReadingStatus,
         limit: Int,

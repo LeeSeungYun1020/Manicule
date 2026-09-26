@@ -82,6 +82,12 @@ class NavigationLibrary
             updatedAt: Instant,
         ): RatingChangeResult = RatingChangeResult.Changed
 
+        override suspend fun updateMemo(
+            isbn: String,
+            memo: String?,
+            updatedAt: Instant,
+        ): com.leeseungyun1020.manicule.core.model.MemoChangeResult = com.leeseungyun1020.manicule.core.model.MemoChangeResult.Changed
+
         override fun observeAll(): Flow<List<BookEntry>> = flowOf(emptyList())
 
         override fun observeByStatus(

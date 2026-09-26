@@ -10,6 +10,7 @@ import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.MemoChangeResult
 import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
@@ -142,6 +143,19 @@ class LibraryRepositoryImplTest {
             assertThat(entryDataSource.saved).isNull()
         }
 
+    @Test
+    fun updateMemo_delegatesWithoutRewritingBookOrEntry() =
+        runTest {
+            val time = Instant.fromEpochMilliseconds(123)
+            for (result in MemoChangeResult.entries) {
+                entryDataSource.memoResult = result
+                assertThat(repository.updateMemo("123", "새 메모", time)).isEqualTo(result)
+                assertThat(entryDataSource.memoRequest).containsExactly("123", "새 메모", time).inOrder()
+            }
+            assertThat(bookDataSource.saved).isNull()
+            assertThat(entryDataSource.saved).isNull()
+        }
+
     private class RecordingBookLocalDataSource : BookLocalDataSource {
         var saved: BookEntity? = null
 
@@ -178,6 +192,18 @@ class LibraryRepositoryImplTest {
         ): RatingChangeResult {
             ratingRequest = listOf(isbn, rating, updatedAt)
             return ratingResult
+        }
+
+        var memoResult = MemoChangeResult.Changed
+        var memoRequest: List<Any?> = emptyList()
+
+        override suspend fun updateMemo(
+            isbn: String,
+            memo: String?,
+            updatedAt: Instant,
+        ): MemoChangeResult {
+            memoRequest = listOf(isbn, memo, updatedAt)
+            return memoResult
         }
 
         var saved: BookEntryEntity? = null

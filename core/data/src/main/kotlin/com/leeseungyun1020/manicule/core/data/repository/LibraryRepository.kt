@@ -3,6 +3,7 @@ package com.leeseungyun1020.manicule.core.data.repository
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.MemoChangeResult
 import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
@@ -37,6 +38,15 @@ interface LibraryRepository {
         rating: Int,
         updatedAt: Instant,
     ): RatingChangeResult
+
+    /** 메모와 시각만 원자적으로 변경한다. 최초 등록은 UNSET 상태로 캐시된 책이 있어야 한다.
+     * 같은 메모는 시각을 보존하며, 항목이 없고 빈 메모면 변경하지 않는다.
+     */
+    suspend fun updateMemo(
+        isbn: String,
+        memo: String?,
+        updatedAt: Instant,
+    ): MemoChangeResult
 
     fun observeAll(): Flow<List<BookEntry>>
 

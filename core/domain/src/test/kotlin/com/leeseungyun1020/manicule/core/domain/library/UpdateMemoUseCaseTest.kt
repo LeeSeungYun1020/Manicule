@@ -7,6 +7,7 @@ import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.MemoChangeResult
 import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
@@ -19,8 +20,8 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import org.junit.Test
 
-class UpdateRatingUseCaseTest {
-    private val repository = RatingRepository()
+class UpdateMemoUseCaseTest {
+    private val repository = MemoRepository()
     private val now = Instant.parse("2026-09-04T16:00:00Z")
     private var clockReads = 0
     private val clock =
@@ -32,36 +33,41 @@ class UpdateRatingUseCaseTest {
 
             override fun timeZone(): TimeZone = TimeZone.of("Asia/Seoul")
         }
-    private val useCase = UpdateRatingUseCase(repository, clock)
+    private val useCase = UpdateMemoUseCase(repository, clock)
 
     @Test
-    fun validRatings_callRepository_withCurrentTime() =
+    fun validMemo_callsRepository_withCurrentTime_andTrimmedMemo() =
         runTest {
-            (0..5).forEach { rating ->
-                val result = useCase("123", rating)
-                assertThat(result).isEqualTo(RatingChangeResult.Changed)
-                assertThat(repository.request).isEqualTo(RatingRequest("123", rating, now))
-            }
-            assertThat(clockReads).isEqualTo(6)
+            val result = useCase("123", "  좋은 책이었습니다.  \n")
+            assertThat(result).isEqualTo(MemoChangeResult.Changed)
+            assertThat(repository.request).isEqualTo(MemoRequest("123", "좋은 책이었습니다.", now))
+            assertThat(clockReads).isEqualTo(1)
         }
 
     @Test
-    fun invalidRating_returnsInvalidRating_withoutAccessingClockOrRepository() =
+    fun blankOrEmptyMemo_normalizesToNull() =
         runTest {
-            listOf(-1, 6, 10).forEach { rating ->
-                val result = useCase("123", rating)
-                assertThat(result).isEqualTo(RatingChangeResult.InvalidRating)
-                assertThat(repository.request).isNull()
-                assertThat(clockReads).isEqualTo(0)
+            listOf("", "   ", "\t\n  ").forEach { blankMemo ->
+                val result = useCase("123", blankMemo)
+                assertThat(result).isEqualTo(MemoChangeResult.Changed)
+                assertThat(repository.request).isEqualTo(MemoRequest("123", null, now))
             }
+        }
+
+    @Test
+    fun nullMemo_callsRepository_withNull() =
+        runTest {
+            val result = useCase("123", null)
+            assertThat(result).isEqualTo(MemoChangeResult.Changed)
+            assertThat(repository.request).isEqualTo(MemoRequest("123", null, now))
         }
 
     @Test
     fun repositoryResults_areForwarded() =
         runTest {
-            listOf(RatingChangeResult.Unchanged, RatingChangeResult.BookNotFound).forEach {
+            listOf(MemoChangeResult.Unchanged, MemoChangeResult.BookNotFound).forEach {
                 repository.result = it
-                val result = useCase("123", 4)
+                val result = useCase("123", "메모")
                 assertThat(result).isEqualTo(it)
             }
         }
@@ -72,39 +78,39 @@ class UpdateRatingUseCaseTest {
             val cancellation = CancellationException("Cancelled")
             repository.failure = cancellation
             try {
-                useCase("123", 4)
+                useCase("123", "메모")
                 error("Expected cancellation")
             } catch (actual: CancellationException) {
                 assertThat(actual).isSameInstanceAs(cancellation)
             }
         }
 
-    private data class RatingRequest(
+    private data class MemoRequest(
         val isbn: String,
-        val rating: Int,
+        val memo: String?,
         val updatedAt: Instant,
     )
 
-    private class RatingRepository : LibraryRepository {
-        var request: RatingRequest? = null
-        var result = RatingChangeResult.Changed
+    private class MemoRepository : LibraryRepository {
+        var request: MemoRequest? = null
+        var result = MemoChangeResult.Changed
         var failure: Exception? = null
-
-        override suspend fun updateRating(
-            isbn: String,
-            rating: Int,
-            updatedAt: Instant,
-        ): RatingChangeResult {
-            failure?.let { throw it }
-            request = RatingRequest(isbn, rating, updatedAt)
-            return result
-        }
 
         override suspend fun updateMemo(
             isbn: String,
             memo: String?,
             updatedAt: Instant,
-        ): com.leeseungyun1020.manicule.core.model.MemoChangeResult = error("Not used")
+        ): MemoChangeResult {
+            failure?.let { throw it }
+            request = MemoRequest(isbn, memo, updatedAt)
+            return result
+        }
+
+        override suspend fun updateRating(
+            isbn: String,
+            rating: Int,
+            updatedAt: Instant,
+        ): RatingChangeResult = error("Not used")
 
         override suspend fun changeReadingStatus(
             isbn: String,

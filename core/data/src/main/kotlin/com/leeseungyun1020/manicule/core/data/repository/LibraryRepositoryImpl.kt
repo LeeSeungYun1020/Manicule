@@ -7,6 +7,7 @@ import com.leeseungyun1020.manicule.core.data.mapper.asExternalModel
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.MemoChangeResult
 import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
@@ -34,6 +35,12 @@ class LibraryRepositoryImpl
             rating: Int,
             updatedAt: Instant,
         ): RatingChangeResult = bookEntryLocalDataSource.updateRating(isbn, rating, updatedAt)
+
+        override suspend fun updateMemo(
+            isbn: String,
+            memo: String?,
+            updatedAt: Instant,
+        ): MemoChangeResult = bookEntryLocalDataSource.updateMemo(isbn, memo, updatedAt)
 
         override fun observeAll(): Flow<List<BookEntry>> =
             bookEntryLocalDataSource.observeAll().map { list ->
