@@ -8,6 +8,6 @@ import kotlinx.serialization.Serializable
 data class OpenSourceLibrary(
     val name: String,
     val copyright: String,
-    val license: String = "Apache License 2.0",
+    val license: String,
     val url: String? = null,
 )

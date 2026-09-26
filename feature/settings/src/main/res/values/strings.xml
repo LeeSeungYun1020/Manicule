@@ -28,7 +28,7 @@
     <string name="settings_support_section">지원</string>
     <string name="settings_licenses">오픈소스 라이선스</string>
     <string name="settings_licenses_title">오픈소스 라이선스</string>
-    <string name="settings_licenses_description">Manicule은 다음의 오픈소스 소프트웨어를 사용하고 있습니다.</string>
+    <string name="settings_licenses_description">우리 앱은 다음의 오픈소스 소프트웨어를 사용하고 있습니다.</string>
     <string name="settings_licenses_view_full_text">전문 보기</string>
     <string name="settings_licenses_view_details">자세히</string>
     <string name="settings_version_info">버전 정보</string>
