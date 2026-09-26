@@ -12,14 +12,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.unit.DpSize
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeCard
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
@@ -105,85 +110,95 @@ private fun TodayCalendarStrip(
     modifier: Modifier = Modifier,
 ) {
     val clickLabel = stringResource(CoreUiR.string.reading_calendar_open_day_records)
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
-    ) {
-        days.forEach { day ->
-            val isToday = day.date == today
-            val isSelected = day.date == selectedDate
-            val isSelectable = day.pages > 0
-            val dateDescription =
-                if (day.pages == 0) {
-                    stringResource(
-                        CoreUiR.string.reading_calendar_cell_no_record_content_description,
-                        day.date.year,
-                        day.date.monthNumber,
-                        day.date.dayOfMonth,
-                    )
-                } else {
-                    pluralStringResource(
-                        CoreUiR.plurals.reading_calendar_cell_content_description,
-                        day.pages,
-                        day.date.year,
-                        day.date.monthNumber,
-                        day.date.dayOfMonth,
-                        day.pages,
-                    )
-                }
-            val contentDesc =
-                if (isToday) {
-                    stringResource(CoreUiR.string.reading_calendar_today_content_description, dateDescription)
-                } else {
-                    dateDescription
-                }
+    val parentViewConfiguration = LocalViewConfiguration.current
+    val calendarViewConfiguration =
+        remember(parentViewConfiguration) {
+            object : ViewConfiguration by parentViewConfiguration {
+                override val minimumTouchTargetSize = DpSize.Zero
+            }
+        }
+    // 밀집된 날짜 사이의 간격과 비활성 셀로 터치 영역이 확장되지 않게 한다.
+    CompositionLocalProvider(LocalViewConfiguration provides calendarViewConfiguration) {
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+        ) {
+            days.forEach { day ->
+                val isToday = day.date == today
+                val isSelected = day.date == selectedDate
+                val isSelectable = day.pages > 0
+                val dateDescription =
+                    if (day.pages == 0) {
+                        stringResource(
+                            CoreUiR.string.reading_calendar_cell_no_record_content_description,
+                            day.date.year,
+                            day.date.monthNumber,
+                            day.date.dayOfMonth,
+                        )
+                    } else {
+                        pluralStringResource(
+                            CoreUiR.plurals.reading_calendar_cell_content_description,
+                            day.pages,
+                            day.date.year,
+                            day.date.monthNumber,
+                            day.date.dayOfMonth,
+                            day.pages,
+                        )
+                    }
+                val contentDesc =
+                    if (isToday) {
+                        stringResource(CoreUiR.string.reading_calendar_today_content_description, dateDescription)
+                    } else {
+                        dateDescription
+                    }
 
-            Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs),
-            ) {
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(1f)
-                            .then(
-                                if (isSelectable) {
-                                    Modifier.clickable(
-                                        onClickLabel = clickLabel,
-                                        onClick = { onDateSelected(day.date) },
-                                    )
-                                } else {
-                                    Modifier
-                                },
-                            ).clearAndSetSemantics {
-                                this.contentDescription = contentDesc
-                                if (isSelectable || isSelected) {
-                                    this.selected = isSelected
-                                }
-                                if (isSelectable) {
-                                    this.onClick(label = clickLabel) {
-                                        onDateSelected(day.date)
-                                        true
-                                    }
-                                }
-                            },
-                    contentAlignment = Alignment.Center,
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs),
                 ) {
-                    ReadingCalendarCell(
-                        intensity = day.intensity,
-                        isToday = isToday,
-                        isSelected = isSelected,
-                        modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(1f)
+                                .then(
+                                    if (isSelectable) {
+                                        Modifier.clickable(
+                                            onClickLabel = clickLabel,
+                                            onClick = { onDateSelected(day.date) },
+                                        )
+                                    } else {
+                                        Modifier
+                                    },
+                                ).clearAndSetSemantics {
+                                    this.contentDescription = contentDesc
+                                    if (isSelectable || isSelected) {
+                                        this.selected = isSelected
+                                    }
+                                    if (isSelectable) {
+                                        this.onClick(label = clickLabel) {
+                                            onDateSelected(day.date)
+                                            true
+                                        }
+                                    }
+                                },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        ReadingCalendarCell(
+                            intensity = day.intensity,
+                            isToday = isToday,
+                            isSelected = isSelected,
+                            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+                        )
+                    }
+                    Text(
+                        text = stringResource(weekdayLabels[day.date.dayOfWeek.value - 1]),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
                     )
                 }
-                Text(
-                    text = stringResource(weekdayLabels[day.date.dayOfWeek.value - 1]),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                )
             }
         }
     }
