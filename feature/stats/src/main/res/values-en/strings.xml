@@ -2,6 +2,11 @@
 <resources>
     <string name="stats_title">Statistics</string>
     <string name="stats_recent_four_weeks">Last 4 weeks</string>
+    <string name="stats_period_today">Today</string>
+    <string name="stats_period_four_weeks">4 weeks</string>
+    <string name="stats_period_one_year">1 year</string>
+    <string name="stats_period_custom">Custom</string>
+    <string name="stats_single_date">%1$d/%2$d/%3$d</string>
     <string name="stats_date_range">%1$d/%2$d/%3$d – %4$d/%5$d/%6$d</string>
     <string name="stats_calendar_title">Reading calendar</string>
     <string name="stats_streak">Longest streak</string>

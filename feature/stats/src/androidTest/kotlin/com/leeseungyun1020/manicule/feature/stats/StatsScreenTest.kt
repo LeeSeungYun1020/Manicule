@@ -113,10 +113,85 @@ class StatsScreenTest {
         composeRule.onNodeWithText(context.resources.getQuantityString(R.plurals.stats_books_value, 0, 0)).assertIsDisplayed()
     }
 
-    private fun period(empty: Boolean = false): PeriodState.Content {
+    @Test
+    fun segmented_buttons_displayed_and_tab_switching_triggers_callback() {
+        var selectedPeriod: StatsPeriod? = null
+        composeRule.setContent {
+            ManiculeTheme {
+                StatsScreen(
+                    state = StatsUiState(period(selectedPeriod = StatsPeriod.TODAY)),
+                    onPeriodSelected = { selectedPeriod = it },
+                    onDateSelected = {},
+                    onDismissDay = {},
+                    onRetryPeriod = {},
+                    onRetryDay = {},
+                    onBookSelected = {},
+                    consumeRefreshError = { true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.stats_period_today)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.stats_period_four_weeks)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.stats_period_one_year)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.stats_period_custom)).assertIsDisplayed()
+
+        composeRule.onNodeWithText(context.getString(R.string.stats_period_four_weeks)).performClick()
+        assertEquals(StatsPeriod.FOUR_WEEKS, selectedPeriod)
+
+        composeRule.onNodeWithText(context.getString(R.string.stats_period_one_year)).performClick()
+        assertEquals(StatsPeriod.ONE_YEAR, selectedPeriod)
+    }
+
+    @Test
+    fun date_label_displays_single_date_for_today_and_date_range_for_other_periods() {
+        var currentPeriod by mutableStateOf(StatsPeriod.TODAY)
+        composeRule.setContent {
+            ManiculeTheme {
+                StatsScreen(
+                    state = StatsUiState(period(selectedPeriod = currentPeriod)),
+                    onPeriodSelected = { currentPeriod = it },
+                    onDateSelected = {},
+                    onDismissDay = {},
+                    onRetryPeriod = {},
+                    onRetryDay = {},
+                    onBookSelected = {},
+                    consumeRefreshError = { true },
+                )
+            }
+        }
+
+        val singleDateText = context.getString(
+            R.string.stats_single_date,
+            today.year,
+            today.monthNumber,
+            today.dayOfMonth,
+        )
+        composeRule.onNodeWithText(singleDateText).assertIsDisplayed()
+
+        currentPeriod = StatsPeriod.FOUR_WEEKS
+
+        val start = today.minus(DatePeriod(days = 27))
+        val dateRangeText = context.getString(
+            R.string.stats_date_range,
+            start.year,
+            start.monthNumber,
+            start.dayOfMonth,
+            today.year,
+            today.monthNumber,
+            today.dayOfMonth,
+        )
+        composeRule.onNodeWithText(dateRangeText).assertIsDisplayed()
+    }
+
+    private fun period(
+        empty: Boolean = false,
+        selectedPeriod: StatsPeriod = StatsPeriod.TODAY,
+    ): PeriodState.Content {
         val start = today.minus(DatePeriod(days = 27))
         return PeriodState.Content(
             today = today,
+            selectedPeriod = selectedPeriod,
             days = (0..27).map { index ->
                 val date = start.plus(DatePeriod(days = index))
                 ReadingCalendarDay.of(date, if (!empty && date == readDate) 20 else 0)
