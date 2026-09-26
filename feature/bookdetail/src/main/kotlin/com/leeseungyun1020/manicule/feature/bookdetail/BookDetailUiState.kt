@@ -24,7 +24,22 @@ sealed interface BookDetailUiState {
         val recordLoadState: RecordLoadState = RecordLoadState.Idle,
         val finishCheck: FinishCheckState = FinishCheckState.Idle,
         val ratingSaving: RatingSavingState = RatingSavingState.Idle,
+        val memoDraft: String? = null,
+        val memoSaving: MemoSavingState = MemoSavingState.Idle,
     ) : BookDetailUiState
+}
+
+sealed interface MemoSavingState {
+    data object Idle : MemoSavingState
+
+    data class Saving(
+        val target: String?,
+    ) : MemoSavingState
+
+    data class Failed(
+        val target: String?,
+        val attempt: Long,
+    ) : MemoSavingState
 }
 
 sealed interface RatingSavingState {

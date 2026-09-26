@@ -67,4 +67,7 @@
     <string name="book_detail_rating_star_description">별 %1$d</string>
     <string name="book_detail_rating_current_state">%1$d점</string>
     <string name="book_detail_rating_empty_state">별점 없음</string>
+    <string name="book_detail_memo_label">메모</string>
+    <string name="book_detail_memo_error">메모를 저장하지 못했어요</string>
+    <string name="book_detail_memo_saving">메모를 저장하고 있어요</string>
 </resources>
