@@ -84,6 +84,12 @@ class RestoreBookEntryUseCaseTest {
             updatedAt: Instant,
         ): RatingChangeResult = error("Unused")
 
+        override suspend fun updateMemo(
+            isbn: String,
+            memo: String?,
+            updatedAt: Instant,
+        ): com.leeseungyun1020.manicule.core.model.MemoChangeResult = error("Unused")
+
         override suspend fun restoreDeletedEntryIfAbsent(entry: BookEntry): Boolean {
             deletedEntry = entry
             return restoreResult

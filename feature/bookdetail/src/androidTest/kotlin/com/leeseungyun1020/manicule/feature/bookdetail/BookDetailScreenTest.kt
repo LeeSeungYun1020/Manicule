@@ -746,6 +746,86 @@ class BookDetailScreenTest {
         assertThat(dismissed).isFalse()
     }
 
+    @Test
+    fun memoTextField_displaysCurrentMemo_andInputTriggersCallback() {
+        var draft = ""
+        val uiState = recordsState(status = ReadingStatus.READING, memo = "Initial memo")
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onMemoDraftChanged = { draft = it },
+                )
+            }
+        }
+
+        val memoLabel = context.getString(R.string.book_detail_memo_label)
+        composeRule.onNodeWithContentDescription(memoLabel)
+            .assertIsDisplayed()
+            .performTextInput(" additional")
+
+        assertThat(draft).isEqualTo("Initial memo additional")
+    }
+
+    @Test
+    fun memoTextField_savingState_showsSavingText_andDisablesInput() {
+        val uiState =
+            recordsState(status = ReadingStatus.READING, memo = "Saving memo")
+                .copy(memoSaving = MemoSavingState.Saving("Saving memo"))
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                )
+            }
+        }
+
+        val memoLabel = context.getString(R.string.book_detail_memo_label)
+        composeRule.onNodeWithContentDescription(memoLabel).assertIsNotEnabled()
+        val savingText = context.getString(R.string.book_detail_memo_saving)
+        composeRule.onNodeWithText(savingText).assertIsDisplayed()
+    }
+
+    @Test
+    fun memoTextField_failureState_showsSnackbar_andRetryTriggersCallback() {
+        var retried = false
+        var dismissed = false
+        val uiState =
+            recordsState(status = ReadingStatus.READING, memo = "Draft")
+                .copy(memoSaving = MemoSavingState.Failed(target = "Draft", attempt = 1L))
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onRetryMemo = { retried = true },
+                    onMemoErrorDismissed = { dismissed = true },
+                )
+            }
+        }
+
+        val memoError = context.getString(R.string.book_detail_memo_error)
+        composeRule.onNodeWithText(memoError).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(DesignSystemR.string.core_designsystem_retry)).performClick()
+
+        assertThat(retried).isTrue()
+        assertThat(dismissed).isFalse()
+    }
+
     @Composable
     private fun BookDetailScreen(
         uiState: BookDetailUiState,
@@ -757,6 +837,11 @@ class BookDetailScreenTest {
         onRatingSelected: (Int) -> Unit = {},
         onRatingErrorDismissed: () -> Unit = {},
         onRetryRating: () -> Unit = {},
+        onMemoDraftChanged: (String) -> Unit = {},
+        onSaveMemo: () -> Unit = {},
+        onSaveMemoAndCheckSuccess: suspend () -> Boolean = { true },
+        onRetryMemo: () -> Unit = {},
+        onMemoErrorDismissed: () -> Unit = {},
         onAddRecord: (LocalDate, LocalTime, Int, Int) -> Long? = { _, _, _, _ -> null },
         onRecordErrorDismissed: () -> Unit = {},
         onFinishCheckConfirmed: (Long) -> Unit = {},
@@ -772,6 +857,11 @@ class BookDetailScreenTest {
             onRatingSelected = onRatingSelected,
             onRatingErrorDismissed = onRatingErrorDismissed,
             onRetryRating = onRetryRating,
+            onMemoDraftChanged = onMemoDraftChanged,
+            onSaveMemo = onSaveMemo,
+            onSaveMemoAndCheckSuccess = onSaveMemoAndCheckSuccess,
+            onRetryMemo = onRetryMemo,
+            onMemoErrorDismissed = onMemoErrorDismissed,
             onAddRecord = onAddRecord,
             onRecordErrorDismissed = onRecordErrorDismissed,
             onFinishCheckConfirmed = onFinishCheckConfirmed,

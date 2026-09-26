@@ -117,6 +117,12 @@ class ChangeReadingStatusUseCaseTest {
             updatedAt: Instant,
         ): RatingChangeResult = error("Not used")
 
+        override suspend fun updateMemo(
+            isbn: String,
+            memo: String?,
+            updatedAt: Instant,
+        ): com.leeseungyun1020.manicule.core.model.MemoChangeResult = error("Not used")
+
         override fun observeAll(): Flow<List<BookEntry>> = emptyFlow()
 
         override fun observeByStatus(

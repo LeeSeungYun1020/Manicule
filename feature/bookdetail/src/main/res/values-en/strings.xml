@@ -67,4 +67,7 @@
     <string name="book_detail_rating_star_description">%1$d star</string>
     <string name="book_detail_rating_current_state">%1$d stars</string>
     <string name="book_detail_rating_empty_state">No rating</string>
+    <string name="book_detail_memo_label">Memo</string>
+    <string name="book_detail_memo_error">Couldn’t save memo</string>
+    <string name="book_detail_memo_saving">Saving memo…</string>
 </resources>

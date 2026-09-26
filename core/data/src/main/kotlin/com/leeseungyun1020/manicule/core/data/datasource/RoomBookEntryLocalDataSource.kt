@@ -5,6 +5,7 @@ import com.leeseungyun1020.manicule.core.database.dao.projection.BookEntryWithCu
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.MemoChangeResult
 import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
@@ -13,6 +14,7 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 
+@Suppress("TooManyFunctions")
 class RoomBookEntryLocalDataSource
     @Inject
     constructor(
@@ -30,6 +32,12 @@ class RoomBookEntryLocalDataSource
             rating: Int,
             updatedAt: Instant,
         ): RatingChangeResult = bookEntryDao.updateRating(isbn, rating, updatedAt)
+
+        override suspend fun updateMemo(
+            isbn: String,
+            memo: String?,
+            updatedAt: Instant,
+        ): MemoChangeResult = bookEntryDao.updateMemo(isbn, memo, updatedAt)
 
         override suspend fun save(entry: BookEntryEntity) = bookEntryDao.upsert(entry)
 

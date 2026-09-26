@@ -10,6 +10,7 @@ import com.leeseungyun1020.manicule.core.database.dao.projection.BookEntryWithCu
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
 import com.leeseungyun1020.manicule.core.database.entity.ReadingRecordEntity
+import com.leeseungyun1020.manicule.core.model.MemoChangeResult
 import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
@@ -621,5 +622,176 @@ class BookEntryDaoTest {
             assertThat(entryFinal?.status).isEqualTo(ReadingStatus.READING)
             assertThat(entryFinal?.rating).isEqualTo(5)
             assertThat(entryFinal?.updatedAt).isEqualTo(t3)
+        }
+
+    @Test
+    fun updateMemo_unregisteredBook_setsUnsetWithMemo_whenMemoIsNotEmpty() =
+        runTest {
+            val isbn = "unregistered"
+            bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+            val now = Instant.parse("2026-09-05T01:00:00Z")
+
+            val result = dao.updateMemo(isbn, "새 메모", now)
+
+            assertThat(result).isEqualTo(MemoChangeResult.Changed)
+            assertThat(dao.getEntry(isbn)).isEqualTo(
+                BookEntryEntity(
+                    isbn = isbn,
+                    status = ReadingStatus.UNSET,
+                    rating = 0,
+                    memo = "새 메모",
+                    addedAt = now,
+                    updatedAt = now,
+                    finishedAt = null,
+                ),
+            )
+        }
+
+    @Test
+    fun updateMemo_unregisteredBook_nullOrEmptyMemo_returnsUnchanged_withoutWriting() =
+        runTest {
+            val isbn = "unregistered"
+            bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+            val now = Instant.parse("2026-09-05T01:00:00Z")
+
+            val resultNull = dao.updateMemo(isbn, null, now)
+            assertThat(resultNull).isEqualTo(MemoChangeResult.Unchanged)
+            assertThat(dao.getEntry(isbn)).isNull()
+
+            val resultEmpty = dao.updateMemo(isbn, "", now)
+            assertThat(resultEmpty).isEqualTo(MemoChangeResult.Unchanged)
+            assertThat(dao.getEntry(isbn)).isNull()
+        }
+
+    @Test
+    fun updateMemo_preservesExistingFieldsAndFinishedDate() =
+        runTest {
+            val isbn = "123"
+            val t1 = Instant.fromEpochMilliseconds(10)
+            val t2 = Instant.fromEpochMilliseconds(20)
+            val t3 = Instant.fromEpochMilliseconds(30)
+            val finishDate = LocalDate(2024, 2, 1)
+            bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+            val original =
+                BookEntryEntity(
+                    isbn = isbn,
+                    status = ReadingStatus.FINISHED,
+                    rating = 4,
+                    memo = "이전 메모",
+                    addedAt = t1,
+                    updatedAt = t2,
+                    finishedAt = finishDate,
+                )
+            dao.upsert(original)
+
+            val result = dao.updateMemo(isbn, "수정된 메모", t3)
+
+            assertThat(result).isEqualTo(MemoChangeResult.Changed)
+            assertThat(dao.getEntry(isbn)).isEqualTo(
+                original.copy(memo = "수정된 메모", updatedAt = t3),
+            )
+        }
+
+    @Test
+    fun updateMemo_sameMemo_returnsUnchanged_andPreservesUpdatedAt() =
+        runTest {
+            val isbn = "123"
+            val t1 = Instant.fromEpochMilliseconds(10)
+            val t2 = Instant.fromEpochMilliseconds(20)
+            val t3 = Instant.fromEpochMilliseconds(30)
+            bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+            dao.upsert(
+                BookEntryEntity(
+                    isbn = isbn,
+                    status = ReadingStatus.READING,
+                    rating = 4,
+                    memo = "기존 메모",
+                    addedAt = t1,
+                    updatedAt = t2,
+                    finishedAt = null,
+                ),
+            )
+
+            val result = dao.updateMemo(isbn, "기존 메모", t3)
+
+            assertThat(result).isEqualTo(MemoChangeResult.Unchanged)
+            assertThat(dao.getEntry(isbn)?.updatedAt).isEqualTo(t2)
+        }
+
+    @Test
+    fun updateMemo_clearMemo_updatesTimestamp_andPreservesOtherFields() =
+        runTest {
+            val isbn = "123"
+            val t1 = Instant.fromEpochMilliseconds(10)
+            val t2 = Instant.fromEpochMilliseconds(20)
+            val t3 = Instant.fromEpochMilliseconds(30)
+            bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+            dao.upsert(
+                BookEntryEntity(
+                    isbn = isbn,
+                    status = ReadingStatus.READING,
+                    rating = 4,
+                    memo = "기존 메모",
+                    addedAt = t1,
+                    updatedAt = t2,
+                    finishedAt = null,
+                ),
+            )
+
+            val result = dao.updateMemo(isbn, null, t3)
+
+            assertThat(result).isEqualTo(MemoChangeResult.Changed)
+            val updated = dao.getEntry(isbn)
+            assertThat(updated?.memo).isNull()
+            assertThat(updated?.updatedAt).isEqualTo(t3)
+            assertThat(updated?.status).isEqualTo(ReadingStatus.READING)
+            assertThat(updated?.rating).isEqualTo(4)
+        }
+
+    @Test
+    fun updateMemo_missingBook_returnsBookNotFound_withoutWriting() =
+        runTest {
+            val now = Instant.fromEpochMilliseconds(10)
+            val result = dao.updateMemo("missing", "메모", now)
+
+            assertThat(result).isEqualTo(MemoChangeResult.BookNotFound)
+            assertThat(dao.getEntry("missing")).isNull()
+        }
+
+    @Test
+    fun updateMemo_and_updateRating_and_changeReadingStatus_preserveEachOther() =
+        runTest {
+            val isbn = "123"
+            val t1 = Instant.fromEpochMilliseconds(10)
+            val t2 = Instant.fromEpochMilliseconds(20)
+            val t3 = Instant.fromEpochMilliseconds(30)
+            val t4 = Instant.fromEpochMilliseconds(40)
+            bookDao.upsert(BookEntity(isbn, "Title", "Author", "Pub", null, null, null, null, null, null, null, null))
+
+            dao.updateMemo(isbn, "첫 메모", t1)
+            val entryAfterMemo = dao.getEntry(isbn)
+            assertThat(entryAfterMemo?.status).isEqualTo(ReadingStatus.UNSET)
+            assertThat(entryAfterMemo?.rating).isEqualTo(0)
+            assertThat(entryAfterMemo?.memo).isEqualTo("첫 메모")
+
+            dao.updateRating(isbn, 4, t2)
+            val entryAfterRating = dao.getEntry(isbn)
+            assertThat(entryAfterRating?.status).isEqualTo(ReadingStatus.UNSET)
+            assertThat(entryAfterRating?.rating).isEqualTo(4)
+            assertThat(entryAfterRating?.memo).isEqualTo("첫 메모")
+
+            dao.changeReadingStatus(isbn, ReadingStatus.READING, t3, null)
+            val entryAfterStatus = dao.getEntry(isbn)
+            assertThat(entryAfterStatus?.status).isEqualTo(ReadingStatus.READING)
+            assertThat(entryAfterStatus?.rating).isEqualTo(4)
+            assertThat(entryAfterStatus?.memo).isEqualTo("첫 메모")
+            assertThat(entryAfterStatus?.updatedAt).isEqualTo(t3)
+
+            dao.updateMemo(isbn, "수정된 메모", t4)
+            val entryFinal = dao.getEntry(isbn)
+            assertThat(entryFinal?.status).isEqualTo(ReadingStatus.READING)
+            assertThat(entryFinal?.rating).isEqualTo(4)
+            assertThat(entryFinal?.memo).isEqualTo("수정된 메모")
+            assertThat(entryFinal?.updatedAt).isEqualTo(t4)
         }
 }

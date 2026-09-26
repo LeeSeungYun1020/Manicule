@@ -180,6 +180,12 @@ private class NavigationLibraryRepository : LibraryRepository {
         updatedAt: Instant,
     ): RatingChangeResult = error("Not used")
 
+    override suspend fun updateMemo(
+        isbn: String,
+        memo: String?,
+        updatedAt: Instant,
+    ): com.leeseungyun1020.manicule.core.model.MemoChangeResult = error("Not used")
+
     override fun observeAll(): Flow<List<BookEntry>> = error("Not used")
 
     override fun observeBookEntry(isbn: String): Flow<BookEntry?> = error("Not used")
