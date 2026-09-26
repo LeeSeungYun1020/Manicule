@@ -20,6 +20,8 @@ import com.leeseungyun1020.manicule.feature.scanner.navigation.scannerScreen
 import com.leeseungyun1020.manicule.feature.search.SearchScannerAction
 import com.leeseungyun1020.manicule.feature.search.navigation.SearchRoute
 import com.leeseungyun1020.manicule.feature.search.navigation.searchScreen
+import com.leeseungyun1020.manicule.feature.settings.navigation.LicensesRoute
+import com.leeseungyun1020.manicule.feature.settings.navigation.licensesScreen
 import com.leeseungyun1020.manicule.feature.settings.navigation.settingsScreen
 import com.leeseungyun1020.manicule.feature.stats.navigation.statsScreen
 
@@ -102,6 +104,15 @@ fun ManiculeNavHost(
                 appState.navController.navigate(BookDetailRoute(isbn, openMyRecords = true))
             },
         )
-        settingsScreen()
+        settingsScreen(
+            onNavigateToLicenses = {
+                appState.navController.navigate(LicensesRoute)
+            },
+        )
+        licensesScreen(
+            onNavigateBack = {
+                appState.navController.popBackStack()
+            },
+        )
     }
 }

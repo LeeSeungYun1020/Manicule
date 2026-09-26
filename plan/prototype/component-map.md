@@ -9,7 +9,7 @@ UI 가이드에서 필요한 화면 변형을 찾은 뒤 해당 행만 읽는다
 
 ## 프로토타입 변형
 
-[prototype.html](prototype.html)의 화면 변형별 구성을 다룬다. 하단 탭 `NavigationBar`는 `app` 셸 소유라 행마다 쓰지 않는다. 오픈소스 라이선스 화면은 서드파티 라이브러리가 그리는 `feature:settings` 화면이며 프로토타입 변형에 없다.
+[prototype.html](prototype.html)의 화면 변형별 구성을 다룬다. 하단 탭 `NavigationBar`는 `app` 셸 소유라 행마다 쓰지 않는다. 오픈소스 라이선스 화면은 `feature:settings`의 자체 화면(`LicensesScreen`)으로 구현하며 프로토타입 변형에 없다.
 
 | 변형 | 화면 | 구성 컴포넌트 |
 |---|---|---|
