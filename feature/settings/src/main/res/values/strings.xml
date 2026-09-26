@@ -25,4 +25,12 @@
     <string name="settings_continue">계속</string>
     <string name="settings_previous_reminder_description">마지막으로 확인한 설정이에요. 다시 불러온 후 변경할 수 있어요.</string>
     <string name="settings_open_system_settings">설정 열기</string>
+    <string name="settings_support_section">지원</string>
+    <string name="settings_licenses">오픈소스 라이선스</string>
+    <string name="settings_licenses_title">오픈소스 라이선스</string>
+    <string name="settings_licenses_description">Manicule은 다음의 오픈소스 소프트웨어를 사용하고 있습니다.</string>
+    <string name="settings_licenses_view_full_text">전문 보기</string>
+    <string name="settings_version_info">버전 정보</string>
+    <string name="settings_licenses_load_error">라이선스 정보를 불러오지 못했어요.</string>
+    <string name="settings_close">닫기</string>
 </resources>

@@ -335,6 +335,31 @@ class SettingsScreenTest {
         assertThat(loadingScroll.value()).isEqualTo(minOf(previousScroll, loadingScroll.maxValue()))
     }
 
+    @Test
+    fun supportSection_displaysLicensesAndVersionInfo() {
+        composeRule.setSettingsContent(
+            state = SettingsUiState(ReminderUiState.Content(ReminderConfig.Default)),
+            appVersion = "1.0.0",
+        )
+
+        composeRule.onNodeWithText(context.getString(R.string.settings_support_section)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.settings_licenses)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.settings_version_info)).assertIsDisplayed()
+        composeRule.onNodeWithText("1.0.0").assertIsDisplayed()
+    }
+
+    @Test
+    fun supportSection_clickLicenses_triggersCallback() {
+        var clicked = false
+        composeRule.setSettingsContent(
+            state = SettingsUiState(ReminderUiState.Content(ReminderConfig.Default)),
+            onNavigateToLicenses = { clicked = true },
+        )
+
+        composeRule.onNodeWithText(context.getString(R.string.settings_licenses)).performClick()
+        assertThat(clicked).isTrue()
+    }
+
     private companion object {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
     }
@@ -346,6 +371,8 @@ private fun androidx.compose.ui.test.junit4.ComposeContentTestRule.setSettingsCo
     onReminderTimeChange: (LocalTime) -> Unit = {},
     onRetryPreferences: () -> Unit = {},
     onThemeSelected: (ThemeMode) -> Unit = {},
+    appVersion: String = "",
+    onNavigateToLicenses: () -> Unit = {},
     width: Int? = null,
 ) {
     setContent {
@@ -358,6 +385,8 @@ private fun androidx.compose.ui.test.junit4.ComposeContentTestRule.setSettingsCo
                     onReminderTimeChange = onReminderTimeChange,
                     onRetryPreferences = onRetryPreferences,
                     onThemeSelected = onThemeSelected,
+                    appVersion = appVersion,
+                    onNavigateToLicenses = onNavigateToLicenses,
                 )
             }
         }
