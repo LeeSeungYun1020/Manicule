@@ -25,4 +25,13 @@
     <string name="settings_continue">Continue</string>
     <string name="settings_previous_reminder_description">Showing the last known settings. Reload to make changes.</string>
     <string name="settings_open_system_settings">Open settings</string>
+    <string name="settings_support_section">Support</string>
+    <string name="settings_licenses">Open source licenses</string>
+    <string name="settings_licenses_title">Open source licenses</string>
+    <string name="settings_licenses_description">Our app is built using the following open source software.</string>
+    <string name="settings_licenses_view_full_text">View License</string>
+    <string name="settings_licenses_view_details">Details</string>
+    <string name="settings_version_info">App version</string>
+    <string name="settings_licenses_load_error">Couldn’t load license information.</string>
+    <string name="settings_licenses_open_url_error">Couldn’t open web browser.</string>
 </resources>

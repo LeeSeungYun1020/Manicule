@@ -33,6 +33,7 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.ThemeMode
 import com.leeseungyun1020.manicule.feature.settings.components.ReminderSection
 import com.leeseungyun1020.manicule.feature.settings.components.ReminderUiStatePreviewProvider
+import com.leeseungyun1020.manicule.feature.settings.components.SupportSection
 import com.leeseungyun1020.manicule.feature.settings.components.ThemeSection
 import kotlinx.datetime.LocalTime
 
@@ -47,7 +48,9 @@ fun SettingsScreen(
     onReminderTimeChange: (LocalTime) -> Unit,
     onRetryPreferences: () -> Unit,
     onThemeSelected: (ThemeMode) -> Unit,
+    onNavigateToLicenses: () -> Unit,
     modifier: Modifier = Modifier,
+    appVersion: String = "",
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
@@ -85,6 +88,10 @@ fun SettingsScreen(
                     onTimeChange = onReminderTimeChange,
                     onRetry = onRetryPreferences,
                 )
+                SupportSection(
+                    appVersion = appVersion,
+                    onNavigateToLicenses = onNavigateToLicenses,
+                )
             }
         }
     }
@@ -106,6 +113,7 @@ private fun SettingsScreenPreview(
             onReminderTimeChange = {},
             onRetryPreferences = {},
             onThemeSelected = {},
+            onNavigateToLicenses = {},
         )
     }
 }
