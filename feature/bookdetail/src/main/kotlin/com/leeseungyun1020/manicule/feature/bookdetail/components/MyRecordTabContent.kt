@@ -165,7 +165,7 @@ internal fun BookDetailReviewCard(
     modifier: Modifier = Modifier,
 ) {
     val currentMemo = memoDraft ?: memo.orEmpty()
-    val isReviewEmpty = rating == 0 && currentMemo.isBlank()
+    val isReviewEmpty = rating == 0 && memo.isNullOrBlank()
     var hasHadFocus by rememberSaveable { mutableStateOf(false) }
 
     val cardContent: @Composable ColumnScope.() -> Unit = {
