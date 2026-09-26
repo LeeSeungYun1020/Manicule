@@ -13,7 +13,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 object HomeRoute
 
-@Suppress("LongParameterList")
 fun NavGraphBuilder.homeScreen(
     onNavigateToSearch: () -> Unit,
     onNavigateToBookDetail: (isbn: String) -> Unit,

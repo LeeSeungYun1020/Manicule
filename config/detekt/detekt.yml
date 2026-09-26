@@ -20,6 +20,7 @@ complexity:
   LongParameterList:
     ignoreDefaultParameters: true
     ignoreAnnotated: [ 'Composable' ]
+    excludes: [ '**/navigation/**' ]
   TooManyFunctions:
     ignoreAnnotatedFunctions: [ 'Preview', 'ManiculePreview' ]
 
