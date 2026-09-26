@@ -33,10 +33,8 @@ class LicensesViewModel
             viewModelScope.launch {
                 runCatching {
                     val libraries = licenseLoader.loadLibraries()
-                    val licenseText = licenseLoader.loadLicenseText()
                     _uiState.value = LicensesUiState.Success(
                         libraries = libraries,
-                        licenseText = licenseText,
                     )
                 }.onFailure {
                     if (it is CancellationException) {

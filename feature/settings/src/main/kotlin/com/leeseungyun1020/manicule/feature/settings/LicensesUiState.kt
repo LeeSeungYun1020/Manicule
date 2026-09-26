@@ -8,7 +8,6 @@ sealed interface LicensesUiState {
 
     data class Success(
         val libraries: List<OpenSourceLibrary>,
-        val licenseText: String,
     ) : LicensesUiState
 
     data object Error : LicensesUiState

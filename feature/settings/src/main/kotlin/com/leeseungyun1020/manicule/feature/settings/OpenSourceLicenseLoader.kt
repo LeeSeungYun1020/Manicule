@@ -17,8 +17,6 @@ import javax.inject.Singleton
 
 interface OpenSourceLicenseLoader {
     suspend fun loadLibraries(): List<OpenSourceLibrary>
-
-    suspend fun loadLicenseText(): String
 }
 
 @Singleton
@@ -42,13 +40,6 @@ class DefaultOpenSourceLicenseLoader internal constructor(
             openRawResource(R.raw.licenses).use { stream ->
                 val jsonString = stream.bufferedReader().use { it.readText() }
                 json.decodeFromString<List<OpenSourceLibrary>>(jsonString)
-            }
-        }
-
-    override suspend fun loadLicenseText(): String =
-        withContext(ioDispatcher) {
-            openRawResource(R.raw.license_apache_2_0).use { stream ->
-                stream.bufferedReader().use { it.readText() }
             }
         }
 }

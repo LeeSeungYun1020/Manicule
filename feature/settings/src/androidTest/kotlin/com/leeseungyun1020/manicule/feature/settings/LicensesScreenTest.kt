@@ -29,7 +29,6 @@ class LicensesScreenTest {
                 url = "https://example.com/test",
             ),
         )
-    private val testLicenseText = "Terms and Conditions of Apache License 2.0"
 
     @Test
     fun licensesScreen_displaysTopBarTitle_andNavigatesBack() {
@@ -60,7 +59,6 @@ class LicensesScreenTest {
                     uiState =
                         LicensesUiState.Success(
                             libraries = testLibraries,
-                            licenseText = testLicenseText,
                         ),
                     onNavigateBack = {},
                     onRetry = {},
@@ -77,30 +75,25 @@ class LicensesScreenTest {
     }
 
     @Test
-    fun licensesScreen_viewFullText_opensAndClosesDialog() {
+    fun licensesScreen_viewFullText_opensApacheLicenseUrl() {
+        var openedUrl: String? = null
         composeRule.setContent {
             ManiculeTheme {
                 LicensesScreen(
                     uiState =
                         LicensesUiState.Success(
                             libraries = testLibraries,
-                            licenseText = testLicenseText,
                         ),
                     onNavigateBack = {},
                     onRetry = {},
-                    onOpenUrl = {},
+                    onOpenUrl = { openedUrl = it },
                 )
             }
         }
 
-        composeRule.onNodeWithText(testLicenseText).assertDoesNotExist()
-
         composeRule.onNodeWithText(context.getString(R.string.settings_licenses_view_full_text)).performClick()
 
-        composeRule.onNodeWithText(testLicenseText).assertIsDisplayed()
-        composeRule.onNodeWithText(context.getString(R.string.settings_close)).performClick()
-
-        composeRule.onNodeWithText(testLicenseText).assertDoesNotExist()
+        assertThat(openedUrl).isEqualTo(APACHE_2_0_LICENSE_URL)
     }
 
     @Test
@@ -112,7 +105,6 @@ class LicensesScreenTest {
                     uiState =
                         LicensesUiState.Success(
                             libraries = testLibraries,
-                            licenseText = testLicenseText,
                         ),
                     onNavigateBack = {},
                     onRetry = {},
@@ -144,7 +136,6 @@ class LicensesScreenTest {
                     uiState =
                         LicensesUiState.Success(
                             libraries = librariesWithoutUrl,
-                            licenseText = testLicenseText,
                         ),
                     onNavigateBack = {},
                     onRetry = {},
