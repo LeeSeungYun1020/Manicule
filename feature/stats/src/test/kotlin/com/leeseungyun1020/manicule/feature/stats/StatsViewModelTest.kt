@@ -47,19 +47,110 @@ class StatsViewModelTest {
     }
 
     @Test
-    fun calendar_uses_28_inclusive_days_and_period_summary() =
+    fun default_period_is_today_with_7_days_calendar_and_today_summary() =
         runTest(dispatcherRule.dispatcher) {
-            repository.records.value = listOf(record(1, LocalDate(2024, 2, 29), "a", 1, 10))
+            repository.records.value = listOf(
+                record(1, LocalDate(2024, 2, 29), "a", 1, 10),
+                record(2, today, "b", 1, 15),
+            )
             val viewModel = viewModel()
             val job = backgroundScope.launch { viewModel.uiState.collect {} }
             runCurrent()
 
             val content = viewModel.uiState.value.period as PeriodState.Content
-            assertThat(content.days).hasSize(28)
-            assertThat(content.days.first().date).isEqualTo(LocalDate(2024, 2, 3))
+            assertThat(content.selectedPeriod).isEqualTo(StatsPeriod.TODAY)
+            assertThat(content.days).hasSize(7)
+            assertThat(content.days.first().date).isEqualTo(LocalDate(2024, 2, 24))
             assertThat(content.days.last().date).isEqualTo(today)
-            assertThat(content.summary.pagesRead).isEqualTo(10)
+            assertThat(content.summary.pagesRead).isEqualTo(15)
             assertThat(content.summary.longestStreak).isEqualTo(1)
+            job.cancel()
+        }
+
+    @Test
+    fun switching_periods_updates_calendar_range_and_summary() =
+        runTest(dispatcherRule.dispatcher) {
+            repository.records.value = listOf(
+                record(1, LocalDate(2024, 2, 3), "a", 1, 10),
+                record(2, today, "b", 1, 15),
+            )
+            val viewModel = viewModel()
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            viewModel.selectPeriod(StatsPeriod.FOUR_WEEKS)
+            runCurrent()
+
+            val fourWeeks = viewModel.uiState.value.period as PeriodState.Content
+            assertThat(fourWeeks.selectedPeriod).isEqualTo(StatsPeriod.FOUR_WEEKS)
+            assertThat(fourWeeks.days).hasSize(28)
+            assertThat(fourWeeks.days.first().date).isEqualTo(LocalDate(2024, 2, 3))
+            assertThat(fourWeeks.days.last().date).isEqualTo(today)
+            assertThat(fourWeeks.summary.pagesRead).isEqualTo(25)
+
+            viewModel.selectPeriod(StatsPeriod.ONE_YEAR)
+            runCurrent()
+
+            val oneYear = viewModel.uiState.value.period as PeriodState.Content
+            assertThat(oneYear.selectedPeriod).isEqualTo(StatsPeriod.ONE_YEAR)
+            assertThat(oneYear.days).hasSize(364)
+            assertThat(oneYear.days.first().date).isEqualTo(LocalDate(2023, 3, 4))
+            assertThat(oneYear.days.last().date).isEqualTo(today)
+            job.cancel()
+        }
+
+    @Test
+    fun switching_period_clears_out_of_range_selected_date() =
+        runTest(dispatcherRule.dispatcher) {
+            val dateInFourWeeksOnly = LocalDate(2024, 2, 10)
+            repository.records.value = listOf(record(1, dateInFourWeeksOnly, "a", 1, 10))
+            val viewModel = viewModel()
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            viewModel.selectPeriod(StatsPeriod.FOUR_WEEKS)
+            runCurrent()
+
+            viewModel.selectDate(dateInFourWeeksOnly)
+            runCurrent()
+            assertThat(viewModel.uiState.value.day).isInstanceOf(DayState.Content::class.java)
+
+            viewModel.selectPeriod(StatsPeriod.TODAY)
+            runCurrent()
+
+            assertThat(viewModel.uiState.value.day).isEqualTo(DayState.Closed)
+            job.cancel()
+        }
+
+    @Test
+    fun period_restored_from_saved_state_handle() =
+        runTest(dispatcherRule.dispatcher) {
+            val handle = SavedStateHandle(mapOf("selected_period" to StatsPeriod.ONE_YEAR))
+            val viewModel = viewModel(handle)
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            val content = viewModel.uiState.value.period as PeriodState.Content
+            assertThat(content.selectedPeriod).isEqualTo(StatsPeriod.ONE_YEAR)
+            assertThat(content.days).hasSize(364)
+            job.cancel()
+        }
+
+    @Test
+    fun custom_period_selection_is_ignored_until_picker_is_implemented() =
+        runTest(dispatcherRule.dispatcher) {
+            val viewModel = viewModel()
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            val initialContent = viewModel.uiState.value.period as PeriodState.Content
+            assertThat(initialContent.selectedPeriod).isEqualTo(StatsPeriod.TODAY)
+
+            viewModel.selectPeriod(StatsPeriod.CUSTOM)
+            runCurrent()
+
+            val afterContent = viewModel.uiState.value.period as PeriodState.Content
+            assertThat(afterContent.selectedPeriod).isEqualTo(StatsPeriod.TODAY)
             job.cancel()
         }
 
@@ -213,6 +304,7 @@ class StatsViewModelTest {
             end: LocalDate,
         ): Flow<List<DailyReading>> =
             records.map { list ->
+                if (failPeriod) error("calendar period failed")
                 list.filter { it.date in start..end }.groupBy { it.date }
                     .map { (date, sessions) ->
                         DailyReading(date, sessions.sumOf { it.pagesRead }, sessions.distinctBy { it.isbn }.size)

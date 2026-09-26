@@ -39,6 +39,7 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
  * @param selectedOption 현재 선택된 항목
  * @param onOptionSelected 항목이 선택되었을 때 호출되는 콜백
  * @param modifier Modifier
+ * @param disabledOptions 비활성화할 항목 집합 (기본값: 빈 집합)
  * @param itemLabel 항목을 텍스트로 변환하는 함수 (기본값: toString())
  */
 @Composable
@@ -47,6 +48,7 @@ fun <T> ManiculeSegmentedButton(
     selectedOption: T,
     onOptionSelected: (T) -> Unit,
     modifier: Modifier = Modifier,
+    disabledOptions: Set<T> = emptySet(),
     itemLabel: (T) -> String = { it.toString() },
 ) {
     Row(
@@ -63,6 +65,7 @@ fun <T> ManiculeSegmentedButton(
     ) {
         options.forEach { option ->
             val isSelected = option == selectedOption
+            val isDisabled = option in disabledOptions
             Box(
                 modifier =
                     Modifier
@@ -72,6 +75,7 @@ fun <T> ManiculeSegmentedButton(
                             if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
                         ).selectable(
                             selected = isSelected,
+                            enabled = !isDisabled,
                             onClick = { onOptionSelected(option) },
                             role = Role.RadioButton,
                         ).padding(vertical = MaterialTheme.spacing.sm),
@@ -81,7 +85,12 @@ fun <T> ManiculeSegmentedButton(
                     text = itemLabel(option),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color =
+                        when {
+                            isDisabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                            isSelected -> MaterialTheme.colorScheme.onPrimary
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        },
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
