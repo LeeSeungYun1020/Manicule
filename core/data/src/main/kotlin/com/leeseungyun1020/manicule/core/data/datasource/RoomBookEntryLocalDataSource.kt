@@ -14,7 +14,6 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 
-@Suppress("TooManyFunctions")
 class RoomBookEntryLocalDataSource
     @Inject
     constructor(
@@ -43,7 +42,6 @@ class RoomBookEntryLocalDataSource
 
         override suspend fun insertIfAbsent(entry: BookEntryEntity): Boolean = bookEntryDao.insertIfAbsent(entry) != -1L
 
-        @Suppress("LongParameterList") // Room 쿼리의 조건과 복구 열을 그대로 전달한다.
         override suspend fun restoreStatusIfUnchanged(
             isbn: String,
             changedStatus: ReadingStatus,
