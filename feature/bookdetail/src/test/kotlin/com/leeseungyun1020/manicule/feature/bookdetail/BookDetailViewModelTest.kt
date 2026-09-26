@@ -11,6 +11,7 @@ import com.leeseungyun1020.manicule.core.data.repository.ReadingRecordRepository
 import com.leeseungyun1020.manicule.core.data.repository.SaveBookEntryResult
 import com.leeseungyun1020.manicule.core.domain.book.GetBookDetailUseCase
 import com.leeseungyun1020.manicule.core.domain.library.ChangeReadingStatusUseCase
+import com.leeseungyun1020.manicule.core.domain.library.UpdateMemoUseCase
 import com.leeseungyun1020.manicule.core.domain.library.UpdateRatingUseCase
 import com.leeseungyun1020.manicule.core.domain.record.AddReadingRecordUseCase
 import com.leeseungyun1020.manicule.core.domain.record.ObserveBookRecordsUseCase
@@ -18,6 +19,7 @@ import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.MemoChangeResult
 import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
@@ -561,6 +563,385 @@ class BookDetailViewModelTest {
         }
 
     @Test
+    fun updateMemoDraft_updatesDraft_andStoresInSavedStateHandle() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry
+            val savedStateHandle = createSavedStateHandle()
+            val viewModel = createViewModel(savedStateHandle)
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("Draft memo content")
+
+            assertThat(contentState(viewModel).memoDraft).isEqualTo("Draft memo content")
+            assertThat(savedStateHandle.get<String?>("bookDetailMemoDraft")).isEqualTo("Draft memo content")
+        }
+
+    @Test
+    fun saveMemo_whenDraftEqualsObserved_clearsDraftAndDoesNotCallUseCase() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = "Existing memo")
+            val savedStateHandle = createSavedStateHandle()
+            val viewModel = createViewModel(savedStateHandle)
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("Existing memo")
+            assertThat(contentState(viewModel).memoDraft).isEqualTo("Existing memo")
+
+            viewModel.saveMemo()
+            advanceUntilIdle()
+
+            assertThat(libraryRepository.memoCalls).isEqualTo(0)
+            assertThat(contentState(viewModel).memoDraft).isNull()
+            assertThat(savedStateHandle.get<String?>("bookDetailMemoDraft")).isNull()
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Idle)
+        }
+
+    @Test
+    fun saveMemo_whenDraftEqualsObservedAfterTrimming_clearsDraftAndDoesNotCallUseCase() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = "Existing memo")
+            val savedStateHandle = createSavedStateHandle()
+            val viewModel = createViewModel(savedStateHandle)
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("   Existing memo   ")
+            viewModel.saveMemo()
+            advanceUntilIdle()
+
+            assertThat(libraryRepository.memoCalls).isEqualTo(0)
+            assertThat(contentState(viewModel).memoDraft).isNull()
+            assertThat(savedStateHandle.get<String?>("bookDetailMemoDraft")).isNull()
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Idle)
+        }
+
+    @Test
+    fun saveMemo_whenBlankDraftAndNullObserved_clearsDraftAndDoesNotCallUseCase() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = null)
+            val savedStateHandle = createSavedStateHandle()
+            val viewModel = createViewModel(savedStateHandle)
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("   ")
+            viewModel.saveMemo()
+            advanceUntilIdle()
+
+            assertThat(libraryRepository.memoCalls).isEqualTo(0)
+            assertThat(contentState(viewModel).memoDraft).isNull()
+            assertThat(savedStateHandle.get<String?>("bookDetailMemoDraft")).isNull()
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Idle)
+        }
+
+    @Test
+    fun saveMemo_normalizesDraftAndCallsUseCase_andUpdatesObservedState() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = null)
+            val savedStateHandle = createSavedStateHandle()
+            val viewModel = createViewModel(savedStateHandle)
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("  New normalized memo  ")
+            viewModel.saveMemo()
+            advanceUntilIdle()
+
+            assertThat(libraryRepository.memoCalls).isEqualTo(1)
+            val content = contentState(viewModel)
+            assertThat(content.bookDetail.entry?.memo).isEqualTo("New normalized memo")
+            assertThat(content.memoDraft).isNull()
+            assertThat(savedStateHandle.get<String?>("bookDetailMemoDraft")).isNull()
+            assertThat(content.memoSaving).isEqualTo(MemoSavingState.Idle)
+        }
+
+    @Test
+    fun saveMemo_saving_blocksDuplicateRequests() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = null)
+            libraryRepository.memoGate = CompletableDeferred()
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("Memo 1")
+            viewModel.saveMemo()
+            runCurrent()
+
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Saving("Memo 1"))
+
+            viewModel.updateMemoDraft("Memo 2")
+            viewModel.saveMemo()
+            runCurrent()
+
+            assertThat(libraryRepository.memoCalls).isEqualTo(1)
+
+            libraryRepository.memoGate?.complete(Unit)
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Idle)
+            assertThat(contentState(viewModel).bookDetail.entry?.memo).isEqualTo("Memo 1")
+        }
+
+    @Test
+    fun saveMemo_observationDelay_keepsSavingStateUntilObserved() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = "Old memo")
+            libraryRepository.emitMemo = false
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("New memo")
+            viewModel.saveMemo()
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Saving("New memo"))
+            assertThat(contentState(viewModel).bookDetail.entry?.memo).isEqualTo("Old memo")
+
+            libraryRepository.entry.value = testEntry.copy(memo = "New memo")
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Idle)
+            assertThat(contentState(viewModel).memoDraft).isNull()
+            assertThat(contentState(viewModel).bookDetail.entry?.memo).isEqualTo("New memo")
+        }
+
+    @Test
+    fun saveMemo_failure_keepsDraftAndShowsFailedState_andDismissError() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = "Old memo")
+            libraryRepository.memoFailure = IllegalStateException("Disk error")
+            val savedStateHandle = createSavedStateHandle()
+            val viewModel = createViewModel(savedStateHandle)
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("New draft")
+            viewModel.saveMemo()
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.memoSaving).isInstanceOf(MemoSavingState.Failed::class.java)
+            val failed = content.memoSaving as MemoSavingState.Failed
+            assertThat(failed.target).isEqualTo("New draft")
+            assertThat(content.memoDraft).isEqualTo("New draft")
+            assertThat(savedStateHandle.get<String?>("bookDetailMemoDraft")).isEqualTo("New draft")
+
+            viewModel.dismissMemoError()
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Idle)
+            assertThat(contentState(viewModel).memoDraft).isEqualTo("New draft")
+            assertThat(savedStateHandle.get<String?>("bookDetailMemoDraft")).isEqualTo("New draft")
+        }
+
+    @Test
+    fun retryMemo_retriesFailedTarget() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = "Old memo")
+            libraryRepository.memoFailure = IllegalStateException("Disk error")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("Retry memo")
+            viewModel.saveMemo()
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoSaving).isInstanceOf(MemoSavingState.Failed::class.java)
+
+            libraryRepository.memoFailure = null
+            viewModel.retryMemo()
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Idle)
+            assertThat(contentState(viewModel).memoDraft).isNull()
+            assertThat(contentState(viewModel).bookDetail.entry?.memo).isEqualTo("Retry memo")
+        }
+
+    @Test
+    fun retryMemo_withRevisedDraft_savesRevisedDraftInsteadOfFailedTarget() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = "Old memo")
+            libraryRepository.memoFailure = IllegalStateException("Disk error")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("Initial fail draft")
+            viewModel.saveMemo()
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoSaving).isInstanceOf(MemoSavingState.Failed::class.java)
+
+            // 사용자가 실패 스낵바가 노출된 상태에서 초안을 수정함
+            viewModel.updateMemoDraft("Revised draft after failure")
+
+            libraryRepository.memoFailure = null
+            viewModel.retryMemo()
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Idle)
+            assertThat(contentState(viewModel).memoDraft).isNull()
+            assertThat(contentState(viewModel).bookDetail.entry?.memo).isEqualTo("Revised draft after failure")
+        }
+
+    @Test
+    fun retryMemo_withClearedBlankDraft_savesNullInsteadOfFailedTarget() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = "Old memo")
+            libraryRepository.memoFailure = IllegalStateException("Disk error")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("Failed memo target")
+            viewModel.saveMemo()
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoSaving).isInstanceOf(MemoSavingState.Failed::class.java)
+
+            // 사용자가 실패 스낵바가 노출된 상태에서 내용을 모두 지움 (빈 문자열)
+            viewModel.updateMemoDraft("")
+
+            libraryRepository.memoFailure = null
+            viewModel.retryMemo()
+            advanceUntilIdle()
+
+            // 실패 타겟이 아닌 null(삭제)이 저장되어야 함
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Idle)
+            assertThat(contentState(viewModel).memoDraft).isNull()
+            assertThat(contentState(viewModel).bookDetail.entry?.memo).isNull()
+        }
+
+    @Test
+    fun saveMemo_whenUserTypesNewDraftDuringObservation_preservesNewDraft() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = "Old memo")
+            libraryRepository.emitMemo = false
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("Saving memo")
+            viewModel.saveMemo()
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Saving("Saving memo"))
+
+            // 저장이 비동기로 진행되는 도중 사용자가 새로운 초안을 작성함
+            viewModel.updateMemoDraft("Newer draft while saving")
+
+            // 이전 저장 타겟이 DB에 반영되어 관찰 스트림으로 방출됨
+            libraryRepository.entry.value = testEntry.copy(memo = "Saving memo")
+            advanceUntilIdle()
+
+            // 이전 타겟이 반영되었어도 사용자의 새 초안은 보존되어야 함
+            val content = contentState(viewModel)
+            assertThat(content.memoSaving).isEqualTo(MemoSavingState.Idle)
+            assertThat(content.memoDraft).isEqualTo("Newer draft while saving")
+            assertThat(content.bookDetail.entry?.memo).isEqualTo("Saving memo")
+        }
+
+    @Test
+    fun saveMemoAndCheckSuccess_returnsTrueOnSuccess_andFalseOnFailure() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = "Initial")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("Success memo")
+            val successResult = viewModel.saveMemoAndCheckSuccess()
+            advanceUntilIdle()
+            assertThat(successResult).isTrue()
+            assertThat(contentState(viewModel).bookDetail.entry?.memo).isEqualTo("Success memo")
+
+            libraryRepository.memoFailure = IllegalStateException("Failure")
+            viewModel.updateMemoDraft("Fail memo")
+            val failResult = viewModel.saveMemoAndCheckSuccess()
+            advanceUntilIdle()
+            assertThat(failResult).isFalse()
+            assertThat(contentState(viewModel).memoDraft).isEqualTo("Fail memo")
+        }
+
+    @Test
+    fun saveMemoAndCheckSuccess_whenNoChanges_returnsTrueWithoutCallingUseCase() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = "Same")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("Same")
+            val result = viewModel.saveMemoAndCheckSuccess()
+            advanceUntilIdle()
+
+            assertThat(result).isTrue()
+            assertThat(libraryRepository.memoCalls).isEqualTo(0)
+            assertThat(contentState(viewModel).memoDraft).isNull()
+        }
+
+    @Test
+    fun saveMemo_cancellation_doesNotLeaveSavingStateOrShowError_andKeepsDraft() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.memoFailure = CancellationException("Cancelled")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("Cancel memo")
+            viewModel.saveMemo()
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Idle)
+            assertThat(contentState(viewModel).memoDraft).isEqualTo("Cancel memo")
+            assertThat(contentState(viewModel).bookDetail.entry?.memo).isNull()
+        }
+
+    @Test
+    fun savedMemoDraft_restoresDraftFromSavedStateHandle_andObservationDoesNotOverwriteDraft() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = "Observed memo 1")
+            val savedStateHandle = createSavedStateHandle(savedMemoDraft = "Draft from handle")
+            val viewModel = createViewModel(savedStateHandle)
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoDraft).isEqualTo("Draft from handle")
+
+            libraryRepository.entry.value = testEntry.copy(memo = "Observed memo 2")
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoDraft).isEqualTo("Draft from handle")
+            assertThat(contentState(viewModel).bookDetail.entry?.memo).isEqualTo("Observed memo 2")
+        }
+
+    @Test
+    fun updateMemo_preservesStatusAndRating() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value =
+                testEntry.copy(
+                    status = ReadingStatus.FINISHED,
+                    rating = 5,
+                    memo = "Old memo",
+                )
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("New memo")
+            viewModel.saveMemo()
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.bookDetail.entry?.status).isEqualTo(ReadingStatus.FINISHED)
+            assertThat(content.bookDetail.entry?.rating).isEqualTo(5)
+            assertThat(content.bookDetail.entry?.memo).isEqualTo("New memo")
+        }
+
+    @Test
     fun records_areObserved_andUpdatedInUiState() =
         runTest(dispatcher) {
             bookRepository.books.value = testBook
@@ -864,6 +1245,7 @@ class BookDetailViewModelTest {
     private fun createSavedStateHandle(
         openMyRecords: Boolean = false,
         savedTab: BookDetailTab? = null,
+        savedMemoDraft: String? = null,
     ): SavedStateHandle {
         val state =
             mutableMapOf<String, Any?>(
@@ -871,6 +1253,7 @@ class BookDetailViewModelTest {
                 "openMyRecords" to openMyRecords,
             )
         savedTab?.let { state["bookDetailSelectedTab"] = it.name }
+        savedMemoDraft?.let { state["bookDetailMemoDraft"] = it }
         return SavedStateHandle(state)
     }
 
@@ -886,6 +1269,14 @@ class BookDetailViewModelTest {
                 },
             ),
             updateRatingUseCase = UpdateRatingUseCase(
+                libraryRepository,
+                object : Clock {
+                    override fun now(): Instant = Instant.fromEpochMilliseconds(100)
+
+                    override fun timeZone(): TimeZone = TimeZone.UTC
+                },
+            ),
+            updateMemoUseCase = UpdateMemoUseCase(
                 libraryRepository,
                 object : Clock {
                     override fun now(): Instant = Instant.fromEpochMilliseconds(100)
@@ -952,6 +1343,11 @@ class BookDetailViewModelTest {
         var ratingFailure: Exception? = null
         var ratingResult = RatingChangeResult.Changed
         var emitRating = true
+        var memoCalls = 0
+        var memoGate: CompletableDeferred<Unit>? = null
+        var memoFailure: Exception? = null
+        var memoResult = MemoChangeResult.Changed
+        var emitMemo = true
         val entry = MutableStateFlow<BookEntry?>(null)
 
         override fun observeAll(): Flow<List<BookEntry>> = emptyFlow()
@@ -990,6 +1386,23 @@ class BookDetailViewModelTest {
                 )
             }
             return ratingResult
+        }
+
+        override suspend fun updateMemo(
+            isbn: String,
+            memo: String?,
+            updatedAt: Instant,
+        ): MemoChangeResult {
+            memoCalls++
+            memoGate?.await()
+            memoFailure?.let { throw it }
+            if (emitMemo && memoResult == MemoChangeResult.Changed) {
+                entry.value = (entry.value ?: testEntry.copy(status = ReadingStatus.UNSET, addedAt = updatedAt)).copy(
+                    memo = memo,
+                    updatedAt = updatedAt,
+                )
+            }
+            return memoResult
         }
 
         override fun observeByStatus(

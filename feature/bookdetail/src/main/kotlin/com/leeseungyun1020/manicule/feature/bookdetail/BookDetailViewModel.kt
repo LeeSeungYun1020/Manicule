@@ -5,10 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.leeseungyun1020.manicule.core.domain.book.GetBookDetailUseCase
 import com.leeseungyun1020.manicule.core.domain.library.ChangeReadingStatusUseCase
+import com.leeseungyun1020.manicule.core.domain.library.UpdateMemoUseCase
 import com.leeseungyun1020.manicule.core.domain.library.UpdateRatingUseCase
 import com.leeseungyun1020.manicule.core.domain.record.AddReadingRecordUseCase
 import com.leeseungyun1020.manicule.core.domain.record.ObserveBookRecordsUseCase
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
+import com.leeseungyun1020.manicule.core.model.MemoChangeResult
 import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
@@ -79,6 +81,23 @@ private fun resolveRatingSaving(
         else -> previousRatingSaving ?: RatingSavingState.Idle
     }
 
+private fun resolveMemoSaving(
+    previousMemoSaving: MemoSavingState?,
+    entryMemo: String?,
+): MemoSavingState =
+    when (previousMemoSaving) {
+        is MemoSavingState.Saving -> {
+            if (entryMemo == previousMemoSaving.target) {
+                MemoSavingState.Idle
+            } else {
+                previousMemoSaving
+            }
+        }
+
+        else -> previousMemoSaving ?: MemoSavingState.Idle
+    }
+
+@Suppress("TooManyFunctions", "LongParameterList")
 @HiltViewModel
 class BookDetailViewModel
     @Inject
@@ -86,6 +105,7 @@ class BookDetailViewModel
         private val getBookDetail: GetBookDetailUseCase,
         private val changeStatus: ChangeReadingStatusUseCase,
         private val updateRatingUseCase: UpdateRatingUseCase,
+        private val updateMemoUseCase: UpdateMemoUseCase,
         private val observeBookRecords: ObserveBookRecordsUseCase,
         private val addReadingRecord: AddReadingRecordUseCase,
         private val savedStateHandle: SavedStateHandle,
@@ -100,6 +120,9 @@ class BookDetailViewModel
         private var observationJob: Job? = null
         private var statusAttempt = 0L
         private var ratingAttempt = 0L
+        private var memoAttempt = 0L
+        private var memoSaveJob: Job? = null
+        private var memoDraft: String? = savedStateHandle[MEMO_DRAFT_KEY]
         private var recordAttempt = 0L
         private val recordRetrySignals = MutableStateFlow(0L)
         private val _uiState = MutableStateFlow<BookDetailUiState>(BookDetailUiState.Loading)
@@ -235,6 +258,126 @@ class BookDetailViewModel
             }
         }
 
+        fun updateMemoDraft(draft: String) {
+            memoDraft = draft
+            savedStateHandle[MEMO_DRAFT_KEY] = draft
+            _uiState.updateContent { it.copy(memoDraft = draft) }
+        }
+
+        fun saveMemo() {
+            val content = _uiState.value as? BookDetailUiState.Content ?: return
+            if (content.memoSaving is MemoSavingState.Saving) return
+            val draft = content.memoDraft ?: return
+            val currentMemo = content.bookDetail.entry?.memo
+            val normalizedDraft = draft.trim().ifEmpty { null }
+            if (normalizedDraft == currentMemo) {
+                clearMemoDraft()
+                return
+            }
+            memoSaveJob =
+                viewModelScope.launch {
+                    saveMemoInternal(normalizedDraft)
+                }
+        }
+
+        suspend fun saveMemoAndCheckSuccess(): Boolean {
+            val activeJob = memoSaveJob
+            if (activeJob != null && activeJob.isActive) {
+                activeJob.join()
+                val state = _uiState.value as? BookDetailUiState.Content
+                return state?.memoSaving !is MemoSavingState.Failed
+            }
+            val content = _uiState.value as? BookDetailUiState.Content
+            val draft = content?.memoDraft
+            val normalizedDraft = draft?.trim()?.ifEmpty { null }
+            val currentMemo = content?.bookDetail?.entry?.memo
+            return when {
+                draft == null -> true
+                normalizedDraft == currentMemo -> {
+                    clearMemoDraft()
+                    true
+                }
+
+                else -> saveMemoInternal(normalizedDraft)
+            }
+        }
+
+        fun retryMemo() {
+            val content = _uiState.value as? BookDetailUiState.Content ?: return
+            val failed = content.memoSaving as? MemoSavingState.Failed ?: return
+            val currentDraft = content.memoDraft
+            val targetToSave =
+                if (currentDraft != null) {
+                    currentDraft.trim().ifEmpty { null }
+                } else {
+                    failed.target
+                }
+            memoSaveJob =
+                viewModelScope.launch {
+                    saveMemoInternal(targetToSave)
+                }
+        }
+
+        fun dismissMemoError() {
+            _uiState.updateContent {
+                if (it.memoSaving is MemoSavingState.Failed) it.copy(memoSaving = MemoSavingState.Idle) else it
+            }
+        }
+
+        private fun clearMemoDraft() {
+            memoDraft = null
+            savedStateHandle.remove<String>(MEMO_DRAFT_KEY)
+            _uiState.updateContent { it.copy(memoDraft = null) }
+        }
+
+        private suspend fun saveMemoInternal(target: String?): Boolean {
+            val attempt = ++memoAttempt
+            _uiState.updateContent { it.copy(memoSaving = MemoSavingState.Saving(target)) }
+            return runCatching { updateMemoUseCase(isbn, target) }
+                .map { result ->
+                    when (result) {
+                        MemoChangeResult.Changed -> {
+                            _uiState.updateContent { state ->
+                                val currentMemo = state.bookDetail.entry?.memo
+                                if (currentMemo == target) {
+                                    val currentNormalizedDraft = state.memoDraft?.trim()?.ifEmpty { null }
+                                    val shouldClearDraft = currentNormalizedDraft == target
+                                    if (shouldClearDraft) {
+                                        memoDraft = null
+                                        savedStateHandle.remove<String>(MEMO_DRAFT_KEY)
+                                    }
+                                    state.copy(
+                                        memoDraft = if (shouldClearDraft) null else state.memoDraft,
+                                        memoSaving = MemoSavingState.Idle,
+                                    )
+                                } else {
+                                    state
+                                }
+                            }
+                            true
+                        }
+
+                        MemoChangeResult.Unchanged -> {
+                            clearMemoDraft()
+                            _uiState.updateContent { it.copy(memoSaving = MemoSavingState.Idle) }
+                            true
+                        }
+
+                        MemoChangeResult.BookNotFound -> {
+                            _uiState.updateContent { it.copy(memoSaving = MemoSavingState.Failed(target, attempt)) }
+                            false
+                        }
+                    }
+                }.getOrElse { e ->
+                    if (e is CancellationException) {
+                        _uiState.updateContent { it.copy(memoSaving = MemoSavingState.Idle) }
+                        throw e
+                    }
+                    _uiState.updateContent { it.copy(memoSaving = MemoSavingState.Failed(target, attempt)) }
+                    false
+                }
+        }
+
         fun addRecord(
             date: LocalDate,
             time: LocalTime,
@@ -353,6 +496,9 @@ class BookDetailViewModel
                                     selectedTab = tab
                                     val ratingSaving =
                                         resolveRatingSaving(previous?.ratingSaving, bookDetail.entry?.rating ?: 0)
+                                    val memoSaving =
+                                        resolveMemoSaving(previous?.memoSaving, bookDetail.entry?.memo)
+                                    val currentDraft = resolveMemoDraft(previous, memoSaving)
                                     BookDetailUiState.Content(
                                         bookDetail = bookDetail,
                                         records = records,
@@ -363,6 +509,8 @@ class BookDetailViewModel
                                         recordLoadState = recordLoadState,
                                         finishCheck = previous?.finishCheck ?: FinishCheckState.Idle,
                                         ratingSaving = ratingSaving,
+                                        memoDraft = currentDraft,
+                                        memoSaving = memoSaving,
                                     )
                                 } else {
                                     state
@@ -370,6 +518,22 @@ class BookDetailViewModel
                             }
                         }
                 }
+        }
+
+        private fun resolveMemoDraft(
+            previous: BookDetailUiState.Content?,
+            memoSaving: MemoSavingState,
+        ): String? {
+            if (previous?.memoSaving is MemoSavingState.Saving && memoSaving is MemoSavingState.Idle) {
+                val savingTarget = previous.memoSaving.target
+                val previousNormalizedDraft = previous.memoDraft?.trim()?.ifEmpty { null }
+                if (previousNormalizedDraft == savingTarget) {
+                    memoDraft = null
+                    savedStateHandle.remove<String>(MEMO_DRAFT_KEY)
+                    return null
+                }
+            }
+            return previous?.memoDraft ?: memoDraft
         }
 
         private fun updateRefreshStatus(
@@ -391,5 +555,6 @@ class BookDetailViewModel
             const val ISBN_KEY = "isbn"
             const val OPEN_MY_RECORDS_KEY = "openMyRecords"
             const val SELECTED_TAB_KEY = "bookDetailSelectedTab"
+            const val MEMO_DRAFT_KEY = "bookDetailMemoDraft"
         }
     }

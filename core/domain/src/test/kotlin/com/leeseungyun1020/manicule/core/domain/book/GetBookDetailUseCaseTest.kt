@@ -90,6 +90,12 @@ class GetBookDetailUseCaseTest {
             updatedAt: Instant,
         ): RatingChangeResult = error("Not used by this test")
 
+        override suspend fun updateMemo(
+            isbn: String,
+            memo: String?,
+            updatedAt: Instant,
+        ): com.leeseungyun1020.manicule.core.model.MemoChangeResult = error("Not used by this test")
+
         override fun observeByStatus(
             status: ReadingStatus,
             sort: LibrarySort,

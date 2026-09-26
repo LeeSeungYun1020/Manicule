@@ -4,6 +4,7 @@ import com.leeseungyun1020.manicule.core.database.dao.projection.BookEntryWithCu
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.BookEntryEntity
 import com.leeseungyun1020.manicule.core.model.LibrarySort
+import com.leeseungyun1020.manicule.core.model.MemoChangeResult
 import com.leeseungyun1020.manicule.core.model.RatingChangeResult
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 
+@Suppress("TooManyFunctions")
 interface BookEntryLocalDataSource {
     suspend fun changeReadingStatus(
         isbn: String,
@@ -24,6 +26,12 @@ interface BookEntryLocalDataSource {
         rating: Int,
         updatedAt: Instant,
     ): RatingChangeResult
+
+    suspend fun updateMemo(
+        isbn: String,
+        memo: String?,
+        updatedAt: Instant,
+    ): MemoChangeResult
 
     suspend fun save(entry: BookEntryEntity)
 
