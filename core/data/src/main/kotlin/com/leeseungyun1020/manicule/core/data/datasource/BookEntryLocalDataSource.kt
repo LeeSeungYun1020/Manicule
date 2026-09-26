@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 
-@Suppress("TooManyFunctions")
 interface BookEntryLocalDataSource {
     suspend fun changeReadingStatus(
         isbn: String,
