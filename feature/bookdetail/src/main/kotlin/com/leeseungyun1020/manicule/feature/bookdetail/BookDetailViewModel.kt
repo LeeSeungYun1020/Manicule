@@ -305,9 +305,12 @@ class BookDetailViewModel
         fun retryMemo() {
             val content = _uiState.value as? BookDetailUiState.Content ?: return
             val failed = content.memoSaving as? MemoSavingState.Failed ?: return
+            val currentDraft = content.memoDraft
+            val normalizedDraft = currentDraft?.trim()?.ifEmpty { null }
+            val targetToSave = normalizedDraft ?: failed.target
             memoSaveJob =
                 viewModelScope.launch {
-                    saveMemoInternal(failed.target)
+                    saveMemoInternal(targetToSave)
                 }
         }
 
@@ -333,9 +336,16 @@ class BookDetailViewModel
                             _uiState.updateContent { state ->
                                 val currentMemo = state.bookDetail.entry?.memo
                                 if (currentMemo == target) {
-                                    memoDraft = null
-                                    savedStateHandle.remove<String>(MEMO_DRAFT_KEY)
-                                    state.copy(memoDraft = null, memoSaving = MemoSavingState.Idle)
+                                    val currentNormalizedDraft = state.memoDraft?.trim()?.ifEmpty { null }
+                                    val shouldClearDraft = currentNormalizedDraft == target
+                                    if (shouldClearDraft) {
+                                        memoDraft = null
+                                        savedStateHandle.remove<String>(MEMO_DRAFT_KEY)
+                                    }
+                                    state.copy(
+                                        memoDraft = if (shouldClearDraft) null else state.memoDraft,
+                                        memoSaving = MemoSavingState.Idle,
+                                    )
                                 } else {
                                     state
                                 }
@@ -484,14 +494,7 @@ class BookDetailViewModel
                                         resolveRatingSaving(previous?.ratingSaving, bookDetail.entry?.rating ?: 0)
                                     val memoSaving =
                                         resolveMemoSaving(previous?.memoSaving, bookDetail.entry?.memo)
-                                    val currentDraft =
-                                        if (previous?.memoSaving is MemoSavingState.Saving && memoSaving is MemoSavingState.Idle) {
-                                            memoDraft = null
-                                            savedStateHandle.remove<String>(MEMO_DRAFT_KEY)
-                                            null
-                                        } else {
-                                            previous?.memoDraft ?: memoDraft
-                                        }
+                                    val currentDraft = resolveMemoDraft(previous, memoSaving)
                                     BookDetailUiState.Content(
                                         bookDetail = bookDetail,
                                         records = records,
@@ -511,6 +514,22 @@ class BookDetailViewModel
                             }
                         }
                 }
+        }
+
+        private fun resolveMemoDraft(
+            previous: BookDetailUiState.Content?,
+            memoSaving: MemoSavingState,
+        ): String? {
+            if (previous?.memoSaving is MemoSavingState.Saving && memoSaving is MemoSavingState.Idle) {
+                val savingTarget = previous.memoSaving.target
+                val previousNormalizedDraft = previous.memoDraft?.trim()?.ifEmpty { null }
+                if (previousNormalizedDraft == savingTarget) {
+                    memoDraft = null
+                    savedStateHandle.remove<String>(MEMO_DRAFT_KEY)
+                    return null
+                }
+            }
+            return previous?.memoDraft ?: memoDraft
         }
 
         private fun updateRefreshStatus(

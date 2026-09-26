@@ -1,7 +1,6 @@
 package com.leeseungyun1020.manicule.feature.bookdetail
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -66,11 +66,11 @@ fun BookDetailScreen(
     onRatingSelected: (Int) -> Unit = {},
     onRatingErrorDismissed: () -> Unit = {},
     onRetryRating: () -> Unit = {},
-    onMemoDraftChanged: (String) -> Unit = {},
-    onSaveMemo: () -> Unit = {},
-    onSaveMemoAndCheckSuccess: suspend () -> Boolean = { true },
-    onRetryMemo: () -> Unit = {},
-    onMemoErrorDismissed: () -> Unit = {},
+    onMemoDraftChanged: (String) -> Unit,
+    onSaveMemo: () -> Unit,
+    onSaveMemoAndCheckSuccess: suspend () -> Boolean,
+    onRetryMemo: () -> Unit,
+    onMemoErrorDismissed: () -> Unit,
     onAddRecord: (LocalDate, LocalTime, Int, Int) -> Long? = { _, _, _, _ -> null },
     onRecordErrorDismissed: () -> Unit = {},
     onFinishCheckConfirmed: (Long) -> Unit = {},
@@ -80,21 +80,29 @@ fun BookDetailScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
+    var isNavigatingBack by rememberSaveable { mutableStateOf(false) }
 
     val onBackWithSave = {
-        focusManager.clearFocus()
-        coroutineScope.launch {
-            if (onSaveMemoAndCheckSuccess()) {
-                onNavigateBack()
+        if (!isNavigatingBack) {
+            focusManager.clearFocus()
+            coroutineScope.launch {
+                isNavigatingBack = true
+                if (onSaveMemoAndCheckSuccess()) {
+                    onNavigateBack()
+                } else {
+                    isNavigatingBack = false
+                }
             }
         }
     }
 
     val onTabSelectedWithSave: (BookDetailTab) -> Unit = { tab ->
-        focusManager.clearFocus()
-        coroutineScope.launch {
-            if (onSaveMemoAndCheckSuccess()) {
-                onTabSelected(tab)
+        if (!isNavigatingBack) {
+            focusManager.clearFocus()
+            coroutineScope.launch {
+                if (onSaveMemoAndCheckSuccess()) {
+                    onTabSelected(tab)
+                }
             }
         }
     }
@@ -117,21 +125,26 @@ fun BookDetailScreen(
         )
     var showAddRecordSheet by rememberSaveable { mutableStateOf(false) }
     var pendingRecordSaveAttempt by rememberSaveable { mutableStateOf<Long?>(null) }
-    val recordSaving = (uiState as? BookDetailUiState.Content)?.recordSaving
+    BookDetailRecordSaveEffect(
+        recordSaving = (uiState as? BookDetailUiState.Content)?.recordSaving,
+        pendingRecordSaveAttempt = pendingRecordSaveAttempt,
+        onResetAttempt = { pendingRecordSaveAttempt = null },
+        onDismissSheet = { showAddRecordSheet = false },
+    )
 
-    LaunchedEffect(recordSaving) {
-        when (recordSaving) {
-            is RecordSavingState.Saving -> Unit
-            is RecordSavingState.Succeeded -> {
-                if (pendingRecordSaveAttempt == recordSaving.attempt) {
-                    showAddRecordSheet = false
-                    pendingRecordSaveAttempt = null
-                }
-            }
+    val onStatusSelectedWithClear: (ReadingStatus) -> Unit = { status ->
+        focusManager.clearFocus()
+        onStatusSelected(status)
+    }
 
-            is RecordSavingState.Failed -> pendingRecordSaveAttempt = null
-            RecordSavingState.Idle, null -> Unit
-        }
+    val onRatingSelectedWithClear: (Int) -> Unit = { rating ->
+        focusManager.clearFocus()
+        onRatingSelected(rating)
+    }
+
+    val onAddRecordWithClear = {
+        focusManager.clearFocus()
+        showAddRecordSheet = true
     }
 
     Scaffold(
@@ -139,35 +152,33 @@ fun BookDetailScreen(
             modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .pointerInput(Unit) {
-                    detectTapGestures(onTap = {
-                        focusManager.clearFocus()
-                    })
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            if (event.changes.any { it.pressed }) {
+                                focusManager.clearFocus()
+                            }
+                        }
+                    }
                 },
         topBar = {
-            Column {
-                ManiculeTopAppBar(
-                    title = if (uiState is BookDetailUiState.Content) uiState.bookDetail.book.title else "",
-                    onNavigateBack = { onBackWithSave() },
-                    scrollBehavior = scrollBehavior,
-                )
-                if (uiState is BookDetailUiState.Content) {
-                    BookDetailTab(
-                        selectedTab = uiState.selectedTab,
-                        onTabSelected = onTabSelectedWithSave,
-                    )
-                }
-            }
+            BookDetailScreenTopBar(
+                uiState = uiState,
+                scrollBehavior = scrollBehavior,
+                onNavigateBack = { onBackWithSave() },
+                onTabSelected = onTabSelectedWithSave,
+            )
         },
         snackbarHost = { ManiculeSnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         BookDetailBody(
             uiState = uiState,
             onRetry = onRetry,
-            onStatusSelected = onStatusSelected,
-            onRatingSelected = onRatingSelected,
+            onStatusSelected = onStatusSelectedWithClear,
+            onRatingSelected = onRatingSelectedWithClear,
             onMemoDraftChanged = onMemoDraftChanged,
             onSaveMemo = onSaveMemo,
-            onAddRecord = { showAddRecordSheet = true },
+            onAddRecord = onAddRecordWithClear,
             modifier =
                 Modifier
                     .fillMaxSize()
@@ -175,14 +186,81 @@ fun BookDetailScreen(
         )
     }
 
+    BookDetailOverlays(
+        uiState = uiState,
+        showAddRecordSheet = showAddRecordSheet,
+        onDismissRecordSheet = { showAddRecordSheet = false },
+        onAddRecord = onAddRecord,
+        onRecordAttemptSaved = { pendingRecordSaveAttempt = it },
+        onFinishCheckConfirmed = onFinishCheckConfirmed,
+        onFinishCheckDismissed = onFinishCheckDismissed,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BookDetailScreenTopBar(
+    uiState: BookDetailUiState,
+    scrollBehavior: androidx.compose.material3.TopAppBarScrollBehavior,
+    onNavigateBack: () -> Unit,
+    onTabSelected: (BookDetailTab) -> Unit,
+) {
+    Column {
+        ManiculeTopAppBar(
+            title = if (uiState is BookDetailUiState.Content) uiState.bookDetail.book.title else "",
+            onNavigateBack = onNavigateBack,
+            scrollBehavior = scrollBehavior,
+        )
+        if (uiState is BookDetailUiState.Content) {
+            BookDetailTab(
+                selectedTab = uiState.selectedTab,
+                onTabSelected = onTabSelected,
+            )
+        }
+    }
+}
+
+@Composable
+private fun BookDetailRecordSaveEffect(
+    recordSaving: RecordSavingState?,
+    pendingRecordSaveAttempt: Long?,
+    onResetAttempt: () -> Unit,
+    onDismissSheet: () -> Unit,
+) {
+    LaunchedEffect(recordSaving) {
+        when (recordSaving) {
+            is RecordSavingState.Saving -> Unit
+            is RecordSavingState.Succeeded -> {
+                if (pendingRecordSaveAttempt == recordSaving.attempt) {
+                    onDismissSheet()
+                    onResetAttempt()
+                }
+            }
+
+            is RecordSavingState.Failed -> onResetAttempt()
+            RecordSavingState.Idle, null -> Unit
+        }
+    }
+}
+
+@Composable
+private fun BookDetailOverlays(
+    uiState: BookDetailUiState,
+    showAddRecordSheet: Boolean,
+    onDismissRecordSheet: () -> Unit,
+    onAddRecord: (LocalDate, LocalTime, Int, Int) -> Long?,
+    onRecordAttemptSaved: (Long?) -> Unit,
+    onFinishCheckConfirmed: (Long) -> Unit,
+    onFinishCheckDismissed: () -> Unit,
+) {
     if (showAddRecordSheet && uiState is BookDetailUiState.Content) {
         val initialStartPage = (uiState.records.maxOfOrNull { it.endPage } ?: 0) + 1
         AddRecordBottomSheet(
             initialStartPage = initialStartPage,
             isSaving = uiState.recordSaving is RecordSavingState.Saving,
-            onDismissRequest = { showAddRecordSheet = false },
+            onDismissRequest = onDismissRecordSheet,
             onSave = { date, time, startPage, endPage ->
-                pendingRecordSaveAttempt = onAddRecord(date, time, startPage, endPage)
+                onRecordAttemptSaved(onAddRecord(date, time, startPage, endPage))
             },
         )
     }
@@ -463,6 +541,31 @@ private val previewReviewOnlyEntry =
         updatedAt = Instant.fromEpochMilliseconds(1),
     )
 
+@Composable
+private fun PreviewBookDetailScreen(
+    uiState: BookDetailUiState,
+    modifier: Modifier = Modifier,
+) {
+    BookDetailScreen(
+        uiState = uiState,
+        onNavigateBack = {},
+        onTabSelected = {},
+        onRetry = {},
+        onStatusSelected = {},
+        onStatusErrorDismissed = {},
+        onMemoDraftChanged = {},
+        onSaveMemo = {},
+        onSaveMemoAndCheckSuccess = { true },
+        onRetryMemo = {},
+        onMemoErrorDismissed = {},
+        onAddRecord = { _, _, _, _ -> null },
+        onRecordErrorDismissed = {},
+        onFinishCheckConfirmed = {},
+        onFinishCheckDismissed = {},
+        modifier = modifier,
+    )
+}
+
 @ManiculePreview
 @Preview(name = "Phone", device = Devices.PHONE)
 @Preview(name = "Foldable", device = Devices.FOLDABLE)
@@ -470,21 +573,12 @@ private val previewReviewOnlyEntry =
 @Composable
 private fun BookDetailScreenPreview() {
     ManiculePreviewTheme {
-        BookDetailScreen(
+        PreviewBookDetailScreen(
             uiState =
                 BookDetailUiState.Content(
                     bookDetail = BookDetail(previewBook, entry = null),
                     selectedTab = BookDetailTab.Information,
                 ),
-            onNavigateBack = {},
-            onTabSelected = {},
-            onRetry = {},
-            onStatusSelected = {},
-            onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> null },
-            onRecordErrorDismissed = {},
-            onFinishCheckConfirmed = {},
-            onFinishCheckDismissed = {},
         )
     }
 }
@@ -493,17 +587,8 @@ private fun BookDetailScreenPreview() {
 @Composable
 private fun BookDetailLoadingPreview() {
     ManiculePreviewTheme {
-        BookDetailScreen(
+        PreviewBookDetailScreen(
             uiState = BookDetailUiState.Loading,
-            onNavigateBack = {},
-            onTabSelected = {},
-            onRetry = {},
-            onStatusSelected = {},
-            onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> null },
-            onRecordErrorDismissed = {},
-            onFinishCheckConfirmed = {},
-            onFinishCheckDismissed = {},
         )
     }
 }
@@ -512,17 +597,8 @@ private fun BookDetailLoadingPreview() {
 @Composable
 private fun BookDetailErrorPreview() {
     ManiculePreviewTheme {
-        BookDetailScreen(
+        PreviewBookDetailScreen(
             uiState = BookDetailUiState.Error,
-            onNavigateBack = {},
-            onTabSelected = {},
-            onRetry = {},
-            onStatusSelected = {},
-            onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> null },
-            onRecordErrorDismissed = {},
-            onFinishCheckConfirmed = {},
-            onFinishCheckDismissed = {},
         )
     }
 }
@@ -531,22 +607,13 @@ private fun BookDetailErrorPreview() {
 @Composable
 private fun BookDetailRefreshErrorPreview() {
     ManiculePreviewTheme {
-        BookDetailScreen(
+        PreviewBookDetailScreen(
             uiState =
                 BookDetailUiState.Content(
                     bookDetail = BookDetail(previewBook, entry = null),
                     selectedTab = BookDetailTab.Information,
                     refreshStatus = RefreshStatus.Failed,
                 ),
-            onNavigateBack = {},
-            onTabSelected = {},
-            onRetry = {},
-            onStatusSelected = {},
-            onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> null },
-            onRecordErrorDismissed = {},
-            onFinishCheckConfirmed = {},
-            onFinishCheckDismissed = {},
         )
     }
 }
@@ -555,22 +622,13 @@ private fun BookDetailRefreshErrorPreview() {
 @Composable
 private fun BookDetailRefreshingPreview() {
     ManiculePreviewTheme {
-        BookDetailScreen(
+        PreviewBookDetailScreen(
             uiState =
                 BookDetailUiState.Content(
                     bookDetail = BookDetail(previewBook, entry = null),
                     selectedTab = BookDetailTab.Information,
                     refreshStatus = RefreshStatus.Refreshing,
                 ),
-            onNavigateBack = {},
-            onTabSelected = {},
-            onRetry = {},
-            onStatusSelected = {},
-            onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> null },
-            onRecordErrorDismissed = {},
-            onFinishCheckConfirmed = {},
-            onFinishCheckDismissed = {},
         )
     }
 }
@@ -579,21 +637,12 @@ private fun BookDetailRefreshingPreview() {
 @Composable
 private fun BookDetailReviewOnlyPreview() {
     ManiculePreviewTheme {
-        BookDetailScreen(
+        PreviewBookDetailScreen(
             uiState =
                 BookDetailUiState.Content(
                     bookDetail = BookDetail(previewBook, entry = previewReviewOnlyEntry),
                     selectedTab = BookDetailTab.MyRecords,
                 ),
-            onNavigateBack = {},
-            onTabSelected = {},
-            onRetry = {},
-            onStatusSelected = {},
-            onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> null },
-            onRecordErrorDismissed = {},
-            onFinishCheckConfirmed = {},
-            onFinishCheckDismissed = {},
         )
     }
 }
@@ -602,22 +651,13 @@ private fun BookDetailReviewOnlyPreview() {
 @Composable
 private fun BookDetailFinishCheckPreview() {
     ManiculePreviewTheme {
-        BookDetailScreen(
+        PreviewBookDetailScreen(
             uiState =
                 BookDetailUiState.Content(
                     bookDetail = BookDetail(previewBook, entry = null),
                     selectedTab = BookDetailTab.MyRecords,
                     finishCheck = FinishCheckState.Pending(attempt = 1L, maxEndPage = 254, totalPages = 264),
                 ),
-            onNavigateBack = {},
-            onTabSelected = {},
-            onRetry = {},
-            onStatusSelected = {},
-            onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> null },
-            onRecordErrorDismissed = {},
-            onFinishCheckConfirmed = {},
-            onFinishCheckDismissed = {},
         )
     }
 }
@@ -626,22 +666,13 @@ private fun BookDetailFinishCheckPreview() {
 @Composable
 private fun BookDetailMemoEditingPreview() {
     ManiculePreviewTheme {
-        BookDetailScreen(
+        PreviewBookDetailScreen(
             uiState =
                 BookDetailUiState.Content(
                     bookDetail = BookDetail(previewBook, entry = previewReviewOnlyEntry),
                     selectedTab = BookDetailTab.MyRecords,
                     memoDraft = "수정 중인 메모 초안",
                 ),
-            onNavigateBack = {},
-            onTabSelected = {},
-            onRetry = {},
-            onStatusSelected = {},
-            onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> null },
-            onRecordErrorDismissed = {},
-            onFinishCheckConfirmed = {},
-            onFinishCheckDismissed = {},
         )
     }
 }
@@ -650,7 +681,7 @@ private fun BookDetailMemoEditingPreview() {
 @Composable
 private fun BookDetailMemoSavingPreview() {
     ManiculePreviewTheme {
-        BookDetailScreen(
+        PreviewBookDetailScreen(
             uiState =
                 BookDetailUiState.Content(
                     bookDetail = BookDetail(previewBook, entry = previewReviewOnlyEntry),
@@ -658,15 +689,6 @@ private fun BookDetailMemoSavingPreview() {
                     memoDraft = "저장 중인 메모",
                     memoSaving = MemoSavingState.Saving("저장 중인 메모"),
                 ),
-            onNavigateBack = {},
-            onTabSelected = {},
-            onRetry = {},
-            onStatusSelected = {},
-            onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> null },
-            onRecordErrorDismissed = {},
-            onFinishCheckConfirmed = {},
-            onFinishCheckDismissed = {},
         )
     }
 }
@@ -675,7 +697,7 @@ private fun BookDetailMemoSavingPreview() {
 @Composable
 private fun BookDetailMemoFailedPreview() {
     ManiculePreviewTheme {
-        BookDetailScreen(
+        PreviewBookDetailScreen(
             uiState =
                 BookDetailUiState.Content(
                     bookDetail = BookDetail(previewBook, entry = previewReviewOnlyEntry),
@@ -683,15 +705,6 @@ private fun BookDetailMemoFailedPreview() {
                     memoDraft = "저장 실패한 메모 초안",
                     memoSaving = MemoSavingState.Failed("저장 실패한 메모 초안", attempt = 1L),
                 ),
-            onNavigateBack = {},
-            onTabSelected = {},
-            onRetry = {},
-            onStatusSelected = {},
-            onStatusErrorDismissed = {},
-            onAddRecord = { _, _, _, _ -> null },
-            onRecordErrorDismissed = {},
-            onFinishCheckConfirmed = {},
-            onFinishCheckDismissed = {},
         )
     }
 }

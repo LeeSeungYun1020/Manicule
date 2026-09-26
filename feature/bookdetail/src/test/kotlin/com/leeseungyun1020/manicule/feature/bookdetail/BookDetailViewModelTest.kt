@@ -761,6 +761,62 @@ class BookDetailViewModelTest {
         }
 
     @Test
+    fun retryMemo_withRevisedDraft_savesRevisedDraftInsteadOfFailedTarget() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = "Old memo")
+            libraryRepository.memoFailure = IllegalStateException("Disk error")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("Initial fail draft")
+            viewModel.saveMemo()
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoSaving).isInstanceOf(MemoSavingState.Failed::class.java)
+
+            // 사용자가 실패 스낵바가 노출된 상태에서 초안을 수정함
+            viewModel.updateMemoDraft("Revised draft after failure")
+
+            libraryRepository.memoFailure = null
+            viewModel.retryMemo()
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Idle)
+            assertThat(contentState(viewModel).memoDraft).isNull()
+            assertThat(contentState(viewModel).bookDetail.entry?.memo).isEqualTo("Revised draft after failure")
+        }
+
+    @Test
+    fun saveMemo_whenUserTypesNewDraftDuringObservation_preservesNewDraft() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            libraryRepository.entry.value = testEntry.copy(memo = "Old memo")
+            libraryRepository.emitMemo = false
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.updateMemoDraft("Saving memo")
+            viewModel.saveMemo()
+            advanceUntilIdle()
+
+            assertThat(contentState(viewModel).memoSaving).isEqualTo(MemoSavingState.Saving("Saving memo"))
+
+            // 저장이 비동기로 진행되는 도중 사용자가 새로운 초안을 작성함
+            viewModel.updateMemoDraft("Newer draft while saving")
+
+            // 이전 저장 타겟이 DB에 반영되어 관찰 스트림으로 방출됨
+            libraryRepository.entry.value = testEntry.copy(memo = "Saving memo")
+            advanceUntilIdle()
+
+            // 이전 타겟이 반영되었어도 사용자의 새 초안은 보존되어야 함
+            val content = contentState(viewModel)
+            assertThat(content.memoSaving).isEqualTo(MemoSavingState.Idle)
+            assertThat(content.memoDraft).isEqualTo("Newer draft while saving")
+            assertThat(content.bookDetail.entry?.memo).isEqualTo("Saving memo")
+        }
+
+    @Test
     fun saveMemoAndCheckSuccess_returnsTrueOnSuccess_andFalseOnFailure() =
         runTest(dispatcher) {
             bookRepository.books.value = testBook
