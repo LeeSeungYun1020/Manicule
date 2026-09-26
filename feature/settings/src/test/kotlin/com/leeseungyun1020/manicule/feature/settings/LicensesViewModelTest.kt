@@ -21,6 +21,7 @@ class LicensesViewModelTest {
             name = "Test Library",
             copyright = "Copyright Test Authors",
             license = "Apache License 2.0",
+            licenseUrl = "https://example.com/license",
             url = "https://example.com",
         ),
     )
@@ -93,6 +94,7 @@ class LicensesViewModelTest {
                     "name": "Library A",
                     "copyright": "Copyright A",
                     "license": "Apache License 2.0",
+                    "licenseUrl": "https://example.com/a-license",
                     "url": "https://example.com/a"
                   }
                 ]
@@ -114,6 +116,7 @@ class LicensesViewModelTest {
             assertThat(libraries.first().name).isEqualTo("Library A")
             assertThat(libraries.first().copyright).isEqualTo("Copyright A")
             assertThat(libraries.first().license).isEqualTo("Apache License 2.0")
+            assertThat(libraries.first().licenseUrl).isEqualTo("https://example.com/a-license")
             assertThat(libraries.first().url).isEqualTo("https://example.com/a")
         }
 }

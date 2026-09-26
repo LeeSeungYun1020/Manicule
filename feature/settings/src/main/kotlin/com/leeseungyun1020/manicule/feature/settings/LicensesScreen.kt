@@ -14,10 +14,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -28,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeCard
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeErrorState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSnackbarHost
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTextButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTopAppBar
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
@@ -35,23 +39,33 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.size
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
-
-internal const val APACHE_2_0_LICENSE_URL = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+import kotlinx.coroutines.launch
 
 @Composable
 fun LicensesRoute(
     onNavigateBack: () -> Unit,
     viewModel: LicensesViewModel = hiltViewModel(),
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
+    val coroutineScope = rememberCoroutineScope()
+    val openUrlErrorMessage = stringResource(R.string.settings_licenses_open_url_error)
+
     LicensesScreen(
         uiState = uiState,
         onNavigateBack = onNavigateBack,
         onRetry = viewModel::retry,
         onOpenUrl = { url ->
-            runCatching { uriHandler.openUri(url) }
+            runCatching {
+                uriHandler.openUri(url)
+            }.onFailure {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(openUrlErrorMessage)
+                }
+            }
         },
+        snackbarHostState = snackbarHostState,
     )
 }
 
@@ -63,6 +77,7 @@ fun LicensesScreen(
     onRetry: () -> Unit,
     onOpenUrl: (String) -> Unit,
     modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -75,6 +90,7 @@ fun LicensesScreen(
                 scrollBehavior = scrollBehavior,
             )
         },
+        snackbarHost = { ManiculeSnackbarHost(hostState = snackbarHostState) },
     ) { contentPadding ->
         Box(
             modifier =
@@ -181,7 +197,7 @@ private fun LicenseItemCard(
                     )
                 }
                 ManiculeTextButton(
-                    onClick = { onOpenUrl(APACHE_2_0_LICENSE_URL) },
+                    onClick = { onOpenUrl(library.licenseUrl) },
                     text = stringResource(R.string.settings_licenses_view_full_text),
                 )
             }
@@ -202,12 +218,14 @@ private fun LicensesScreenSuccessPreview() {
                                 name = "AndroidX & Jetpack Compose",
                                 copyright = "Copyright The Android Open Source Project",
                                 license = "Apache License 2.0",
+                                licenseUrl = "https://www.apache.org/licenses/LICENSE-2.0.txt",
                                 url = "https://developer.android.com/jetpack",
                             ),
                             OpenSourceLibrary(
                                 name = "Coil",
                                 copyright = "Copyright Coil Contributors",
                                 license = "Apache License 2.0",
+                                licenseUrl = "https://www.apache.org/licenses/LICENSE-2.0.txt",
                                 url = "https://coil-kt.github.io/coil/",
                             ),
                         ),

@@ -33,4 +33,5 @@
     <string name="settings_licenses_view_details">자세히</string>
     <string name="settings_version_info">버전 정보</string>
     <string name="settings_licenses_load_error">라이선스 정보를 불러오지 못했어요.</string>
+    <string name="settings_licenses_open_url_error">웹 브라우저를 열 수 없어요.</string>
 </resources>

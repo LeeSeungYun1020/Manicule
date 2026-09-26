@@ -9,5 +9,6 @@ data class OpenSourceLibrary(
     val name: String,
     val copyright: String,
     val license: String,
+    val licenseUrl: String,
     val url: String? = null,
 )

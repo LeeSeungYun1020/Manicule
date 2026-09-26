@@ -1,5 +1,7 @@
 package com.leeseungyun1020.manicule.feature.settings
 
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -9,6 +11,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,6 +30,7 @@ class LicensesScreenTest {
                 name = "Test Library A",
                 copyright = "Copyright 2026 Test Authors",
                 license = "Apache License 2.0",
+                licenseUrl = "https://example.com/license-a",
                 url = "https://example.com/test",
             ),
         )
@@ -75,14 +80,22 @@ class LicensesScreenTest {
     }
 
     @Test
-    fun licensesScreen_viewFullText_opensApacheLicenseUrl() {
+    fun licensesScreen_viewFullText_opensLibraryLicenseUrl() {
+        val customLicenseUrl = "https://example.com/custom-license.txt"
+        val customLibrary =
+            OpenSourceLibrary(
+                name = "Custom Library",
+                copyright = "Copyright 2026 Custom Authors",
+                license = "GPLv2 with Classpath Exception",
+                licenseUrl = customLicenseUrl,
+            )
         var openedUrl: String? = null
         composeRule.setContent {
             ManiculeTheme {
                 LicensesScreen(
                     uiState =
                         LicensesUiState.Success(
-                            libraries = testLibraries,
+                            libraries = listOf(customLibrary),
                         ),
                     onNavigateBack = {},
                     onRetry = {},
@@ -93,7 +106,7 @@ class LicensesScreenTest {
 
         composeRule.onNodeWithText(context.getString(R.string.settings_licenses_view_full_text)).performClick()
 
-        assertThat(openedUrl).isEqualTo(APACHE_2_0_LICENSE_URL)
+        assertThat(openedUrl).isEqualTo(customLicenseUrl)
     }
 
     @Test
@@ -127,6 +140,7 @@ class LicensesScreenTest {
                     name = "No Url Library",
                     copyright = "Copyright 2026 Test Authors",
                     license = "Apache License 2.0",
+                    licenseUrl = "https://example.com/license",
                     url = null,
                 ),
             )
@@ -166,6 +180,30 @@ class LicensesScreenTest {
             .performClick()
 
         assertThat(retried).isTrue()
+    }
+
+    @Test
+    fun licensesScreen_displaysSnackbarMessage() {
+        val snackbarHostState = SnackbarHostState()
+        var coroutineScope: CoroutineScope? = null
+        composeRule.setContent {
+            coroutineScope = rememberCoroutineScope()
+            ManiculeTheme {
+                LicensesScreen(
+                    uiState = LicensesUiState.Loading,
+                    onNavigateBack = {},
+                    onRetry = {},
+                    onOpenUrl = {},
+                    snackbarHostState = snackbarHostState,
+                )
+            }
+        }
+
+        coroutineScope?.launch {
+            snackbarHostState.showSnackbar("Test error message")
+        }
+
+        composeRule.onNodeWithText("Test error message").assertIsDisplayed()
     }
 
     private companion object {

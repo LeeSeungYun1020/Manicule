@@ -33,4 +33,5 @@
     <string name="settings_licenses_view_details">Details</string>
     <string name="settings_version_info">App version</string>
     <string name="settings_licenses_load_error">Couldn’t load license information.</string>
+    <string name="settings_licenses_open_url_error">Couldn’t open web browser.</string>
 </resources>
