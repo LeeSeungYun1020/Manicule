@@ -12,7 +12,7 @@ object SettingsRoute
 @Serializable
 object LicensesRoute
 
-fun NavGraphBuilder.settingsScreen(onNavigateToLicenses: () -> Unit = {}) {
+fun NavGraphBuilder.settingsScreen(onNavigateToLicenses: () -> Unit) {
     composable<SettingsRoute> {
         SettingsRoute(onNavigateToLicenses = onNavigateToLicenses)
     }

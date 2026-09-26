@@ -242,6 +242,7 @@ class SettingsScreenTest {
                         onReminderTimeChange = {},
                         onRetryPreferences = {},
                         onThemeSelected = {},
+                        onNavigateToLicenses = {},
                     )
                 }
             }
@@ -286,6 +287,7 @@ class SettingsScreenTest {
                     onReminderTimeChange = { changes++ },
                     onRetryPreferences = {},
                     onThemeSelected = {},
+                    onNavigateToLicenses = {},
                 )
             }
         }
@@ -319,6 +321,7 @@ class SettingsScreenTest {
                         onReminderTimeChange = {},
                         onRetryPreferences = {},
                         onThemeSelected = {},
+                        onNavigateToLicenses = {},
                     )
                 }
             }
@@ -385,8 +388,8 @@ private fun androidx.compose.ui.test.junit4.ComposeContentTestRule.setSettingsCo
                     onReminderTimeChange = onReminderTimeChange,
                     onRetryPreferences = onRetryPreferences,
                     onThemeSelected = onThemeSelected,
-                    appVersion = appVersion,
                     onNavigateToLicenses = onNavigateToLicenses,
+                    appVersion = appVersion,
                 )
             }
         }

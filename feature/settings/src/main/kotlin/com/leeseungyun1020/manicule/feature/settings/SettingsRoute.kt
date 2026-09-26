@@ -33,7 +33,7 @@ import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun SettingsRoute(
-    onNavigateToLicenses: () -> Unit = {},
+    onNavigateToLicenses: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

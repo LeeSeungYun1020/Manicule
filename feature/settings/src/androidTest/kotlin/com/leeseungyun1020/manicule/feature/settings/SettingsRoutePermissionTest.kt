@@ -87,7 +87,7 @@ class SettingsRoutePermissionTest {
                 LocalActivity provides permissionActivity,
                 LocalActivityResultRegistryOwner provides registryOwner,
             ) {
-                ManiculeTheme { SettingsRoute(viewModel) }
+                ManiculeTheme { SettingsRoute(onNavigateToLicenses = {}, viewModel = viewModel) }
             }
         }
         composeRule.waitForIdle()

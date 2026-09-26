@@ -48,9 +48,9 @@ fun SettingsScreen(
     onReminderTimeChange: (LocalTime) -> Unit,
     onRetryPreferences: () -> Unit,
     onThemeSelected: (ThemeMode) -> Unit,
+    onNavigateToLicenses: () -> Unit,
     modifier: Modifier = Modifier,
     appVersion: String = "",
-    onNavigateToLicenses: () -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
@@ -113,6 +113,7 @@ private fun SettingsScreenPreview(
             onReminderTimeChange = {},
             onRetryPreferences = {},
             onThemeSelected = {},
+            onNavigateToLicenses = {},
         )
     }
 }
