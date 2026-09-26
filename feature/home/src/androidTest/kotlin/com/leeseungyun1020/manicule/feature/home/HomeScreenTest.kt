@@ -1,8 +1,12 @@
 package com.leeseungyun1020.manicule.feature.home
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
@@ -129,7 +133,9 @@ class HomeScreenTest {
             onShowReadingBooks = { showReading = true },
         )
 
-        composeRule.onNodeWithText(context.getString(R.string.home_more)).performClick()
+        composeRule
+            .onNode(hasText(context.getString(R.string.home_more)) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+            .performClick()
 
         assertThat(showReading).isTrue()
     }
@@ -197,6 +203,29 @@ class HomeScreenTest {
         composeRule.onNodeWithText(context.getString(R.string.home_summary_error_title)).assertIsDisplayed()
     }
 
+    @Test
+    fun readingSummary_requestsStatsNavigation() {
+        var showStats = false
+        setHome(HomeUiState.Content(homeData(hasLibraryBooks = true)), onShowStats = { showStats = true })
+
+        composeRule.onNodeWithText(context.getString(R.string.home_streak)).performClick()
+
+        assertThat(showStats).isTrue()
+    }
+
+    @Test
+    fun noReadingBooksWithoutWant_scan_requestsScannerNavigation() {
+        var scanned = false
+        setHome(
+            HomeUiState.Content(homeData(hasLibraryBooks = true, wantBookCount = 0)),
+            onScan = { scanned = true },
+        )
+
+        composeRule.onNodeWithText(context.getString(R.string.home_scan)).performClick()
+
+        assertThat(scanned).isTrue()
+    }
+
     private fun setHome(
         state: HomeUiState,
         onSearch: () -> Unit = {},
@@ -204,6 +233,7 @@ class HomeScreenTest {
         onBookSelected: (String) -> Unit = {},
         onShowReadingBooks: () -> Unit = {},
         onChooseWantBook: () -> Unit = {},
+        onShowStats: () -> Unit = {},
         onRetry: () -> Unit = {},
     ) {
         composeRule.setContent {
@@ -215,7 +245,7 @@ class HomeScreenTest {
                     onBookSelected = onBookSelected,
                     onShowReadingBooks = onShowReadingBooks,
                     onChooseWantBook = onChooseWantBook,
-                    onShowStats = {},
+                    onShowStats = onShowStats,
                     onRetry = onRetry,
                 )
             }
@@ -229,7 +259,7 @@ class HomeScreenTest {
     ): HomeData {
         val today = LocalDate(2026, 9, 21)
         return HomeData(
-            hasLibraryBooks = hasLibraryBooks,
+            hasLibraryBooks = hasLibraryBooks || readingBooks.isNotEmpty(),
             hasReadingRecords = false,
             readingBooks = readingBooks,
             wantBookCount = wantBookCount,
