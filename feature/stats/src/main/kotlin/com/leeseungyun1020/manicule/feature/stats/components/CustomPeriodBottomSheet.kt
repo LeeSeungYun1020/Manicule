@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -92,7 +94,8 @@ internal fun CustomPeriodContent(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = MaterialTheme.spacing.lg)
-            .padding(bottom = MaterialTheme.spacing.xl),
+            .padding(bottom = MaterialTheme.spacing.xl)
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
     ) {
         Row(
