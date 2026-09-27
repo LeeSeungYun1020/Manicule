@@ -1,6 +1,8 @@
 package com.leeseungyun1020.manicule.feature.scanner
 
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
@@ -14,6 +16,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -109,8 +113,88 @@ class ScannerScreenTest {
                 }
             }
         }
+        val titleText = context.getString(R.string.scanner_title)
+        val appbar = compose.onNodeWithText(titleText).assertIsDisplayed().getUnclippedBoundsInRoot()
         compose.onNodeWithText(context.getString(R.string.scanner_use_camera)).performScrollTo().assertIsDisplayed()
         compose.onNodeWithText(context.getString(R.string.scanner_search)).performScrollTo().assertIsDisplayed()
+        val appbarAfterScroll = compose.onNodeWithText(titleText).assertIsDisplayed().getUnclippedBoundsInRoot()
+        assertThat(appbarAfterScroll.top).isEqualTo(appbar.top)
+    }
+
+    @Test
+    fun normalPortraitMessageScreensFillAvailableHeightAndStayFixedOnDrag() {
+        val stateHolder = mutableStateOf<ScannerUiState>(ScannerUiState.PermissionDenied())
+        var expectedBottom = 640.dp
+        compose.setContent {
+            val bottomPadding = ScaffoldDefaults.contentWindowInsets.asPaddingValues().calculateBottomPadding()
+            expectedBottom = 640.dp - bottomPadding
+            ManiculeTheme {
+                ScannerScreen(
+                    uiState = stateHolder.value,
+                    onNavigateBack = {},
+                    onNavigateToSearch = {},
+                    onUseCamera = {},
+                    modifier = Modifier.requiredSize(360.dp, 640.dp),
+                )
+            }
+        }
+
+        val messageStates = listOf(
+            ScannerUiState.PermissionDenied(),
+            ScannerUiState.CameraUnavailable,
+            ScannerUiState.Failed,
+        )
+
+        for (state in messageStates) {
+            compose.runOnIdle { stateHolder.value = state }
+
+            val appbar = compose.onNodeWithTag(SCANNER_TOP_BAR_TEST_TAG).assertIsDisplayed().getUnclippedBoundsInRoot()
+            val card = compose.onNodeWithTag(SCANNER_MESSAGE_CARD_TEST_TAG).assertIsDisplayed().getUnclippedBoundsInRoot()
+
+            // 점선 카드가 앱바 아래 가용 높이를 채우는지 검증 (상단은 앱바 하단, 하단은 패딩 안 가용 영역 하단)
+            assertThat(card.top.value).isWithin(0.5f).of(appbar.bottom.value)
+            assertThat(card.bottom.value).isWithin(0.5f).of(expectedBottom.value)
+
+            // 드래그(swipeUp) 시도 후에도 본문 카드와 앱바 위치가 고정되어 있는지 검증
+            compose.onNodeWithTag(SCANNER_MESSAGE_CARD_TEST_TAG).performTouchInput { swipeUp() }
+            compose.waitForIdle()
+
+            val appbarAfter = compose.onNodeWithTag(SCANNER_TOP_BAR_TEST_TAG).getUnclippedBoundsInRoot()
+            val cardAfter = compose.onNodeWithTag(SCANNER_MESSAGE_CARD_TEST_TAG).getUnclippedBoundsInRoot()
+            assertThat(cardAfter.top).isEqualTo(card.top)
+            assertThat(cardAfter.bottom).isEqualTo(card.bottom)
+            assertThat(appbarAfter.top).isEqualTo(appbar.top)
+        }
+    }
+
+    @Test
+    fun messageScreensDisplayExpectedTitlesAndActions() {
+        val stateHolder = mutableStateOf<ScannerUiState>(ScannerUiState.PermissionDenied())
+        compose.setContent {
+            ManiculeTheme {
+                ScannerScreen(stateHolder.value, {}, {}, {})
+            }
+        }
+
+        // PermissionDenied: 카메라 사용, 검색 모두 표시
+        compose.onNodeWithText(context.getString(R.string.scanner_permission_title)).assertIsDisplayed()
+        compose.onNodeWithText(context.getString(R.string.scanner_permission_description)).assertIsDisplayed()
+        compose.onNodeWithText(context.getString(R.string.scanner_use_camera)).assertIsDisplayed()
+        compose.onNodeWithText(context.getString(R.string.scanner_search)).assertIsDisplayed()
+
+        // CameraUnavailable: 검색만 표시, 카메라 사용 없음
+        compose.runOnIdle { stateHolder.value = ScannerUiState.CameraUnavailable }
+        compose.onNodeWithText(context.getString(R.string.scanner_camera_unavailable_title)).assertIsDisplayed()
+        compose.onNodeWithText(context.getString(R.string.scanner_camera_unavailable_description)).assertIsDisplayed()
+        compose.onNodeWithText(context.getString(R.string.scanner_search)).assertIsDisplayed()
+        compose.onNodeWithText(context.getString(R.string.scanner_use_camera)).assertDoesNotExist()
+
+        // Failed: 검색만 표시, 카메라 사용 없음
+        compose.runOnIdle { stateHolder.value = ScannerUiState.Failed }
+        compose.onNodeWithText(context.getString(R.string.scanner_failed_title)).assertIsDisplayed()
+        compose.onNodeWithText(context.getString(R.string.scanner_failed_description)).assertIsDisplayed()
+        compose.onNodeWithText(context.getString(R.string.scanner_search)).assertIsDisplayed()
+        compose.onNodeWithText(context.getString(R.string.scanner_use_camera)).assertDoesNotExist()
     }
 
     @Test
