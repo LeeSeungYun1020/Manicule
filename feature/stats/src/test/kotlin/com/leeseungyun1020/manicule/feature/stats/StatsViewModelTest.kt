@@ -138,20 +138,208 @@ class StatsViewModelTest {
         }
 
     @Test
-    fun custom_period_selection_is_ignored_until_picker_is_implemented() =
+    fun custom_period_default_range_is_recent_91_days_and_cancelling_maintains_previous_period() =
+        runTest(dispatcherRule.dispatcher) {
+            val defaultRange = CustomPeriodRange.defaultFor(today)
+            assertThat(defaultRange.start).isEqualTo(LocalDate(2023, 12, 2))
+            assertThat(defaultRange.end).isEqualTo(today)
+            assertThat(defaultRange.dayCount).isEqualTo(91)
+
+            val viewModel = viewModel()
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            val initial = viewModel.uiState.value.period as PeriodState.Content
+            assertThat(initial.selectedPeriod).isEqualTo(StatsPeriod.TODAY)
+            // 취소 시 applyCustomPeriod가 호출되지 않아 기존 TODAY 기간이 유지된다
+            runCurrent()
+            val afterCancel = viewModel.uiState.value.period as PeriodState.Content
+            assertThat(afterCancel.selectedPeriod).isEqualTo(StatsPeriod.TODAY)
+            job.cancel()
+        }
+
+    @Test
+    fun applying_custom_period_updates_calendar_range_and_summary() =
+        runTest(dispatcherRule.dispatcher) {
+            repository.records.value = listOf(
+                record(1, LocalDate(2024, 2, 10), "a", 1, 10),
+                record(2, LocalDate(2024, 2, 20), "b", 1, 15),
+            )
+            val viewModel = viewModel()
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            val applied = viewModel.applyCustomPeriod(LocalDate(2024, 2, 10), LocalDate(2024, 2, 20))
+            assertThat(applied).isTrue()
+            runCurrent()
+
+            val content = viewModel.uiState.value.period as PeriodState.Content
+            assertThat(content.selectedPeriod).isEqualTo(StatsPeriod.CUSTOM)
+            assertThat(content.customRange).isEqualTo(CustomPeriodRange(LocalDate(2024, 2, 10), LocalDate(2024, 2, 20)))
+            assertThat(content.days).hasSize(11)
+            assertThat(content.days.first().date).isEqualTo(LocalDate(2024, 2, 10))
+            assertThat(content.days.last().date).isEqualTo(LocalDate(2024, 2, 20))
+            assertThat(content.summary.pagesRead).isEqualTo(25)
+            assertThat(content.summary.rangeStart).isEqualTo(LocalDate(2024, 2, 10))
+            assertThat(content.summary.rangeEnd).isEqualTo(LocalDate(2024, 2, 20))
+            job.cancel()
+        }
+
+    @Test
+    fun reapplying_and_reentering_custom_period() =
         runTest(dispatcherRule.dispatcher) {
             val viewModel = viewModel()
             val job = backgroundScope.launch { viewModel.uiState.collect {} }
             runCurrent()
 
-            val initialContent = viewModel.uiState.value.period as PeriodState.Content
-            assertThat(initialContent.selectedPeriod).isEqualTo(StatsPeriod.TODAY)
+            viewModel.applyCustomPeriod(LocalDate(2024, 2, 10), LocalDate(2024, 2, 20))
+            runCurrent()
+            assertThat((viewModel.uiState.value.period as PeriodState.Content).days).hasSize(11)
 
+            // 다른 기간으로 전환 시에도 기존 customRange는 유지됨
+            viewModel.selectPeriod(StatsPeriod.FOUR_WEEKS)
+            runCurrent()
+            val fourWeeks = viewModel.uiState.value.period as PeriodState.Content
+            assertThat(fourWeeks.selectedPeriod).isEqualTo(StatsPeriod.FOUR_WEEKS)
+            assertThat(fourWeeks.customRange).isEqualTo(CustomPeriodRange(LocalDate(2024, 2, 10), LocalDate(2024, 2, 20)))
+
+            // CUSTOM 재진입 시 기존 customRange로 복귀
             viewModel.selectPeriod(StatsPeriod.CUSTOM)
             runCurrent()
+            val reentered = viewModel.uiState.value.period as PeriodState.Content
+            assertThat(reentered.selectedPeriod).isEqualTo(StatsPeriod.CUSTOM)
+            assertThat(reentered.days).hasSize(11)
 
-            val afterContent = viewModel.uiState.value.period as PeriodState.Content
-            assertThat(afterContent.selectedPeriod).isEqualTo(StatsPeriod.TODAY)
+            // 재적용 시 새로운 customRange로 변경
+            viewModel.applyCustomPeriod(LocalDate(2024, 2, 1), LocalDate(2024, 2, 5))
+            runCurrent()
+            val reapplied = viewModel.uiState.value.period as PeriodState.Content
+            assertThat(reapplied.days).hasSize(5)
+            assertThat(reapplied.customRange).isEqualTo(CustomPeriodRange(LocalDate(2024, 2, 1), LocalDate(2024, 2, 5)))
+            job.cancel()
+        }
+
+    @Test
+    fun restored_custom_period_from_saved_state_handle() =
+        runTest(dispatcherRule.dispatcher) {
+            val handle = SavedStateHandle(
+                mapOf(
+                    "selected_period" to StatsPeriod.CUSTOM,
+                    "custom_period_range" to "2024-02-01/2024-02-15",
+                ),
+            )
+            val viewModel = viewModel(handle)
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            val content = viewModel.uiState.value.period as PeriodState.Content
+            assertThat(content.selectedPeriod).isEqualTo(StatsPeriod.CUSTOM)
+            assertThat(content.customRange).isEqualTo(CustomPeriodRange(LocalDate(2024, 2, 1), LocalDate(2024, 2, 15)))
+            assertThat(content.days).hasSize(15)
+            job.cancel()
+        }
+
+    @Test
+    fun invalid_or_missing_custom_range_on_restore_recovers_to_today() =
+        runTest(dispatcherRule.dispatcher) {
+            val invalidHandles = listOf(
+                SavedStateHandle(mapOf("selected_period" to StatsPeriod.CUSTOM)),
+                SavedStateHandle(mapOf("selected_period" to StatsPeriod.CUSTOM, "custom_period_range" to "invalid")),
+                SavedStateHandle(mapOf("selected_period" to StatsPeriod.CUSTOM, "custom_period_range" to "2024-02-20/2024-02-10")),
+                SavedStateHandle(mapOf("selected_period" to StatsPeriod.CUSTOM, "custom_period_range" to "2023-01-01/2024-02-01")),
+                SavedStateHandle(mapOf("selected_period" to StatsPeriod.CUSTOM, "custom_period_range" to "2024-02-01/2024-03-05")),
+            )
+
+            for (handle in invalidHandles) {
+                val vm = viewModel(handle)
+                val job = backgroundScope.launch { vm.uiState.collect {} }
+                runCurrent()
+
+                val content = vm.uiState.value.period as PeriodState.Content
+                assertThat(content.selectedPeriod).isEqualTo(StatsPeriod.TODAY)
+                job.cancel()
+            }
+        }
+
+    @Test
+    fun custom_period_validation_boundaries_and_leap_year() =
+        runTest(dispatcherRule.dispatcher) {
+            // 1일 (start == end)
+            val oneDay = CustomPeriodRange(LocalDate(2024, 2, 29), LocalDate(2024, 2, 29))
+            assertThat(oneDay.validate(today)).isNull()
+            assertThat(oneDay.dayCount).isEqualTo(1)
+
+            // 윤년 포함 정확히 365일 (2023-03-03 ~ 2024-03-01: 2024-02-29 포함)
+            val exact365 = CustomPeriodRange(LocalDate(2023, 3, 3), LocalDate(2024, 3, 1))
+            assertThat(exact365.validate(today)).isNull()
+            assertThat(exact365.dayCount).isEqualTo(365)
+
+            // 윤년 포함 366일 (2023-03-02 ~ 2024-03-01) -> 거부
+            val exact366 = CustomPeriodRange(LocalDate(2023, 3, 2), LocalDate(2024, 3, 1))
+            assertThat(exact366.validate(today)).isEqualTo(CustomPeriodRange.ValidationError.EXCEEDS_MAX_DAYS)
+            assertThat(exact366.dayCount).isEqualTo(366)
+
+            // 역순 (start > end) -> 거부
+            val reverse = CustomPeriodRange(LocalDate(2024, 2, 20), LocalDate(2024, 2, 10))
+            assertThat(reverse.validate(today)).isEqualTo(CustomPeriodRange.ValidationError.START_AFTER_END)
+
+            // 미래 날짜 (end > today) -> 거부
+            val future = CustomPeriodRange(LocalDate(2024, 2, 20), LocalDate(2024, 3, 2))
+            assertThat(future.validate(today)).isEqualTo(CustomPeriodRange.ValidationError.FUTURE_DATE)
+
+            // 잘못된 범위 적용 시 ViewModel이 거부하고 상태를 변경하지 않음
+            val viewModel = viewModel()
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            val applied = viewModel.applyCustomPeriod(LocalDate(2024, 2, 20), LocalDate(2024, 2, 10))
+            assertThat(applied).isFalse()
+            runCurrent()
+            assertThat((viewModel.uiState.value.period as PeriodState.Content).selectedPeriod).isEqualTo(StatsPeriod.TODAY)
+            job.cancel()
+        }
+
+    @Test
+    fun custom_period_change_clears_out_of_range_selected_date() =
+        runTest(dispatcherRule.dispatcher) {
+            val dateInFirstRange = LocalDate(2024, 2, 5)
+            repository.records.value = listOf(record(1, dateInFirstRange, "a", 1, 10))
+            val viewModel = viewModel()
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            viewModel.applyCustomPeriod(LocalDate(2024, 2, 1), LocalDate(2024, 2, 10))
+            runCurrent()
+
+            viewModel.selectDate(dateInFirstRange)
+            runCurrent()
+            assertThat(viewModel.uiState.value.day).isInstanceOf(DayState.Content::class.java)
+
+            // 새 custom 범위 밖의 날짜이므로 시트가 닫힘
+            viewModel.applyCustomPeriod(LocalDate(2024, 2, 15), LocalDate(2024, 2, 20))
+            runCurrent()
+            assertThat(viewModel.uiState.value.day).isEqualTo(DayState.Closed)
+            job.cancel()
+        }
+
+    @Test
+    fun custom_period_query_cancels_previous_flow_and_recovers_on_retry() =
+        runTest(dispatcherRule.dispatcher) {
+            val viewModel = viewModel()
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            repository.failPeriod = true
+            viewModel.applyCustomPeriod(LocalDate(2024, 2, 1), LocalDate(2024, 2, 10))
+            runCurrent()
+            assertThat(viewModel.uiState.value.period).isEqualTo(PeriodState.Error)
+
+            repository.failPeriod = false
+            viewModel.retryPeriod()
+            runCurrent()
+            val content = viewModel.uiState.value.period as PeriodState.Content
+            assertThat(content.selectedPeriod).isEqualTo(StatsPeriod.CUSTOM)
+            assertThat(content.days).hasSize(10)
             job.cancel()
         }
 

@@ -24,6 +24,7 @@ sealed interface PeriodState {
         val days: List<ReadingCalendarDay>,
         val summary: PeriodSummary,
         val selectedPeriod: StatsPeriod = StatsPeriod.TODAY,
+        val customRange: CustomPeriodRange? = null,
         val refreshErrorId: Int = 0,
     ) : PeriodState
 }

@@ -27,6 +27,15 @@
     <string name="stats_book_missing">책 정보 없음</string>
     <plurals name="stats_session_count"><item quantity="other">%d회</item></plurals>
     <string name="stats_close">닫기</string>
+    <string name="stats_confirm">확인</string>
+    <string name="stats_custom_period_title">기간 설정</string>
+    <string name="stats_custom_period_start_date">시작일</string>
+    <string name="stats_custom_period_end_date">종료일</string>
+    <string name="stats_custom_period_apply">적용</string>
+    <string name="stats_custom_period_cancel">취소</string>
+    <string name="stats_custom_period_error_order">시작일은 종료일보다 앞서야 해요.</string>
+    <string name="stats_custom_period_error_max_days">최대 365일까지 선택할 수 있어요.</string>
+    <string name="stats_custom_period_error_future">오늘 이후 날짜는 선택할 수 없어요.</string>
     <string name="stats_monday">월</string><string name="stats_tuesday">화</string><string name="stats_wednesday">수</string>
     <string name="stats_thursday">목</string><string name="stats_friday">금</string><string name="stats_saturday">토</string><string name="stats_sunday">일</string>
     <plurals name="stats_today_books_title"><item quantity="other">오늘 읽은 책 · %d권</item></plurals>
