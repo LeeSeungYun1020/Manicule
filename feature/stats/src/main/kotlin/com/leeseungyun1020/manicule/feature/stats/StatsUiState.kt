@@ -10,6 +10,7 @@ import kotlinx.datetime.LocalDate
 data class StatsUiState(
     val period: PeriodState = PeriodState.Loading,
     val day: DayState = DayState.Closed,
+    val todayBooks: TodayBooksState = TodayBooksState.Hidden,
 )
 
 @Immutable
@@ -44,4 +45,19 @@ sealed interface DayState {
     data class Error(
         val date: LocalDate,
     ) : DayState
+}
+
+@Immutable
+sealed interface TodayBooksState {
+    data object Hidden : TodayBooksState
+
+    data object Loading : TodayBooksState
+
+    data class Content(
+        val date: LocalDate,
+        val rows: List<ReadingDayBook>,
+        val refreshErrorId: Int = 0,
+    ) : TodayBooksState
+
+    data object Error : TodayBooksState
 }
