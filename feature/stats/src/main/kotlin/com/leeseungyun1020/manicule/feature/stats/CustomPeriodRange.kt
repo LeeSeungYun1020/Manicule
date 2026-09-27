@@ -31,7 +31,7 @@ data class CustomPeriodRange(
 
     companion object {
         const val MAX_DAYS = 365
-        const val DEFAULT_DAYS = 28
+        const val DEFAULT_DAYS = 91
 
         fun defaultFor(today: LocalDate): CustomPeriodRange = CustomPeriodRange(today.minus(DatePeriod(days = DEFAULT_DAYS - 1)), today)
 

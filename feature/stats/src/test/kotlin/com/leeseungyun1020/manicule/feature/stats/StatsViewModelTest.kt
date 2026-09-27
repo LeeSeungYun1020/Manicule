@@ -138,12 +138,12 @@ class StatsViewModelTest {
         }
 
     @Test
-    fun custom_period_default_range_is_recent_28_days_and_cancelling_maintains_previous_period() =
+    fun custom_period_default_range_is_recent_91_days_and_cancelling_maintains_previous_period() =
         runTest(dispatcherRule.dispatcher) {
             val defaultRange = CustomPeriodRange.defaultFor(today)
-            assertThat(defaultRange.start).isEqualTo(LocalDate(2024, 2, 3))
+            assertThat(defaultRange.start).isEqualTo(LocalDate(2023, 12, 2))
             assertThat(defaultRange.end).isEqualTo(today)
-            assertThat(defaultRange.dayCount).isEqualTo(28)
+            assertThat(defaultRange.dayCount).isEqualTo(91)
 
             val viewModel = viewModel()
             val job = backgroundScope.launch { viewModel.uiState.collect {} }

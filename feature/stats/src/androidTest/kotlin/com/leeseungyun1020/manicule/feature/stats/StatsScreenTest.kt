@@ -226,7 +226,7 @@ class StatsScreenTest {
 
         composeRule.onNodeWithText(context.getString(R.string.stats_custom_period_apply)).performClick()
 
-        val expectedStart = today.minus(DatePeriod(days = 27))
+        val expectedStart = today.minus(DatePeriod(days = CustomPeriodRange.DEFAULT_DAYS - 1))
         assertEquals(expectedStart, appliedStart)
         assertEquals(today, appliedEnd)
 

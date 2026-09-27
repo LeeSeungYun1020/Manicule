@@ -303,7 +303,7 @@ class StatsViewModel
                     StatsPeriod.TODAY -> today.minus(DatePeriod(days = 6))
                     StatsPeriod.FOUR_WEEKS -> today.minus(DatePeriod(days = 27))
                     StatsPeriod.ONE_YEAR -> today.minus(DatePeriod(days = 363))
-                    StatsPeriod.CUSTOM -> customRange?.start ?: today.minus(DatePeriod(days = 27))
+                    StatsPeriod.CUSTOM -> customRange?.start ?: CustomPeriodRange.defaultFor(today).start
                 }
             val end =
                 when (period) {
@@ -323,7 +323,7 @@ class StatsViewModel
                     StatsPeriod.TODAY -> today
                     StatsPeriod.FOUR_WEEKS -> today.minus(DatePeriod(days = 27))
                     StatsPeriod.ONE_YEAR -> today.minus(DatePeriod(days = 363))
-                    StatsPeriod.CUSTOM -> customRange?.start ?: today.minus(DatePeriod(days = 27))
+                    StatsPeriod.CUSTOM -> customRange?.start ?: CustomPeriodRange.defaultFor(today).start
                 }
             val end =
                 when (period) {
