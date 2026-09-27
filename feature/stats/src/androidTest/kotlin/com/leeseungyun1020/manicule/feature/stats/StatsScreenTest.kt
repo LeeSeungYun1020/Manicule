@@ -16,6 +16,8 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.domain.stats.ReadingChartBucket
+import com.leeseungyun1020.manicule.core.domain.stats.ReadingChartUnit
 import com.leeseungyun1020.manicule.core.domain.stats.ReadingDayBook
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.PeriodSummary
@@ -54,6 +56,8 @@ class StatsScreenTest {
                     onRetryPeriod = {},
                     onRetryDay = {},
                     onRetryTodayBooks = {},
+                    onChartUnitSelected = {},
+                    onRetryChart = {},
                     onBookSelected = { selectedIsbn = it },
                     consumeRefreshError = { true },
                 )
@@ -113,6 +117,8 @@ class StatsScreenTest {
                     onRetryPeriod = {},
                     onRetryDay = {},
                     onRetryTodayBooks = {},
+                    onChartUnitSelected = {},
+                    onRetryChart = {},
                     onBookSelected = {},
                     consumeRefreshError = { true },
                 )
@@ -131,6 +137,7 @@ class StatsScreenTest {
                 StatsScreen(
                     state = StatsUiState(
                         period = period(empty = true, selectedPeriod = StatsPeriod.FOUR_WEEKS),
+                        chart = emptyChart(StatsPeriod.FOUR_WEEKS, today.minus(DatePeriod(days = 27)), today),
                     ),
                     onPeriodSelected = {},
                     onApplyCustomPeriod = { _, _ -> true },
@@ -139,6 +146,8 @@ class StatsScreenTest {
                     onRetryPeriod = {},
                     onRetryDay = {},
                     onRetryTodayBooks = {},
+                    onChartUnitSelected = {},
+                    onRetryChart = {},
                     onBookSelected = {},
                     consumeRefreshError = { true },
                 )
@@ -162,6 +171,8 @@ class StatsScreenTest {
                     onRetryPeriod = {},
                     onRetryDay = {},
                     onRetryTodayBooks = {},
+                    onChartUnitSelected = {},
+                    onRetryChart = {},
                     onBookSelected = {},
                     consumeRefreshError = { true },
                 )
@@ -217,6 +228,8 @@ class StatsScreenTest {
                     onRetryPeriod = {},
                     onRetryDay = {},
                     onRetryTodayBooks = {},
+                    onChartUnitSelected = {},
+                    onRetryChart = {},
                     onBookSelected = {},
                     consumeRefreshError = { true },
                 )
@@ -264,6 +277,8 @@ class StatsScreenTest {
                     onRetryPeriod = {},
                     onRetryDay = {},
                     onRetryTodayBooks = {},
+                    onChartUnitSelected = {},
+                    onRetryChart = {},
                     onBookSelected = {},
                     consumeRefreshError = { true },
                 )
@@ -300,6 +315,8 @@ class StatsScreenTest {
                     onRetryPeriod = {},
                     onRetryDay = {},
                     onRetryTodayBooks = {},
+                    onChartUnitSelected = {},
+                    onRetryChart = {},
                     onBookSelected = {},
                     consumeRefreshError = { true },
                 )
@@ -355,6 +372,8 @@ class StatsScreenTest {
                     onRetryPeriod = {},
                     onRetryDay = {},
                     onRetryTodayBooks = {},
+                    onChartUnitSelected = {},
+                    onRetryChart = {},
                     onBookSelected = {},
                     consumeRefreshError = { true },
                 )
@@ -394,7 +413,10 @@ class StatsScreenTest {
         composeRule.setContent {
             ManiculeTheme {
                 StatsScreen(
-                    state = StatsUiState(emptyCustomContent),
+                    state = StatsUiState(
+                        period = emptyCustomContent,
+                        chart = emptyChart(StatsPeriod.CUSTOM, customStart, customEnd),
+                    ),
                     onPeriodSelected = {},
                     onApplyCustomPeriod = { _, _ -> true },
                     onDateSelected = {},
@@ -402,6 +424,8 @@ class StatsScreenTest {
                     onRetryPeriod = {},
                     onRetryDay = {},
                     onRetryTodayBooks = {},
+                    onChartUnitSelected = {},
+                    onRetryChart = {},
                     onBookSelected = {},
                     consumeRefreshError = { true },
                 )
@@ -439,6 +463,8 @@ class StatsScreenTest {
                     onRetryPeriod = {},
                     onRetryDay = {},
                     onRetryTodayBooks = {},
+                    onChartUnitSelected = {},
+                    onRetryChart = {},
                     onBookSelected = {},
                     consumeRefreshError = { true },
                 )
@@ -482,6 +508,8 @@ class StatsScreenTest {
                     onRetryPeriod = {},
                     onRetryDay = {},
                     onRetryTodayBooks = {},
+                    onChartUnitSelected = {},
+                    onRetryChart = {},
                     onBookSelected = {},
                     consumeRefreshError = { true },
                 )
@@ -538,6 +566,8 @@ class StatsScreenTest {
                     onRetryPeriod = {},
                     onRetryDay = {},
                     onRetryTodayBooks = {},
+                    onChartUnitSelected = {},
+                    onRetryChart = {},
                     onBookSelected = { selectedIsbn = it },
                     consumeRefreshError = { true },
                 )
@@ -591,6 +621,8 @@ class StatsScreenTest {
                     onRetryPeriod = {},
                     onRetryDay = {},
                     onRetryTodayBooks = {},
+                    onChartUnitSelected = {},
+                    onRetryChart = {},
                     onBookSelected = {},
                     consumeRefreshError = { true },
                 )
@@ -616,6 +648,16 @@ class StatsScreenTest {
         ).assertIsDisplayed()
         composeRule.onNodeWithText("오늘의 책").assertIsDisplayed()
     }
+
+    private fun emptyChart(
+        period: StatsPeriod,
+        start: LocalDate,
+        end: LocalDate,
+    ): ChartState.Content =
+        ChartState.Content(
+            ChartKey(period, start, end, ReadingChartUnit.WEEK),
+            listOf(ReadingChartBucket(start, end, 0, 0)),
+        )
 
     private fun period(
         empty: Boolean = false,

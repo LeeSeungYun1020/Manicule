@@ -16,6 +16,15 @@
     <plurals name="stats_pages_value"><item quantity="other">%d쪽</item></plurals>
     <plurals name="stats_books_value"><item quantity="other">%d권</item></plurals>
     <string name="stats_empty_period">이 기간에는 독서 기록이 없어요.</string>
+    <string name="stats_chart_title">읽은 책 · 페이지</string>
+    <string name="stats_chart_day">일</string>
+    <string name="stats_chart_week">주</string>
+    <string name="stats_chart_month">월</string>
+    <string name="stats_chart_books_legend">책 (권)</string>
+    <string name="stats_chart_pages_legend">페이지 (쪽)</string>
+    <string name="stats_chart_explanation">구간마다 읽은 책을 중복 없이 세므로, 막대의 권수 합은 기간 요약과 다를 수 있어요.</string>
+    <string name="stats_chart_bucket_description">%1$s부터 %2$s까지, %3$d권, %4$d쪽</string>
+    <string name="stats_chart_error">그래프를 불러오지 못했어요.</string>
     <string name="stats_error_title">통계를 불러오지 못했어요</string>
     <string name="stats_error_description">잠시 후 다시 시도해 주세요.</string>
     <string name="stats_refresh_error">통계를 새로고침하지 못했어요.</string>

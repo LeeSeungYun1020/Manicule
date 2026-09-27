@@ -154,7 +154,7 @@ app/
 | `feature:scanner` | `navigation/ScannerNavigation.kt`, `ScannerViewModel.kt`, `CameraPreview.kt` | 권한·카메라 수명주기와 도서 조회 결과 |
 | `feature:bookdetail` | `navigation/BookDetailNavigation.kt`, `BookDetailRoute.kt`, `BookDetailViewModel.kt`, `components/AddRecordBottomSheet.kt` | ISBN 진입, 독서 상태·리뷰·기록 편집 |
 | `feature:library` | `navigation/LibraryNavigation.kt`, `LibraryRoute.kt`, `LibraryViewModel.kt`, `components/SortBottomSheet.kt` | 상태 탭, 정렬, 책 변경·삭제 |
-| `feature:stats` | `navigation/StatsNavigation.kt`, `StatsScreen.kt`, `StatsViewModel.kt`, `components/StatsCalendarCard.kt`, `components/ReadingDayBottomSheet.kt` | `StatsRoute(focus)` 진입 계약, 최근 4주 집계·달력·날짜 기록 상태와 화면 |
+| `feature:stats` | `navigation/StatsNavigation.kt`, `StatsScreen.kt`, `StatsViewModel.kt`, `StatsChartSelection.kt`, `components/StatsCalendarCard.kt`, `components/ReadingChartCard.kt`, `components/ReadingChart.kt`, `components/ReadingDayBottomSheet.kt` | 기간별 요약·달력·날짜 기록·오늘 목록과 읽은 책·페이지 그래프의 상태 및 화면 |
 | `feature:settings` | `navigation/SettingsNavigation.kt`, `SettingsRoute.kt`, `SettingsViewModel.kt`, `components/ReminderSection.kt` | 테마·리마인더 설정 |
 
 서재 새 진입은 `LibraryRoute()`의 `READING`을 기본으로 하며, 홈 '고르기'는 `LibraryRoute(LibraryTab.WANT)`로 진입한다. `initialTab`은 새 백스택 항목의 초기값이다. 기존 화면을 복원할 때는 저장된 사용자 선택을 유지하므로, '고르기' 연결 시 기존 항목을 `restoreState`로 복원하지 않는다.
@@ -184,6 +184,7 @@ app/
 ### 4.5 `core:domain`
 
 `book/`, `search/`, `scanner/`, `library/`, `record/`, `stats/`, `settings/`에 기능별 UseCase를 둔다. 공용 상태 변경은 `library/ChangeReadingStatusUseCase.kt`, 스캔 후보 조회는 `scanner/GetBookByScanUseCase.kt`, 리마인더 계약은 `settings/ReminderScheduler.kt`가 소유한다.
+`stats/GetReadingChartUseCase.kt`는 날짜 범위의 독서 기록을 한 번 관찰해 일·주·월별 고유 ISBN 수와 읽은 페이지 합계를 빈 구간까지 집계한다. 기존 Stats Repository 계약은 변경하지 않는다.
 
 ### 4.6 `core:data`
 

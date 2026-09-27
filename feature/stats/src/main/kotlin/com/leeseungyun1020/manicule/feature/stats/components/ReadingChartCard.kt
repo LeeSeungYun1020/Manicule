@@ -1,0 +1,140 @@
+package com.leeseungyun1020.manicule.feature.stats.components
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.res.stringResource
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeCard
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeErrorState
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
+import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSegmentedButton
+import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
+import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
+import com.leeseungyun1020.manicule.core.domain.stats.ReadingChartBucket
+import com.leeseungyun1020.manicule.core.domain.stats.ReadingChartUnit
+import com.leeseungyun1020.manicule.feature.stats.ChartKey
+import com.leeseungyun1020.manicule.feature.stats.ChartState
+import com.leeseungyun1020.manicule.feature.stats.R
+import com.leeseungyun1020.manicule.feature.stats.StatsPeriod
+import kotlinx.datetime.LocalDate
+
+@Composable
+fun ReadingChartCard(
+    state: ChartState,
+    unit: ReadingChartUnit,
+    onUnitSelected: (ReadingChartUnit) -> Unit,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (state == ChartState.Hidden) return
+    val day = stringResource(R.string.stats_chart_day)
+    val week = stringResource(R.string.stats_chart_week)
+    val month = stringResource(R.string.stats_chart_month)
+    ManiculeCard(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(MaterialTheme.spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+        ) {
+            Text(stringResource(R.string.stats_chart_title), style = MaterialTheme.typography.titleMedium)
+            ManiculeSegmentedButton(
+                options = ReadingChartUnit.entries,
+                selectedOption = unit,
+                onOptionSelected = onUnitSelected,
+                disabledOptions = emptySet(),
+                itemLabel = {
+                    when (it) {
+                        ReadingChartUnit.DAY -> day
+                        ReadingChartUnit.WEEK -> week
+                        ReadingChartUnit.MONTH -> month
+                    }
+                },
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.lg)) {
+                LegendMark(bar = true, label = stringResource(R.string.stats_chart_books_legend))
+                LegendMark(bar = false, label = stringResource(R.string.stats_chart_pages_legend))
+            }
+            when (state) {
+                is ChartState.Loading -> ManiculeLoading(Modifier.fillMaxWidth().height(ManiculeSize.chartHeight))
+                is ChartState.Error -> ManiculeErrorState(
+                    title = stringResource(R.string.stats_chart_error),
+                    icon = ManiculeIcons.NetworkError,
+                    onRetry = onRetry,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                is ChartState.Content -> {
+                    ReadingChart(buckets = state.buckets, key = state.key)
+                    if (state.buckets.all { it.bookCount == 0 && it.pagesRead == 0L }) {
+                        Text(
+                            stringResource(R.string.stats_empty_period),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                ChartState.Hidden -> Unit
+            }
+            Text(
+                stringResource(R.string.stats_chart_explanation),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun LegendMark(
+    bar: Boolean,
+    label: String,
+) {
+    val markColor = if (bar) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+    Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs)) {
+        Canvas(Modifier.size(ManiculeSize.iconXs)) {
+            if (bar) {
+                drawRect(
+                    markColor,
+                    topLeft = Offset(size.width * .3f, size.height * .15f),
+                    size = androidx.compose.ui.geometry.Size(size.width * .4f, size.height * .7f),
+                )
+            } else {
+                drawLine(
+                    markColor,
+                    Offset(0f, size.height / 2),
+                    Offset(size.width, size.height / 2),
+                    ManiculeSize.chartLineWidth.toPx(),
+                )
+            }
+        }
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun ReadingChartCardPreview() {
+    val date = LocalDate(2026, 9, 1)
+    ManiculePreviewTheme {
+        ReadingChartCard(
+            state = ChartState.Content(
+                ChartKey(StatsPeriod.CUSTOM, date, date, ReadingChartUnit.DAY),
+                listOf(ReadingChartBucket(date, date, 1, 42)),
+            ),
+            unit = ReadingChartUnit.DAY,
+            onUnitSelected = {},
+            onRetry = {},
+        )
+    }
+}
