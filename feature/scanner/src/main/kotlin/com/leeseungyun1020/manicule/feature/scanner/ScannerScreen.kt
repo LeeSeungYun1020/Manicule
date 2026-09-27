@@ -2,12 +2,13 @@ package com.leeseungyun1020.manicule.feature.scanner
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -123,34 +124,54 @@ private fun ScannerMessageScreen(
             ManiculeTopAppBar(
                 title = stringResource(R.string.scanner_title),
                 onNavigateBack = onNavigateBack,
+                modifier = Modifier.testTag(SCANNER_TOP_BAR_TEST_TAG),
                 scrollBehavior = scrollBehavior,
             )
         },
     ) { padding ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)
-                .verticalScroll(rememberScrollState()).padding(MaterialTheme.spacing.screenHorizontal),
-            verticalArrangement = Arrangement.Center,
+        val scrollState = rememberScrollState()
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .consumeWindowInsets(padding)
+                .padding(bottom = MaterialTheme.spacing.xl),
         ) {
-            ManiculeEmptyState(
-                title = stringResource(message.title),
-                description = stringResource(message.description),
-                icon = {
-                    Icon(
-                        imageVector = ManiculeIcons.CameraOff,
-                        contentDescription = null,
-                        modifier = Modifier.size(MaterialTheme.size.iconEmptyState),
+            val availableHeight = maxHeight
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(
+                        state = scrollState,
+                        enabled = scrollState.maxValue > 0,
                     )
-                },
-                actions = {
-                    if (denied != null) {
-                        ManiculeButton(onClick = onUseCamera, text = stringResource(R.string.scanner_use_camera))
-                        ManiculeOutlinedButton(onClick = onNavigateToSearch, text = stringResource(R.string.scanner_search))
-                    } else {
-                        ManiculeButton(onClick = onNavigateToSearch, text = stringResource(R.string.scanner_search))
-                    }
-                },
-            )
+                    .padding(horizontal = MaterialTheme.spacing.screenHorizontal)
+                    .testTag(SCANNER_MESSAGE_SCROLL_TEST_TAG),
+            ) {
+                ManiculeEmptyState(
+                    title = stringResource(message.title),
+                    description = stringResource(message.description),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = availableHeight)
+                        .testTag(SCANNER_MESSAGE_CARD_TEST_TAG),
+                    icon = {
+                        Icon(
+                            imageVector = ManiculeIcons.CameraOff,
+                            contentDescription = null,
+                            modifier = Modifier.size(MaterialTheme.size.iconEmptyState),
+                        )
+                    },
+                    actions = {
+                        if (denied != null) {
+                            ManiculeButton(onClick = onUseCamera, text = stringResource(R.string.scanner_use_camera))
+                            ManiculeOutlinedButton(onClick = onNavigateToSearch, text = stringResource(R.string.scanner_search))
+                        } else {
+                            ManiculeButton(onClick = onNavigateToSearch, text = stringResource(R.string.scanner_search))
+                        }
+                    },
+                )
+            }
         }
     }
 }
@@ -215,6 +236,9 @@ private fun BarcodeScannerOverlay(
     }
 }
 
+internal const val SCANNER_MESSAGE_CARD_TEST_TAG = "scanner_message_card"
+internal const val SCANNER_MESSAGE_SCROLL_TEST_TAG = "scanner_message_scroll"
+internal const val SCANNER_TOP_BAR_TEST_TAG = "scanner_top_bar"
 private const val VIEWFINDER_RATIO = 21f / 13f
 private const val VIEWFINDER_WIDTH_FRACTION = 0.58f
 private const val OVERLAY_ALPHA = 0.95f
