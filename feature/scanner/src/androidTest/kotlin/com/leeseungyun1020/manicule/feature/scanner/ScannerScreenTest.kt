@@ -2,6 +2,7 @@ package com.leeseungyun1020.manicule.feature.scanner
 
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +25,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
+import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -131,9 +133,9 @@ class ScannerScreenTest {
         val stateHolder = mutableStateOf<ScannerUiState>(ScannerUiState.PermissionDenied())
         var expectedBottom = 640.dp
         compose.setContent {
-            val bottomPadding = ScaffoldDefaults.contentWindowInsets.asPaddingValues().calculateBottomPadding()
-            expectedBottom = 640.dp - bottomPadding
             ManiculeTheme {
+                val bottomPadding = ScaffoldDefaults.contentWindowInsets.asPaddingValues().calculateBottomPadding()
+                expectedBottom = 640.dp - bottomPadding - MaterialTheme.spacing.xl
                 ScannerScreen(
                     uiState = stateHolder.value,
                     onNavigateBack = {},
@@ -156,7 +158,7 @@ class ScannerScreenTest {
             val appbar = compose.onNodeWithTag(SCANNER_TOP_BAR_TEST_TAG).assertIsDisplayed().getUnclippedBoundsInRoot()
             val card = compose.onNodeWithTag(SCANNER_MESSAGE_CARD_TEST_TAG).assertIsDisplayed().getUnclippedBoundsInRoot()
 
-            // 점선 카드가 앱바 아래 가용 높이를 채우는지 검증 (상단은 앱바 하단, 하단은 패딩 안 가용 영역 하단)
+            // 점선 카드가 앱바 아래 영역을 채우고 하단 인셋 위에 xl 여백을 남기는지 검증
             assertThat(card.top.value).isWithin(0.5f).of(appbar.bottom.value)
             assertThat(card.bottom.value).isWithin(0.5f).of(expectedBottom.value)
 

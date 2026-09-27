@@ -134,7 +134,8 @@ private fun ScannerMessageScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .consumeWindowInsets(padding),
+                .consumeWindowInsets(padding)
+                .padding(bottom = MaterialTheme.spacing.xl),
         ) {
             val availableHeight = maxHeight
             Column(
