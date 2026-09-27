@@ -17,6 +17,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
 import com.leeseungyun1020.manicule.core.domain.stats.ReadingDayBook
+import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.PeriodSummary
 import com.leeseungyun1020.manicule.core.model.ReadingCalendarDay
 import kotlinx.datetime.DatePeriod
@@ -51,6 +52,7 @@ class StatsScreenTest {
                     onDismissDay = { day = DayState.Closed },
                     onRetryPeriod = {},
                     onRetryDay = {},
+                    onRetryTodayBooks = {},
                     onBookSelected = { selectedIsbn = it },
                     consumeRefreshError = { true },
                 )
@@ -99,12 +101,16 @@ class StatsScreenTest {
         composeRule.setContent {
             ManiculeTheme {
                 StatsScreen(
-                    state = StatsUiState(period(empty = true)),
+                    state = StatsUiState(
+                        period = period(empty = true),
+                        todayBooks = TodayBooksState.Content(today, emptyList()),
+                    ),
                     onPeriodSelected = {},
                     onDateSelected = {},
                     onDismissDay = {},
                     onRetryPeriod = {},
                     onRetryDay = {},
+                    onRetryTodayBooks = {},
                     onBookSelected = {},
                     consumeRefreshError = { true },
                 )
@@ -112,8 +118,31 @@ class StatsScreenTest {
         }
 
         composeRule.onNodeWithText(context.getString(R.string.stats_calendar_title)).assertIsDisplayed()
-        composeRule.onNodeWithText(context.getString(R.string.stats_empty_period)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.stats_today_books_empty)).assertIsDisplayed()
         composeRule.onNodeWithText(context.resources.getQuantityString(R.plurals.stats_books_value, 0, 0)).assertIsDisplayed()
+    }
+
+    @Test
+    fun empty_period_in_four_weeks_shows_empty_period_message() {
+        composeRule.setContent {
+            ManiculeTheme {
+                StatsScreen(
+                    state = StatsUiState(
+                        period = period(empty = true, selectedPeriod = StatsPeriod.FOUR_WEEKS),
+                    ),
+                    onPeriodSelected = {},
+                    onDateSelected = {},
+                    onDismissDay = {},
+                    onRetryPeriod = {},
+                    onRetryDay = {},
+                    onRetryTodayBooks = {},
+                    onBookSelected = {},
+                    consumeRefreshError = { true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.stats_empty_period)).assertIsDisplayed()
     }
 
     @Test
@@ -128,6 +157,7 @@ class StatsScreenTest {
                     onDismissDay = {},
                     onRetryPeriod = {},
                     onRetryDay = {},
+                    onRetryTodayBooks = {},
                     onBookSelected = {},
                     consumeRefreshError = { true },
                 )
@@ -173,6 +203,7 @@ class StatsScreenTest {
                     onDismissDay = { day = DayState.Closed },
                     onRetryPeriod = {},
                     onRetryDay = {},
+                    onRetryTodayBooks = {},
                     onBookSelected = {},
                     consumeRefreshError = { true },
                 )
@@ -214,6 +245,7 @@ class StatsScreenTest {
                     onDismissDay = {},
                     onRetryPeriod = {},
                     onRetryDay = {},
+                    onRetryTodayBooks = {},
                     onBookSelected = {},
                     consumeRefreshError = { true },
                 )
@@ -243,6 +275,110 @@ class StatsScreenTest {
         composeRule.onNodeWithText(dateRangeText).assertIsDisplayed()
     }
 
+    @Test
+    fun today_tab_displays_books_with_cover_title_records_pages_and_click_navigates() {
+        var selectedIsbn: String? = null
+        val todayPeriodContent = PeriodState.Content(
+            today = today,
+            selectedPeriod = StatsPeriod.TODAY,
+            days = listOf(ReadingCalendarDay.of(today, 54)),
+            summary = PeriodSummary(today, today, 1, 54, 1),
+        )
+        val book = testBook("isbn-1", "달러구트 꿈 백화점")
+        composeRule.setContent {
+            ManiculeTheme {
+                StatsScreen(
+                    state = StatsUiState(
+                        period = todayPeriodContent,
+                        todayBooks = TodayBooksState.Content(
+                            today,
+                            listOf(ReadingDayBook("isbn-1", book, 2, 54)),
+                        ),
+                    ),
+                    onPeriodSelected = {},
+                    onDateSelected = {},
+                    onDismissDay = {},
+                    onRetryPeriod = {},
+                    onRetryDay = {},
+                    onRetryTodayBooks = {},
+                    onBookSelected = { selectedIsbn = it },
+                    consumeRefreshError = { true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(
+            context.resources.getQuantityString(R.plurals.stats_today_books_title, 1, 1),
+        ).assertIsDisplayed()
+        composeRule.onNodeWithText("달러구트 꿈 백화점").assertIsDisplayed()
+        composeRule.onNodeWithText(
+            context.resources.getQuantityString(R.plurals.stats_session_count, 2, 2),
+        ).assertIsDisplayed()
+        composeRule.onAllNodesWithText(
+            context.resources.getQuantityString(R.plurals.stats_pages_value, 54, 54),
+        ).assertCountEquals(2)
+
+        composeRule.onNodeWithText("달러구트 꿈 백화점").performClick()
+        assertEquals("isbn-1", selectedIsbn)
+    }
+
+    @Test
+    fun today_cell_click_scrolls_to_today_books_and_does_not_open_sheet() {
+        var day by mutableStateOf<DayState>(DayState.Closed)
+        val todayPeriodContent = PeriodState.Content(
+            today = today,
+            selectedPeriod = StatsPeriod.TODAY,
+            days = (0..6).map { index ->
+                val date = today.minus(DatePeriod(days = 6 - index))
+                ReadingCalendarDay.of(date, if (date == today) 45 else 0)
+            },
+            summary = PeriodSummary(today, today, 1, 45, 1),
+        )
+        composeRule.setContent {
+            ManiculeTheme {
+                StatsScreen(
+                    state = StatsUiState(
+                        period = todayPeriodContent,
+                        day = day,
+                        todayBooks = TodayBooksState.Content(
+                            today,
+                            listOf(ReadingDayBook("isbn-today", testBook("isbn-today", "오늘의 책"), 2, 45)),
+                        ),
+                    ),
+                    onPeriodSelected = {},
+                    onDateSelected = { date ->
+                        day = DayState.Content(date, listOf(ReadingDayBook("isbn-sheet", null, 1, 45)))
+                    },
+                    onDismissDay = { day = DayState.Closed },
+                    onRetryPeriod = {},
+                    onRetryDay = {},
+                    onRetryTodayBooks = {},
+                    onBookSelected = {},
+                    consumeRefreshError = { true },
+                )
+            }
+        }
+
+        val todayDateDescription = context.resources.getQuantityString(
+            CoreUiR.plurals.reading_calendar_cell_content_description,
+            45,
+            today.year,
+            today.monthNumber,
+            today.dayOfMonth,
+            45,
+        )
+        val todayDescription = context.getString(
+            CoreUiR.string.reading_calendar_today_content_description,
+            todayDateDescription,
+        )
+        composeRule.onNodeWithContentDescription(todayDescription).performClick()
+        assertEquals(DayState.Closed, day)
+        composeRule.onNodeWithText(
+            context.resources.getQuantityString(R.plurals.stats_today_books_title, 1, 1),
+        ).assertIsDisplayed()
+        composeRule.onNodeWithText("오늘의 책").assertIsDisplayed()
+    }
+
     private fun period(
         empty: Boolean = false,
         selectedPeriod: StatsPeriod = StatsPeriod.TODAY,
@@ -258,4 +394,26 @@ class StatsScreenTest {
             summary = PeriodSummary(start, today, if (empty) 0 else 1, if (empty) 0 else 20, if (empty) 0 else 1),
         )
     }
+
+    private fun testBook(
+        isbn: String = "isbn-1",
+        title: String = "달러구트 꿈 백화점",
+        author: String = "이미예",
+        publisher: String = "팩토리나인",
+        publishedDate: LocalDate? = LocalDate(2020, 7, 8),
+        coverUrl: String? = null,
+    ) = Book(
+        isbn = isbn,
+        title = title,
+        author = author,
+        publisher = publisher,
+        publishedDate = publishedDate,
+        coverUrl = coverUrl,
+        totalPages = 300,
+        price = 13800,
+        category = "소설",
+        tableOfContentsUrl = null,
+        introductionUrl = null,
+        summaryUrl = null,
+    )
 }

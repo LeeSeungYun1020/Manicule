@@ -1,6 +1,5 @@
 package com.leeseungyun1020.manicule.feature.stats.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeBottomSheet
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeErrorState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
@@ -31,7 +29,6 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
-import com.leeseungyun1020.manicule.core.ui.book.BookListItem
 import com.leeseungyun1020.manicule.feature.stats.DayState
 import com.leeseungyun1020.manicule.feature.stats.R
 import kotlinx.datetime.LocalDate
@@ -112,28 +109,9 @@ private fun ReadingDayContent(
                 } else {
                     LazyColumn(modifier = Modifier.heightIn(max = ManiculeSize.chartHeight * 2)) {
                         items(state.rows, key = { it.isbn }, contentType = { "reading-day-book" }) { row ->
-                            val book = row.book
-                            BookListItem(
-                                title = book?.title ?: stringResource(R.string.stats_book_missing),
-                                author = book?.author.orEmpty(),
-                                publisher = book?.publisher.orEmpty(),
-                                pubDate = book?.publishedDate?.toString().orEmpty(),
-                                imageUrl = book?.coverUrl,
-                                modifier = Modifier.clickable(role = Role.Button) { onBookSelected(row.isbn) },
-                                trailingContent = {
-                                    Column(horizontalAlignment = Alignment.End) {
-                                        Text(
-                                            text = pluralStringResource(R.plurals.stats_pages_value, row.pagesRead, row.pagesRead),
-                                            style = MaterialTheme.typography.labelLarge,
-                                            color = MaterialTheme.colorScheme.primary,
-                                        )
-                                        Text(
-                                            text = pluralStringResource(R.plurals.stats_session_count, row.recordCount, row.recordCount),
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-                                },
+                            ReadingDayBookItem(
+                                book = row,
+                                onBookSelected = onBookSelected,
                             )
                             HorizontalDivider()
                         }

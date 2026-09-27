@@ -29,4 +29,9 @@
     <string name="stats_close">닫기</string>
     <string name="stats_monday">월</string><string name="stats_tuesday">화</string><string name="stats_wednesday">수</string>
     <string name="stats_thursday">목</string><string name="stats_friday">금</string><string name="stats_saturday">토</string><string name="stats_sunday">일</string>
+    <plurals name="stats_today_books_title"><item quantity="other">오늘 읽은 책 · %d권</item></plurals>
+    <string name="stats_today_books_section_title">오늘 읽은 책</string>
+    <string name="stats_today_books_empty">오늘 읽은 책이 없어요.</string>
+    <string name="stats_today_books_error">오늘 읽은 책을 불러오지 못했어요.</string>
+    <string name="stats_today_calendar_today_cell_click_label">오늘 읽은 책 목록으로 이동</string>
 </resources>
