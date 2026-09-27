@@ -21,10 +21,17 @@ class ReadingRecordRepositoryImpl
             updatedAt: Instant,
         ): Long = readingRecordLocalDataSource.add(record.asEntity(), updatedAt)
 
-        override suspend fun saveRecord(record: ReadingRecord): Long = readingRecordLocalDataSource.save(record.asEntity())
+        override suspend fun saveRecord(record: ReadingRecord): Boolean {
+            if (record.id <= 0) return false
+            return readingRecordLocalDataSource.update(record.asEntity()) > 0
+        }
 
-        override suspend fun removeRecord(id: Long) {
-            readingRecordLocalDataSource.remove(id)
+        override suspend fun removeRecord(
+            id: Long,
+            isbn: String,
+        ): Boolean {
+            if (id <= 0 || isbn.isBlank()) return false
+            return readingRecordLocalDataSource.remove(id, isbn) > 0
         }
 
         override fun observeRecordsByIsbn(isbn: String): Flow<List<ReadingRecord>> =

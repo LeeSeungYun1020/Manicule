@@ -8,7 +8,11 @@ class DeleteReadingRecordUseCase
     constructor(
         private val readingRecordRepository: ReadingRecordRepository,
     ) {
-        suspend operator fun invoke(id: Long) {
-            readingRecordRepository.removeRecord(id)
+        suspend operator fun invoke(
+            id: Long,
+            isbn: String,
+        ): Boolean {
+            if (id <= 0 || isbn.isBlank()) return false
+            return readingRecordRepository.removeRecord(id, isbn)
         }
     }

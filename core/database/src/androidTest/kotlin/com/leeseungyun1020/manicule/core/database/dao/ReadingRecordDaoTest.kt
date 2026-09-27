@@ -100,6 +100,92 @@ class ReadingRecordDaoTest {
             assertThat(dao.getMaxEndPage(isbn)).isEqualTo(100)
         }
 
+    @Test
+    fun update_updates_existing_record_with_same_id_and_isbn() =
+        runTest {
+            val isbn = "123"
+            bookDao.upsert(BookEntity(isbn, "T", "A", "P", null, null, null, null, null, null, null, null))
+            val id = dao.upsert(record(isbn = isbn, startPage = 1, endPage = 10))
+
+            val updatedRows =
+                dao.update(
+                    record(
+                        id = id,
+                        isbn = isbn,
+                        date = LocalDate(2024, 2, 1),
+                        time = LocalTime(15, 30),
+                        startPage = 10,
+                        endPage = 30,
+                    ),
+                )
+
+            assertThat(updatedRows).isEqualTo(1)
+            dao.observeByIsbn(isbn).test {
+                val records = awaitItem()
+                assertThat(records).hasSize(1)
+                val item = records.first()
+                assertThat(item.id).isEqualTo(id)
+                assertThat(item.date).isEqualTo(LocalDate(2024, 2, 1))
+                assertThat(item.time).isEqualTo(LocalTime(15, 30))
+                assertThat(item.startPage).isEqualTo(10)
+                assertThat(item.endPage).isEqualTo(30)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun update_returns_zero_when_id_or_isbn_not_matched() =
+        runTest {
+            val isbn1 = "123"
+            val isbn2 = "456"
+            bookDao.upsert(BookEntity(isbn1, "T1", "A", "P", null, null, null, null, null, null, null, null))
+            bookDao.upsert(BookEntity(isbn2, "T2", "A", "P", null, null, null, null, null, null, null, null))
+            val id = dao.upsert(record(isbn = isbn1, startPage = 1, endPage = 10))
+
+            // Non-existent ID
+            val nonExistentResult = dao.update(record(id = 999L, isbn = isbn1, startPage = 1, endPage = 20))
+            assertThat(nonExistentResult).isEqualTo(0)
+
+            // Different ISBN
+            val differentIsbnResult = dao.update(record(id = id, isbn = isbn2, startPage = 1, endPage = 20))
+            assertThat(differentIsbnResult).isEqualTo(0)
+        }
+
+    @Test
+    fun delete_with_isbn_removes_matching_record() =
+        runTest {
+            val isbn = "123"
+            bookDao.upsert(BookEntity(isbn, "T", "A", "P", null, null, null, null, null, null, null, null))
+            val id = dao.upsert(record(isbn = isbn, startPage = 1, endPage = 10))
+
+            val deletedRows = dao.delete(id, isbn)
+            assertThat(deletedRows).isEqualTo(1)
+
+            dao.observeByIsbn(isbn).test {
+                val records = awaitItem()
+                assertThat(records).isEmpty()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun delete_with_isbn_returns_zero_when_not_matched() =
+        runTest {
+            val isbn1 = "123"
+            val isbn2 = "456"
+            bookDao.upsert(BookEntity(isbn1, "T1", "A", "P", null, null, null, null, null, null, null, null))
+            bookDao.upsert(BookEntity(isbn2, "T2", "A", "P", null, null, null, null, null, null, null, null))
+            val id = dao.upsert(record(isbn = isbn1, startPage = 1, endPage = 10))
+
+            // Different ISBN
+            val differentIsbnResult = dao.delete(id, isbn2)
+            assertThat(differentIsbnResult).isEqualTo(0)
+
+            // Non-existent ID
+            val nonExistentResult = dao.delete(999L, isbn1)
+            assertThat(nonExistentResult).isEqualTo(0)
+        }
+
     private fun record(
         id: Long = 0,
         isbn: String,

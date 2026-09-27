@@ -1458,10 +1458,27 @@ class BookDetailViewModelTest {
             return newId
         }
 
-        override suspend fun saveRecord(record: ReadingRecord): Long = record.id
+        override suspend fun saveRecord(record: ReadingRecord): Boolean {
+            val idx = records.value.indexOfFirst { it.id == record.id }
+            if (idx >= 0) {
+                val list = records.value.toMutableList()
+                list[idx] = record
+                records.value = list
+                return true
+            }
+            return false
+        }
 
-        override suspend fun removeRecord(id: Long) {
-            records.value = records.value.filterNot { it.id == id }
+        override suspend fun removeRecord(
+            id: Long,
+            isbn: String,
+        ): Boolean {
+            val exists = records.value.any { it.id == id && it.isbn == isbn }
+            if (exists) {
+                records.value = records.value.filterNot { it.id == id && it.isbn == isbn }
+                return true
+            }
+            return false
         }
 
         override fun observeRecordsBetween(

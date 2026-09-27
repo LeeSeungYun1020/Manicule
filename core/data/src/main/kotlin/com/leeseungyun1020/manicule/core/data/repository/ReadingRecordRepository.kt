@@ -16,9 +16,22 @@ interface ReadingRecordRepository {
         updatedAt: Instant,
     ): Long
 
-    suspend fun saveRecord(record: ReadingRecord): Long
+    /**
+     * 기존 세션 기록을 갱신한다. (id > 0 이어야 함)
+     * 대상 기록이 존재하고 책의 isbn이 일치하면 갱신 후 true를 반환한다.
+     * 대상이 없거나 isbn이 불일치하면 false를 반환한다.
+     */
+    suspend fun saveRecord(record: ReadingRecord): Boolean
 
-    suspend fun removeRecord(id: Long)
+    /**
+     * 세션 기록을 삭제한다.
+     * 대상 기록이 존재하고 책의 isbn이 일치하면 삭제 후 true를 반환한다.
+     * 대상이 없거나 isbn이 불일치하면 false를 반환한다.
+     */
+    suspend fun removeRecord(
+        id: Long,
+        isbn: String,
+    ): Boolean
 
     fun observeRecordsByIsbn(isbn: String): Flow<List<ReadingRecord>>
 

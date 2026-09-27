@@ -9,6 +9,7 @@ import com.leeseungyun1020.manicule.core.database.entity.ReadingRecordEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalTime
 
 @Dao
 interface ReadingRecordDao {
@@ -60,6 +61,38 @@ interface ReadingRecordDao {
 
     @Upsert
     suspend fun upsert(record: ReadingRecordEntity): Long
+
+    @Query(
+        """
+        UPDATE reading_records
+        SET date = :date, time = :time, startPage = :startPage, endPage = :endPage
+        WHERE id = :id AND isbn = :isbn
+        """,
+    )
+    suspend fun update(
+        id: Long,
+        isbn: String,
+        date: LocalDate,
+        time: LocalTime,
+        startPage: Int,
+        endPage: Int,
+    ): Int
+
+    suspend fun update(record: ReadingRecordEntity): Int =
+        update(
+            id = record.id,
+            isbn = record.isbn,
+            date = record.date,
+            time = record.time,
+            startPage = record.startPage,
+            endPage = record.endPage,
+        )
+
+    @Query("DELETE FROM reading_records WHERE id = :id AND isbn = :isbn")
+    suspend fun delete(
+        id: Long,
+        isbn: String,
+    ): Int
 
     @Query("DELETE FROM reading_records WHERE id = :id")
     suspend fun delete(id: Long)
