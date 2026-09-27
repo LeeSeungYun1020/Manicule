@@ -26,7 +26,28 @@ sealed interface BookDetailUiState {
         val ratingSaving: RatingSavingState = RatingSavingState.Idle,
         val memoDraft: String? = null,
         val memoSaving: MemoSavingState = MemoSavingState.Idle,
+        val editingRecord: ReadingRecord? = null,
+        val recordSnackbarMessage: RecordSnackbarMessage? = null,
     ) : BookDetailUiState
+}
+
+sealed interface RecordSnackbarMessage {
+    val id: Long
+
+    data class RecordDeleted(
+        override val id: Long,
+        val recordId: Long,
+    ) : RecordSnackbarMessage
+
+    data class RecordDeleteFailed(
+        override val id: Long,
+        val recordId: Long,
+    ) : RecordSnackbarMessage
+
+    data class RecordEditFailed(
+        override val id: Long,
+        val isNotFound: Boolean,
+    ) : RecordSnackbarMessage
 }
 
 sealed interface MemoSavingState {

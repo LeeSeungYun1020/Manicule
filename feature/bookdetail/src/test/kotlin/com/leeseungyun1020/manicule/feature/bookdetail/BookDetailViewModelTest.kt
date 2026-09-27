@@ -14,6 +14,8 @@ import com.leeseungyun1020.manicule.core.domain.library.ChangeReadingStatusUseCa
 import com.leeseungyun1020.manicule.core.domain.library.UpdateMemoUseCase
 import com.leeseungyun1020.manicule.core.domain.library.UpdateRatingUseCase
 import com.leeseungyun1020.manicule.core.domain.record.AddReadingRecordUseCase
+import com.leeseungyun1020.manicule.core.domain.record.DeleteReadingRecordUseCase
+import com.leeseungyun1020.manicule.core.domain.record.EditReadingRecordUseCase
 import com.leeseungyun1020.manicule.core.domain.record.ObserveBookRecordsUseCase
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
@@ -26,6 +28,7 @@ import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.core.model.ReadingStatusChangeResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -1242,10 +1245,273 @@ class BookDetailViewModelTest {
             }
         }
 
+    @Test
+    fun startEditRecord_setsEditingRecordState() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.records.value = listOf(testRecord)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.startEditRecord(testRecord)
+
+            val content = contentState(viewModel)
+            assertThat(content.editingRecord).isEqualTo(testRecord)
+        }
+
+    @Test
+    fun dismissEditRecord_clearsEditingRecordState() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.records.value = listOf(testRecord)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.startEditRecord(testRecord)
+            assertThat(contentState(viewModel).editingRecord).isEqualTo(testRecord)
+
+            viewModel.dismissEditRecord()
+            assertThat(contentState(viewModel).editingRecord).isNull()
+        }
+
+    @Test
+    fun saveEditedRecord_updatesExistingRecord_andClearsEditingState() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.records.value = listOf(testRecord)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.startEditRecord(testRecord)
+
+            val attempt =
+                viewModel.saveEditedRecord(
+                    recordId = 1L,
+                    date = LocalDate(2026, 9, 20),
+                    time = LocalTime(15, 30),
+                    startPage = 10,
+                    endPage = 40,
+                )
+            assertThat(attempt).isNotNull()
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.editingRecord).isNull()
+            assertThat(content.recordSaving).isEqualTo(RecordSavingState.Succeeded(attempt!!))
+            val updated = recordRepository.records.value.first()
+            assertThat(updated.startPage).isEqualTo(10)
+            assertThat(updated.endPage).isEqualTo(40)
+            assertThat(updated.date).isEqualTo(LocalDate(2026, 9, 20))
+            assertThat(updated.time).isEqualTo(LocalTime(15, 30))
+        }
+
+    @Test
+    fun saveEditedRecord_failsWhenRecordNotFound_showsErrorSnackbar_andClearsEditingState() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.records.value = listOf(testRecord)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.saveEditedRecord(
+                recordId = 999L,
+                date = LocalDate(2026, 9, 20),
+                time = LocalTime(15, 30),
+                startPage = 10,
+                endPage = 40,
+            )
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.editingRecord).isNull()
+            assertThat(content.recordSnackbarMessage).isInstanceOf(RecordSnackbarMessage.RecordEditFailed::class.java)
+            val message = content.recordSnackbarMessage as RecordSnackbarMessage.RecordEditFailed
+            assertThat(message.isNotFound).isTrue()
+        }
+
+    @Test
+    fun saveEditedRecord_failsOnRepositoryError_showsErrorSnackbar() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.records.value = listOf(testRecord)
+            recordRepository.saveFailure = IllegalStateException("DB error")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.startEditRecord(testRecord)
+            viewModel.saveEditedRecord(
+                recordId = 1L,
+                date = LocalDate(2026, 9, 20),
+                time = LocalTime(15, 30),
+                startPage = 10,
+                endPage = 40,
+            )
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.recordSaving).isEqualTo(RecordSavingState.Idle)
+            assertThat(content.recordSnackbarMessage).isInstanceOf(RecordSnackbarMessage.RecordEditFailed::class.java)
+            val message = content.recordSnackbarMessage as RecordSnackbarMessage.RecordEditFailed
+            assertThat(message.isNotFound).isFalse()
+        }
+
+    @Test
+    fun deleteRecord_hidesRecordImmediately_andShowsUndoSnackbar() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.records.value = listOf(testRecord)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.deleteRecord(testRecord)
+
+            val content = contentState(viewModel)
+            assertThat(content.records).isEmpty()
+            assertThat(content.recordSnackbarMessage).isInstanceOf(RecordSnackbarMessage.RecordDeleted::class.java)
+            val message = content.recordSnackbarMessage as RecordSnackbarMessage.RecordDeleted
+            assertThat(message.recordId).isEqualTo(testRecord.id)
+            assertThat(recordRepository.removeCalls).isEqualTo(0)
+        }
+
+    @Test
+    fun undoDeleteRecord_restoresRecord_andDismissesSnackbar() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.records.value = listOf(testRecord)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.deleteRecord(testRecord)
+            var content = contentState(viewModel)
+            val messageId = content.recordSnackbarMessage!!.id
+
+            viewModel.undoDeleteRecord(testRecord.id, messageId)
+
+            content = contentState(viewModel)
+            assertThat(content.records).containsExactly(testRecord)
+            assertThat(content.recordSnackbarMessage).isNull()
+            assertThat(recordRepository.removeCalls).isEqualTo(0)
+        }
+
+    @Test
+    fun dismissDeleteSnackbar_commitsDeleteToRepository() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.records.value = listOf(testRecord)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.deleteRecord(testRecord)
+            val messageId = contentState(viewModel).recordSnackbarMessage!!.id
+
+            viewModel.dismissDeleteSnackbar(testRecord.id, messageId)
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(recordRepository.removeCalls).isEqualTo(1)
+            assertThat(recordRepository.records.value).isEmpty()
+            assertThat(content.recordSnackbarMessage).isNull()
+            assertThat(content.records).isEmpty()
+        }
+
+    @Test
+    fun deleteMultipleRecords_commitsPendingAndSetsNewPending() =
+        runTest(dispatcher) {
+            val record2 = testRecord.copy(id = 2L, startPage = 21, endPage = 40)
+            bookRepository.books.value = testBook
+            recordRepository.records.value = listOf(testRecord, record2)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.deleteRecord(testRecord)
+            assertThat(recordRepository.removeCalls).isEqualTo(0)
+
+            viewModel.deleteRecord(record2)
+            advanceUntilIdle()
+
+            assertThat(recordRepository.removeCalls).isEqualTo(1)
+            val content = contentState(viewModel)
+            assertThat(content.records).isEmpty()
+            val message = content.recordSnackbarMessage as RecordSnackbarMessage.RecordDeleted
+            assertThat(message.recordId).isEqualTo(record2.id)
+        }
+
+    @Test
+    fun deleteMultipleRecords_whenFirstDeleteFails_preservesNewerDeletedSnackbar() =
+        runTest(dispatcher) {
+            val record2 = testRecord.copy(id = 2L, startPage = 21, endPage = 40)
+            bookRepository.books.value = testBook
+            recordRepository.records.value = listOf(testRecord, record2)
+            recordRepository.removeFailure = IllegalStateException("DB failure on first delete")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.deleteRecord(testRecord)
+            viewModel.deleteRecord(record2)
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            // First record was restored due to failure, while second record is pending deletion
+            assertThat(content.records).containsExactly(testRecord)
+            // Newer pending delete snackbar is preserved rather than overwritten by failure message
+            assertThat(content.recordSnackbarMessage).isInstanceOf(RecordSnackbarMessage.RecordDeleted::class.java)
+            val message = content.recordSnackbarMessage as RecordSnackbarMessage.RecordDeleted
+            assertThat(message.recordId).isEqualTo(record2.id)
+        }
+
+    @Test
+    fun deleteFailure_restoresRecord_andShowsErrorSnackbar() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.records.value = listOf(testRecord)
+            recordRepository.removeFailure = IllegalStateException("DB error")
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.deleteRecord(testRecord)
+            val messageId = contentState(viewModel).recordSnackbarMessage!!.id
+
+            viewModel.dismissDeleteSnackbar(testRecord.id, messageId)
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.records).containsExactly(testRecord)
+            assertThat(content.recordSnackbarMessage).isInstanceOf(RecordSnackbarMessage.RecordDeleteFailed::class.java)
+        }
+
+    @Test
+    fun deleteRecord_whileEditingSameRecord_clearsEditingRecord() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.records.value = listOf(testRecord)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            viewModel.startEditRecord(testRecord)
+            assertThat(contentState(viewModel).editingRecord).isEqualTo(testRecord)
+
+            viewModel.deleteRecord(testRecord)
+            assertThat(contentState(viewModel).editingRecord).isNull()
+        }
+
+    @Test
+    fun savedStateHandle_restoresEditingRecord() =
+        runTest(dispatcher) {
+            bookRepository.books.value = testBook
+            recordRepository.records.value = listOf(testRecord)
+            val savedHandle = createSavedStateHandle(savedEditingRecordId = 1L)
+            val viewModel = createViewModel(savedStateHandle = savedHandle)
+            advanceUntilIdle()
+
+            val content = contentState(viewModel)
+            assertThat(content.editingRecord).isEqualTo(testRecord)
+        }
+
     private fun createSavedStateHandle(
         openMyRecords: Boolean = false,
         savedTab: BookDetailTab? = null,
         savedMemoDraft: String? = null,
+        savedEditingRecordId: Long? = null,
     ): SavedStateHandle {
         val state =
             mutableMapOf<String, Any?>(
@@ -1254,49 +1520,38 @@ class BookDetailViewModelTest {
             )
         savedTab?.let { state["bookDetailSelectedTab"] = it.name }
         savedMemoDraft?.let { state["bookDetailMemoDraft"] = it }
+        savedEditingRecordId?.let { state["bookDetailEditingRecordId"] = it }
         return SavedStateHandle(state)
     }
 
-    private fun createViewModel(savedStateHandle: SavedStateHandle = createSavedStateHandle()): BookDetailViewModel =
-        BookDetailViewModel(
+    private fun createViewModel(
+        savedStateHandle: SavedStateHandle = createSavedStateHandle(),
+        applicationScope: CoroutineScope = CoroutineScope(dispatcher),
+    ): BookDetailViewModel {
+        val testClock =
+            object : Clock {
+                override fun now(): Instant = Instant.fromEpochMilliseconds(100)
+
+                override fun timeZone(): TimeZone = TimeZone.UTC
+            }
+        return BookDetailViewModel(
             getBookDetail = GetBookDetailUseCase(bookRepository, libraryRepository),
-            changeStatus = ChangeReadingStatusUseCase(
-                libraryRepository,
-                object : Clock {
-                    override fun now(): Instant = Instant.fromEpochMilliseconds(100)
-
-                    override fun timeZone(): TimeZone = TimeZone.UTC
-                },
-            ),
-            updateRatingUseCase = UpdateRatingUseCase(
-                libraryRepository,
-                object : Clock {
-                    override fun now(): Instant = Instant.fromEpochMilliseconds(100)
-
-                    override fun timeZone(): TimeZone = TimeZone.UTC
-                },
-            ),
-            updateMemoUseCase = UpdateMemoUseCase(
-                libraryRepository,
-                object : Clock {
-                    override fun now(): Instant = Instant.fromEpochMilliseconds(100)
-
-                    override fun timeZone(): TimeZone = TimeZone.UTC
-                },
-            ),
+            changeStatus = ChangeReadingStatusUseCase(libraryRepository, testClock),
+            updateRatingUseCase = UpdateRatingUseCase(libraryRepository, testClock),
+            updateMemoUseCase = UpdateMemoUseCase(libraryRepository, testClock),
             observeBookRecords = ObserveBookRecordsUseCase(recordRepository),
             addReadingRecord = AddReadingRecordUseCase(
                 recordRepository,
                 bookRepository,
                 libraryRepository,
-                object : Clock {
-                    override fun now(): Instant = Instant.fromEpochMilliseconds(100)
-
-                    override fun timeZone(): TimeZone = TimeZone.UTC
-                },
+                testClock,
             ),
+            editReadingRecord = EditReadingRecordUseCase(recordRepository, testClock),
+            deleteReadingRecord = DeleteReadingRecordUseCase(recordRepository, testClock),
+            applicationScope = applicationScope,
             savedStateHandle = savedStateHandle,
         )
+    }
 
     private fun contentState(viewModel: BookDetailViewModel): BookDetailUiState.Content {
         val state = viewModel.uiState.value
@@ -1458,10 +1713,42 @@ class BookDetailViewModelTest {
             return newId
         }
 
-        override suspend fun saveRecord(record: ReadingRecord): Long = record.id
+        var saveFailure: Throwable? = null
+        var saveCalls = 0
+        var removeFailure: Throwable? = null
+        var removeCalls = 0
+        var removeGate: CompletableDeferred<Unit>? = null
 
-        override suspend fun removeRecord(id: Long) {
-            records.value = records.value.filterNot { it.id == id }
+        override suspend fun saveRecord(
+            record: ReadingRecord,
+            updatedAt: Instant,
+        ): Boolean {
+            saveCalls++
+            saveFailure?.let { throw it }
+            val idx = records.value.indexOfFirst { it.id == record.id }
+            if (idx >= 0) {
+                val list = records.value.toMutableList()
+                list[idx] = record
+                records.value = list
+                return true
+            }
+            return false
+        }
+
+        override suspend fun removeRecord(
+            id: Long,
+            isbn: String,
+            updatedAt: Instant,
+        ): Boolean {
+            removeCalls++
+            removeGate?.await()
+            removeFailure?.let { throw it }
+            val exists = records.value.any { it.id == id && it.isbn == isbn }
+            if (exists) {
+                records.value = records.value.filterNot { it.id == id && it.isbn == isbn }
+                return true
+            }
+            return false
         }
 
         override fun observeRecordsBetween(

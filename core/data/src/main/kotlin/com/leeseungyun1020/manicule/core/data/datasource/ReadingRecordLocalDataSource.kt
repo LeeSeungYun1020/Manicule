@@ -14,7 +14,18 @@ interface ReadingRecordLocalDataSource {
 
     suspend fun save(record: ReadingRecordEntity): Long
 
+    suspend fun update(
+        record: ReadingRecordEntity,
+        updatedAt: Instant,
+    ): Boolean
+
     suspend fun remove(id: Long)
+
+    suspend fun remove(
+        id: Long,
+        isbn: String,
+        updatedAt: Instant,
+    ): Boolean
 
     fun observeByIsbn(isbn: String): Flow<List<ReadingRecordEntity>>
 

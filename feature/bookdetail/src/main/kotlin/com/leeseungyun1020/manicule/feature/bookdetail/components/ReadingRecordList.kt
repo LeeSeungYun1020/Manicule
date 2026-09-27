@@ -48,6 +48,9 @@ internal fun LazyListScope.readingRecordListItems(
     maxEndPage: Int,
     totalPages: Int?,
     onAddRecord: () -> Unit,
+    onEditRecord: (ReadingRecord) -> Unit = {},
+    onDeleteRecord: (ReadingRecord) -> Unit = {},
+    isActionEnabled: Boolean = true,
 ) {
     item(
         key = "reading-record-title",
@@ -93,10 +96,20 @@ internal fun LazyListScope.readingRecordListItems(
         }
     }
 
-    readingRecordSessionItems(groupedRecords)
+    readingRecordSessionItems(
+        groupedRecords = groupedRecords,
+        onEditRecord = onEditRecord,
+        onDeleteRecord = onDeleteRecord,
+        isActionEnabled = isActionEnabled,
+    )
 }
 
-private fun LazyListScope.readingRecordSessionItems(groupedRecords: List<Pair<LocalDate, List<ReadingRecord>>>) {
+private fun LazyListScope.readingRecordSessionItems(
+    groupedRecords: List<Pair<LocalDate, List<ReadingRecord>>>,
+    onEditRecord: (ReadingRecord) -> Unit,
+    onDeleteRecord: (ReadingRecord) -> Unit,
+    isActionEnabled: Boolean,
+) {
     groupedRecords.forEach { (date, sessions) ->
         item(
             key = "reading-record-date-$date",
@@ -113,7 +126,12 @@ private fun LazyListScope.readingRecordSessionItems(groupedRecords: List<Pair<Lo
             contentType = { ReadingRecordContentType.Session },
         ) { record ->
             Column {
-                ReadingRecordSessionItem(record = record)
+                ReadingRecordSessionItem(
+                    record = record,
+                    onEditRecord = onEditRecord,
+                    onDeleteRecord = onDeleteRecord,
+                    isActionEnabled = isActionEnabled,
+                )
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = MaterialTheme.spacing.xs),
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
@@ -158,6 +176,9 @@ private fun ReadingRecordDateHeader(
 @Composable
 private fun ReadingRecordSessionItem(
     record: ReadingRecord,
+    onEditRecord: (ReadingRecord) -> Unit,
+    onDeleteRecord: (ReadingRecord) -> Unit,
+    isActionEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val timeFormatRes = if (record.time.hour < 12) R.string.book_detail_time_am else R.string.book_detail_time_pm
@@ -181,8 +202,8 @@ private fun ReadingRecordSessionItem(
         )
         Row {
             ManiculeIconButton(
-                onClick = {},
-                enabled = false,
+                onClick = { onEditRecord(record) },
+                enabled = isActionEnabled,
                 icon = {
                     Icon(
                         imageVector = ManiculeIcons.Edit,
@@ -191,8 +212,8 @@ private fun ReadingRecordSessionItem(
                 },
             )
             ManiculeIconButton(
-                onClick = {},
-                enabled = false,
+                onClick = { onDeleteRecord(record) },
+                enabled = isActionEnabled,
                 icon = {
                     Icon(
                         imageVector = ManiculeIcons.Delete,

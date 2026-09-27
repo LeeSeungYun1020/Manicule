@@ -31,6 +31,13 @@ fun NavGraphBuilder.bookDetailScreen(onNavigateBack: () -> Unit) {
             onRecordErrorDismissed = viewModel::dismissRecordError,
             onFinishCheckConfirmed = viewModel::confirmFinish,
             onFinishCheckDismissed = viewModel::dismissFinishCheck,
+            onEditRecord = viewModel::startEditRecord,
+            onDismissEditRecordSheet = viewModel::dismissEditRecord,
+            onSaveEditedRecord = viewModel::saveEditedRecord,
+            onDeleteRecord = viewModel::deleteRecord,
+            onUndoDeleteRecord = viewModel::undoDeleteRecord,
+            onDismissDeleteRecordSnackbar = viewModel::dismissDeleteSnackbar,
+            onRecordSnackbarDismissed = viewModel::dismissRecordSnackbar,
         )
     }
 }

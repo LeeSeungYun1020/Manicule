@@ -70,4 +70,11 @@
     <string name="book_detail_memo_label">Memo</string>
     <string name="book_detail_memo_error">Couldn’t save memo</string>
     <string name="book_detail_memo_saving">Saving memo…</string>
+    <string name="book_detail_edit_record_title">Edit record</string>
+    <string name="book_detail_edit_record_button">Save</string>
+    <string name="book_detail_record_edit_error">Couldn’t edit reading record</string>
+    <string name="book_detail_record_not_found_error">Couldn’t find the reading record</string>
+    <string name="book_detail_record_deleted">Record deleted</string>
+    <string name="book_detail_undo">Undo</string>
+    <string name="book_detail_record_delete_error">Couldn’t delete reading record</string>
 </resources>

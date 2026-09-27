@@ -37,6 +37,7 @@ import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeNetworkE
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSnackbarHost
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTabRow
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeTopAppBar
+import com.leeseungyun1020.manicule.core.designsystem.component.showUndoSnackbar
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
@@ -44,6 +45,7 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookDetail
 import com.leeseungyun1020.manicule.core.model.BookEntry
+import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
 import com.leeseungyun1020.manicule.feature.bookdetail.components.AddRecordBottomSheet
 import com.leeseungyun1020.manicule.feature.bookdetail.components.BookInfoTabContent
@@ -64,18 +66,25 @@ fun BookDetailScreen(
     onRetry: () -> Unit,
     onStatusSelected: (ReadingStatus) -> Unit,
     onStatusErrorDismissed: () -> Unit,
-    onRatingSelected: (Int) -> Unit = {},
-    onRatingErrorDismissed: () -> Unit = {},
-    onRetryRating: () -> Unit = {},
+    onRatingSelected: (Int) -> Unit,
+    onRatingErrorDismissed: () -> Unit,
+    onRetryRating: () -> Unit,
     onMemoDraftChanged: (String) -> Unit,
     onSaveMemo: () -> Unit,
     onSaveMemoAndCheckSuccess: suspend () -> Boolean,
     onRetryMemo: () -> Unit,
     onMemoErrorDismissed: () -> Unit,
-    onAddRecord: (LocalDate, LocalTime, Int, Int) -> Long? = { _, _, _, _ -> null },
-    onRecordErrorDismissed: () -> Unit = {},
-    onFinishCheckConfirmed: (Long) -> Unit = {},
-    onFinishCheckDismissed: () -> Unit = {},
+    onAddRecord: (LocalDate, LocalTime, Int, Int) -> Long?,
+    onRecordErrorDismissed: () -> Unit,
+    onFinishCheckConfirmed: (Long) -> Unit,
+    onFinishCheckDismissed: () -> Unit,
+    onEditRecord: (ReadingRecord) -> Unit,
+    onDismissEditRecordSheet: () -> Unit,
+    onSaveEditedRecord: (Long, LocalDate, LocalTime, Int, Int) -> Long?,
+    onDeleteRecord: (ReadingRecord) -> Unit,
+    onUndoDeleteRecord: (Long, Long) -> Unit,
+    onDismissDeleteRecordSnackbar: (Long, Long) -> Unit,
+    onRecordSnackbarDismissed: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -128,6 +137,9 @@ fun BookDetailScreen(
             onRetryMemo = onRetryMemo,
             onMemoErrorDismissed = onMemoErrorDismissed,
             onRecordErrorDismissed = onRecordErrorDismissed,
+            onUndoDeleteRecord = onUndoDeleteRecord,
+            onDismissDeleteRecordSnackbar = onDismissDeleteRecordSnackbar,
+            onRecordSnackbarDismissed = onRecordSnackbarDismissed,
         )
     var showAddRecordSheet by rememberSaveable { mutableStateOf(false) }
     var pendingRecordSaveAttempt by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -135,7 +147,10 @@ fun BookDetailScreen(
         recordSaving = (uiState as? BookDetailUiState.Content)?.recordSaving,
         pendingRecordSaveAttempt = pendingRecordSaveAttempt,
         onResetAttempt = { pendingRecordSaveAttempt = null },
-        onDismissSheet = { showAddRecordSheet = false },
+        onDismissSheet = {
+            showAddRecordSheet = false
+            onDismissEditRecordSheet()
+        },
     )
 
     val onStatusSelectedWithClear: (ReadingStatus) -> Unit = { status ->
@@ -180,6 +195,8 @@ fun BookDetailScreen(
             onMemoDraftChanged = onMemoDraftChanged,
             onSaveMemo = onSaveMemo,
             onAddRecord = onAddRecordWithClear,
+            onEditRecord = onEditRecord,
+            onDeleteRecord = onDeleteRecord,
             modifier =
                 Modifier
                     .fillMaxSize()
@@ -192,6 +209,8 @@ fun BookDetailScreen(
         showAddRecordSheet = showAddRecordSheet,
         onDismissRecordSheet = { showAddRecordSheet = false },
         onAddRecord = onAddRecord,
+        onDismissEditRecordSheet = onDismissEditRecordSheet,
+        onSaveEditedRecord = onSaveEditedRecord,
         onRecordAttemptSaved = { pendingRecordSaveAttempt = it },
         onFinishCheckConfirmed = onFinishCheckConfirmed,
         onFinishCheckDismissed = onFinishCheckDismissed,
@@ -250,6 +269,8 @@ private fun BookDetailOverlays(
     showAddRecordSheet: Boolean,
     onDismissRecordSheet: () -> Unit,
     onAddRecord: (LocalDate, LocalTime, Int, Int) -> Long?,
+    onDismissEditRecordSheet: () -> Unit,
+    onSaveEditedRecord: (Long, LocalDate, LocalTime, Int, Int) -> Long?,
     onRecordAttemptSaved: (Long?) -> Unit,
     onFinishCheckConfirmed: (Long) -> Unit,
     onFinishCheckDismissed: () -> Unit,
@@ -262,6 +283,27 @@ private fun BookDetailOverlays(
             onDismissRequest = onDismissRecordSheet,
             onSave = { date, time, startPage, endPage ->
                 onRecordAttemptSaved(onAddRecord(date, time, startPage, endPage))
+            },
+        )
+    }
+
+    if (uiState is BookDetailUiState.Content && uiState.editingRecord != null) {
+        val editingRecord = uiState.editingRecord
+        AddRecordBottomSheet(
+            recordToEdit = editingRecord,
+            initialStartPage = editingRecord.startPage,
+            isSaving = uiState.recordSaving is RecordSavingState.Saving,
+            onDismissRequest = onDismissEditRecordSheet,
+            onSave = { date, time, startPage, endPage ->
+                onRecordAttemptSaved(
+                    onSaveEditedRecord(
+                        editingRecord.id,
+                        date,
+                        time,
+                        startPage,
+                        endPage,
+                    ),
+                )
             },
         )
     }
@@ -316,7 +358,49 @@ private fun rememberBookDetailSnackbarHostState(
     onRetryMemo: () -> Unit,
     onMemoErrorDismissed: () -> Unit,
     onRecordErrorDismissed: () -> Unit,
+    onUndoDeleteRecord: (Long, Long) -> Unit,
+    onDismissDeleteRecordSnackbar: (Long, Long) -> Unit,
+    onRecordSnackbarDismissed: (Long) -> Unit,
 ): SnackbarHostState {
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    BookDetailEntrySnackbarEffects(
+        snackbarHostState = snackbarHostState,
+        content = content,
+        onRetry = onRetry,
+        onStatusSelected = onStatusSelected,
+        onStatusErrorDismissed = onStatusErrorDismissed,
+        onRatingErrorDismissed = onRatingErrorDismissed,
+        onRetryRating = onRetryRating,
+        onRetryMemo = onRetryMemo,
+        onMemoErrorDismissed = onMemoErrorDismissed,
+    )
+
+    BookDetailRecordSnackbarEffects(
+        snackbarHostState = snackbarHostState,
+        content = content,
+        onRetry = onRetry,
+        onRecordErrorDismissed = onRecordErrorDismissed,
+        onUndoDeleteRecord = onUndoDeleteRecord,
+        onDismissDeleteRecordSnackbar = onDismissDeleteRecordSnackbar,
+        onRecordSnackbarDismissed = onRecordSnackbarDismissed,
+    )
+
+    return snackbarHostState
+}
+
+@Composable
+private fun BookDetailEntrySnackbarEffects(
+    snackbarHostState: SnackbarHostState,
+    content: BookDetailUiState.Content?,
+    onRetry: () -> Unit,
+    onStatusSelected: (ReadingStatus) -> Unit,
+    onStatusErrorDismissed: () -> Unit,
+    onRatingErrorDismissed: () -> Unit,
+    onRetryRating: () -> Unit,
+    onRetryMemo: () -> Unit,
+    onMemoErrorDismissed: () -> Unit,
+) {
     val currentOnRetry by rememberUpdatedState(onRetry)
     val currentOnStatusSelected by rememberUpdatedState(onStatusSelected)
     val currentOnStatusErrorDismissed by rememberUpdatedState(onStatusErrorDismissed)
@@ -324,23 +408,18 @@ private fun rememberBookDetailSnackbarHostState(
     val currentOnRetryRating by rememberUpdatedState(onRetryRating)
     val currentOnRetryMemo by rememberUpdatedState(onRetryMemo)
     val currentOnMemoErrorDismissed by rememberUpdatedState(onMemoErrorDismissed)
-    val currentOnRecordErrorDismissed by rememberUpdatedState(onRecordErrorDismissed)
-    val snackbarHostState = remember { SnackbarHostState() }
+
     val errorMessage = stringResource(R.string.book_detail_refresh_error)
     val retryActionLabel = stringResource(DesignSystemR.string.core_designsystem_retry)
-
     val statusErrorMessage = stringResource(R.string.book_detail_status_error)
     val ratingErrorMessage = stringResource(R.string.book_detail_rating_error)
     val memoErrorMessage = stringResource(R.string.book_detail_memo_error)
-    val recordErrorMessage = stringResource(R.string.book_detail_record_save_error)
-    val recordLoadErrorMessage = stringResource(R.string.book_detail_records_error_title)
+
     val statusChange = content?.statusChange
     val ratingSaving = content?.ratingSaving
     val memoSaving = content?.memoSaving
-    val recordSaving = content?.recordSaving
     val refreshStatus = content?.refreshStatus
-    val recordLoadState = content?.recordLoadState
-    val hasRecords = content?.records?.isNotEmpty() == true
+
     LaunchedEffect(refreshStatus, statusChange) {
         if (statusChange is StatusChangeState.Failed) {
             val result =
@@ -401,6 +480,37 @@ private fun rememberBookDetailSnackbarHostState(
             }
         }
     }
+}
+
+@Composable
+private fun BookDetailRecordSnackbarEffects(
+    snackbarHostState: SnackbarHostState,
+    content: BookDetailUiState.Content?,
+    onRetry: () -> Unit,
+    onRecordErrorDismissed: () -> Unit,
+    onUndoDeleteRecord: (Long, Long) -> Unit,
+    onDismissDeleteRecordSnackbar: (Long, Long) -> Unit,
+    onRecordSnackbarDismissed: (Long) -> Unit,
+) {
+    val currentOnRetry by rememberUpdatedState(onRetry)
+    val currentOnRecordErrorDismissed by rememberUpdatedState(onRecordErrorDismissed)
+    val currentOnUndoDeleteRecord by rememberUpdatedState(onUndoDeleteRecord)
+    val currentOnDismissDeleteRecordSnackbar by rememberUpdatedState(onDismissDeleteRecordSnackbar)
+    val currentOnRecordSnackbarDismissed by rememberUpdatedState(onRecordSnackbarDismissed)
+
+    val retryActionLabel = stringResource(DesignSystemR.string.core_designsystem_retry)
+    val recordErrorMessage = stringResource(R.string.book_detail_record_save_error)
+    val recordLoadErrorMessage = stringResource(R.string.book_detail_records_error_title)
+    val recordDeletedMessage = stringResource(R.string.book_detail_record_deleted)
+    val undoActionLabel = stringResource(R.string.book_detail_undo)
+    val recordDeleteErrorMessage = stringResource(R.string.book_detail_record_delete_error)
+    val recordEditErrorMessage = stringResource(R.string.book_detail_record_edit_error)
+    val recordEditNotFoundMessage = stringResource(R.string.book_detail_record_not_found_error)
+
+    val recordSaving = content?.recordSaving
+    val recordLoadState = content?.recordLoadState
+    val recordSnackbarMessage = content?.recordSnackbarMessage
+    val hasRecords = content?.records?.isNotEmpty() == true
 
     LaunchedEffect(recordSaving) {
         if (recordSaving is RecordSavingState.Failed) {
@@ -427,7 +537,54 @@ private fun rememberBookDetailSnackbarHostState(
         }
     }
 
-    return snackbarHostState
+    LaunchedEffect(recordSnackbarMessage) {
+        when (recordSnackbarMessage) {
+            is RecordSnackbarMessage.RecordDeleted -> {
+                val result =
+                    snackbarHostState.showUndoSnackbar(
+                        message = recordDeletedMessage,
+                        undoLabel = undoActionLabel,
+                    )
+                if (result == SnackbarResult.ActionPerformed) {
+                    currentOnUndoDeleteRecord(
+                        recordSnackbarMessage.recordId,
+                        recordSnackbarMessage.id,
+                    )
+                } else {
+                    currentOnDismissDeleteRecordSnackbar(
+                        recordSnackbarMessage.recordId,
+                        recordSnackbarMessage.id,
+                    )
+                }
+            }
+
+            is RecordSnackbarMessage.RecordDeleteFailed -> {
+                snackbarHostState.showSnackbar(
+                    message = recordDeleteErrorMessage,
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Short,
+                )
+                currentOnRecordSnackbarDismissed(recordSnackbarMessage.id)
+            }
+
+            is RecordSnackbarMessage.RecordEditFailed -> {
+                val message =
+                    if (recordSnackbarMessage.isNotFound) {
+                        recordEditNotFoundMessage
+                    } else {
+                        recordEditErrorMessage
+                    }
+                snackbarHostState.showSnackbar(
+                    message = message,
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Short,
+                )
+                currentOnRecordSnackbarDismissed(recordSnackbarMessage.id)
+            }
+
+            null -> Unit
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -457,6 +614,8 @@ private fun BookDetailBody(
     onMemoDraftChanged: (String) -> Unit,
     onSaveMemo: () -> Unit,
     onAddRecord: () -> Unit,
+    onEditRecord: (ReadingRecord) -> Unit,
+    onDeleteRecord: (ReadingRecord) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -492,6 +651,9 @@ private fun BookDetailBody(
                             onMemoDraftChanged = onMemoDraftChanged,
                             onSaveMemo = onSaveMemo,
                             onAddRecord = onAddRecord,
+                            onEditRecord = onEditRecord,
+                            onDeleteRecord = onDeleteRecord,
+                            isRecordActionEnabled = uiState.recordSaving !is RecordSavingState.Saving,
                             onRetryRecords = onRetry,
                         )
                 }
@@ -554,6 +716,9 @@ private fun PreviewBookDetailScreen(
         onRetry = {},
         onStatusSelected = {},
         onStatusErrorDismissed = {},
+        onRatingSelected = {},
+        onRatingErrorDismissed = {},
+        onRetryRating = {},
         onMemoDraftChanged = {},
         onSaveMemo = {},
         onSaveMemoAndCheckSuccess = { true },
@@ -563,6 +728,13 @@ private fun PreviewBookDetailScreen(
         onRecordErrorDismissed = {},
         onFinishCheckConfirmed = {},
         onFinishCheckDismissed = {},
+        onEditRecord = {},
+        onDismissEditRecordSheet = {},
+        onSaveEditedRecord = { _, _, _, _, _ -> null },
+        onDeleteRecord = {},
+        onUndoDeleteRecord = { _, _ -> },
+        onDismissDeleteRecordSnackbar = { _, _ -> },
+        onRecordSnackbarDismissed = {},
         modifier = modifier,
     )
 }

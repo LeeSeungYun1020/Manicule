@@ -12,6 +12,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
@@ -445,12 +446,90 @@ class BookDetailScreenTest {
         composeRule.onNodeWithText("30p").assertIsDisplayed()
         composeRule.onNodeWithContentDescription(context.getString(R.string.book_detail_edit_record))
             .assertIsDisplayed()
-            .assertIsNotEnabled()
+            .assertIsEnabled()
         composeRule.onNodeWithContentDescription(context.getString(R.string.book_detail_delete_record))
             .assertIsDisplayed()
-            .assertIsNotEnabled()
+            .assertIsEnabled()
         composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_button)).performClick()
         composeRule.onNodeWithText(context.getString(R.string.book_detail_add_record_title)).assertIsDisplayed()
+    }
+
+    @Test
+    fun editRecord_displaysEditSheet_andSubmits() {
+        val record = ReadingRecord(1L, "123", LocalDate(2026, 9, 19), LocalTime(14, 0), 1, 30)
+        var editedRecord: ReadingRecord? = null
+        var savedRecordId: Long? = null
+        var uiState by mutableStateOf(recordsState(ReadingStatus.READING, listOf(record)))
+
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onEditRecord = {
+                        editedRecord = it
+                        uiState = uiState.copy(editingRecord = it)
+                    },
+                    onSaveEditedRecord = { id, _, _, _, _ ->
+                        savedRecordId = id
+                        1L
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription(context.getString(R.string.book_detail_edit_record)).performClick()
+        assertThat(editedRecord).isEqualTo(record)
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_edit_record_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_edit_record_button)).performClick()
+        assertThat(savedRecordId).isEqualTo(1L)
+    }
+
+    @Test
+    fun deleteRecord_displaysUndoSnackbar_andTriggersUndo() {
+        val record = ReadingRecord(1L, "123", LocalDate(2026, 9, 19), LocalTime(14, 0), 1, 30)
+        var deletedRecord: ReadingRecord? = null
+        var undoneRecordId: Long? = null
+        var uiState by mutableStateOf(recordsState(ReadingStatus.READING, listOf(record)))
+
+        composeRule.setContent {
+            ManiculeTheme {
+                BookDetailScreen(
+                    uiState = uiState,
+                    onNavigateBack = {},
+                    onStatusSelected = {},
+                    onStatusErrorDismissed = {},
+                    onTabSelected = {},
+                    onRetry = {},
+                    onDeleteRecord = {
+                        deletedRecord = it
+                        uiState = uiState.copy(
+                            records = emptyList(),
+                            recordSnackbarMessage = RecordSnackbarMessage.RecordDeleted(10L, it.id),
+                        )
+                    },
+                    onUndoDeleteRecord = { recordId, _ ->
+                        undoneRecordId = recordId
+                        uiState = uiState.copy(
+                            records = listOf(record),
+                            recordSnackbarMessage = null,
+                        )
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription(context.getString(R.string.book_detail_delete_record)).performClick()
+        assertThat(deletedRecord).isEqualTo(record)
+
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_record_deleted)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.book_detail_undo)).performClick()
+        assertThat(undoneRecordId).isEqualTo(1L)
     }
 
     @Test
@@ -846,6 +925,13 @@ class BookDetailScreenTest {
         onRecordErrorDismissed: () -> Unit = {},
         onFinishCheckConfirmed: (Long) -> Unit = {},
         onFinishCheckDismissed: () -> Unit = {},
+        onEditRecord: (ReadingRecord) -> Unit = {},
+        onDismissEditRecordSheet: () -> Unit = {},
+        onSaveEditedRecord: (Long, LocalDate, LocalTime, Int, Int) -> Long? = { _, _, _, _, _ -> null },
+        onDeleteRecord: (ReadingRecord) -> Unit = {},
+        onUndoDeleteRecord: (Long, Long) -> Unit = { _, _ -> },
+        onDismissDeleteRecordSnackbar: (Long, Long) -> Unit = { _, _ -> },
+        onRecordSnackbarDismissed: (Long) -> Unit = {},
     ) {
         com.leeseungyun1020.manicule.feature.bookdetail.BookDetailScreen(
             uiState = uiState,
@@ -866,6 +952,13 @@ class BookDetailScreenTest {
             onRecordErrorDismissed = onRecordErrorDismissed,
             onFinishCheckConfirmed = onFinishCheckConfirmed,
             onFinishCheckDismissed = onFinishCheckDismissed,
+            onEditRecord = onEditRecord,
+            onDismissEditRecordSheet = onDismissEditRecordSheet,
+            onSaveEditedRecord = onSaveEditedRecord,
+            onDeleteRecord = onDeleteRecord,
+            onUndoDeleteRecord = onUndoDeleteRecord,
+            onDismissDeleteRecordSnackbar = onDismissDeleteRecordSnackbar,
+            onRecordSnackbarDismissed = onRecordSnackbarDismissed,
         )
     }
 
