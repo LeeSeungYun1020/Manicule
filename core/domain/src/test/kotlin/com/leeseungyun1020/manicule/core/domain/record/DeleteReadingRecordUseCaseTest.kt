@@ -1,6 +1,7 @@
 package com.leeseungyun1020.manicule.core.domain.record
 
 import com.google.common.truth.Truth.assertThat
+import com.leeseungyun1020.manicule.core.common.time.Clock
 import com.leeseungyun1020.manicule.core.data.repository.ReadingRecordRepository
 import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import kotlinx.coroutines.flow.Flow
@@ -8,11 +9,19 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 import org.junit.Test
 
 class DeleteReadingRecordUseCaseTest {
     private val repository = FakeReadingRecordRepository()
-    private val useCase = DeleteReadingRecordUseCase(repository)
+    private val now = Instant.parse("2026-09-16T12:00:00Z")
+    private val clock =
+        object : Clock {
+            override fun now(): Instant = now
+
+            override fun timeZone(): TimeZone = TimeZone.UTC
+        }
+    private val useCase = DeleteReadingRecordUseCase(repository, clock)
 
     @Test
     fun invoke_with_valid_id_and_isbn_returns_repository_result() =
@@ -22,7 +31,7 @@ class DeleteReadingRecordUseCaseTest {
             val result = useCase(1L, "123")
 
             assertThat(result).isTrue()
-            assertThat(repository.removedArgs).isEqualTo(1L to "123")
+            assertThat(repository.removedArgs).isEqualTo(Triple(1L, "123", now))
         }
 
     @Test
@@ -53,11 +62,11 @@ class DeleteReadingRecordUseCaseTest {
             val result = useCase(999L, "123")
 
             assertThat(result).isFalse()
-            assertThat(repository.removedArgs).isEqualTo(999L to "123")
+            assertThat(repository.removedArgs).isEqualTo(Triple(999L, "123", now))
         }
 
     private class FakeReadingRecordRepository : ReadingRecordRepository {
-        var removedArgs: Pair<Long, String>? = null
+        var removedArgs: Triple<Long, String, Instant>? = null
         var removeResult = true
 
         override suspend fun addRecord(
@@ -65,13 +74,17 @@ class DeleteReadingRecordUseCaseTest {
             updatedAt: Instant,
         ): Long = error("Not used")
 
-        override suspend fun saveRecord(record: ReadingRecord): Boolean = error("Not used")
+        override suspend fun saveRecord(
+            record: ReadingRecord,
+            updatedAt: Instant,
+        ): Boolean = error("Not used")
 
         override suspend fun removeRecord(
             id: Long,
             isbn: String,
+            updatedAt: Instant,
         ): Boolean {
-            removedArgs = id to isbn
+            removedArgs = Triple(id, isbn, updatedAt)
             return removeResult
         }
 

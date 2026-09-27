@@ -1,6 +1,7 @@
 package com.leeseungyun1020.manicule.core.domain.record
 
 import com.google.common.truth.Truth.assertThat
+import com.leeseungyun1020.manicule.core.common.time.Clock
 import com.leeseungyun1020.manicule.core.data.repository.ReadingRecordRepository
 import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import kotlinx.coroutines.flow.Flow
@@ -9,11 +10,19 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
 import org.junit.Test
 
 class EditReadingRecordUseCaseTest {
     private val repository = FakeReadingRecordRepository()
-    private val useCase = EditReadingRecordUseCase(repository)
+    private val now = Instant.parse("2026-09-16T12:00:00Z")
+    private val clock =
+        object : Clock {
+            override fun now(): Instant = now
+
+            override fun timeZone(): TimeZone = TimeZone.UTC
+        }
+    private val useCase = EditReadingRecordUseCase(repository, clock)
 
     @Test
     fun invoke_with_valid_positive_id_returns_repository_result() =
@@ -33,6 +42,7 @@ class EditReadingRecordUseCaseTest {
 
             assertThat(result).isTrue()
             assertThat(repository.savedRecord).isEqualTo(record)
+            assertThat(repository.savedUpdatedAt).isEqualTo(now)
         }
 
     @Test
@@ -72,10 +82,12 @@ class EditReadingRecordUseCaseTest {
 
             assertThat(result).isFalse()
             assertThat(repository.savedRecord).isEqualTo(record)
+            assertThat(repository.savedUpdatedAt).isEqualTo(now)
         }
 
     private class FakeReadingRecordRepository : ReadingRecordRepository {
         var savedRecord: ReadingRecord? = null
+        var savedUpdatedAt: Instant? = null
         var saveResult = true
 
         override suspend fun addRecord(
@@ -83,14 +95,19 @@ class EditReadingRecordUseCaseTest {
             updatedAt: Instant,
         ): Long = error("Not used")
 
-        override suspend fun saveRecord(record: ReadingRecord): Boolean {
+        override suspend fun saveRecord(
+            record: ReadingRecord,
+            updatedAt: Instant,
+        ): Boolean {
             savedRecord = record
+            savedUpdatedAt = updatedAt
             return saveResult
         }
 
         override suspend fun removeRecord(
             id: Long,
             isbn: String,
+            updatedAt: Instant,
         ): Boolean = error("Not used")
 
         override fun observeRecordsByIsbn(isbn: String): Flow<List<ReadingRecord>> = emptyFlow()

@@ -62,6 +62,54 @@ interface ReadingRecordDao {
     @Upsert
     suspend fun upsert(record: ReadingRecordEntity): Long
 
+    @Query("UPDATE book_entries SET updatedAt = :updatedAt WHERE isbn = :isbn")
+    suspend fun updateBookEntryTimestamp(
+        isbn: String,
+        updatedAt: Instant,
+    )
+
+    /** 독서 기록을 수정하고 해당 책의 최종 수정 시각을 원자적으로 갱신한다. */
+    @Transaction
+    suspend fun update(
+        record: ReadingRecordEntity,
+        updatedAt: Instant,
+    ): Boolean {
+        require(record.id > 0L) { "An existing record must have a positive id" }
+        require(record.isbn.isNotBlank()) { "isbn must not be blank" }
+        require(record.startPage >= 1) { "startPage must be at least 1, was ${record.startPage}" }
+        require(record.endPage >= record.startPage) { "endPage must be at least startPage, was ${record.endPage}" }
+        val updatedRows =
+            updateSession(
+                id = record.id,
+                isbn = record.isbn,
+                date = record.date,
+                time = record.time,
+                startPage = record.startPage,
+                endPage = record.endPage,
+            )
+        if (updatedRows > 0) {
+            updateBookEntryTimestamp(record.isbn, updatedAt)
+            return true
+        }
+        return false
+    }
+
+    /** 독서 기록을 삭제하고 해당 책의 최종 수정 시각을 원자적으로 갱신한다. */
+    @Transaction
+    suspend fun delete(
+        id: Long,
+        isbn: String,
+        updatedAt: Instant,
+    ): Boolean {
+        val deletedRows = deleteSession(id, isbn)
+        if (deletedRows > 0) {
+            updateBookEntryTimestamp(isbn, updatedAt)
+            return true
+        }
+        return false
+    }
+
+    @Suppress("LongParameterList")
     @Query(
         """
         UPDATE reading_records
@@ -69,7 +117,7 @@ interface ReadingRecordDao {
         WHERE id = :id AND isbn = :isbn
         """,
     )
-    suspend fun update(
+    suspend fun updateSession(
         id: Long,
         isbn: String,
         date: LocalDate,
@@ -78,18 +126,8 @@ interface ReadingRecordDao {
         endPage: Int,
     ): Int
 
-    suspend fun update(record: ReadingRecordEntity): Int =
-        update(
-            id = record.id,
-            isbn = record.isbn,
-            date = record.date,
-            time = record.time,
-            startPage = record.startPage,
-            endPage = record.endPage,
-        )
-
     @Query("DELETE FROM reading_records WHERE id = :id AND isbn = :isbn")
-    suspend fun delete(
+    suspend fun deleteSession(
         id: Long,
         isbn: String,
     ): Int

@@ -12,6 +12,7 @@ import com.leeseungyun1020.manicule.core.domain.record.AddReadingRecordUseCase
 import com.leeseungyun1020.manicule.core.domain.record.DeleteReadingRecordUseCase
 import com.leeseungyun1020.manicule.core.domain.record.EditReadingRecordUseCase
 import com.leeseungyun1020.manicule.core.domain.record.ObserveBookRecordsUseCase
+import com.leeseungyun1020.manicule.core.model.BookDetail
 import com.leeseungyun1020.manicule.core.model.BookSyncStatus
 import com.leeseungyun1020.manicule.core.model.MemoChangeResult
 import com.leeseungyun1020.manicule.core.model.RatingChangeResult
@@ -107,7 +108,7 @@ private fun calculateEffectiveRecords(
     deletingRecordIds: Set<Long>,
 ): List<ReadingRecord> = rawRecords.filterNot { it.id == pendingDeleteRecordId || it.id in deletingRecordIds }
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 @HiltViewModel
 class BookDetailViewModel
     @Inject
@@ -469,7 +470,7 @@ class BookDetailViewModel
                     val failMsgId = ++nextSnackbarMessageId
                     _uiState.updateContent {
                         it.copy(
-                            recordSaving = RecordSavingState.Failed(attempt),
+                            recordSaving = RecordSavingState.Idle,
                             recordSnackbarMessage = RecordSnackbarMessage.RecordEditFailed(failMsgId, isNotFound = false),
                         )
                     }
@@ -548,29 +549,26 @@ class BookDetailViewModel
             _uiState.updateContent { it.copy(records = effectiveRecords) }
 
             applicationScope.launch {
-                runCatching {
+                val success = runCatching {
                     deleteReadingRecord(recordIdToCommit, isbn)
-                }.onSuccess { success ->
-                    deletingRecordIds.update { it - recordIdToCommit }
-                    if (!success) {
-                        val failMsgId = ++nextSnackbarMessageId
-                        val restoredRecords = calculateEffectiveRecords(rawRecords, pendingDeleteRecordId, deletingRecordIds.value)
-                        _uiState.updateContent {
-                            it.copy(
-                                records = restoredRecords,
-                                recordSnackbarMessage = RecordSnackbarMessage.RecordDeleteFailed(failMsgId, recordIdToCommit),
-                            )
-                        }
-                    }
-                }.onFailure { e ->
+                }.getOrElse { e ->
                     if (e is CancellationException) throw e
-                    deletingRecordIds.update { it - recordIdToCommit }
+                    false
+                }
+                deletingRecordIds.update { it - recordIdToCommit }
+                if (!success) {
                     val failMsgId = ++nextSnackbarMessageId
                     val restoredRecords = calculateEffectiveRecords(rawRecords, pendingDeleteRecordId, deletingRecordIds.value)
                     _uiState.updateContent {
+                        val nextMsg =
+                            if (it.recordSnackbarMessage is RecordSnackbarMessage.RecordDeleted) {
+                                it.recordSnackbarMessage
+                            } else {
+                                RecordSnackbarMessage.RecordDeleteFailed(failMsgId, recordIdToCommit)
+                            }
                         it.copy(
                             records = restoredRecords,
-                            recordSnackbarMessage = RecordSnackbarMessage.RecordDeleteFailed(failMsgId, recordIdToCommit),
+                            recordSnackbarMessage = nextMsg,
                         )
                     }
                 }
@@ -584,8 +582,8 @@ class BookDetailViewModel
             endPage: Int,
         ): Long? {
             commitPendingDelete()
-            val content = _uiState.value as? BookDetailUiState.Content ?: return null
-            if (content.recordSaving is RecordSavingState.Saving) return null
+            val content = _uiState.value as? BookDetailUiState.Content
+            if (content == null || content.recordSaving is RecordSavingState.Saving) return null
             val attempt = ++recordAttempt
             _uiState.updateContent { it.copy(recordSaving = RecordSavingState.Saving(attempt)) }
             viewModelScope.launch {
@@ -682,54 +680,59 @@ class BookDetailViewModel
                     ) { bookDetail, recordObservation -> bookDetail to recordObservation }
                         .catch { _uiState.value = BookDetailUiState.Error }
                         .collect { (bookDetail, recordObservation) ->
-                            _uiState.update { state ->
-                                if (bookDetail != null) {
-                                    val previous = state as? BookDetailUiState.Content
-                                    val (observedRecords, recordLoadState) =
-                                        resolveRecordObservation(previous?.records.orEmpty(), recordObservation)
-                                    if (recordObservation is RecordObservation.Loaded) {
-                                        rawRecords = observedRecords
-                                    }
-                                    val effectiveRecords =
-                                        calculateEffectiveRecords(rawRecords, pendingDeleteRecordId, deletingRecordIds.value)
-                                    val editingRecord = editingRecordId?.let { id -> rawRecords.firstOrNull { it.id == id } }
-                                    if (recordObservation is RecordObservation.Loaded && editingRecordId != null && editingRecord == null) {
-                                        editingRecordId = null
-                                        savedStateHandle.remove<Long>(EDITING_RECORD_ID_KEY)
-                                    }
-                                    val tab =
-                                        selectedTab ?: if (bookDetail.entry != null) {
-                                            BookDetailTab.MyRecords
-                                        } else {
-                                            BookDetailTab.Information
-                                        }
-                                    selectedTab = tab
-                                    val ratingSaving =
-                                        resolveRatingSaving(previous?.ratingSaving, bookDetail.entry?.rating ?: 0)
-                                    val memoSaving =
-                                        resolveMemoSaving(previous?.memoSaving, bookDetail.entry?.memo)
-                                    val currentDraft = resolveMemoDraft(previous, memoSaving)
-                                    BookDetailUiState.Content(
-                                        bookDetail = bookDetail,
-                                        records = effectiveRecords,
-                                        selectedTab = tab,
-                                        refreshStatus = refreshStatus,
-                                        statusChange = previous?.statusChange ?: StatusChangeState.Idle,
-                                        recordSaving = previous?.recordSaving ?: RecordSavingState.Idle,
-                                        recordLoadState = recordLoadState,
-                                        finishCheck = previous?.finishCheck ?: FinishCheckState.Idle,
-                                        ratingSaving = ratingSaving,
-                                        memoDraft = currentDraft,
-                                        memoSaving = memoSaving,
-                                        editingRecord = editingRecord ?: previous?.editingRecord,
-                                        recordSnackbarMessage = previous?.recordSnackbarMessage,
-                                    )
-                                } else {
-                                    state
-                                }
+                            if (bookDetail != null) {
+                                updateContentForBookDetail(bookDetail, recordObservation)
                             }
                         }
                 }
+        }
+
+        private fun updateContentForBookDetail(
+            bookDetail: BookDetail,
+            recordObservation: RecordObservation,
+        ) {
+            _uiState.update { state ->
+                val previous = state as? BookDetailUiState.Content
+                val (observedRecords, recordLoadState) =
+                    resolveRecordObservation(previous?.records.orEmpty(), recordObservation)
+                if (recordObservation is RecordObservation.Loaded) {
+                    rawRecords = observedRecords
+                }
+                val effectiveRecords =
+                    calculateEffectiveRecords(rawRecords, pendingDeleteRecordId, deletingRecordIds.value)
+                val editingRecord = editingRecordId?.let { id -> rawRecords.firstOrNull { it.id == id } }
+                if (recordObservation is RecordObservation.Loaded && editingRecordId != null && editingRecord == null) {
+                    editingRecordId = null
+                    savedStateHandle.remove<Long>(EDITING_RECORD_ID_KEY)
+                }
+                val tab =
+                    selectedTab ?: if (bookDetail.entry != null) {
+                        BookDetailTab.MyRecords
+                    } else {
+                        BookDetailTab.Information
+                    }
+                selectedTab = tab
+                val ratingSaving =
+                    resolveRatingSaving(previous?.ratingSaving, bookDetail.entry?.rating ?: 0)
+                val memoSaving =
+                    resolveMemoSaving(previous?.memoSaving, bookDetail.entry?.memo)
+                val currentDraft = resolveMemoDraft(previous, memoSaving)
+                BookDetailUiState.Content(
+                    bookDetail = bookDetail,
+                    records = effectiveRecords,
+                    selectedTab = tab,
+                    refreshStatus = refreshStatus,
+                    statusChange = previous?.statusChange ?: StatusChangeState.Idle,
+                    recordSaving = previous?.recordSaving ?: RecordSavingState.Idle,
+                    recordLoadState = recordLoadState,
+                    finishCheck = previous?.finishCheck ?: FinishCheckState.Idle,
+                    ratingSaving = ratingSaving,
+                    memoDraft = currentDraft,
+                    memoSaving = memoSaving,
+                    editingRecord = editingRecord ?: previous?.editingRecord,
+                    recordSnackbarMessage = previous?.recordSnackbarMessage,
+                )
+            }
         }
 
         override fun onCleared() {

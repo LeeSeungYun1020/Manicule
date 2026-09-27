@@ -19,7 +19,10 @@ class RoomReadingRecordLocalDataSource
 
         override suspend fun save(record: ReadingRecordEntity): Long = readingRecordDao.upsert(record)
 
-        override suspend fun update(record: ReadingRecordEntity): Int = readingRecordDao.update(record)
+        override suspend fun update(
+            record: ReadingRecordEntity,
+            updatedAt: Instant,
+        ): Boolean = readingRecordDao.update(record, updatedAt)
 
         override suspend fun remove(id: Long) {
             readingRecordDao.delete(id)
@@ -28,7 +31,8 @@ class RoomReadingRecordLocalDataSource
         override suspend fun remove(
             id: Long,
             isbn: String,
-        ): Int = readingRecordDao.delete(id, isbn)
+            updatedAt: Instant,
+        ): Boolean = readingRecordDao.delete(id, isbn, updatedAt)
 
         override fun observeByIsbn(isbn: String): Flow<List<ReadingRecordEntity>> = readingRecordDao.observeByIsbn(isbn)
 

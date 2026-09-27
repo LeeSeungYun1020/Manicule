@@ -42,6 +42,7 @@ class ReadingRecordRepositoryImplTest {
     @Test
     fun saveRecord_updates_existing_record_and_returns_true() =
         runTest {
+            val now = Instant.parse("2026-09-16T12:00:00Z")
             fakeDao.records.add(recordEntity(id = 1L, endPage = 50))
             val updated =
                 ReadingRecord(
@@ -52,18 +53,20 @@ class ReadingRecordRepositoryImplTest {
                     startPage = 1,
                     endPage = 60,
                 )
-            val result = repository.saveRecord(updated)
+            val result = repository.saveRecord(updated, now)
 
             assertThat(result).isTrue()
             assertThat(fakeDao.records).hasSize(1)
             assertThat(fakeDao.records[0].date).isEqualTo(LocalDate(2024, 4, 13))
             assertThat(fakeDao.records[0].time).isEqualTo(LocalTime(11, 0))
             assertThat(fakeDao.records[0].endPage).isEqualTo(60)
+            assertThat(fakeDao.updatedEntry).isEqualTo("123" to now)
         }
 
     @Test
     fun saveRecord_returns_false_when_id_is_non_positive_or_not_found() =
         runTest {
+            val now = Instant.parse("2026-09-16T12:00:00Z")
             fakeDao.records.add(recordEntity(id = 1L, endPage = 50))
 
             // Non-positive id
@@ -76,7 +79,7 @@ class ReadingRecordRepositoryImplTest {
                     startPage = 1,
                     endPage = 60,
                 )
-            assertThat(repository.saveRecord(zeroIdRecord)).isFalse()
+            assertThat(repository.saveRecord(zeroIdRecord, now)).isFalse()
 
             // Non-existent id
             val nonExistentRecord =
@@ -88,7 +91,7 @@ class ReadingRecordRepositoryImplTest {
                     startPage = 1,
                     endPage = 60,
                 )
-            assertThat(repository.saveRecord(nonExistentRecord)).isFalse()
+            assertThat(repository.saveRecord(nonExistentRecord, now)).isFalse()
 
             // Different isbn
             val differentIsbnRecord =
@@ -100,36 +103,39 @@ class ReadingRecordRepositoryImplTest {
                     startPage = 1,
                     endPage = 60,
                 )
-            assertThat(repository.saveRecord(differentIsbnRecord)).isFalse()
+            assertThat(repository.saveRecord(differentIsbnRecord, now)).isFalse()
         }
 
     @Test
     fun removeRecord_removes_from_dao_and_returns_true() =
         runTest {
+            val now = Instant.parse("2026-09-16T12:00:00Z")
             fakeDao.records.add(recordEntity(id = 1L, endPage = 50))
-            val result = repository.removeRecord(1L, "123")
+            val result = repository.removeRecord(1L, "123", now)
             assertThat(result).isTrue()
             assertThat(fakeDao.records).isEmpty()
+            assertThat(fakeDao.updatedEntry).isEqualTo("123" to now)
         }
 
     @Test
     fun removeRecord_returns_false_when_not_found_or_different_isbn_or_invalid() =
         runTest {
+            val now = Instant.parse("2026-09-16T12:00:00Z")
             fakeDao.records.add(recordEntity(id = 1L, endPage = 50))
 
             // Different isbn
-            assertThat(repository.removeRecord(1L, "456")).isFalse()
+            assertThat(repository.removeRecord(1L, "456", now)).isFalse()
             assertThat(fakeDao.records).isNotEmpty()
 
             // Non-existent id
-            assertThat(repository.removeRecord(999L, "123")).isFalse()
+            assertThat(repository.removeRecord(999L, "123", now)).isFalse()
 
             // Invalid id
-            assertThat(repository.removeRecord(0L, "123")).isFalse()
-            assertThat(repository.removeRecord(-1L, "123")).isFalse()
+            assertThat(repository.removeRecord(0L, "123", now)).isFalse()
+            assertThat(repository.removeRecord(-1L, "123", now)).isFalse()
 
             // Blank isbn
-            assertThat(repository.removeRecord(1L, "")).isFalse()
+            assertThat(repository.removeRecord(1L, "", now)).isFalse()
         }
 
     @Test
@@ -201,7 +207,14 @@ class FakeReadingRecordDao : ReadingRecordDao {
         }
     }
 
-    override suspend fun update(
+    override suspend fun updateBookEntryTimestamp(
+        isbn: String,
+        updatedAt: Instant,
+    ) {
+        updatedEntry = isbn to updatedAt
+    }
+
+    override suspend fun updateSession(
         id: Long,
         isbn: String,
         date: LocalDate,
@@ -222,16 +235,16 @@ class FakeReadingRecordDao : ReadingRecordDao {
         return 0
     }
 
-    override suspend fun delete(id: Long) {
-        records.removeIf { it.id == id }
-    }
-
-    override suspend fun delete(
+    override suspend fun deleteSession(
         id: Long,
         isbn: String,
     ): Int {
         val removed = records.removeIf { it.id == id && it.isbn == isbn }
         return if (removed) 1 else 0
+    }
+
+    override suspend fun delete(id: Long) {
+        records.removeIf { it.id == id }
     }
 
     override fun observeByIsbn(isbn: String): Flow<List<ReadingRecordEntity>> = flowOf(records.filter { it.isbn == isbn })

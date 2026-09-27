@@ -63,6 +63,46 @@ private enum class TimeSelectionMode {
     Custom,
 }
 
+private data class RecordFormInitialValues(
+    val dateMode: DateSelectionMode,
+    val customDateText: String,
+    val timeMode: TimeSelectionMode,
+    val customTimeText: String,
+    val startPageText: String,
+    val endPageText: String,
+)
+
+private fun resolveInitialFormValues(
+    recordToEdit: ReadingRecord?,
+    initialStartPage: Int,
+    today: LocalDate,
+    currentTime: LocalTime,
+): RecordFormInitialValues {
+    val dateMode = when {
+        recordToEdit == null -> DateSelectionMode.Today
+        recordToEdit.date == today -> DateSelectionMode.Today
+        recordToEdit.date == today.minus(1, DateTimeUnit.DAY) -> DateSelectionMode.Yesterday
+        else -> DateSelectionMode.Custom
+    }
+    val customDateText = recordToEdit?.date?.toString() ?: today.toString()
+    val timeMode = if (recordToEdit != null) TimeSelectionMode.Custom else TimeSelectionMode.Now
+    val customTimeText = if (recordToEdit != null) {
+        LocalTime(recordToEdit.time.hour, recordToEdit.time.minute).toString()
+    } else {
+        LocalTime(currentTime.hour, currentTime.minute).toString()
+    }
+    val startPageText = (recordToEdit?.startPage ?: initialStartPage).toString()
+    val endPageText = recordToEdit?.endPage?.toString() ?: ""
+    return RecordFormInitialValues(
+        dateMode = dateMode,
+        customDateText = customDateText,
+        timeMode = timeMode,
+        customTimeText = customTimeText,
+        startPageText = startPageText,
+        endPageText = endPageText,
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AddRecordBottomSheet(
@@ -80,48 +120,20 @@ internal fun AddRecordBottomSheet(
     val today = remember { Clock.System.now().toLocalDateTime(timeZone).date }
     val currentTime = remember { Clock.System.now().toLocalDateTime(timeZone).time }
 
-    val initialDateMode = remember(recordToEdit, today) {
-        when {
-            recordToEdit == null -> DateSelectionMode.Today
-            recordToEdit.date == today -> DateSelectionMode.Today
-            recordToEdit.date == today.minus(1, DateTimeUnit.DAY) -> DateSelectionMode.Yesterday
-            else -> DateSelectionMode.Custom
-        }
-    }
-    val initialCustomDateText = remember(recordToEdit, today) {
-        recordToEdit?.date?.toString() ?: today.toString()
-    }
-    val initialTimeMode = remember(recordToEdit) {
-        if (recordToEdit != null) {
-            TimeSelectionMode.Custom
-        } else {
-            TimeSelectionMode.Now
-        }
-    }
-    val initialCustomTimeText = remember(recordToEdit, currentTime) {
-        if (recordToEdit != null) {
-            LocalTime(recordToEdit.time.hour, recordToEdit.time.minute).toString()
-        } else {
-            LocalTime(currentTime.hour, currentTime.minute).toString()
-        }
-    }
-    val initialStartPageText = remember(recordToEdit, initialStartPage) {
-        (recordToEdit?.startPage ?: initialStartPage).toString()
-    }
-    val initialEndPageText = remember(recordToEdit) {
-        recordToEdit?.endPage?.toString() ?: ""
+    val initialValues = remember(recordToEdit, initialStartPage, today, currentTime) {
+        resolveInitialFormValues(recordToEdit, initialStartPage, today, currentTime)
     }
 
-    var dateMode by rememberSaveable(targetRecordId) { mutableStateOf(initialDateMode) }
-    var customDateText by rememberSaveable(targetRecordId) { mutableStateOf(initialCustomDateText) }
+    var dateMode by rememberSaveable(targetRecordId) { mutableStateOf(initialValues.dateMode) }
+    var customDateText by rememberSaveable(targetRecordId) { mutableStateOf(initialValues.customDateText) }
     var showDatePicker by rememberSaveable(targetRecordId) { mutableStateOf(false) }
 
-    var timeMode by rememberSaveable(targetRecordId) { mutableStateOf(initialTimeMode) }
-    var customTimeText by rememberSaveable(targetRecordId) { mutableStateOf(initialCustomTimeText) }
+    var timeMode by rememberSaveable(targetRecordId) { mutableStateOf(initialValues.timeMode) }
+    var customTimeText by rememberSaveable(targetRecordId) { mutableStateOf(initialValues.customTimeText) }
     var showTimePicker by rememberSaveable(targetRecordId) { mutableStateOf(false) }
 
-    var startPageText by rememberSaveable(targetRecordId) { mutableStateOf(initialStartPageText) }
-    var endPageText by rememberSaveable(targetRecordId) { mutableStateOf(initialEndPageText) }
+    var startPageText by rememberSaveable(targetRecordId) { mutableStateOf(initialValues.startPageText) }
+    var endPageText by rememberSaveable(targetRecordId) { mutableStateOf(initialValues.endPageText) }
 
     val startPage = startPageText.toIntOrNull()
     val endPage = endPageText.toIntOrNull()
@@ -140,78 +152,31 @@ internal fun AddRecordBottomSheet(
         modifier = modifier,
         sheetState = sheetState,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = MaterialTheme.spacing.screenHorizontal)
-                .padding(bottom = MaterialTheme.spacing.xl)
-                .imePadding()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = if (isEditMode) {
-                        stringResource(R.string.book_detail_edit_record_title)
-                    } else {
-                        stringResource(R.string.book_detail_add_record_title)
-                    },
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                IconButton(
-                    onClick = onDismissRequest,
-                    enabled = !isSaving,
-                ) {
-                    Icon(
-                        imageVector = ManiculeIcons.Close,
-                        contentDescription = stringResource(R.string.book_detail_cancel),
-                    )
+        RecordSheetFormContent(
+            isEditMode = isEditMode,
+            isSaving = isSaving,
+            dateMode = dateMode,
+            onDateModeSelected = { mode ->
+                dateMode = mode
+                if (mode == DateSelectionMode.Custom) showDatePicker = true
+            },
+            startPageText = startPageText,
+            onStartPageChange = { startPageText = it.filter { ch -> ch.isDigit() } },
+            endPageText = endPageText,
+            onEndPageChange = { endPageText = it.filter { ch -> ch.isDigit() } },
+            timeMode = timeMode,
+            onTimeModeSelected = { mode ->
+                timeMode = mode
+                if (mode == TimeSelectionMode.Custom) showTimePicker = true
+            },
+            isPageValid = isPageValid,
+            onDismissRequest = onDismissRequest,
+            onSave = {
+                if (startPage != null && endPage != null && isPageValid) {
+                    onSave(selectedDate, selectedTime, startPage, endPage)
                 }
-            }
-
-            RecordDateSection(
-                selectedMode = dateMode,
-                onModeSelected = { mode ->
-                    dateMode = mode
-                    if (mode == DateSelectionMode.Custom) showDatePicker = true
-                },
-            )
-
-            RecordPageSection(
-                startPageText = startPageText,
-                onStartPageChange = { startPageText = it.filter { ch -> ch.isDigit() } },
-                endPageText = endPageText,
-                onEndPageChange = { endPageText = it.filter { ch -> ch.isDigit() } },
-                isError = endPage != null && startPage != null && endPage < startPage,
-            )
-
-            RecordTimeSection(
-                selectedMode = timeMode,
-                onModeSelected = { mode ->
-                    timeMode = mode
-                    if (mode == TimeSelectionMode.Custom) showTimePicker = true
-                },
-            )
-
-            ManiculeButton(
-                onClick = {
-                    if (startPage != null && endPage != null && isPageValid) {
-                        onSave(selectedDate, selectedTime, startPage, endPage)
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                text = if (isEditMode) {
-                    stringResource(R.string.book_detail_edit_record_button)
-                } else {
-                    stringResource(R.string.book_detail_add_record_button)
-                },
-                enabled = isPageValid && !isSaving,
-            )
-        }
+            },
+        )
     }
 
     if (showDatePicker) {
@@ -227,6 +192,88 @@ internal fun AddRecordBottomSheet(
             initialTime = selectedTime,
             onConfirm = { customTimeText = it.toString() },
             onDismiss = { showTimePicker = false },
+        )
+    }
+}
+
+@Composable
+private fun RecordSheetFormContent(
+    isEditMode: Boolean,
+    isSaving: Boolean,
+    dateMode: DateSelectionMode,
+    onDateModeSelected: (DateSelectionMode) -> Unit,
+    startPageText: String,
+    onStartPageChange: (String) -> Unit,
+    endPageText: String,
+    onEndPageChange: (String) -> Unit,
+    timeMode: TimeSelectionMode,
+    onTimeModeSelected: (TimeSelectionMode) -> Unit,
+    isPageValid: Boolean,
+    onDismissRequest: () -> Unit,
+    onSave: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = MaterialTheme.spacing.screenHorizontal)
+            .padding(bottom = MaterialTheme.spacing.xl)
+            .imePadding()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = if (isEditMode) {
+                    stringResource(R.string.book_detail_edit_record_title)
+                } else {
+                    stringResource(R.string.book_detail_add_record_title)
+                },
+                style = MaterialTheme.typography.titleMedium,
+            )
+            IconButton(
+                onClick = onDismissRequest,
+                enabled = !isSaving,
+            ) {
+                Icon(
+                    imageVector = ManiculeIcons.Close,
+                    contentDescription = stringResource(R.string.book_detail_cancel),
+                )
+            }
+        }
+
+        RecordDateSection(
+            selectedMode = dateMode,
+            onModeSelected = onDateModeSelected,
+        )
+
+        val startPage = startPageText.toIntOrNull()
+        val endPage = endPageText.toIntOrNull()
+        RecordPageSection(
+            startPageText = startPageText,
+            onStartPageChange = onStartPageChange,
+            endPageText = endPageText,
+            onEndPageChange = onEndPageChange,
+            isError = endPage != null && startPage != null && endPage < startPage,
+        )
+
+        RecordTimeSection(
+            selectedMode = timeMode,
+            onModeSelected = onTimeModeSelected,
+        )
+
+        ManiculeButton(
+            onClick = onSave,
+            modifier = Modifier.fillMaxWidth(),
+            text = if (isEditMode) {
+                stringResource(R.string.book_detail_edit_record_button)
+            } else {
+                stringResource(R.string.book_detail_add_record_button)
+            },
+            enabled = isPageValid && !isSaving,
         )
     }
 }

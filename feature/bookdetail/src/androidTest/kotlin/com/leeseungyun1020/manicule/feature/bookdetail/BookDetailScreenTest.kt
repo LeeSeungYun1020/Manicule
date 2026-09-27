@@ -925,6 +925,13 @@ class BookDetailScreenTest {
         onRecordErrorDismissed: () -> Unit = {},
         onFinishCheckConfirmed: (Long) -> Unit = {},
         onFinishCheckDismissed: () -> Unit = {},
+        onEditRecord: (ReadingRecord) -> Unit = {},
+        onDismissEditRecordSheet: () -> Unit = {},
+        onSaveEditedRecord: (Long, LocalDate, LocalTime, Int, Int) -> Long? = { _, _, _, _, _ -> null },
+        onDeleteRecord: (ReadingRecord) -> Unit = {},
+        onUndoDeleteRecord: (Long, Long) -> Unit = { _, _ -> },
+        onDismissDeleteRecordSnackbar: (Long, Long) -> Unit = { _, _ -> },
+        onRecordSnackbarDismissed: (Long) -> Unit = {},
     ) {
         com.leeseungyun1020.manicule.feature.bookdetail.BookDetailScreen(
             uiState = uiState,
@@ -945,6 +952,13 @@ class BookDetailScreenTest {
             onRecordErrorDismissed = onRecordErrorDismissed,
             onFinishCheckConfirmed = onFinishCheckConfirmed,
             onFinishCheckDismissed = onFinishCheckDismissed,
+            onEditRecord = onEditRecord,
+            onDismissEditRecordSheet = onDismissEditRecordSheet,
+            onSaveEditedRecord = onSaveEditedRecord,
+            onDeleteRecord = onDeleteRecord,
+            onUndoDeleteRecord = onUndoDeleteRecord,
+            onDismissDeleteRecordSnackbar = onDismissDeleteRecordSnackbar,
+            onRecordSnackbarDismissed = onRecordSnackbarDismissed,
         )
     }
 

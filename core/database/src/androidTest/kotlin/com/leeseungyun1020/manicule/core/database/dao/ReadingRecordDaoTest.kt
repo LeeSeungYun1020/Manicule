@@ -9,6 +9,7 @@ import com.leeseungyun1020.manicule.core.database.ManiculeDatabase
 import com.leeseungyun1020.manicule.core.database.entity.BookEntity
 import com.leeseungyun1020.manicule.core.database.entity.ReadingRecordEntity
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import org.junit.After
@@ -19,6 +20,7 @@ class ReadingRecordDaoTest {
     private lateinit var db: ManiculeDatabase
     private lateinit var dao: ReadingRecordDao
     private lateinit var bookDao: BookDao
+    private lateinit var bookEntryDao: BookEntryDao
 
     @Before
     fun createDb() {
@@ -26,6 +28,7 @@ class ReadingRecordDaoTest {
         db = Room.inMemoryDatabaseBuilder(context, ManiculeDatabase::class.java).build()
         dao = db.readingRecordDao()
         bookDao = db.bookDao()
+        bookEntryDao = db.bookEntryDao()
     }
 
     @After
@@ -101,13 +104,16 @@ class ReadingRecordDaoTest {
         }
 
     @Test
-    fun update_updates_existing_record_with_same_id_and_isbn() =
+    fun update_updates_existing_record_and_advances_book_entry_timestamp() =
         runTest {
             val isbn = "123"
             bookDao.upsert(BookEntity(isbn, "T", "A", "P", null, null, null, null, null, null, null, null))
-            val id = dao.upsert(record(isbn = isbn, startPage = 1, endPage = 10))
+            val initialTime = Instant.fromEpochMilliseconds(100)
+            val updatedTime = Instant.fromEpochMilliseconds(500)
+            val id = dao.add(record(isbn = isbn, startPage = 1, endPage = 10), initialTime)
+            assertThat(bookEntryDao.getEntry(isbn)?.updatedAt).isEqualTo(initialTime)
 
-            val updatedRows =
+            val success =
                 dao.update(
                     record(
                         id = id,
@@ -117,9 +123,11 @@ class ReadingRecordDaoTest {
                         startPage = 10,
                         endPage = 30,
                     ),
+                    updatedAt = updatedTime,
                 )
 
-            assertThat(updatedRows).isEqualTo(1)
+            assertThat(success).isTrue()
+            assertThat(bookEntryDao.getEntry(isbn)?.updatedAt).isEqualTo(updatedTime)
             dao.observeByIsbn(isbn).test {
                 val records = awaitItem()
                 assertThat(records).hasSize(1)
@@ -134,32 +142,40 @@ class ReadingRecordDaoTest {
         }
 
     @Test
-    fun update_returns_zero_when_id_or_isbn_not_matched() =
+    fun update_returns_false_and_keeps_timestamp_when_id_or_isbn_not_matched() =
         runTest {
             val isbn1 = "123"
             val isbn2 = "456"
+            val initialTime = Instant.fromEpochMilliseconds(100)
+            val updatedTime = Instant.fromEpochMilliseconds(500)
             bookDao.upsert(BookEntity(isbn1, "T1", "A", "P", null, null, null, null, null, null, null, null))
             bookDao.upsert(BookEntity(isbn2, "T2", "A", "P", null, null, null, null, null, null, null, null))
-            val id = dao.upsert(record(isbn = isbn1, startPage = 1, endPage = 10))
+            val id = dao.add(record(isbn = isbn1, startPage = 1, endPage = 10), initialTime)
 
             // Non-existent ID
-            val nonExistentResult = dao.update(record(id = 999L, isbn = isbn1, startPage = 1, endPage = 20))
-            assertThat(nonExistentResult).isEqualTo(0)
+            val nonExistentResult = dao.update(record(id = 999L, isbn = isbn1, startPage = 1, endPage = 20), updatedTime)
+            assertThat(nonExistentResult).isFalse()
+            assertThat(bookEntryDao.getEntry(isbn1)?.updatedAt).isEqualTo(initialTime)
 
             // Different ISBN
-            val differentIsbnResult = dao.update(record(id = id, isbn = isbn2, startPage = 1, endPage = 20))
-            assertThat(differentIsbnResult).isEqualTo(0)
+            val differentIsbnResult = dao.update(record(id = id, isbn = isbn2, startPage = 1, endPage = 20), updatedTime)
+            assertThat(differentIsbnResult).isFalse()
+            assertThat(bookEntryDao.getEntry(isbn1)?.updatedAt).isEqualTo(initialTime)
         }
 
     @Test
-    fun delete_with_isbn_removes_matching_record() =
+    fun delete_with_isbn_removes_matching_record_and_advances_book_entry_timestamp() =
         runTest {
             val isbn = "123"
+            val initialTime = Instant.fromEpochMilliseconds(100)
+            val updatedTime = Instant.fromEpochMilliseconds(500)
             bookDao.upsert(BookEntity(isbn, "T", "A", "P", null, null, null, null, null, null, null, null))
-            val id = dao.upsert(record(isbn = isbn, startPage = 1, endPage = 10))
+            val id = dao.add(record(isbn = isbn, startPage = 1, endPage = 10), initialTime)
+            assertThat(bookEntryDao.getEntry(isbn)?.updatedAt).isEqualTo(initialTime)
 
-            val deletedRows = dao.delete(id, isbn)
-            assertThat(deletedRows).isEqualTo(1)
+            val success = dao.delete(id, isbn, updatedTime)
+            assertThat(success).isTrue()
+            assertThat(bookEntryDao.getEntry(isbn)?.updatedAt).isEqualTo(updatedTime)
 
             dao.observeByIsbn(isbn).test {
                 val records = awaitItem()
@@ -169,21 +185,25 @@ class ReadingRecordDaoTest {
         }
 
     @Test
-    fun delete_with_isbn_returns_zero_when_not_matched() =
+    fun delete_with_isbn_returns_false_and_keeps_timestamp_when_not_matched() =
         runTest {
             val isbn1 = "123"
             val isbn2 = "456"
+            val initialTime = Instant.fromEpochMilliseconds(100)
+            val updatedTime = Instant.fromEpochMilliseconds(500)
             bookDao.upsert(BookEntity(isbn1, "T1", "A", "P", null, null, null, null, null, null, null, null))
             bookDao.upsert(BookEntity(isbn2, "T2", "A", "P", null, null, null, null, null, null, null, null))
-            val id = dao.upsert(record(isbn = isbn1, startPage = 1, endPage = 10))
+            val id = dao.add(record(isbn = isbn1, startPage = 1, endPage = 10), initialTime)
 
             // Different ISBN
-            val differentIsbnResult = dao.delete(id, isbn2)
-            assertThat(differentIsbnResult).isEqualTo(0)
+            val differentIsbnResult = dao.delete(id, isbn2, updatedTime)
+            assertThat(differentIsbnResult).isFalse()
+            assertThat(bookEntryDao.getEntry(isbn1)?.updatedAt).isEqualTo(initialTime)
 
             // Non-existent ID
-            val nonExistentResult = dao.delete(999L, isbn1)
-            assertThat(nonExistentResult).isEqualTo(0)
+            val nonExistentResult = dao.delete(999L, isbn1, updatedTime)
+            assertThat(nonExistentResult).isFalse()
+            assertThat(bookEntryDao.getEntry(isbn1)?.updatedAt).isEqualTo(initialTime)
         }
 
     private fun record(

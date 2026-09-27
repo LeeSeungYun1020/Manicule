@@ -189,11 +189,15 @@ class AddReadingRecordUseCaseTest {
             return 7
         }
 
-        override suspend fun saveRecord(record: ReadingRecord): Boolean = error("Not used")
+        override suspend fun saveRecord(
+            record: ReadingRecord,
+            updatedAt: Instant,
+        ): Boolean = error("Not used")
 
         override suspend fun removeRecord(
             id: Long,
             isbn: String,
+            updatedAt: Instant,
         ): Boolean = true
 
         override fun observeRecordsByIsbn(isbn: String): Flow<List<ReadingRecord>> = emptyFlow()
