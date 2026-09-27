@@ -58,6 +58,7 @@ fun StatsCalendarCard(
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
     isTodayPeriod: Boolean = false,
+    onTodayClicked: (() -> Unit)? = null,
 ) {
     ManiculeCard(modifier = modifier) {
         Column(
@@ -71,6 +72,7 @@ fun StatsCalendarCard(
                     today = today,
                     selectedDate = selectedDate,
                     onDateSelected = onDateSelected,
+                    onTodayClicked = onTodayClicked,
                 )
             } else {
                 Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
@@ -108,8 +110,10 @@ private fun TodayCalendarStrip(
     selectedDate: LocalDate?,
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
+    onTodayClicked: (() -> Unit)? = null,
 ) {
-    val clickLabel = stringResource(CoreUiR.string.reading_calendar_open_day_records)
+    val defaultClickLabel = stringResource(CoreUiR.string.reading_calendar_open_day_records)
+    val todayClickLabel = stringResource(R.string.stats_today_calendar_today_cell_click_label)
     val parentViewConfiguration = LocalViewConfiguration.current
     val calendarViewConfiguration =
         remember(parentViewConfiguration) {
@@ -125,7 +129,7 @@ private fun TodayCalendarStrip(
         ) {
             days.forEach { day ->
                 val isToday = day.date == today
-                val isSelected = day.date == selectedDate
+                val isSelected = !isToday && day.date == selectedDate
                 val isSelectable = day.pages > 0
                 val dateDescription =
                     if (day.pages == 0) {
@@ -151,6 +155,14 @@ private fun TodayCalendarStrip(
                     } else {
                         dateDescription
                     }
+                val clickLabel = if (isToday && onTodayClicked != null) todayClickLabel else defaultClickLabel
+                val onClick: () -> Unit = {
+                    if (isToday && onTodayClicked != null) {
+                        onTodayClicked()
+                    } else {
+                        onDateSelected(day.date)
+                    }
+                }
 
                 Column(
                     modifier = Modifier.weight(1f),
@@ -166,7 +178,7 @@ private fun TodayCalendarStrip(
                                     if (isSelectable) {
                                         Modifier.clickable(
                                             onClickLabel = clickLabel,
-                                            onClick = { onDateSelected(day.date) },
+                                            onClick = onClick,
                                         )
                                     } else {
                                         Modifier
@@ -178,7 +190,7 @@ private fun TodayCalendarStrip(
                                     }
                                     if (isSelectable) {
                                         this.onClick(label = clickLabel) {
-                                            onDateSelected(day.date)
+                                            onClick()
                                             true
                                         }
                                     }

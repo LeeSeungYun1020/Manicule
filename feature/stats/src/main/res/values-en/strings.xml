@@ -29,4 +29,9 @@
     <string name="stats_close">Close</string>
     <string name="stats_monday">M</string><string name="stats_tuesday">T</string><string name="stats_wednesday">W</string>
     <string name="stats_thursday">T</string><string name="stats_friday">F</string><string name="stats_saturday">S</string><string name="stats_sunday">S</string>
+    <plurals name="stats_today_books_title"><item quantity="one">Books read today · %d book</item><item quantity="other">Books read today · %d books</item></plurals>
+    <string name="stats_today_books_section_title">Books read today</string>
+    <string name="stats_today_books_empty">No books read today.</string>
+    <string name="stats_today_books_error">Could not load books read today.</string>
+    <string name="stats_today_calendar_today_cell_click_label">Scroll to books read today</string>
 </resources>

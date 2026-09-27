@@ -40,6 +40,7 @@ class StatsViewModelTest {
 
     private val today = LocalDate(2024, 3, 1)
     private val repository = FakeRepository()
+    private val fakeBooks = FakeBooks()
     private val clock = object : Clock {
         override fun now(): Instant = Instant.parse("2024-03-01T12:00:00Z")
 
@@ -267,14 +268,192 @@ class StatsViewModelTest {
             job.cancel()
         }
 
-    private fun viewModel(handle: SavedStateHandle = SavedStateHandle()) =
-        StatsViewModel(
-            GetReadingCalendarUseCase(repository),
-            GetPeriodSummaryUseCase(repository),
-            GetReadingDayBooksUseCase(repository, FakeBooks()),
-            clock,
-            handle,
-        )
+    @Test
+    fun today_books_observed_in_today_period_and_hidden_in_other_periods() =
+        runTest(dispatcherRule.dispatcher) {
+            repository.records.value = listOf(
+                record(1, today, "a", 1, 10),
+                record(2, today, "a", 11, 20),
+                record(3, today, "b", 1, 15),
+            )
+            val viewModel = viewModel()
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            val initialBooks = viewModel.uiState.value.todayBooks as TodayBooksState.Content
+            assertThat(initialBooks.date).isEqualTo(today)
+            assertThat(initialBooks.rows).hasSize(2)
+            assertThat(initialBooks.rows.first { it.isbn == "a" }.recordCount).isEqualTo(2)
+            assertThat(initialBooks.rows.first { it.isbn == "a" }.pagesRead).isEqualTo(20)
+
+            viewModel.selectPeriod(StatsPeriod.FOUR_WEEKS)
+            runCurrent()
+            assertThat(viewModel.uiState.value.todayBooks).isEqualTo(TodayBooksState.Hidden)
+
+            viewModel.selectPeriod(StatsPeriod.TODAY)
+            runCurrent()
+            val restoredBooks = viewModel.uiState.value.todayBooks as TodayBooksState.Content
+            assertThat(restoredBooks.date).isEqualTo(today)
+            assertThat(restoredBooks.rows).hasSize(2)
+            job.cancel()
+        }
+
+    @Test
+    fun today_date_cannot_be_selected_in_today_period_but_can_in_four_weeks() =
+        runTest(dispatcherRule.dispatcher) {
+            repository.records.value = listOf(record(1, today, "a", 1, 10))
+            val viewModel = viewModel()
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            viewModel.selectDate(today)
+            runCurrent()
+            assertThat(viewModel.uiState.value.day).isEqualTo(DayState.Closed)
+
+            viewModel.selectPeriod(StatsPeriod.FOUR_WEEKS)
+            runCurrent()
+
+            viewModel.selectDate(today)
+            runCurrent()
+            val selected = viewModel.uiState.value.day as DayState.Content
+            assertThat(selected.date).isEqualTo(today)
+            assertThat(selected.rows.single().pagesRead).isEqualTo(10)
+            job.cancel()
+        }
+
+    @Test
+    fun today_selected_date_cleared_when_switching_to_today_period() =
+        runTest(dispatcherRule.dispatcher) {
+            repository.records.value = listOf(record(1, today, "a", 1, 10))
+            val viewModel = viewModel()
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            viewModel.selectPeriod(StatsPeriod.FOUR_WEEKS)
+            runCurrent()
+
+            viewModel.selectDate(today)
+            runCurrent()
+            assertThat(viewModel.uiState.value.day).isInstanceOf(DayState.Content::class.java)
+
+            viewModel.selectPeriod(StatsPeriod.TODAY)
+            runCurrent()
+            assertThat(viewModel.uiState.value.day).isEqualTo(DayState.Closed)
+            job.cancel()
+        }
+
+    @Test
+    fun today_restored_selected_date_cleared_if_today_period() =
+        runTest(dispatcherRule.dispatcher) {
+            val handle = SavedStateHandle(
+                mapOf(
+                    "selected_period" to StatsPeriod.TODAY,
+                    "selected_date" to today.toString(),
+                ),
+            )
+            val viewModel = viewModel(handle)
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            assertThat(handle.get<String>("selected_date")).isNull()
+            assertThat(viewModel.uiState.value.day).isEqualTo(DayState.Closed)
+            job.cancel()
+        }
+
+    @Test
+    fun today_books_initial_error_recovers_on_retry_without_affecting_period_summary() =
+        runTest(dispatcherRule.dispatcher) {
+            repository.records.value = listOf(record(1, today, "a", 1, 10))
+            fakeBooks.failBook = true
+            val viewModel = viewModel()
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            assertThat(viewModel.uiState.value.period).isInstanceOf(PeriodState.Content::class.java)
+            assertThat(viewModel.uiState.value.todayBooks).isEqualTo(TodayBooksState.Error)
+
+            fakeBooks.failBook = false
+            viewModel.retryTodayBooks()
+            runCurrent()
+
+            val content = viewModel.uiState.value.todayBooks as TodayBooksState.Content
+            assertThat(content.rows.single().pagesRead).isEqualTo(10)
+            job.cancel()
+        }
+
+    @Test
+    fun today_books_refresh_failure_retains_prior_rows_with_refresh_error_id_and_recovers_on_retry() =
+        runTest(dispatcherRule.dispatcher) {
+            repository.records.value = listOf(record(1, today, "a", 1, 10))
+            val viewModel = viewModel()
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            val contentBefore = viewModel.uiState.value.todayBooks as TodayBooksState.Content
+            assertThat(contentBefore.rows).hasSize(1)
+            assertThat(contentBefore.refreshErrorId).isEqualTo(0)
+
+            fakeBooks.failBook = true
+            repository.records.value = listOf(record(1, today, "a", 1, 20))
+            runCurrent()
+
+            val contentDuring = viewModel.uiState.value.todayBooks as TodayBooksState.Content
+            assertThat(contentDuring.rows.single().pagesRead).isEqualTo(10)
+            assertThat(contentDuring.refreshErrorId).isGreaterThan(0)
+            assertThat(viewModel.consumeRefreshError(contentDuring.refreshErrorId)).isTrue()
+            assertThat(viewModel.consumeRefreshError(contentDuring.refreshErrorId)).isFalse()
+
+            fakeBooks.failBook = false
+            viewModel.retryTodayBooks()
+            runCurrent()
+
+            val contentAfter = viewModel.uiState.value.todayBooks as TodayBooksState.Content
+            assertThat(contentAfter.rows.single().pagesRead).isEqualTo(20)
+            assertThat(contentAfter.refreshErrorId).isEqualTo(0)
+            job.cancel()
+        }
+
+    @Test
+    fun clock_day_change_updates_today_books_and_does_not_leak_previous_day_rows() =
+        runTest(dispatcherRule.dispatcher) {
+            var currentInstant = Instant.parse("2024-03-01T23:59:00Z")
+            val mutableClock = object : Clock {
+                override fun now(): Instant = currentInstant
+
+                override fun timeZone(): TimeZone = TimeZone.UTC
+            }
+            repository.records.value = listOf(
+                record(1, today, "a", 1, 10),
+                record(2, LocalDate(2024, 3, 2), "b", 1, 15),
+            )
+            val viewModel = viewModel(clock = mutableClock)
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+
+            val booksDay1 = viewModel.uiState.value.todayBooks as TodayBooksState.Content
+            assertThat(booksDay1.date).isEqualTo(today)
+            assertThat(booksDay1.rows.single().isbn).isEqualTo("a")
+
+            currentInstant = Instant.parse("2024-03-02T00:01:00Z")
+            testScheduler.advanceTimeBy(61_000)
+            runCurrent()
+
+            val booksDay2 = viewModel.uiState.value.todayBooks as TodayBooksState.Content
+            assertThat(booksDay2.date).isEqualTo(LocalDate(2024, 3, 2))
+            assertThat(booksDay2.rows.single().isbn).isEqualTo("b")
+            job.cancel()
+        }
+
+    private fun viewModel(
+        handle: SavedStateHandle = SavedStateHandle(),
+        clock: Clock = this.clock,
+    ) = StatsViewModel(
+        GetReadingCalendarUseCase(repository),
+        GetPeriodSummaryUseCase(repository),
+        GetReadingDayBooksUseCase(repository, fakeBooks),
+        clock,
+        handle,
+    )
 
     private fun record(
         id: Long,
@@ -320,7 +499,14 @@ class StatsViewModelTest {
     }
 
     private class FakeBooks : BookRepository {
-        override fun observeBook(isbn: String): Flow<Book?> = flowOf(null)
+        var failBook = false
+
+        override fun observeBook(isbn: String): Flow<Book?> =
+            if (failBook) {
+                kotlinx.coroutines.flow.flow { error("book failed") }
+            } else {
+                flowOf(null)
+            }
 
         override suspend fun syncBook(isbn: String): Result<BookSyncResult> = error("Unexpected sync")
 

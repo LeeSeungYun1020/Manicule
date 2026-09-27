@@ -42,6 +42,7 @@ class StatsViewModel
     ) : ViewModel() {
         private val periodRetries = MutableStateFlow(0)
         private val dayRetries = MutableStateFlow(0)
+        private val todayBooksRetries = MutableStateFlow(0)
         private val selectedPeriod = savedStateHandle.getStateFlow(SELECTED_PERIOD_KEY, StatsPeriod.TODAY)
         private val selectedDate = savedStateHandle.getStateFlow<String?>(SELECTED_DATE_KEY, null)
         private val consumedRefreshErrorIds = java.util.concurrent.ConcurrentHashMap.newKeySet<Int>()
@@ -49,7 +50,9 @@ class StatsViewModel
 
         init {
             val restored = selectedDate.value?.let { parseDate(it) }
-            if (selectedDate.value != null && (restored == null || !inCalendarRange(restored, clock.today(), selectedPeriod.value))) {
+            if (selectedDate.value != null &&
+                (restored == null || shouldDismissSelectedDate(restored, clock.today(), selectedPeriod.value))
+            ) {
                 savedStateHandle[SELECTED_DATE_KEY] = null
             }
         }
@@ -67,7 +70,9 @@ class StatsViewModel
                     val today = event.today
                     val period = event.period
                     val selected = selectedDate.value?.let { parseDate(it) }
-                    if (selected != null && !inCalendarRange(selected, today, period)) dismissDay()
+                    if (selected != null && shouldDismissSelectedDate(selected, today, period)) {
+                        dismissDay()
+                    }
                 }.scan<PeriodEvent, PeriodState>(PeriodState.Loading) { previous, event ->
                     when (event) {
                         is PeriodEvent.Started ->
@@ -120,8 +125,36 @@ class StatsViewModel
                     }
                 }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DayState.Closed)
 
+        private val todayBooksState =
+            combine(clock.observeToday(), selectedPeriod, todayBooksRetries) { today, period, _ -> today to period }
+                .flatMapLatest { (today, period) ->
+                    if (period != StatsPeriod.TODAY) {
+                        flowOf(TodayBooksEvent.Hidden)
+                    } else {
+                        getDayBooks(today).map { TodayBooksEvent.Ready(today, it) as TodayBooksEvent }
+                            .onStart { emit(TodayBooksEvent.Started(today)) }
+                            .catch { emit(TodayBooksEvent.Failed(today)) }
+                    }
+                }.scan<TodayBooksEvent, TodayBooksState>(TodayBooksState.Hidden) { previous, event ->
+                    when (event) {
+                        TodayBooksEvent.Hidden -> TodayBooksState.Hidden
+                        is TodayBooksEvent.Started ->
+                            previous.takeIf { it is TodayBooksState.Content && it.date == event.date }
+                                ?: TodayBooksState.Loading
+                        is TodayBooksEvent.Ready -> TodayBooksState.Content(event.date, event.rows)
+                        is TodayBooksEvent.Failed -> {
+                            val prior = previous as? TodayBooksState.Content
+                            if (prior?.date == event.date) {
+                                prior.copy(refreshErrorId = ++nextRefreshErrorId)
+                            } else {
+                                TodayBooksState.Error
+                            }
+                        }
+                    }
+                }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TodayBooksState.Hidden)
+
         val uiState =
-            combine(periodState, dayState) { period, day ->
+            combine(periodState, dayState, todayBooksState) { period, day, todayBooks ->
                 val visibleDay = when (period) {
                     is PeriodState.Content -> when (day) {
                         DayState.Closed -> day
@@ -133,7 +166,22 @@ class StatsViewModel
                     }
                     else -> DayState.Closed
                 }
-                StatsUiState(period, visibleDay)
+                val visibleTodayBooks = when (period) {
+                    is PeriodState.Content -> {
+                        if (period.selectedPeriod == StatsPeriod.TODAY) {
+                            todayBooks.takeIf {
+                                when (it) {
+                                    is TodayBooksState.Content -> it.date == period.today
+                                    else -> true
+                                }
+                            } ?: TodayBooksState.Loading
+                        } else {
+                            TodayBooksState.Hidden
+                        }
+                    }
+                    else -> TodayBooksState.Hidden
+                }
+                StatsUiState(period, visibleDay, visibleTodayBooks)
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), StatsUiState())
 
         fun selectPeriod(period: StatsPeriod) {
@@ -142,13 +190,14 @@ class StatsViewModel
             savedStateHandle[SELECTED_PERIOD_KEY] = period
             val currentToday = (periodState.value as? PeriodState.Content)?.today ?: clock.today()
             val selected = selectedDate.value?.let { parseDate(it) }
-            if (selected != null && !inCalendarRange(selected, currentToday, period)) {
+            if (selected != null && shouldDismissSelectedDate(selected, currentToday, period)) {
                 dismissDay()
             }
         }
 
         fun selectDate(date: LocalDate) {
             val period = uiState.value.period as? PeriodState.Content ?: return
+            if (period.selectedPeriod == StatsPeriod.TODAY && date == period.today) return
             if (period.days.none { it.date == date && it.pages > 0 }) return
             savedStateHandle[SELECTED_DATE_KEY] = date.toString()
         }
@@ -163,6 +212,10 @@ class StatsViewModel
 
         fun retryDay() {
             dayRetries.value++
+        }
+
+        fun retryTodayBooks() {
+            todayBooksRetries.value++
         }
 
         fun consumeRefreshError(id: Int): Boolean {
@@ -207,6 +260,15 @@ class StatsViewModel
             return date in start..end
         }
 
+        private fun shouldDismissSelectedDate(
+            date: LocalDate,
+            today: LocalDate,
+            period: StatsPeriod,
+        ): Boolean {
+            if (!inCalendarRange(date, today, period)) return true
+            return period == StatsPeriod.TODAY && date == today
+        }
+
         private fun parseDate(raw: String): LocalDate? = runCatching { LocalDate.parse(raw) }.getOrNull()
 
         private sealed interface PeriodEvent {
@@ -246,5 +308,22 @@ class StatsViewModel
             data class Failed(
                 val date: LocalDate,
             ) : DayEvent
+        }
+
+        private sealed interface TodayBooksEvent {
+            data object Hidden : TodayBooksEvent
+
+            data class Started(
+                val date: LocalDate,
+            ) : TodayBooksEvent
+
+            data class Ready(
+                val date: LocalDate,
+                val rows: List<com.leeseungyun1020.manicule.core.domain.stats.ReadingDayBook>,
+            ) : TodayBooksEvent
+
+            data class Failed(
+                val date: LocalDate,
+            ) : TodayBooksEvent
         }
     }
