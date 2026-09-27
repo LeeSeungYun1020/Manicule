@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -224,48 +225,21 @@ private fun StatsContent(
                 selectedOption = period.selectedPeriod,
                 onOptionSelected = onPeriodSelected,
                 disabledOptions = setOf(StatsPeriod.CUSTOM),
-                itemLabel = { option ->
-                    when (option) {
-                        StatsPeriod.TODAY -> todayLabel
-                        StatsPeriod.FOUR_WEEKS -> fourWeeksLabel
-                        StatsPeriod.ONE_YEAR -> oneYearLabel
-                        StatsPeriod.CUSTOM -> customLabel
-                    }
-                },
+                itemLabel = statsPeriodLabel(
+                    todayLabel = todayLabel,
+                    fourWeeksLabel = fourWeeksLabel,
+                    oneYearLabel = oneYearLabel,
+                    customLabel = customLabel,
+                ),
             )
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.lg))
         }
 
         item(key = "date_label") {
-            if (isTodayPeriod) {
-                val today = period.today
-                Text(
-                    text = stringResource(
-                        R.string.stats_single_date,
-                        today.year,
-                        today.monthNumber,
-                        today.dayOfMonth,
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            } else {
-                val start = period.summary.rangeStart
-                val end = period.summary.rangeEnd
-                Text(
-                    text = stringResource(
-                        R.string.stats_date_range,
-                        start.year,
-                        start.monthNumber,
-                        start.dayOfMonth,
-                        end.year,
-                        end.monthNumber,
-                        end.dayOfMonth,
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            StatsDateLabel(
+                period = period,
+                isTodayPeriod = isTodayPeriod,
+            )
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.lg))
         }
 
@@ -302,76 +276,157 @@ private fun StatsContent(
         }
 
         if (isTodayPeriod) {
-            item(key = "today_books_header") {
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.lg))
-                val headerText = when (todayBooks) {
-                    is TodayBooksState.Content -> pluralStringResource(
-                        R.plurals.stats_today_books_title,
-                        todayBooks.rows.size,
-                        todayBooks.rows.size,
-                    )
-                    else -> stringResource(R.string.stats_today_books_section_title)
-                }
-                Text(
-                    text = headerText,
-                    style = MaterialTheme.typography.titleMedium,
+            todayBooksSection(
+                todayBooks = todayBooks,
+                onRetryTodayBooks = onRetryTodayBooks,
+                onBookSelected = onBookSelected,
+            )
+        }
+    }
+}
+
+private fun statsPeriodLabel(
+    todayLabel: String,
+    fourWeeksLabel: String,
+    oneYearLabel: String,
+    customLabel: String,
+): (StatsPeriod) -> String =
+    { option ->
+        when (option) {
+            StatsPeriod.TODAY -> todayLabel
+            StatsPeriod.FOUR_WEEKS -> fourWeeksLabel
+            StatsPeriod.ONE_YEAR -> oneYearLabel
+            StatsPeriod.CUSTOM -> customLabel
+        }
+    }
+
+@Composable
+private fun StatsDateLabel(
+    period: PeriodState.Content,
+    isTodayPeriod: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    if (isTodayPeriod) {
+        val today = period.today
+        Text(
+            text = stringResource(
+                R.string.stats_single_date,
+                today.year,
+                today.monthNumber,
+                today.dayOfMonth,
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = modifier,
+        )
+    } else {
+        val start = period.summary.rangeStart
+        val end = period.summary.rangeEnd
+        Text(
+            text = stringResource(
+                R.string.stats_date_range,
+                start.year,
+                start.monthNumber,
+                start.dayOfMonth,
+                end.year,
+                end.monthNumber,
+                end.dayOfMonth,
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = modifier,
+        )
+    }
+}
+
+private fun LazyListScope.todayBooksHeader(todayBooks: TodayBooksState) {
+    item(key = "today_books_header") {
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.lg))
+        val headerText = when (todayBooks) {
+            is TodayBooksState.Content -> pluralStringResource(
+                R.plurals.stats_today_books_title,
+                todayBooks.rows.size,
+                todayBooks.rows.size,
+            )
+            else -> stringResource(R.string.stats_today_books_section_title)
+        }
+        Text(
+            text = headerText,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { heading() },
+        )
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.sm))
+    }
+}
+
+private fun LazyListScope.todayBooksContent(
+    todayBooks: TodayBooksState,
+    onRetryTodayBooks: () -> Unit,
+    onBookSelected: (String) -> Unit,
+) {
+    when (todayBooks) {
+        TodayBooksState.Hidden -> Unit
+        TodayBooksState.Loading -> {
+            item(key = "today_books_loading") {
+                ManiculeLoading(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .semantics { heading() },
+                        .padding(MaterialTheme.spacing.xl),
                 )
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.sm))
             }
-
-            when (todayBooks) {
-                TodayBooksState.Hidden -> Unit
-                TodayBooksState.Loading -> {
-                    item(key = "today_books_loading") {
-                        ManiculeLoading(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(MaterialTheme.spacing.xl),
-                        )
-                    }
+        }
+        TodayBooksState.Error -> {
+            item(key = "today_books_error") {
+                ManiculeErrorState(
+                    title = stringResource(R.string.stats_today_books_error),
+                    icon = ManiculeIcons.NetworkError,
+                    onRetry = onRetryTodayBooks,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = MaterialTheme.spacing.lg),
+                )
+            }
+        }
+        is TodayBooksState.Content -> {
+            if (todayBooks.rows.isEmpty()) {
+                item(key = "today_books_empty") {
+                    Text(
+                        text = stringResource(R.string.stats_today_books_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = MaterialTheme.spacing.sm),
+                    )
                 }
-                TodayBooksState.Error -> {
-                    item(key = "today_books_error") {
-                        ManiculeErrorState(
-                            title = stringResource(R.string.stats_today_books_error),
-                            icon = ManiculeIcons.NetworkError,
-                            onRetry = onRetryTodayBooks,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = MaterialTheme.spacing.lg),
-                        )
-                    }
-                }
-                is TodayBooksState.Content -> {
-                    if (todayBooks.rows.isEmpty()) {
-                        item(key = "today_books_empty") {
-                            Text(
-                                text = stringResource(R.string.stats_today_books_empty),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(vertical = MaterialTheme.spacing.sm),
-                            )
-                        }
-                    } else {
-                        items(
-                            items = todayBooks.rows,
-                            key = { it.isbn },
-                            contentType = { "today-book-item" },
-                        ) { row ->
-                            ReadingDayBookItem(
-                                book = row,
-                                onBookSelected = onBookSelected,
-                            )
-                            HorizontalDivider()
-                        }
-                    }
+            } else {
+                items(
+                    items = todayBooks.rows,
+                    key = { it.isbn },
+                    contentType = { "today-book-item" },
+                ) { row ->
+                    ReadingDayBookItem(
+                        book = row,
+                        onBookSelected = onBookSelected,
+                    )
+                    HorizontalDivider()
                 }
             }
         }
     }
+}
+
+private fun LazyListScope.todayBooksSection(
+    todayBooks: TodayBooksState,
+    onRetryTodayBooks: () -> Unit,
+    onBookSelected: (String) -> Unit,
+) {
+    todayBooksHeader(todayBooks)
+    todayBooksContent(
+        todayBooks = todayBooks,
+        onRetryTodayBooks = onRetryTodayBooks,
+        onBookSelected = onBookSelected,
+    )
 }
 
 private data class StatTileItem(
