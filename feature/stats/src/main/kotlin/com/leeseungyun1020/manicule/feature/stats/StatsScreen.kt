@@ -90,7 +90,7 @@ fun StatsScreenRoute(
 fun StatsScreen(
     state: StatsUiState,
     onPeriodSelected: (StatsPeriod) -> Unit,
-    onApplyCustomPeriod: (LocalDate, LocalDate) -> Boolean = { _, _ -> true },
+    onApplyCustomPeriod: (LocalDate, LocalDate) -> Boolean,
     onDateSelected: (LocalDate) -> Unit,
     onDismissDay: () -> Unit,
     onRetryPeriod: () -> Unit,
@@ -171,8 +171,9 @@ fun StatsScreen(
             today = period.today,
             initialRange = initialRange,
             onApply = { start, end ->
-                onApplyCustomPeriod(start, end)
-                showCustomPeriodSheet = false
+                if (onApplyCustomPeriod(start, end)) {
+                    showCustomPeriodSheet = false
+                }
             },
             onDismiss = { showCustomPeriodSheet = false },
         )
@@ -545,6 +546,7 @@ private fun StatsScreenPreview() {
                 ),
             ),
             onPeriodSelected = {},
+            onApplyCustomPeriod = { _, _ -> true },
             onDateSelected = {},
             onDismissDay = {},
             onRetryPeriod = {},
@@ -575,6 +577,7 @@ private fun StatsScreenTodayEmptyPreview() {
                 ),
             ),
             onPeriodSelected = {},
+            onApplyCustomPeriod = { _, _ -> true },
             onDateSelected = {},
             onDismissDay = {},
             onRetryPeriod = {},
@@ -602,6 +605,7 @@ private fun StatsScreenFourWeeksPreview() {
                 ),
             ),
             onPeriodSelected = {},
+            onApplyCustomPeriod = { _, _ -> true },
             onDateSelected = {},
             onDismissDay = {},
             onRetryPeriod = {},
@@ -631,6 +635,7 @@ private fun StatsScreenCustomPeriodPreview() {
                 ),
             ),
             onPeriodSelected = {},
+            onApplyCustomPeriod = { _, _ -> true },
             onDateSelected = {},
             onDismissDay = {},
             onRetryPeriod = {},

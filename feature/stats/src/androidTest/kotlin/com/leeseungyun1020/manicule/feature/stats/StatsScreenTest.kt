@@ -46,6 +46,7 @@ class StatsScreenTest {
                 StatsScreen(
                     state = StatsUiState(period(), day),
                     onPeriodSelected = {},
+                    onApplyCustomPeriod = { _, _ -> true },
                     onDateSelected = { date ->
                         day = DayState.Content(date, listOf(ReadingDayBook("isbn", null, 2, 20)))
                     },
@@ -106,6 +107,7 @@ class StatsScreenTest {
                         todayBooks = TodayBooksState.Content(today, emptyList()),
                     ),
                     onPeriodSelected = {},
+                    onApplyCustomPeriod = { _, _ -> true },
                     onDateSelected = {},
                     onDismissDay = {},
                     onRetryPeriod = {},
@@ -131,6 +133,7 @@ class StatsScreenTest {
                         period = period(empty = true, selectedPeriod = StatsPeriod.FOUR_WEEKS),
                     ),
                     onPeriodSelected = {},
+                    onApplyCustomPeriod = { _, _ -> true },
                     onDateSelected = {},
                     onDismissDay = {},
                     onRetryPeriod = {},
@@ -153,6 +156,7 @@ class StatsScreenTest {
                 StatsScreen(
                     state = StatsUiState(period(selectedPeriod = StatsPeriod.TODAY)),
                     onPeriodSelected = { selectedPeriod = it },
+                    onApplyCustomPeriod = { _, _ -> true },
                     onDateSelected = {},
                     onDismissDay = {},
                     onRetryPeriod = {},
@@ -283,6 +287,35 @@ class StatsScreenTest {
     }
 
     @Test
+    fun custom_period_sheet_remains_open_when_apply_is_rejected() {
+        var state by mutableStateOf(StatsUiState(period(selectedPeriod = StatsPeriod.TODAY)))
+        composeRule.setContent {
+            ManiculeTheme {
+                StatsScreen(
+                    state = state,
+                    onPeriodSelected = { state = state.copy(period = period(selectedPeriod = it)) },
+                    onApplyCustomPeriod = { _, _ -> false },
+                    onDateSelected = {},
+                    onDismissDay = {},
+                    onRetryPeriod = {},
+                    onRetryDay = {},
+                    onRetryTodayBooks = {},
+                    onBookSelected = {},
+                    consumeRefreshError = { true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.stats_period_custom)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.stats_custom_period_title)).assertIsDisplayed()
+
+        composeRule.onNodeWithText(context.getString(R.string.stats_custom_period_apply)).performClick()
+
+        // 적용이 거부(false)되었으므로 시트가 닫히지 않고 열린 상태를 유지한다
+        composeRule.onNodeWithText(context.getString(R.string.stats_custom_period_title)).assertIsDisplayed()
+    }
+
+    @Test
     fun custom_period_sheet_invalid_range_disables_apply_button_and_shows_error() {
         val invalidRange = CustomPeriodRange(today, today.minus(DatePeriod(days = 5)))
         composeRule.setContent {
@@ -363,6 +396,7 @@ class StatsScreenTest {
                 StatsScreen(
                     state = StatsUiState(emptyCustomContent),
                     onPeriodSelected = {},
+                    onApplyCustomPeriod = { _, _ -> true },
                     onDateSelected = {},
                     onDismissDay = {},
                     onRetryPeriod = {},
@@ -397,6 +431,7 @@ class StatsScreenTest {
                 StatsScreen(
                     state = StatsUiState(todayPeriodContent, day),
                     onPeriodSelected = {},
+                    onApplyCustomPeriod = { _, _ -> true },
                     onDateSelected = { date ->
                         day = DayState.Content(date, listOf(ReadingDayBook("isbn-today", null, 1, 35)))
                     },
@@ -441,6 +476,7 @@ class StatsScreenTest {
                 StatsScreen(
                     state = StatsUiState(period(selectedPeriod = currentPeriod)),
                     onPeriodSelected = { currentPeriod = it },
+                    onApplyCustomPeriod = { _, _ -> true },
                     onDateSelected = {},
                     onDismissDay = {},
                     onRetryPeriod = {},
@@ -496,6 +532,7 @@ class StatsScreenTest {
                         ),
                     ),
                     onPeriodSelected = {},
+                    onApplyCustomPeriod = { _, _ -> true },
                     onDateSelected = {},
                     onDismissDay = {},
                     onRetryPeriod = {},
@@ -546,6 +583,7 @@ class StatsScreenTest {
                         ),
                     ),
                     onPeriodSelected = {},
+                    onApplyCustomPeriod = { _, _ -> true },
                     onDateSelected = { date ->
                         day = DayState.Content(date, listOf(ReadingDayBook("isbn-sheet", null, 1, 45)))
                     },
