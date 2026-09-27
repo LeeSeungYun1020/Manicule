@@ -175,8 +175,208 @@ class StatsScreenTest {
         composeRule.onNodeWithText(context.getString(R.string.stats_period_one_year)).performClick()
         assertEquals(StatsPeriod.ONE_YEAR, selectedPeriod)
 
-        // 직접 선택(CUSTOM)은 날짜 선택기/바텀시트가 구현될 때까지 비활성화(disabled) 상태로 표시된다.
-        composeRule.onNodeWithText(context.getString(R.string.stats_period_custom)).assertIsNotEnabled()
+        composeRule.onNodeWithText(context.getString(R.string.stats_period_custom)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.stats_custom_period_title)).assertIsDisplayed()
+    }
+
+    @Test
+    fun custom_tab_opens_sheet_and_applying_shows_custom_range_calendar_and_summary() {
+        var state by mutableStateOf(StatsUiState(period(selectedPeriod = StatsPeriod.TODAY)))
+        var appliedStart: LocalDate? = null
+        var appliedEnd: LocalDate? = null
+
+        composeRule.setContent {
+            ManiculeTheme {
+                StatsScreen(
+                    state = state,
+                    onPeriodSelected = { state = state.copy(period = period(selectedPeriod = it)) },
+                    onApplyCustomPeriod = { start, end ->
+                        appliedStart = start
+                        appliedEnd = end
+                        val customRange = CustomPeriodRange(start, end)
+                        state = state.copy(
+                            period = PeriodState.Content(
+                                today = today,
+                                selectedPeriod = StatsPeriod.CUSTOM,
+                                customRange = customRange,
+                                days = (0..27).map { index ->
+                                    val date = start.plus(DatePeriod(days = index))
+                                    ReadingCalendarDay.of(date, 10)
+                                },
+                                summary = PeriodSummary(start, end, 5, 280, 2),
+                            ),
+                        )
+                        true
+                    },
+                    onDateSelected = {},
+                    onDismissDay = {},
+                    onRetryPeriod = {},
+                    onRetryDay = {},
+                    onRetryTodayBooks = {},
+                    onBookSelected = {},
+                    consumeRefreshError = { true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.stats_period_custom)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.stats_custom_period_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.stats_custom_period_start_date)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.stats_custom_period_end_date)).assertIsDisplayed()
+
+        composeRule.onNodeWithText(context.getString(R.string.stats_custom_period_apply)).performClick()
+
+        val expectedStart = today.minus(DatePeriod(days = 27))
+        assertEquals(expectedStart, appliedStart)
+        assertEquals(today, appliedEnd)
+
+        // 적용 후 시트가 닫히고 커스텀 기간 범위 라벨, 달력, 요약 표시
+        composeRule.onNodeWithText(context.getString(R.string.stats_custom_period_title)).assertDoesNotExist()
+        val dateRangeText = context.getString(
+            R.string.stats_date_range,
+            expectedStart.year,
+            expectedStart.monthNumber,
+            expectedStart.dayOfMonth,
+            today.year,
+            today.monthNumber,
+            today.dayOfMonth,
+        )
+        composeRule.onNodeWithText(dateRangeText).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.stats_calendar_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.resources.getQuantityString(R.plurals.stats_pages_value, 280, 280)).assertIsDisplayed()
+    }
+
+    @Test
+    fun custom_period_sheet_dismiss_via_close_button_keeps_previous_period() {
+        var state by mutableStateOf(StatsUiState(period(selectedPeriod = StatsPeriod.TODAY)))
+        composeRule.setContent {
+            ManiculeTheme {
+                StatsScreen(
+                    state = state,
+                    onPeriodSelected = { state = state.copy(period = period(selectedPeriod = it)) },
+                    onApplyCustomPeriod = { _, _ -> true },
+                    onDateSelected = {},
+                    onDismissDay = {},
+                    onRetryPeriod = {},
+                    onRetryDay = {},
+                    onRetryTodayBooks = {},
+                    onBookSelected = {},
+                    consumeRefreshError = { true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.stats_period_custom)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.stats_custom_period_title)).assertIsDisplayed()
+
+        composeRule.onNodeWithContentDescription(context.getString(R.string.stats_close)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.stats_custom_period_title)).assertDoesNotExist()
+
+        // 닫은 후에도 기존 TODAY의 단일 날짜 라벨 유지
+        val singleDateText = context.getString(
+            R.string.stats_single_date,
+            today.year,
+            today.monthNumber,
+            today.dayOfMonth,
+        )
+        composeRule.onNodeWithText(singleDateText).assertIsDisplayed()
+    }
+
+    @Test
+    fun custom_period_sheet_invalid_range_disables_apply_button_and_shows_error() {
+        val invalidRange = CustomPeriodRange(today, today.minus(DatePeriod(days = 5)))
+        composeRule.setContent {
+            ManiculeTheme {
+                com.leeseungyun1020.manicule.feature.stats.components.CustomPeriodContent(
+                    today = today,
+                    initialRange = invalidRange,
+                    onApply = { _, _ -> },
+                    onDismiss = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.stats_custom_period_error_order)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.stats_custom_period_apply)).assertIsNotEnabled()
+    }
+
+    @Test
+    fun reentering_custom_sheet_shows_previously_applied_custom_range() {
+        val customStart = LocalDate(2026, 6, 12)
+        val customEnd = LocalDate(2026, 7, 9)
+        val content = PeriodState.Content(
+            today = today,
+            selectedPeriod = StatsPeriod.CUSTOM,
+            customRange = CustomPeriodRange(customStart, customEnd),
+            days = emptyList(),
+            summary = PeriodSummary(customStart, customEnd, 0, 0, 0),
+        )
+        composeRule.setContent {
+            ManiculeTheme {
+                StatsScreen(
+                    state = StatsUiState(content),
+                    onPeriodSelected = {},
+                    onApplyCustomPeriod = { _, _ -> true },
+                    onDateSelected = {},
+                    onDismissDay = {},
+                    onRetryPeriod = {},
+                    onRetryDay = {},
+                    onRetryTodayBooks = {},
+                    onBookSelected = {},
+                    consumeRefreshError = { true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.stats_period_custom)).performClick()
+        composeRule.onNodeWithText(context.getString(R.string.stats_custom_period_title)).assertIsDisplayed()
+
+        val expectedStartText = context.getString(
+            R.string.stats_single_date,
+            customStart.year,
+            customStart.monthNumber,
+            customStart.dayOfMonth,
+        )
+        val expectedEndText = context.getString(
+            R.string.stats_single_date,
+            customEnd.year,
+            customEnd.monthNumber,
+            customEnd.dayOfMonth,
+        )
+        composeRule.onNodeWithText(expectedStartText).assertIsDisplayed()
+        composeRule.onNodeWithText(expectedEndText).assertIsDisplayed()
+    }
+
+    @Test
+    fun empty_custom_period_shows_empty_period_text_and_zero_summary() {
+        val customStart = LocalDate(2026, 6, 12)
+        val customEnd = LocalDate(2026, 7, 9)
+        val emptyCustomContent = PeriodState.Content(
+            today = today,
+            selectedPeriod = StatsPeriod.CUSTOM,
+            customRange = CustomPeriodRange(customStart, customEnd),
+            days = emptyList(),
+            summary = PeriodSummary(customStart, customEnd, 0, 0, 0),
+        )
+        composeRule.setContent {
+            ManiculeTheme {
+                StatsScreen(
+                    state = StatsUiState(emptyCustomContent),
+                    onPeriodSelected = {},
+                    onDateSelected = {},
+                    onDismissDay = {},
+                    onRetryPeriod = {},
+                    onRetryDay = {},
+                    onRetryTodayBooks = {},
+                    onBookSelected = {},
+                    consumeRefreshError = { true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(context.getString(R.string.stats_calendar_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.stats_empty_period)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.resources.getQuantityString(R.plurals.stats_books_value, 0, 0)).assertIsDisplayed()
     }
 
     @Test

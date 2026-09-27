@@ -27,6 +27,15 @@
     <string name="stats_book_missing">Book information unavailable</string>
     <plurals name="stats_session_count"><item quantity="one">%d session</item><item quantity="other">%d sessions</item></plurals>
     <string name="stats_close">Close</string>
+    <string name="stats_confirm">OK</string>
+    <string name="stats_custom_period_title">Set period</string>
+    <string name="stats_custom_period_start_date">Start date</string>
+    <string name="stats_custom_period_end_date">End date</string>
+    <string name="stats_custom_period_apply">Apply</string>
+    <string name="stats_custom_period_cancel">Cancel</string>
+    <string name="stats_custom_period_error_order">Start date must be before or equal to end date.</string>
+    <string name="stats_custom_period_error_max_days">You can select up to 365 days.</string>
+    <string name="stats_custom_period_error_future">Cannot select dates after today.</string>
     <string name="stats_monday">M</string><string name="stats_tuesday">T</string><string name="stats_wednesday">W</string>
     <string name="stats_thursday">T</string><string name="stats_friday">F</string><string name="stats_saturday">S</string><string name="stats_sunday">S</string>
     <plurals name="stats_today_books_title"><item quantity="one">Books read today · %d book</item><item quantity="other">Books read today · %d books</item></plurals>

@@ -25,8 +25,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -51,6 +55,7 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.domain.stats.ReadingDayBook
 import com.leeseungyun1020.manicule.core.model.PeriodSummary
 import com.leeseungyun1020.manicule.core.model.ReadingCalendarDay
+import com.leeseungyun1020.manicule.feature.stats.components.CustomPeriodBottomSheet
 import com.leeseungyun1020.manicule.feature.stats.components.ReadingDayBookItem
 import com.leeseungyun1020.manicule.feature.stats.components.ReadingDayBottomSheet
 import com.leeseungyun1020.manicule.feature.stats.components.StatsCalendarCard
@@ -66,6 +71,7 @@ fun StatsScreenRoute(
     StatsScreen(
         state = state,
         onPeriodSelected = viewModel::selectPeriod,
+        onApplyCustomPeriod = viewModel::applyCustomPeriod,
         onDateSelected = viewModel::selectDate,
         onDismissDay = viewModel::dismissDay,
         onRetryPeriod = viewModel::retryPeriod,
@@ -84,6 +90,7 @@ fun StatsScreenRoute(
 fun StatsScreen(
     state: StatsUiState,
     onPeriodSelected: (StatsPeriod) -> Unit,
+    onApplyCustomPeriod: (LocalDate, LocalDate) -> Boolean = { _, _ -> true },
     onDateSelected: (LocalDate) -> Unit,
     onDismissDay: () -> Unit,
     onRetryPeriod: () -> Unit,
@@ -96,6 +103,7 @@ fun StatsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val period = state.period
+    var showCustomPeriodSheet by rememberSaveable { mutableStateOf(false) }
 
     HandleRefreshError(
         errorId = period.refreshErrorId,
@@ -140,6 +148,7 @@ fun StatsScreen(
                 todayBooks = state.todayBooks,
                 selectedDate = state.day.selectedDate,
                 onPeriodSelected = onPeriodSelected,
+                onOpenCustomPeriodSheet = { showCustomPeriodSheet = true },
                 onDateSelected = onDateSelected,
                 onRetryTodayBooks = onRetryTodayBooks,
                 onBookSelected = onBookSelected,
@@ -154,6 +163,18 @@ fun StatsScreen(
             onRetry = onRetryDay,
             onBookSelected = onBookSelected,
             snackbarHostState = snackbarHostState,
+        )
+    }
+    if (showCustomPeriodSheet && period is PeriodState.Content) {
+        val initialRange = period.customRange ?: CustomPeriodRange.defaultFor(period.today)
+        CustomPeriodBottomSheet(
+            today = period.today,
+            initialRange = initialRange,
+            onApply = { start, end ->
+                onApplyCustomPeriod(start, end)
+                showCustomPeriodSheet = false
+            },
+            onDismiss = { showCustomPeriodSheet = false },
         )
     }
 }
@@ -201,6 +222,7 @@ private fun StatsContent(
     todayBooks: TodayBooksState,
     selectedDate: LocalDate?,
     onPeriodSelected: (StatsPeriod) -> Unit,
+    onOpenCustomPeriodSheet: () -> Unit,
     onDateSelected: (LocalDate) -> Unit,
     onRetryTodayBooks: () -> Unit,
     onBookSelected: (String) -> Unit,
@@ -223,8 +245,14 @@ private fun StatsContent(
             ManiculeSegmentedButton(
                 options = StatsPeriod.entries,
                 selectedOption = period.selectedPeriod,
-                onOptionSelected = onPeriodSelected,
-                disabledOptions = setOf(StatsPeriod.CUSTOM),
+                onOptionSelected = { option ->
+                    if (option == StatsPeriod.CUSTOM) {
+                        onOpenCustomPeriodSheet()
+                    } else {
+                        onPeriodSelected(option)
+                    }
+                },
+                disabledOptions = emptySet(),
                 itemLabel = statsPeriodLabel(
                     todayLabel = todayLabel,
                     fourWeeksLabel = fourWeeksLabel,
@@ -571,6 +599,35 @@ private fun StatsScreenFourWeeksPreview() {
                     selectedPeriod = StatsPeriod.FOUR_WEEKS,
                     days = listOf(ReadingCalendarDay.of(today, 25)),
                     summary = PeriodSummary(start, today, 5, 250, 3),
+                ),
+            ),
+            onPeriodSelected = {},
+            onDateSelected = {},
+            onDismissDay = {},
+            onRetryPeriod = {},
+            onRetryDay = {},
+            onRetryTodayBooks = {},
+            onBookSelected = {},
+            consumeRefreshError = { true },
+        )
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun StatsScreenCustomPeriodPreview() {
+    val today = LocalDate(2026, 9, 24)
+    val start = LocalDate(2026, 6, 12)
+    val end = LocalDate(2026, 7, 9)
+    ManiculePreviewTheme {
+        StatsScreen(
+            state = StatsUiState(
+                period = PeriodState.Content(
+                    today = today,
+                    selectedPeriod = StatsPeriod.CUSTOM,
+                    customRange = CustomPeriodRange(start, end),
+                    days = listOf(ReadingCalendarDay.of(today, 25)),
+                    summary = PeriodSummary(start, end, 3, 150, 2),
                 ),
             ),
             onPeriodSelected = {},
