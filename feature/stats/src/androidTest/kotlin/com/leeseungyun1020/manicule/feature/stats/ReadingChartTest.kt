@@ -1,17 +1,33 @@
 package com.leeseungyun1020.manicule.feature.stats
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeRight
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeTheme
@@ -108,5 +124,74 @@ class ReadingChartTest {
         val bookAxisX = composeRule.onNodeWithText("4").fetchSemanticsNode().boundsInRoot.center.x
         val pageAxisX = composeRule.onNodeWithText("80").fetchSemanticsNode().boundsInRoot.center.x
         org.junit.Assert.assertTrue(bookAxisX < pageAxisX)
+    }
+
+    @Test fun enlargedLabelsFitTheirSlotsAndAxes() {
+        val months = (1..12).map { month ->
+            val date = LocalDate(2026, month, 1)
+            ReadingChartBucket(date, date, 4, 80)
+        }
+        composeRule.setContent {
+            ManiculeTheme {
+                val density = LocalDensity.current
+                CompositionLocalProvider(LocalDensity provides Density(density.density, 2f)) {
+                    ReadingChart(
+                        months,
+                        ChartKey(StatsPeriod.ONE_YEAR, months.first().start, months.last().end, ReadingChartUnit.MONTH),
+                    )
+                }
+            }
+        }
+        val lastLabel = composeRule.onNodeWithText("2026/12")
+        lastLabel.assertIsDisplayed()
+        val layouts = mutableListOf<TextLayoutResult>()
+        lastLabel.fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        val layout = layouts.single()
+        org.junit.Assert.assertFalse(
+            "label size=${layout.size}, paragraph width=${layout.multiParagraph.width}, height=${layout.multiParagraph.height}, " +
+                "line count=${layout.lineCount}",
+            layout.hasVisualOverflow,
+        )
+        val bottomAxis = composeRule.onAllNodesWithText("0").fetchSemanticsNodes().maxOf { it.boundsInRoot.bottom }
+        val xLabelTop = lastLabel.fetchSemanticsNode().boundsInRoot.top
+        org.junit.Assert.assertTrue(bottomAxis < xLabelTop)
+    }
+
+    @Test fun newKeyStartsAtLatestAfterOuterListDisposesChart() {
+        val monthStart = LocalDate(2025, 1, 1)
+        val monthly = (0 until 12).map { index ->
+            val date = monthStart.plus(DatePeriod(months = index))
+            ReadingChartBucket(date, date, 1, 10)
+        }
+        val dayStart = LocalDate(2026, 1, 1)
+        val daily = (0 until 120).map { index ->
+            val date = dayStart.plus(DatePeriod(days = index))
+            ReadingChartBucket(date, date, 1, 10)
+        }
+        var currentBuckets by mutableStateOf(monthly)
+        var currentKey by mutableStateOf(
+            ChartKey(StatsPeriod.ONE_YEAR, monthly.first().start, monthly.last().end, ReadingChartUnit.MONTH),
+        )
+        val outerState = LazyListState()
+        composeRule.setContent {
+            ManiculeTheme {
+                LazyColumn(state = outerState, modifier = androidx.compose.ui.Modifier.fillMaxSize().testTag("outer_list")) {
+                    item(key = "chart") { ReadingChart(currentBuckets, currentKey) }
+                    item(key = "filler") { Spacer(androidx.compose.ui.Modifier.height(2000.dp)) }
+                }
+            }
+        }
+        composeRule.onNodeWithTag("reading_chart_row").performScrollToIndex(0)
+        composeRule.onNodeWithTag("outer_list").performScrollToIndex(1)
+        composeRule.onNodeWithTag("reading_chart_row").assertDoesNotExist()
+        composeRule.runOnIdle {
+            currentBuckets = daily
+            currentKey = ChartKey(StatsPeriod.CUSTOM, daily.first().start, daily.last().end, ReadingChartUnit.DAY)
+        }
+        composeRule.onNodeWithTag("outer_list").performScrollToIndex(0)
+        val last = daily.last()
+        composeRule.onNodeWithContentDescription(
+            context.getString(R.string.stats_chart_bucket_description, last.start.toString(), last.end.toString(), 1, 10),
+        ).assertIsDisplayed()
     }
 }
