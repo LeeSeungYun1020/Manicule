@@ -105,20 +105,25 @@ class ScannerScreenTest {
     }
 
     @Test
-    fun darkLargeFontLandscapePermissionActionsRemainReachable() {
+    fun darkLargeFontLandscapeCollapsesAppBarAndKeepsPermissionActionsReachable() {
         compose.setContent {
             CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, 1.5f)) {
                 ManiculeTheme(darkTheme = true) {
-                    ScannerScreen(ScannerUiState.PermissionDenied(), {}, {}, {}, Modifier.requiredSize(640.dp, 320.dp))
+                    ScannerScreen(ScannerUiState.PermissionDenied(), {}, {}, {}, Modifier.requiredSize(640.dp, 240.dp))
                 }
             }
         }
+        val scroll = compose.onNodeWithTag(SCANNER_MESSAGE_SCROLL_TEST_TAG).getUnclippedBoundsInRoot()
+        val card = compose.onNodeWithTag(SCANNER_MESSAGE_CARD_TEST_TAG).getUnclippedBoundsInRoot()
+        assertThat((card.bottom - card.top).value).isGreaterThan((scroll.bottom - scroll.top).value)
         val titleText = context.getString(R.string.scanner_title)
-        val appbar = compose.onNodeWithText(titleText).assertIsDisplayed().getUnclippedBoundsInRoot()
+        val title = compose.onNodeWithText(titleText).getUnclippedBoundsInRoot()
+        compose.onNodeWithTag(SCANNER_MESSAGE_SCROLL_TEST_TAG).performTouchInput { swipeUp() }
+        compose.waitForIdle()
+        val titleAfterDrag = compose.onNodeWithText(titleText).getUnclippedBoundsInRoot()
+        assertThat(titleAfterDrag.top.value).isLessThan(title.top.value)
         compose.onNodeWithText(context.getString(R.string.scanner_use_camera)).performScrollTo().assertIsDisplayed()
         compose.onNodeWithText(context.getString(R.string.scanner_search)).performScrollTo().assertIsDisplayed()
-        val appbarAfterScroll = compose.onNodeWithText(titleText).assertIsDisplayed().getUnclippedBoundsInRoot()
-        assertThat(appbarAfterScroll.top).isEqualTo(appbar.top)
     }
 
     @Test

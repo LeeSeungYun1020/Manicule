@@ -15,14 +15,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -73,6 +76,7 @@ internal fun ScannerScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ScannerMessageScreen(
     uiState: ScannerUiState,
@@ -113,13 +117,15 @@ private fun ScannerMessageScreen(
                     description = R.string.scanner_failed_description,
                 )
         }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             ManiculeTopAppBar(
                 title = stringResource(R.string.scanner_title),
                 onNavigateBack = onNavigateBack,
                 modifier = Modifier.testTag(SCANNER_TOP_BAR_TEST_TAG),
+                scrollBehavior = scrollBehavior,
             )
         },
     ) { padding ->
@@ -138,7 +144,8 @@ private fun ScannerMessageScreen(
                         state = scrollState,
                         enabled = scrollState.maxValue > 0,
                     )
-                    .padding(horizontal = MaterialTheme.spacing.screenHorizontal),
+                    .padding(horizontal = MaterialTheme.spacing.screenHorizontal)
+                    .testTag(SCANNER_MESSAGE_SCROLL_TEST_TAG),
             ) {
                 ManiculeEmptyState(
                     title = stringResource(message.title),
@@ -229,6 +236,7 @@ private fun BarcodeScannerOverlay(
 }
 
 internal const val SCANNER_MESSAGE_CARD_TEST_TAG = "scanner_message_card"
+internal const val SCANNER_MESSAGE_SCROLL_TEST_TAG = "scanner_message_scroll"
 internal const val SCANNER_TOP_BAR_TEST_TAG = "scanner_top_bar"
 private const val VIEWFINDER_RATIO = 21f / 13f
 private const val VIEWFINDER_WIDTH_FRACTION = 0.58f
