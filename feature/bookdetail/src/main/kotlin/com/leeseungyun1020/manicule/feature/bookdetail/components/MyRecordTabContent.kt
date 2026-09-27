@@ -60,6 +60,9 @@ internal fun MyRecordTabContent(
     onSaveMemo: () -> Unit = {},
     onAddRecord: () -> Unit,
     onRetryRecords: () -> Unit,
+    onEditRecord: (ReadingRecord) -> Unit = {},
+    onDeleteRecord: (ReadingRecord) -> Unit = {},
+    isRecordActionEnabled: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val maxEndPage = remember(records) { records.maxOfOrNull { it.endPage } ?: 0 }
@@ -147,6 +150,9 @@ internal fun MyRecordTabContent(
                 maxEndPage = maxEndPage,
                 totalPages = totalPages,
                 onAddRecord = onAddRecord,
+                onEditRecord = onEditRecord,
+                onDeleteRecord = onDeleteRecord,
+                isActionEnabled = isRecordActionEnabled,
             )
         }
     }

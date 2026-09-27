@@ -40,6 +40,7 @@ import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
+import com.leeseungyun1020.manicule.core.model.ReadingRecord
 import com.leeseungyun1020.manicule.feature.bookdetail.R
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
@@ -70,23 +71,57 @@ internal fun AddRecordBottomSheet(
     onDismissRequest: () -> Unit,
     onSave: (LocalDate, LocalTime, Int, Int) -> Unit,
     modifier: Modifier = Modifier,
+    recordToEdit: ReadingRecord? = null,
 ) {
+    val isEditMode = recordToEdit != null
+    val targetRecordId = recordToEdit?.id ?: 0L
+
     val timeZone = remember { TimeZone.currentSystemDefault() }
     val today = remember { Clock.System.now().toLocalDateTime(timeZone).date }
     val currentTime = remember { Clock.System.now().toLocalDateTime(timeZone).time }
 
-    var dateMode by rememberSaveable { mutableStateOf(DateSelectionMode.Today) }
-    var customDateText by rememberSaveable { mutableStateOf(today.toString()) }
-    var showDatePicker by rememberSaveable { mutableStateOf(false) }
-
-    var timeMode by rememberSaveable { mutableStateOf(TimeSelectionMode.Now) }
-    var customTimeText by rememberSaveable {
-        mutableStateOf(LocalTime(currentTime.hour, currentTime.minute).toString())
+    val initialDateMode = remember(recordToEdit, today) {
+        when {
+            recordToEdit == null -> DateSelectionMode.Today
+            recordToEdit.date == today -> DateSelectionMode.Today
+            recordToEdit.date == today.minus(1, DateTimeUnit.DAY) -> DateSelectionMode.Yesterday
+            else -> DateSelectionMode.Custom
+        }
     }
-    var showTimePicker by rememberSaveable { mutableStateOf(false) }
+    val initialCustomDateText = remember(recordToEdit, today) {
+        recordToEdit?.date?.toString() ?: today.toString()
+    }
+    val initialTimeMode = remember(recordToEdit) {
+        if (recordToEdit != null) {
+            TimeSelectionMode.Custom
+        } else {
+            TimeSelectionMode.Now
+        }
+    }
+    val initialCustomTimeText = remember(recordToEdit, currentTime) {
+        if (recordToEdit != null) {
+            LocalTime(recordToEdit.time.hour, recordToEdit.time.minute).toString()
+        } else {
+            LocalTime(currentTime.hour, currentTime.minute).toString()
+        }
+    }
+    val initialStartPageText = remember(recordToEdit, initialStartPage) {
+        (recordToEdit?.startPage ?: initialStartPage).toString()
+    }
+    val initialEndPageText = remember(recordToEdit) {
+        recordToEdit?.endPage?.toString() ?: ""
+    }
 
-    var startPageText by rememberSaveable { mutableStateOf(initialStartPage.toString()) }
-    var endPageText by rememberSaveable { mutableStateOf("") }
+    var dateMode by rememberSaveable(targetRecordId) { mutableStateOf(initialDateMode) }
+    var customDateText by rememberSaveable(targetRecordId) { mutableStateOf(initialCustomDateText) }
+    var showDatePicker by rememberSaveable(targetRecordId) { mutableStateOf(false) }
+
+    var timeMode by rememberSaveable(targetRecordId) { mutableStateOf(initialTimeMode) }
+    var customTimeText by rememberSaveable(targetRecordId) { mutableStateOf(initialCustomTimeText) }
+    var showTimePicker by rememberSaveable(targetRecordId) { mutableStateOf(false) }
+
+    var startPageText by rememberSaveable(targetRecordId) { mutableStateOf(initialStartPageText) }
+    var endPageText by rememberSaveable(targetRecordId) { mutableStateOf(initialEndPageText) }
 
     val startPage = startPageText.toIntOrNull()
     val endPage = endPageText.toIntOrNull()
@@ -120,7 +155,11 @@ internal fun AddRecordBottomSheet(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = stringResource(R.string.book_detail_add_record_title),
+                    text = if (isEditMode) {
+                        stringResource(R.string.book_detail_edit_record_title)
+                    } else {
+                        stringResource(R.string.book_detail_add_record_title)
+                    },
                     style = MaterialTheme.typography.titleMedium,
                 )
                 IconButton(
@@ -165,7 +204,11 @@ internal fun AddRecordBottomSheet(
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                text = stringResource(R.string.book_detail_add_record_button),
+                text = if (isEditMode) {
+                    stringResource(R.string.book_detail_edit_record_button)
+                } else {
+                    stringResource(R.string.book_detail_add_record_button)
+                },
                 enabled = isPageValid && !isSaving,
             )
         }
@@ -357,6 +400,27 @@ private fun AddRecordBottomSheetPreview() {
             isSaving = false,
             onDismissRequest = {},
             onSave = { _, _, _, _ -> },
+        )
+    }
+}
+
+@ManiculePreview
+@Composable
+private fun EditRecordBottomSheetPreview() {
+    ManiculePreviewTheme {
+        AddRecordBottomSheet(
+            initialStartPage = 1,
+            isSaving = false,
+            onDismissRequest = {},
+            onSave = { _, _, _, _ -> },
+            recordToEdit = ReadingRecord(
+                id = 1L,
+                isbn = "123",
+                date = LocalDate(2026, 7, 8),
+                time = LocalTime(21, 12),
+                startPage = 43,
+                endPage = 68,
+            ),
         )
     }
 }
