@@ -558,8 +558,8 @@ class BookDetailViewModel
                 deletingRecordIds.update { it - recordIdToCommit }
                 if (!success) {
                     val failMsgId = ++nextSnackbarMessageId
-                    val restoredRecords = calculateEffectiveRecords(rawRecords, pendingDeleteRecordId, deletingRecordIds.value)
                     _uiState.updateContent {
+                        val restoredRecords = calculateEffectiveRecords(rawRecords, pendingDeleteRecordId, deletingRecordIds.value)
                         val nextMsg =
                             if (it.recordSnackbarMessage is RecordSnackbarMessage.RecordDeleted) {
                                 it.recordSnackbarMessage
