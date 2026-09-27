@@ -19,9 +19,16 @@ complexity:
     ignoreAnnotated: [ 'Composable' ]
   LongParameterList:
     ignoreDefaultParameters: true
-    ignoreAnnotated: [ 'Composable' ]
+    ignoreAnnotated: [ 'Composable', 'Inject' ]
     excludes: [ '**/navigation/**' ]
   TooManyFunctions:
+    thresholdInFiles: 15
+    thresholdInClasses: 15
+    thresholdInInterfaces: 15
+    thresholdInObjects: 15
+    thresholdInEnums: 15
+    ignorePrivate: true
+    ignoreOverridden: true
     ignoreAnnotatedFunctions: [ 'Preview', 'ManiculePreview' ]
 
 # 서식은 ktlint에 맡기고 의미 분석은 detekt 기본 규칙을 유지한다.

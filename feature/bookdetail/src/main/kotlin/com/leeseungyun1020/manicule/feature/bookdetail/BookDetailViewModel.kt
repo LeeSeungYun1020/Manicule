@@ -97,7 +97,7 @@ private fun resolveMemoSaving(
         else -> previousMemoSaving ?: MemoSavingState.Idle
     }
 
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions")
 @HiltViewModel
 class BookDetailViewModel
     @Inject

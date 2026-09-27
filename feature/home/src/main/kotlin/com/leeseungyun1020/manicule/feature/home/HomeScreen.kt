@@ -1,5 +1,3 @@
-@file:Suppress("TooManyFunctions")
-
 package com.leeseungyun1020.manicule.feature.home
 
 import androidx.compose.foundation.clickable

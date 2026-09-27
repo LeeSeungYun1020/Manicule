@@ -17,7 +17,6 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import javax.inject.Inject
 
-@Suppress("TooManyFunctions")
 class LibraryRepositoryImpl
     @Inject
     constructor(
