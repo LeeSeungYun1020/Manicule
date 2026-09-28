@@ -20,6 +20,12 @@
     <string name="stats_chart_day">Day</string>
     <string name="stats_chart_week">Week</string>
     <string name="stats_chart_month">Month</string>
+    <string name="stats_chart_day_short">D</string>
+    <string name="stats_chart_week_short">W</string>
+    <string name="stats_chart_month_short">M</string>
+    <string name="stats_chart_day_description">Daily grouping</string>
+    <string name="stats_chart_week_description">Weekly grouping</string>
+    <string name="stats_chart_month_description">Monthly grouping</string>
     <string name="stats_chart_books_legend">Books (count)</string>
     <string name="stats_chart_pages_legend">Pages (pages)</string>
     <string name="stats_chart_explanation">Books are counted once per interval, so the bar totals may differ from the period summary.</string>

@@ -1,19 +1,24 @@
 package com.leeseungyun1020.manicule.feature.stats
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -105,8 +110,89 @@ class ReadingChartTest {
                 )
             }
         }
-        composeRule.onNodeWithText(context.getString(R.string.stats_chart_week)).performClick()
+        composeRule.onNodeWithTag("reading_chart_unit_week").performClick()
         composeRule.runOnIdle { org.junit.Assert.assertEquals(ReadingChartUnit.WEEK, selected) }
+    }
+
+    @Test fun chartUnitSelectorHasOneSelectionAndAccessibleTouchTargets() {
+        val date = LocalDate(2026, 9, 1)
+        var unit by mutableStateOf(ReadingChartUnit.DAY)
+        composeRule.setContent {
+            ManiculeTheme {
+                ReadingChartCard(
+                    state = ChartState.Content(
+                        ChartKey(StatsPeriod.CUSTOM, date, date, ReadingChartUnit.DAY),
+                        listOf(ReadingChartBucket(date, date, 1, 42)),
+                    ),
+                    unit = unit,
+                    onUnitSelected = { unit = it },
+                    onRetry = {},
+                )
+            }
+        }
+        val units = listOf("day", "week", "month")
+        units.forEachIndexed { index, name ->
+            val node = composeRule.onNodeWithTag("reading_chart_unit_$name")
+            node.assertIsDisplayed()
+            if (index == 0) node.assertIsSelected() else node.assertIsNotSelected()
+            val bounds = node.fetchSemanticsNode().boundsInRoot
+            val minTouchPx = with(composeRule.density) { 48.dp.toPx() }
+            org.junit.Assert.assertTrue("$name width=${bounds.width}", bounds.width >= minTouchPx)
+            org.junit.Assert.assertTrue("$name height=${bounds.height}", bounds.height >= minTouchPx)
+        }
+        composeRule.onNodeWithText(context.getString(R.string.stats_chart_day_short)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.stats_chart_week_short)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.stats_chart_month_short)).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(context.getString(R.string.stats_chart_week_description)).performClick()
+        composeRule.onNodeWithTag("reading_chart_unit_week").assertIsSelected()
+        composeRule.onNodeWithTag("reading_chart_unit_day").assertIsNotSelected()
+        composeRule.onNodeWithTag("reading_chart_unit_month").assertIsNotSelected()
+        composeRule.runOnIdle { org.junit.Assert.assertEquals(ReadingChartUnit.WEEK, unit) }
+    }
+
+    @Test fun chartHeaderWrapsOnlyWhenMeasuredContentDoesNotFit() {
+        val date = LocalDate(2026, 9, 1)
+        var width by mutableStateOf(240.dp)
+        var fontScale by mutableStateOf(1f)
+        var direction by mutableStateOf(LayoutDirection.Ltr)
+        composeRule.setContent {
+            ManiculeTheme {
+                val density = LocalDensity.current
+                CompositionLocalProvider(
+                    LocalDensity provides Density(density.density, fontScale),
+                    LocalLayoutDirection provides direction,
+                ) {
+                    Box(Modifier.width(width)) {
+                        ReadingChartCard(
+                            state = ChartState.Content(
+                                ChartKey(StatsPeriod.CUSTOM, date, date, ReadingChartUnit.DAY),
+                                listOf(ReadingChartBucket(date, date, 1, 42)),
+                            ),
+                            unit = ReadingChartUnit.DAY,
+                            onUnitSelected = {},
+                            onRetry = {},
+                        )
+                    }
+                }
+            }
+        }
+        val title = composeRule.onNodeWithTag("reading_chart_title")
+        val selector = composeRule.onNodeWithTag("reading_chart_unit_selector")
+        org.junit.Assert.assertTrue(selector.fetchSemanticsNode().boundsInRoot.top >= title.fetchSemanticsNode().boundsInRoot.bottom)
+        composeRule.runOnIdle { width = 600.dp }
+        org.junit.Assert.assertTrue(selector.fetchSemanticsNode().boundsInRoot.top < title.fetchSemanticsNode().boundsInRoot.bottom)
+        org.junit.Assert.assertTrue(selector.fetchSemanticsNode().boundsInRoot.left >= title.fetchSemanticsNode().boundsInRoot.right)
+        composeRule.runOnIdle {
+            width = 320.dp
+            fontScale = 2f
+        }
+        org.junit.Assert.assertTrue(selector.fetchSemanticsNode().boundsInRoot.top >= title.fetchSemanticsNode().boundsInRoot.bottom)
+        composeRule.runOnIdle {
+            width = 600.dp
+            fontScale = 1f
+            direction = LayoutDirection.Rtl
+        }
+        org.junit.Assert.assertTrue(selector.fetchSemanticsNode().boundsInRoot.right <= title.fetchSemanticsNode().boundsInRoot.left)
     }
 
     @Test fun rtlKeepsBookAxisOnPhysicalLeft() {
