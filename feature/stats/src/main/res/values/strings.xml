@@ -20,6 +20,12 @@
     <string name="stats_chart_day">일</string>
     <string name="stats_chart_week">주</string>
     <string name="stats_chart_month">월</string>
+    <string name="stats_chart_day_short">일</string>
+    <string name="stats_chart_week_short">주</string>
+    <string name="stats_chart_month_short">월</string>
+    <string name="stats_chart_day_description">일별 집계</string>
+    <string name="stats_chart_week_description">주별 집계</string>
+    <string name="stats_chart_month_description">월별 집계</string>
     <string name="stats_chart_books_legend">책 (권)</string>
     <string name="stats_chart_pages_legend">페이지 (쪽)</string>
     <string name="stats_chart_explanation">구간마다 읽은 책을 중복 없이 세므로, 막대의 권수 합은 기간 요약과 다를 수 있어요.</string>

@@ -13,11 +13,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeCard
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeErrorState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
-import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSegmentedButton
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
@@ -40,28 +41,12 @@ fun ReadingChartCard(
     modifier: Modifier = Modifier,
 ) {
     if (state == ChartState.Hidden) return
-    val day = stringResource(R.string.stats_chart_day)
-    val week = stringResource(R.string.stats_chart_week)
-    val month = stringResource(R.string.stats_chart_month)
     ManiculeCard(modifier = modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(MaterialTheme.spacing.lg),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
         ) {
-            Text(stringResource(R.string.stats_chart_title), style = MaterialTheme.typography.titleMedium)
-            ManiculeSegmentedButton(
-                options = ReadingChartUnit.entries,
-                selectedOption = unit,
-                onOptionSelected = onUnitSelected,
-                disabledOptions = emptySet(),
-                itemLabel = {
-                    when (it) {
-                        ReadingChartUnit.DAY -> day
-                        ReadingChartUnit.WEEK -> week
-                        ReadingChartUnit.MONTH -> month
-                    }
-                },
-            )
+            ReadingChartHeader(unit = unit, onUnitSelected = onUnitSelected)
             Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.lg)) {
                 LegendMark(bar = true, label = stringResource(R.string.stats_chart_books_legend))
                 LegendMark(bar = false, label = stringResource(R.string.stats_chart_pages_legend))
@@ -90,6 +75,38 @@ fun ReadingChartCard(
                 stringResource(R.string.stats_chart_explanation),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReadingChartHeader(
+    unit: ReadingChartUnit,
+    onUnitSelected: (ReadingChartUnit) -> Unit,
+) {
+    val gap = MaterialTheme.spacing.sm
+    Layout(
+        content = {
+            Text(
+                stringResource(R.string.stats_chart_title),
+                modifier = Modifier.testTag("reading_chart_title"),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            ReadingChartUnitSelector(selectedUnit = unit, onUnitSelected = onUnitSelected)
+        },
+        modifier = Modifier.fillMaxWidth(),
+    ) { measurables, constraints ->
+        val selector = measurables[1].measure(constraints.copy(minWidth = 0, minHeight = 0))
+        val title = measurables[0].measure(constraints.copy(minWidth = 0, minHeight = 0))
+        val gapPx = gap.roundToPx()
+        val sameRow = title.width + gapPx + selector.width <= constraints.maxWidth
+        val height = if (sameRow) maxOf(title.height, selector.height) else title.height + gapPx + selector.height
+        layout(constraints.maxWidth, height) {
+            title.placeRelative(0, if (sameRow) (height - title.height) / 2 else 0)
+            selector.placeRelative(
+                constraints.maxWidth - selector.width,
+                if (sameRow) (height - selector.height) / 2 else title.height + gapPx,
             )
         }
     }
