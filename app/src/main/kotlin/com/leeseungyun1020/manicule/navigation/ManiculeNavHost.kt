@@ -12,7 +12,6 @@ import com.leeseungyun1020.manicule.feature.bookdetail.navigation.BookDetailRout
 import com.leeseungyun1020.manicule.feature.bookdetail.navigation.bookDetailScreen
 import com.leeseungyun1020.manicule.feature.home.navigation.HomeRoute
 import com.leeseungyun1020.manicule.feature.home.navigation.homeScreen
-import com.leeseungyun1020.manicule.feature.library.navigation.LibraryRoute
 import com.leeseungyun1020.manicule.feature.library.navigation.LibraryTab
 import com.leeseungyun1020.manicule.feature.library.navigation.libraryScreen
 import com.leeseungyun1020.manicule.feature.scanner.navigation.ScannerRoute
@@ -53,10 +52,10 @@ fun ManiculeNavHost(
                 appState.navController.navigate(BookDetailRoute(isbn))
             },
             onNavigateToReadingBooks = {
-                appState.navController.navigate(LibraryRoute(LibraryTab.READING))
+                appState.navigateToLibrary(LibraryTab.READING)
             },
             onNavigateToWantBooks = {
-                appState.navController.navigate(LibraryRoute(LibraryTab.WANT))
+                appState.navigateToLibrary(LibraryTab.WANT)
             },
             onNavigateToScanner = {
                 appState.navController.navigate(ScannerRoute)

@@ -10,6 +10,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.leeseungyun1020.manicule.feature.home.navigation.HomeRoute
+import com.leeseungyun1020.manicule.feature.library.navigation.LibraryRoute
+import com.leeseungyun1020.manicule.feature.library.navigation.LibraryTab
 
 /**
  * Manicule 의 최상위 navigation 상태 컨테이너.
@@ -36,18 +39,37 @@ class ManiculeAppState(
         }
 
     fun navigateToTopLevelDestination(destination: TopLevelDestination) {
-        val options =
-            NavOptions
-                .Builder()
-                .setLaunchSingleTop(true)
-                .setRestoreState(true)
-                .setPopUpTo(
-                    navController.graph.findStartDestination().id,
-                    inclusive = false,
-                    saveState = true,
-                ).build()
-        navController.navigate(destination.route, options)
+        if (destination == TopLevelDestination.HOME) {
+            if (navController.currentBackStackEntry?.destination?.hasRoute(HomeRoute::class) == true) {
+                return
+            }
+            val popped = navController.popBackStack(HomeRoute, inclusive = false, saveState = true)
+            if (!popped) {
+                navController.navigate(destination.route, topLevelNavOptions())
+            }
+            return
+        }
+
+        navController.navigate(destination.route, topLevelNavOptions())
     }
+
+    internal fun navigateToLibrary(tab: LibraryTab) {
+        navController.navigate(
+            route = LibraryRoute(initialTab = tab),
+            navOptions = topLevelNavOptions(restoreState = false),
+        )
+    }
+
+    private fun topLevelNavOptions(restoreState: Boolean = true): NavOptions =
+        NavOptions
+            .Builder()
+            .setLaunchSingleTop(true)
+            .setRestoreState(restoreState)
+            .setPopUpTo(
+                navController.graph.findStartDestination().id,
+                inclusive = false,
+                saveState = true,
+            ).build()
 }
 
 @Composable
