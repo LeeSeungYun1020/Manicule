@@ -9,7 +9,9 @@ import com.leeseungyun1020.manicule.core.data.repository.BookSyncResult
 import com.leeseungyun1020.manicule.core.data.repository.StatsRepository
 import com.leeseungyun1020.manicule.core.domain.stats.GetPeriodSummaryUseCase
 import com.leeseungyun1020.manicule.core.domain.stats.GetReadingCalendarUseCase
+import com.leeseungyun1020.manicule.core.domain.stats.GetReadingChartUseCase
 import com.leeseungyun1020.manicule.core.domain.stats.GetReadingDayBooksUseCase
+import com.leeseungyun1020.manicule.core.domain.stats.ReadingChartUnit
 import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.DailyReading
 import com.leeseungyun1020.manicule.core.model.ReadingRecord
@@ -45,6 +47,46 @@ class StatsViewModelTest {
         override fun now(): Instant = Instant.parse("2024-03-01T12:00:00Z")
 
         override fun timeZone(): TimeZone = TimeZone.UTC
+    }
+
+    @Test
+    fun chart_unit_defaults_and_period_specific_selection_survive_switching() =
+        runTest(dispatcherRule.dispatcher) {
+            val handle = SavedStateHandle()
+            val viewModel = viewModel(handle)
+            val job = backgroundScope.launch { viewModel.uiState.collect {} }
+            runCurrent()
+            assertThat(viewModel.uiState.value.chart).isEqualTo(ChartState.Hidden)
+
+            viewModel.selectPeriod(StatsPeriod.FOUR_WEEKS)
+            runCurrent()
+            assertThat((viewModel.uiState.value.chart as ChartState.Content).key.unit)
+                .isEqualTo(ReadingChartUnit.WEEK)
+            viewModel.selectChartUnit(ReadingChartUnit.DAY)
+            runCurrent()
+            assertThat((viewModel.uiState.value.chart as ChartState.Content).key.unit)
+                .isEqualTo(ReadingChartUnit.DAY)
+            assertThat(handle.get<String>("chart_unit_FOUR_WEEKS")).isEqualTo("DAY")
+
+            viewModel.selectPeriod(StatsPeriod.ONE_YEAR)
+            runCurrent()
+            assertThat((viewModel.uiState.value.chart as ChartState.Content).key.unit)
+                .isEqualTo(ReadingChartUnit.MONTH)
+            viewModel.selectPeriod(StatsPeriod.FOUR_WEEKS)
+            runCurrent()
+            assertThat((viewModel.uiState.value.chart as ChartState.Content).key.unit)
+                .isEqualTo(ReadingChartUnit.DAY)
+            job.cancel()
+        }
+
+    @Test
+    fun custom_chart_default_changes_at_fourteen_and_ninety_day_boundaries() {
+        val end = LocalDate(2024, 3, 1)
+        assertThat(defaultChartUnit(StatsPeriod.CUSTOM, LocalDate(2024, 2, 17), end)).isEqualTo(ReadingChartUnit.DAY)
+        assertThat(defaultChartUnit(StatsPeriod.CUSTOM, LocalDate(2024, 2, 16), end)).isEqualTo(ReadingChartUnit.WEEK)
+        assertThat(defaultChartUnit(StatsPeriod.CUSTOM, LocalDate(2023, 12, 3), end)).isEqualTo(ReadingChartUnit.WEEK)
+        assertThat(defaultChartUnit(StatsPeriod.CUSTOM, LocalDate(2023, 12, 2), end)).isEqualTo(ReadingChartUnit.MONTH)
+        assertThat(chartUnitFromSaved("invalid", ReadingChartUnit.MONTH)).isEqualTo(ReadingChartUnit.MONTH)
     }
 
     @Test
@@ -639,6 +681,7 @@ class StatsViewModelTest {
         GetReadingCalendarUseCase(repository),
         GetPeriodSummaryUseCase(repository),
         GetReadingDayBooksUseCase(repository, fakeBooks),
+        GetReadingChartUseCase(repository, dispatcherRule.dispatcher),
         clock,
         handle,
     )

@@ -6,7 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.leeseungyun1020.manicule.core.common.time.Clock
 import com.leeseungyun1020.manicule.core.domain.stats.GetPeriodSummaryUseCase
 import com.leeseungyun1020.manicule.core.domain.stats.GetReadingCalendarUseCase
+import com.leeseungyun1020.manicule.core.domain.stats.GetReadingChartUseCase
 import com.leeseungyun1020.manicule.core.domain.stats.GetReadingDayBooksUseCase
+import com.leeseungyun1020.manicule.core.domain.stats.ReadingChartBucket
+import com.leeseungyun1020.manicule.core.domain.stats.ReadingChartUnit
 import com.leeseungyun1020.manicule.core.domain.time.observeToday
 import com.leeseungyun1020.manicule.core.model.PeriodSummary
 import com.leeseungyun1020.manicule.core.model.ReadingCalendarDay
@@ -15,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -30,6 +34,7 @@ import javax.inject.Inject
 private const val SELECTED_DATE_KEY = "selected_date"
 private const val SELECTED_PERIOD_KEY = "selected_period"
 private const val CUSTOM_PERIOD_RANGE_KEY = "custom_period_range"
+private const val CHART_UNIT_KEY_PREFIX = "chart_unit_"
 
 @HiltViewModel
 class StatsViewModel
@@ -38,12 +43,19 @@ class StatsViewModel
         private val getCalendar: GetReadingCalendarUseCase,
         private val getSummary: GetPeriodSummaryUseCase,
         private val getDayBooks: GetReadingDayBooksUseCase,
+        private val getChart: GetReadingChartUseCase,
         private val clock: Clock,
         private val savedStateHandle: SavedStateHandle,
     ) : ViewModel() {
         private val periodRetries = MutableStateFlow(0)
         private val dayRetries = MutableStateFlow(0)
         private val todayBooksRetries = MutableStateFlow(0)
+        private val chartRetries = MutableStateFlow(0)
+        private val chartSelections = MutableStateFlow(
+            StatsPeriod.entries.associateWith { period ->
+                savedStateHandle.get<String>(CHART_UNIT_KEY_PREFIX + period.name)
+            },
+        )
         private val selectedPeriod = savedStateHandle.getStateFlow(SELECTED_PERIOD_KEY, StatsPeriod.TODAY)
         private val customPeriodRange = savedStateHandle.getStateFlow<String?>(CUSTOM_PERIOD_RANGE_KEY, null)
         private val selectedDate = savedStateHandle.getStateFlow<String?>(SELECTED_DATE_KEY, null)
@@ -190,8 +202,50 @@ class StatsViewModel
                     }
                 }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TodayBooksState.Hidden)
 
+        private val chartState =
+            combine(periodState, chartSelections, chartRetries) { period, selections, retry ->
+                val content = period as? PeriodState.Content
+                val key = if (content == null || content.selectedPeriod == StatsPeriod.TODAY) {
+                    null
+                } else {
+                    val start = content.summary.rangeStart
+                    val end = content.summary.rangeEnd
+                    val unit = chartUnitFromSaved(
+                        selections[content.selectedPeriod],
+                        defaultChartUnit(content.selectedPeriod, start, end),
+                    )
+                    ChartKey(content.selectedPeriod, start, end, unit)
+                }
+                key to retry
+            }.distinctUntilChanged().flatMapLatest { (key, _) ->
+                if (key == null) {
+                    flowOf<ChartEvent>(ChartEvent.Hidden)
+                } else {
+                    getChart(key.start, key.end, key.unit)
+                        .map { ChartEvent.Ready(key, it) as ChartEvent }
+                        .onStart { emit(ChartEvent.Started(key)) }
+                        .catch { emit(ChartEvent.Failed(key)) }
+                }
+            }.scan<ChartEvent, ChartState>(ChartState.Hidden) { previous, event ->
+                when (event) {
+                    ChartEvent.Hidden -> ChartState.Hidden
+                    is ChartEvent.Started -> previous.takeIf {
+                        it is ChartState.Content && it.key == event.key
+                    } ?: ChartState.Loading(event.key)
+                    is ChartEvent.Ready -> ChartState.Content(event.key, event.buckets)
+                    is ChartEvent.Failed -> {
+                        val prior = previous as? ChartState.Content
+                        if (prior?.key == event.key) {
+                            prior.copy(refreshErrorId = ++nextRefreshErrorId)
+                        } else {
+                            ChartState.Error(event.key)
+                        }
+                    }
+                }
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ChartState.Hidden)
+
         val uiState =
-            combine(periodState, dayState, todayBooksState) { period, day, todayBooks ->
+            combine(periodState, dayState, todayBooksState, chartState) { period, day, todayBooks, chart ->
                 val visibleDay = when (period) {
                     is PeriodState.Content -> when (day) {
                         DayState.Closed -> day
@@ -222,8 +276,42 @@ class StatsViewModel
                     }
                     else -> TodayBooksState.Hidden
                 }
-                StatsUiState(period, visibleDay, visibleTodayBooks)
+                val visibleChart = (period as? PeriodState.Content)?.let { content ->
+                    if (content.selectedPeriod == StatsPeriod.TODAY) {
+                        null
+                    } else {
+                        val expected = ChartKey(
+                            content.selectedPeriod,
+                            content.summary.rangeStart,
+                            content.summary.rangeEnd,
+                            chartUnitFromSaved(
+                                chartSelections.value[content.selectedPeriod],
+                                defaultChartUnit(content.selectedPeriod, content.summary.rangeStart, content.summary.rangeEnd),
+                            ),
+                        )
+                        chart.takeIf { state ->
+                            when (state) {
+                                is ChartState.Loading -> state.key == expected
+                                is ChartState.Error -> state.key == expected
+                                is ChartState.Content -> state.key == expected
+                                ChartState.Hidden -> false
+                            }
+                        } ?: ChartState.Loading(expected)
+                    }
+                } ?: ChartState.Hidden
+                StatsUiState(period, visibleDay, visibleTodayBooks, visibleChart)
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), StatsUiState())
+
+        fun selectChartUnit(unit: ReadingChartUnit) {
+            val period = (uiState.value.period as? PeriodState.Content)?.selectedPeriod ?: return
+            if (period == StatsPeriod.TODAY) return
+            savedStateHandle[CHART_UNIT_KEY_PREFIX + period.name] = unit.name
+            chartSelections.value = chartSelections.value + (period to unit.name)
+        }
+
+        fun retryChart() {
+            chartRetries.value++
+        }
 
         fun selectPeriod(period: StatsPeriod) {
             if (period == StatsPeriod.CUSTOM) {
@@ -402,6 +490,23 @@ class StatsViewModel
             data class Failed(
                 val date: LocalDate,
             ) : DayEvent
+        }
+
+        private sealed interface ChartEvent {
+            data object Hidden : ChartEvent
+
+            data class Started(
+                val key: ChartKey,
+            ) : ChartEvent
+
+            data class Ready(
+                val key: ChartKey,
+                val buckets: List<ReadingChartBucket>,
+            ) : ChartEvent
+
+            data class Failed(
+                val key: ChartKey,
+            ) : ChartEvent
         }
 
         private sealed interface TodayBooksEvent {

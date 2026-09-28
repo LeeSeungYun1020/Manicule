@@ -52,10 +52,12 @@ import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
+import com.leeseungyun1020.manicule.core.domain.stats.ReadingChartUnit
 import com.leeseungyun1020.manicule.core.domain.stats.ReadingDayBook
 import com.leeseungyun1020.manicule.core.model.PeriodSummary
 import com.leeseungyun1020.manicule.core.model.ReadingCalendarDay
 import com.leeseungyun1020.manicule.feature.stats.components.CustomPeriodBottomSheet
+import com.leeseungyun1020.manicule.feature.stats.components.ReadingChartCard
 import com.leeseungyun1020.manicule.feature.stats.components.ReadingDayBookItem
 import com.leeseungyun1020.manicule.feature.stats.components.ReadingDayBottomSheet
 import com.leeseungyun1020.manicule.feature.stats.components.StatsCalendarCard
@@ -77,6 +79,8 @@ fun StatsScreenRoute(
         onRetryPeriod = viewModel::retryPeriod,
         onRetryDay = viewModel::retryDay,
         onRetryTodayBooks = viewModel::retryTodayBooks,
+        onChartUnitSelected = viewModel::selectChartUnit,
+        onRetryChart = viewModel::retryChart,
         onBookSelected = { isbn ->
             viewModel.dismissDay()
             onBookSelected(isbn)
@@ -96,6 +100,8 @@ fun StatsScreen(
     onRetryPeriod: () -> Unit,
     onRetryDay: () -> Unit,
     onRetryTodayBooks: () -> Unit,
+    onChartUnitSelected: (ReadingChartUnit) -> Unit,
+    onRetryChart: () -> Unit,
     onBookSelected: (String) -> Unit,
     consumeRefreshError: (Int) -> Boolean,
     modifier: Modifier = Modifier,
@@ -122,6 +128,12 @@ fun StatsScreen(
         consumeRefreshError = consumeRefreshError,
         snackbarHostState = snackbarHostState,
         onRetry = onRetryTodayBooks,
+    )
+    HandleRefreshError(
+        errorId = (state.chart as? ChartState.Content)?.refreshErrorId ?: 0,
+        consumeRefreshError = consumeRefreshError,
+        snackbarHostState = snackbarHostState,
+        onRetry = onRetryChart,
     )
 
     Scaffold(
@@ -151,6 +163,9 @@ fun StatsScreen(
                 onOpenCustomPeriodSheet = { showCustomPeriodSheet = true },
                 onDateSelected = onDateSelected,
                 onRetryTodayBooks = onRetryTodayBooks,
+                chart = state.chart,
+                onChartUnitSelected = onChartUnitSelected,
+                onRetryChart = onRetryChart,
                 onBookSelected = onBookSelected,
                 modifier = Modifier.fillMaxSize().padding(padding),
             )
@@ -226,6 +241,9 @@ private fun StatsContent(
     onOpenCustomPeriodSheet: () -> Unit,
     onDateSelected: (LocalDate) -> Unit,
     onRetryTodayBooks: () -> Unit,
+    chart: ChartState,
+    onChartUnitSelected: (ReadingChartUnit) -> Unit,
+    onRetryChart: () -> Unit,
     onBookSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -294,13 +312,22 @@ private fun StatsContent(
 
         item(key = "summary") {
             StatsSummary(period.summary)
-            if (!isTodayPeriod && period.summary.pagesRead == 0) {
+        }
+
+        if (!isTodayPeriod) {
+            item(key = "reading_chart") {
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.lg))
-                Text(
-                    text = stringResource(R.string.stats_empty_period),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                val unit = when (chart) {
+                    is ChartState.Loading -> chart.key.unit
+                    is ChartState.Error -> chart.key.unit
+                    is ChartState.Content -> chart.key.unit
+                    ChartState.Hidden -> defaultChartUnit(
+                        period.selectedPeriod,
+                        period.summary.rangeStart,
+                        period.summary.rangeEnd,
+                    )
+                }
+                ReadingChartCard(chart, unit, onChartUnitSelected, onRetryChart)
             }
         }
 
@@ -552,6 +579,8 @@ private fun StatsScreenPreview() {
             onRetryPeriod = {},
             onRetryDay = {},
             onRetryTodayBooks = {},
+            onChartUnitSelected = {},
+            onRetryChart = {},
             onBookSelected = {},
             consumeRefreshError = { true },
         )
@@ -583,6 +612,8 @@ private fun StatsScreenTodayEmptyPreview() {
             onRetryPeriod = {},
             onRetryDay = {},
             onRetryTodayBooks = {},
+            onChartUnitSelected = {},
+            onRetryChart = {},
             onBookSelected = {},
             consumeRefreshError = { true },
         )
@@ -611,6 +642,8 @@ private fun StatsScreenFourWeeksPreview() {
             onRetryPeriod = {},
             onRetryDay = {},
             onRetryTodayBooks = {},
+            onChartUnitSelected = {},
+            onRetryChart = {},
             onBookSelected = {},
             consumeRefreshError = { true },
         )
@@ -641,6 +674,8 @@ private fun StatsScreenCustomPeriodPreview() {
             onRetryPeriod = {},
             onRetryDay = {},
             onRetryTodayBooks = {},
+            onChartUnitSelected = {},
+            onRetryChart = {},
             onBookSelected = {},
             consumeRefreshError = { true },
         )
