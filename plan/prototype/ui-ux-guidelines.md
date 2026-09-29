@@ -37,7 +37,7 @@
 - 앱 루트는 `ManiculeTheme`으로 감싼다. 컴포넌트는 `MaterialTheme.colorScheme`·`typography`·`shapes`·치수 토큰을 사용하며 ARGB 리터럴을 넣지 않는다. 달력 레벨은 `MaterialTheme.maniculeColors.calendarLevels`를 사용한다.
 - `ManiculeExtendedColors` 필드는 M3 색상 역할에 맞는 값이 없고, 라이트·다크 값이 다르며, 둘 이상의 컴포넌트가 공유할 때만 추가한다. 표지·카메라 딤은 `scrim`, 차트 막대는 `primary`, 격자선은 `outlineVariant`, 축 레이블은 `onSurfaceVariant`를 우선 사용한다.
 - `ManiculeTopAppBar`는 `enterAlwaysScrollBehavior()`와 `Scaffold`의 `nestedScroll`을 연결한다. 책 정보·서재의 탭은 앱바 밖 상단에 남긴다. 검색 화면과 카메라 스캔은 앱바가 없고, 스캔 실패·권한 거부는 앱바를 사용한다. 하단 탭은 3~5개로 구성하며 시스템 뒤로가기와 타입 안전 내비게이션을 지원한다.
-- M3 표준 컴포넌트를 우선 사용하고 깊이는 그림자 대신 tonal elevation으로 표현한다. 상태 전환에는 `AnimatedVisibility`·`animateContentSize`·`Crossfade`를 사용하며 화면 전환의 공유 요소 효과는 필요 시 검토한다. 창 크기는 `WindowSizeClass`의 Compact·Medium·Expanded로 대응한다.
+- M3 표준 컴포넌트를 우선 사용하고 깊이는 그림자 대신 tonal elevation으로 표현한다. 상태 전환에는 `AnimatedVisibility`·`animateContentSize`·`Crossfade`를 사용하며 화면 전환의 공유 요소 효과는 필요 시 검토한다. 창 크기에 따른 화면 조정은 가용 폭과 콘텐츠 최대 폭을 사용하며, `WindowSizeClass`별 앱 셸 전환은 향후 개선 대상으로 둔다.
 - 사용자 노출 문자열은 `stringResource`로 관리한다. RTL에는 `start`/`end` 패딩과 방향성 아이콘의 `AutoMirrored`를 사용한다. 인터랙티브 요소에는 접근성 설명을 제공하고 순수 장식에는 `null`을 사용한다. 카드의 텍스트 그룹은 의미를 합친다.
 - 앱은 `enableEdgeToEdge()`를 사용한다. 상태바·내비게이션바·IME 인셋이 콘텐츠와 겹치지 않게 처리한다. `LazyColumn`/`LazyRow` 항목은 안정적인 `key`와 `contentType`을 지정한다. 네트워크 표지는 `BookCover` 또는 Coil `AsyncImage`를 사용하고 `crossfade(true)`·placeholder·error를 제공한다.
 

@@ -1,47 +1,47 @@
 # 화면별 컴포넌트 지도
 
-UI 가이드에서 필요한 화면 변형을 찾은 뒤 해당 행만 읽는다. 이 표는 화면 콘텐츠의 설계이며 구현 여부는 코드에서 확인한다. `(f)`는 feature 소유, 나머지는 공용 컴포넌트 또는 M3 표준이다.
+UI 가이드에서 필요한 화면 변형을 찾은 뒤 해당 행만 읽는다. 각 행은 현재 화면을 구성하는 주요 Composable을 바깥쪽부터 적고, 괄호에는 그 안에서 사용하는 Composable이나 상태별 차이를 적는다. `(f)`는 feature 소유이며, 이름 앞의 `M3`는 Material 3 표준 컴포넌트를 뜻한다.
 
 ## 공용 컴포넌트
 
-- `core:designsystem`: `ManiculeBottomSheet`, `ManiculeButton`, `ManiculeIconButton`, `ManiculeCard`, `ManiculeDashedCard`, `ManiculeDialog`, `ManiculeEmptyState`, `ManiculeErrorState`, `ManiculeNetworkErrorState`, `ManiculeLoading`, `ManiculeSegmentedButton`, `ManiculeTextField`, `ManiculeTopAppBar`, `ManiculeSearchEntry`, `ManiculeSearchBar`, `ManiculeSectionHeader`, `ManiculeSnackbarHost`, `ManiculeTabRow`, `ManiculeStatTile`.
-- `core:ui`: `BookCover`, `BookListItem`, `BookProgressBar`, `ReadingCalendarGrid`와 셀·범례.
+- `core:designsystem`: `ManiculeBottomSheet`, `ManiculeButton`, `ManiculeOutlinedButton`, `ManiculeTextButton`, `ManiculeIconButton`, `ManiculeCard`, `ManiculeDashedCard`, `ManiculeDialog`, `ManiculeEmptyState`, `ManiculeErrorState`, `ManiculeNetworkErrorState`, `ManiculeLoading`, `ManiculeSegmentedButton`, `ManiculeTextField`, `ManiculeTopAppBar`, `ManiculeSearchEntry`, `ManiculeSearchBar`, `ManiculeSectionHeader`, `ManiculeSnackbarHost`, `ManiculeTabRow`, `ManiculeStatTile`.
+- `core:ui`: `BookCover`, `BookListItem`, `BookProgressBar`, `ReadingCalendarGrid`, `ReadingCalendarCell`, `ReadingCalendarLegend`.
 
 ## 프로토타입 변형
 
 [prototype.html](prototype.html)의 화면 변형별 구성을 다룬다. 하단 탭 `NavigationBar`는 `app` 셸 소유라 행마다 쓰지 않는다. 오픈소스 라이선스 화면은 `feature:settings`의 자체 화면(`LicensesScreen`)으로 구현하며 프로토타입 변형에 없다.
 
-| 변형 | 화면 | 구성 컴포넌트 |
+| 변형 | 화면 | 구성 컴포저블 |
 |---|---|---|
-| 1a | 홈 · 계속 사용자 | `HomeSearchTopBar`(f, 로고·검색·스캔) · `ManiculeCard`(요약, 클릭) · `ReadingCalendarGrid`(최근 7일) · `ManiculeStatTile`×2 · `ManiculeSectionHeader`(더보기) · `BookCarouselItem`(f) |
-| 1b | 홈 · 첫 사용자 | `HomeSearchTopBar`(f) · `ManiculeDashedCard`(빈 요약) · `OnboardingGuide`(f) · `ManiculeButton`×2 |
-| 1c | 홈 · 읽는 중 없음 | 1a 요약부 · `ManiculeEmptyState`(inline, 액션 1~2개) |
-| 2a | 검색어 없음 | `ManiculeSearchBar`(초기 포커스) · `ManiculeEmptyState`, 앱바 없음 |
-| 2b | 최근 검색어 | `ManiculeSearchBar` · `ManiculeSectionHeader` · M3 `ListItem`(History, Delete)×n · `HorizontalDivider` |
-| 2c | 입력 중 로컬 필터 | `ManiculeSearchBar` · M3 `ListItem`(Search, 입력값 강조는 호출부 `AnnotatedString`)×n |
-| 3a | 검색 결과 | `ManiculeSearchBar` · “검색 결과” 캡션(`labelMedium`, `onSurfaceVariant`, 배지 아님) · `BookListItem`×n · `ManiculeLoading`(페이징) |
-| 3b | 결과 없음 | `ManiculeSearchBar` · `ManiculeEmptyState`(스캔 액션) |
-| 4a | 카메라 스캔 | `BarcodeScannerOverlay`(f, `colorScheme.scrim` + 알파), 앱바 없음·카메라 위 뒤로가기 |
-| 4b | 인식 실패 | `ManiculeTopAppBar` · `ManiculeEmptyState`(검색 액션) |
-| 4c | 권한 거부 | `ManiculeTopAppBar` · `ManiculeEmptyState`(카메라 사용·검색, Filled + Outlined 액션) |
-| 5a | 책 정보 탭 | `ManiculeTopAppBar` + `ManiculeTabRow`(앱바 밖) · `BookCover`(중형) · 정보 행 · `BookDetailExpandableText`(f)×2 |
-| 5b | 내 기록 있음 | `ManiculeTabRow` · `ManiculeSegmentedButton`(상태 3) · `BookDetailRatingBar`(f) · `ManiculeTextField`(`maxLines`) · `BookProgressBar` · `ManiculeSectionHeader` · M3 `ListItem`(기록)×n |
-| 5c | 내 기록 없음 | 5b · `ManiculeDashedCard`(리뷰 유도, 평점 0) · `ManiculeEmptyState`(기록 없음) |
-| 5d | 기록 추가 시트 | `ManiculeBottomSheet` · `ManiculeSegmentedButton`×2(날짜/시간) · `ManiculeTextField`(`keyboardType = Number`)×2 · `ManiculeButton` · M3 `DatePickerDialog`/`TimePickerDialog`(직접 선택) |
-| 5e | 삭제 스낵바 | `ManiculeSnackbarHost` + `showUndoSnackbar` |
-| 5f | 다 읽음 확인 | `ManiculeDialog`(Celebration 아이콘) |
-| 6a | 읽고 싶음 탭 | `ManiculeTopAppBar`(정렬 아이콘) + `ManiculeTabRow`(앱바 밖) · 정렬 상태 캡션(`labelMedium`, 탭 아래·목록 위) · `LibraryBookCard`(f)×n |
-| 6b | 읽는 중 탭 | 6a의 `LibraryBookCard`(f)에 진도율 책갈피 |
-| 6c | 다 읽음 탭 | 6a의 `LibraryBookCard`(f)에 완료 날짜 |
-| 6d | 서재 빈 상태 | `ManiculeTabRow` · `ManiculeEmptyState`(검색·스캔 액션) |
-| 6e | 정렬 시트 | `ManiculeBottomSheet` · M3 `ListItem`(선택)×3 · `ManiculeSegmentedButton`(방향) · `ManiculeButton`(적용) |
-| 6f | 롱프레스 메뉴 | `ManiculeBottomSheet` · M3 `ListItem`(삭제·상태 변경×2), 모두 `onSurface` |
-| 7a | 통계 4주 | `ManiculeTopAppBar` · `ManiculeSegmentedButton`(기간 4) · `ManiculeCard` · `ReadingCalendarGrid` · `ReadingCalendarLegend` · `ManiculeStatTile`×3 · `ReadingChart`(f) |
-| 7b | 통계 1년 | 7a, 가로 스크롤·좌우 축 고정 |
-| 7c | 통계 오늘 | 7a 요약부 · `BookListItem`(소형, trailing=쪽수)×n |
-| 7d | 기간 설정 시트 | `ManiculeBottomSheet` · M3 `ListItem`×2(시작/종료일) · M3 `DatePickerDialog` · `ManiculeButton` |
-| 7e | 날짜 탭 시트 | `ManiculeBottomSheet` · `BookListItem`(소형)×n |
-| 8a | 설정 | `ManiculeTopAppBar` · `ManiculeSectionHeader`×3 · `ManiculeSegmentedButton`(테마 3) · M3 `ListItem`(리마인더, trailing=Switch) · M3 `ListItem`(시간·라이선스·버전) · M3 `TimePickerDialog` |
+| 1a | 홈 · 계속 사용자 | `HomeSearchTopBar`(f) · `ReadingSummary`(f, `ManiculeCard` 안에 `SummaryMetrics`·`HomeWeekStrip`(`ReadingCalendarCell`×7)·`ReadingCalendarLegend`) · `ReadingBooks`(f, `ManiculeSectionHeader`·`ReadingBookCard`×n) |
+| 1b | 홈 · 첫 사용자 | `HomeSearchTopBar`(f) · `OnboardingContent`(f, `ManiculeDashedCard` 안에 `SummaryMetrics`·`HomeWeekStrip`, `ManiculeCard` 안에 `OnboardingStep`·`ManiculeButton`·`ManiculeOutlinedButton`) |
+| 1c | 홈 · 읽는 중 없음 | `HomeSearchTopBar`(f) · `ReadingSummary`(f) · `NoReadingBooks`(f, `ManiculeEmptyState`와 검색·스캔 또는 서재 이동 액션) |
+| 2a | 검색어 없음 | `ManiculeSearchBar`(초기 포커스) · `IdleSearchContent`(f, `EmptyRecentQuery` 안에 `ManiculeEmptyState`); 앱바 없음 |
+| 2b | 최근 검색어 | `ManiculeSearchBar` · `RecentQueryList`(f, `ManiculeSectionHeader`·`QueryListItem`×n; 항목은 M3 `ListItem`·`HorizontalDivider`) |
+| 2c | 입력 중 로컬 필터 | `ManiculeSearchBar` · `FilteredQueryList`(f, `QueryListItem`×n; 일치 문자열 강조) |
+| 3a | 검색 결과 | `ManiculeSearchBar` · `SearchResultList`(f, 결과 캡션·`SearchResultItem`(`BookListItem` 사용)×n·추가 로딩/오류의 `SearchAppendState`) |
+| 3b | 결과 없음 | `ManiculeSearchBar` · `SearchResultList`(f, 빈 결과에서 `ManiculeEmptyState`·`ManiculeButton`으로 스캔 이동) |
+| 4a | 카메라 스캔 | `CameraPreview`(f) · `BarcodeScannerOverlay`(f, 카메라 위 뒤로가기·가이드); 앱바 없음 |
+| 4b | 인식 실패 | `ScannerMessageScreen`(f, `ManiculeTopAppBar`·`ManiculeEmptyState`·`ManiculeButton`으로 검색 이동) |
+| 4c | 권한 거부 | `ScannerMessageScreen`(f, `ManiculeTopAppBar`·`ManiculeEmptyState`·`ManiculeButton`·`ManiculeOutlinedButton`) |
+| 5a | 책 정보 탭 | `BookDetailScreenTopBar`(f, `ManiculeTopAppBar`·`ManiculeTabRow`) · `BookInfoTabContent`(f, `BookCover`·출판 정보·`BookDetailExpandableText`×2) |
+| 5b | 내 기록 있음 | `BookDetailScreenTopBar`(f) · `MyRecordTabContent`(f, `StatusSelector`·`BookDetailReviewCard`(`BookDetailRatingBar`·`ManiculeTextField`)·`BookProgressBar`·`ManiculeSectionHeader`·`ReadingRecordDateHeader`·`ReadingRecordSessionItem`×n) |
+| 5c | 내 기록 없음 | `BookDetailScreenTopBar`(f) · `MyRecordTabContent`(f, 평점·메모가 비면 `BookDetailReviewCard`의 `ManiculeDashedCard`, 기록이 비면 `EmptyReadingRecord`의 `ManiculeEmptyState`·기록 추가 버튼) |
+| 5d | 기록 추가 시트 | `AddRecordBottomSheet`(f, `ManiculeBottomSheet` 안에 날짜·시간용 `ManiculeSegmentedButton`×2, 페이지용 `ManiculeTextField`×2, `ManiculeButton`); 직접 선택 시 M3 `DatePickerDialog` 또는 `AlertDialog`(`TimePicker`) |
+| 5e | 삭제 스낵바 | `ManiculeSnackbarHost`(Undo 액션 표시) |
+| 5f | 다 읽음 확인 | `FinishCheckDialog`(f, 축하 아이콘을 넣은 `ManiculeDialog`) |
+| 6a | 읽고 싶음 탭 | `LibraryTopBar`(f, `ManiculeTopAppBar`·`ManiculeTabRow`·정렬 상태를 표시하는 `LibraryActionRow`) · `LibraryGrid`(f, `LibraryBookCard`×n) |
+| 6b | 읽는 중 탭 | `LibraryTopBar`(f, `ManiculeTopAppBar`·`ManiculeTabRow`·`LibraryActionRow`) · `LibraryGrid`(f, `LibraryBookCard`×n; 카드에 `BookmarkRibbon`·`BookCoverStatusOverlay`로 진도율 표시) |
+| 6c | 다 읽음 탭 | `LibraryTopBar`(f, `ManiculeTopAppBar`·`ManiculeTabRow`·`LibraryActionRow`) · `LibraryGrid`(f, `LibraryBookCard`×n; 카드에 `BookCoverStatusOverlay`로 완료 날짜 표시) |
+| 6d | 서재 빈 상태 | `LibraryTopBar`(f, `ManiculeTopAppBar`·`ManiculeTabRow`) · `EmptyLibrary`(f, `ManiculeEmptyState`·`ManiculeButton`·`ManiculeOutlinedButton`) |
+| 6e | 정렬 시트 | `SortBottomSheet`(f, `ManiculeBottomSheet` 안에 M3 `ListItem`×3·`ManiculeSegmentedButton`·`ManiculeOutlinedButton`·`ManiculeButton`) |
+| 6f | 롱프레스 메뉴 | `LibraryActionBottomSheet`(f, `ManiculeBottomSheet` 안에 `BookCover`·M3 `ListItem`×3) |
+| 7a | 통계 4주 | `ManiculeTopAppBar` · `ManiculeSegmentedButton`(기간) · `StatsCalendarCard`(f, `ReadingCalendarGrid`·`ReadingCalendarLegend`) · `StatsSummary`(f, `ManiculeStatTile`×3) · `ReadingChartCard`(f, `ReadingChartUnitSelector`·`ReadingChart`) |
+| 7b | 통계 1년 | `ManiculeTopAppBar` · `ManiculeSegmentedButton`(기간) · `StatsCalendarCard`(f, `ReadingCalendarGrid`·`ReadingCalendarLegend`) · `StatsSummary`(f, `ManiculeStatTile`×3) · `ReadingChartCard`(f, `ReadingChartUnitSelector`·`ReadingChart`; 가운데 그래프 가로 스크롤·양쪽 축 고정) |
+| 7c | 통계 오늘 | `ManiculeTopAppBar` · `ManiculeSegmentedButton`(기간) · `StatsCalendarCard`(f, `TodayCalendarStrip`·`ReadingCalendarLegend`; 오늘 셀 선택 시 목록으로 스크롤) · `StatsSummary`(f) · `ReadingDayBookItem`(f, `BookListItem` 사용)×n |
+| 7d | 기간 설정 시트 | `CustomPeriodBottomSheet`(f, `ManiculeBottomSheet` 안에 `CustomPeriodContent`(M3 `ListItem`×2·`ManiculeButton`)); 날짜 직접 선택 시 M3 `DatePickerDialog` |
+| 7e | 날짜 탭 시트 | `ReadingDayBottomSheet`(f, `ManiculeBottomSheet` 안에 `ReadingDayBookItem`×n; 항목은 `BookListItem` 사용) |
+| 8a | 설정 | `ManiculeTopAppBar` · `ThemeSection`(f, `ManiculeSectionHeader`·`ManiculeSegmentedButton`) · `ReminderSection`(f, `ManiculeSectionHeader`·`ReminderToggle`·시간 변경 시 `ReminderTimePicker`) · `SupportSection`(f, `ManiculeSectionHeader`·M3 `ListItem`×2) |
 
 ## 사용 원칙
 
