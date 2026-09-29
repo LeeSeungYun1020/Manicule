@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeBorder
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
@@ -25,7 +26,7 @@ fun ReadingCalendarCell(
 ) {
     val backgroundColor =
         if (intensity == null) {
-            MaterialTheme.maniculeColors.calendarPlaceholder
+            Color.Transparent
         } else {
             val levels = MaterialTheme.maniculeColors.calendarLevels
             levels[intensity.coerceIn(levels.indices)]
