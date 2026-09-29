@@ -260,7 +260,7 @@ private fun StatsContent(
         contentPadding = ManiculeSpacing.screenContent,
         modifier = modifier,
     ) {
-        item(key = "period_segmented_button") {
+        item(key = "period_segmented_button", contentType = "period_segmented_button") {
             ManiculeSegmentedButton(
                 options = StatsPeriod.entries,
                 selectedOption = period.selectedPeriod,
@@ -282,7 +282,7 @@ private fun StatsContent(
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.lg))
         }
 
-        item(key = "date_label") {
+        item(key = "date_label", contentType = "date_label") {
             StatsDateLabel(
                 period = period,
                 isTodayPeriod = isTodayPeriod,
@@ -290,7 +290,7 @@ private fun StatsContent(
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.lg))
         }
 
-        item(key = "calendar_card") {
+        item(key = "calendar_card", contentType = "calendar_card") {
             StatsCalendarCard(
                 days = period.days,
                 today = period.today,
@@ -310,12 +310,12 @@ private fun StatsContent(
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.lg))
         }
 
-        item(key = "summary") {
+        item(key = "summary", contentType = "summary") {
             StatsSummary(period.summary)
         }
 
         if (!isTodayPeriod) {
-            item(key = "reading_chart") {
+            item(key = "reading_chart", contentType = "reading_chart") {
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.lg))
                 val unit = when (chart) {
                     is ChartState.Loading -> chart.key.unit
@@ -396,7 +396,7 @@ private fun StatsDateLabel(
 }
 
 private fun LazyListScope.todayBooksHeader(todayBooks: TodayBooksState) {
-    item(key = "today_books_header") {
+    item(key = "today_books_header", contentType = "today_books_header") {
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.lg))
         val headerText = when (todayBooks) {
             is TodayBooksState.Content -> pluralStringResource(
@@ -425,7 +425,7 @@ private fun LazyListScope.todayBooksContent(
     when (todayBooks) {
         TodayBooksState.Hidden -> Unit
         TodayBooksState.Loading -> {
-            item(key = "today_books_loading") {
+            item(key = "today_books_loading", contentType = "today_books_loading") {
                 ManiculeLoading(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -434,7 +434,7 @@ private fun LazyListScope.todayBooksContent(
             }
         }
         TodayBooksState.Error -> {
-            item(key = "today_books_error") {
+            item(key = "today_books_error", contentType = "today_books_error") {
                 ManiculeErrorState(
                     title = stringResource(R.string.stats_today_books_error),
                     icon = ManiculeIcons.NetworkError,
@@ -447,7 +447,7 @@ private fun LazyListScope.todayBooksContent(
         }
         is TodayBooksState.Content -> {
             if (todayBooks.rows.isEmpty()) {
-                item(key = "today_books_empty") {
+                item(key = "today_books_empty", contentType = "today_books_empty") {
                     Text(
                         text = stringResource(R.string.stats_today_books_empty),
                         style = MaterialTheme.typography.bodyMedium,

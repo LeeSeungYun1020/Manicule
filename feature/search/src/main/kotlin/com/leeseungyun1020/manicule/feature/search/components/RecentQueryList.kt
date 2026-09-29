@@ -41,7 +41,7 @@ fun RecentQueryList(
     LazyColumn(
         modifier = modifier.fillMaxSize(),
     ) {
-        item(contentType = "section_header") {
+        item(key = "recent_query_section_header", contentType = "section_header") {
             ManiculeSectionHeader(
                 title = stringResource(R.string.search_recent_title),
                 action =
