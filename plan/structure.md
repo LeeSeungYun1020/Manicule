@@ -35,7 +35,7 @@ Android 공식 권장 아키텍처(3-layer)를 따른다.
 - **Feature 간 의존 금지**: feature 모듈끼리 직접 의존하지 않는다. 공통이 필요하면 `core:*`로 추출.
 - **Repository는 SSOT(Single Source of Truth)**: 외부에는 도메인 모델만 노출, DTO/Entity는 Data Layer 내부에 격리.
 - **단방향 데이터 흐름(UDF)**: ViewModel은 `StateFlow<UiState>` 노출, UI는 이벤트만 송신.
-- **Offline-first**: 저장한 도서·서재·독서 기록은 Room을 SSOT로 관찰한다. 도서 검색은 원격 API를 사용하고, 책 상세 동기화와 스캔 ISBN 조회는 캐시가 없거나 최신 정보를 가져올 때 네트워크를 호출한다.
+- **Offline-first**: 저장한 도서·서재·독서 기록은 Room을 SSOT로 관찰한다. 도서 검색은 원격 API를 사용하고, 스캔은 로컬 캐시에 도서가 없을 때 ISBN을 원격 조회한다. 책 상세는 로컬 내용을 관찰하면서 진입 시 원격 갱신을 시도한다.
 - **반응형 레이아웃**: `WindowSizeClass`를 계산해 `ManiculeAppState`에 전달한다. 현재 앱 셸은 창 크기와 관계없이 하단 4개 탭을 사용하며, 일부 화면은 콘텐츠 최대 폭 제한이나 가용 폭에 따른 배치를 사용한다. ViewModel의 복원 대상 상태는 `SavedStateHandle`로 회전 시 보존한다.
 - **빌드 베이스라인**: minSdk 24 + `coreLibraryDesugaring` 활성화(java.time 등), Android Auto Backup(`allowBackup=true`)으로 로컬 데이터 자동 백업.
 
@@ -90,7 +90,7 @@ manicule/
 | `core:data`          | Data   | Repository 구현, DTO/Entity ↔ Model 매퍼             |
 | `core:database`      | Data   | Room Database, DAO, Entity                       |
 | `core:datastore`     | Data   | UserPreferences (테마, 알림)                         |
-| `core:network`       | Data   | 국립중앙도서관 ISBN API 클라이언트                           |
+| `core:network`       | Data   | 국립중앙도서관 서지정보 검색 API 클라이언트                           |
 | `core:scanner`       | Data   | CameraX + ML Kit 기반의 바코드 분석기 및 원천 데이터 제공         |
 | `core:notifications` | Platform | WorkManager 기반 리마인더 예약·발송, 알림 채널 (`core:domain` 계약 구현) |
 
@@ -186,7 +186,7 @@ app/
 
 ### 4.5 `core:domain`
 
-`book/`, `search/`, `scanner/`, `library/`, `record/`, `stats/`, `settings/`에 기능별 UseCase를 둔다. 공용 상태 변경은 `library/ChangeReadingStatusUseCase.kt`, 스캔 후보 조회는 `scanner/GetBookByScanUseCase.kt`, 리마인더 계약은 `settings/ReminderScheduler.kt`가 소유한다.
+`book/`, `search/`, `scanner/`, `library/`, `record/`, `stats/`, `settings/`, `home/`에 기능별 UseCase를 둔다. 공용 상태 변경은 `library/ChangeReadingStatusUseCase.kt`, 스캔 후보 조회는 `scanner/GetBookByScanUseCase.kt`, 리마인더 계약은 `settings/ReminderScheduler.kt`가 소유한다.
 `stats/GetReadingChartUseCase.kt`는 날짜 범위의 독서 기록을 한 번 관찰해 일·주·월별 고유 ISBN 수와 읽은 페이지 합계를 빈 구간까지 집계한다. 기존 Stats Repository 계약은 변경하지 않는다.
 
 ### 4.6 `core:data`
