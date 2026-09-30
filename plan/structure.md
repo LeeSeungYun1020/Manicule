@@ -35,8 +35,8 @@ Android 공식 권장 아키텍처(3-layer)를 따른다.
 - **Feature 간 의존 금지**: feature 모듈끼리 직접 의존하지 않는다. 공통이 필요하면 `core:*`로 추출.
 - **Repository는 SSOT(Single Source of Truth)**: 외부에는 도메인 모델만 노출, DTO/Entity는 Data Layer 내부에 격리.
 - **단방향 데이터 흐름(UDF)**: ViewModel은 `StateFlow<UiState>` 노출, UI는 이벤트만 송신.
-- **Offline-first**: Room을 SSOT로, 네트워크는 도서 검색 시에만 호출.
-- **반응형 레이아웃**: 폰·태블릿·폴더블 + 회전 모두 대응. WindowSizeClass 기반 분기, ViewModel은 `SavedStateHandle`로 회전 시 상태 보존.
+- **Offline-first**: 저장한 도서·서재·독서 기록은 Room을 SSOT로 관찰한다. 도서 검색은 원격 API를 사용하고, 스캔은 로컬 캐시에 도서가 없을 때 ISBN을 원격 조회한다. 책 상세는 로컬 내용을 관찰하면서 진입 시 원격 갱신을 시도한다.
+- **반응형 레이아웃**: `WindowSizeClass`를 계산해 `ManiculeAppState`에 전달한다. 현재 앱 셸은 창 크기와 관계없이 하단 4개 탭을 사용하며, 일부 화면은 콘텐츠 최대 폭 제한이나 가용 폭에 따른 배치를 사용한다. ViewModel의 복원 대상 상태는 `SavedStateHandle`로 회전 시 보존한다.
 - **빌드 베이스라인**: minSdk 24 + `coreLibraryDesugaring` 활성화(java.time 등), Android Auto Backup(`allowBackup=true`)으로 로컬 데이터 자동 백업.
 
 ---
@@ -90,24 +90,27 @@ manicule/
 | `core:data`          | Data   | Repository 구현, DTO/Entity ↔ Model 매퍼             |
 | `core:database`      | Data   | Room Database, DAO, Entity                       |
 | `core:datastore`     | Data   | UserPreferences (테마, 알림)                         |
-| `core:network`       | Data   | 국립중앙도서관 ISBN API 클라이언트                           |
+| `core:network`       | Data   | 국립중앙도서관 서지정보 검색 API 클라이언트                           |
 | `core:scanner`       | Data   | CameraX + ML Kit 기반의 바코드 분석기 및 원천 데이터 제공         |
 | `core:notifications` | Platform | WorkManager 기반 리마인더 예약·발송, 알림 채널 (`core:domain` 계약 구현) |
 
 ### 2.2 모듈 의존 그래프
 
 ```
-app
-├── feature:* ───────────────┬──> core:domain ──┬──> core:data ──┬──> core:network
-│                            │                   │                 ├──> core:database
-│                            │                   │                 └──> core:datastore
-│                            │                   └──> core:scanner
-│                            ├──> core:designsystem
-│                            └──> core:ui ───────────> core:designsystem
-└── core:notifications ─────────> core:domain
+app ──> feature:* ──┬──> core:domain ──┬──> core:data ──┬──> core:network
+  │                 │                   │                 ├──> core:database
+  │                 │                   │                 └──> core:datastore
+  │                 │                   └──> core:scanner
+  │                 ├──> core:designsystem
+  │                 └──> core:ui ───────────> core:designsystem
+  ├──> core:domain
+  ├──> core:designsystem
+  └──> core:notifications ─────────> core:domain
 
-core:data, core:domain, core:ui ──> core:model / core:common
+feature:scanner ──> core:scanner
 ```
+
+`core:model`·`core:common`으로의 공통 의존은 그래프에서 생략했다.
 
 ---
 
@@ -126,10 +129,10 @@ app/
         ├── ManiculeApplication.kt              # @HiltAndroidApp
         ├── MainActivity.kt                  # 단일 Activity, 루트 ManiculeTheme
         └── navigation/
-            ├── ManiculeNavHost.kt               # 최상위 NavHost (NavController 소유 및 실제 stack mutation 조립)
+            ├── ManiculeNavHost.kt           # 최상위 NavHost와 화면 간 이동 콜백 조립
             ├── TopLevelDestination.kt       # feature route를 사용하는 홈/서재/통계/설정 4개 탭
             ├── ManiculeApp.kt                # Scaffold·하단 탭 조립
-            └── ManiculeAppState.kt          # rememberManiculeAppState
+            └── ManiculeAppState.kt          # NavController·최상위 탭 백스택 상태 소유
 ```
 
 ### 3.2 Feature 모듈 공통 구조
@@ -141,7 +144,7 @@ app/
 - **Feature는 NavController 비의존**: feature Composable은 `NavController`를 직접 받지 않고 콜백만 호출한다. production 콜백에 기본 빈 람다(`{}`)를 두지 않는다 (Preview/테스트만 허용, 미지원 이동은 UI availability로 모델링).
 - **Destination-local 이동**: 현재 화면 종료 후 기존 history로 복귀(뒤로가기, 닫기 등). feature는 필수 콜백을 소유하고, `app`의 최소 연결(`popBackStack()` 등)은 해당 destination을 노출하는 feature PR에서 완료한다. 단, pop 실패·deep link fallback 정책은 app이 소유한다.
 - **Cross-destination 이동**: 다른 destination으로 이동(검색·책 상세 등). source는 의도/인자 콜백, target은 route 타입을 소유하며, 준비 즉시 `app/`의 `ManiculeNavHost`에서 점진 연결한다.
-- **App 계층의 백스택 소유**: `app`의 `ManiculeNavHost`가 `NavController`, 실제 백스택 조작, `popUpTo`, `launchSingleTop`, 상태 복원 정책을 소유한다.
+- **App 계층의 백스택 소유**: `ManiculeAppState`가 `NavController`, 최상위 탭 이동·상태 복원 정책을 소유한다. `ManiculeNavHost`는 destination을 등록하고 화면 간 이동의 `navigate`·`popUpTo`·`launchSingleTop` 및 뒤로가기 콜백을 연결한다.
 
 ### 3.3 Feature별 주요 파일
 
@@ -154,7 +157,7 @@ app/
 | `feature:scanner` | `navigation/ScannerNavigation.kt`, `ScannerViewModel.kt`, `CameraPreview.kt` | 권한·카메라 수명주기와 도서 조회 결과 |
 | `feature:bookdetail` | `navigation/BookDetailNavigation.kt`, `BookDetailRoute.kt`, `BookDetailViewModel.kt`, `components/AddRecordBottomSheet.kt` | ISBN 진입, 독서 상태·리뷰·기록 편집 |
 | `feature:library` | `navigation/LibraryNavigation.kt`, `LibraryRoute.kt`, `LibraryViewModel.kt`, `components/SortBottomSheet.kt` | 상태 탭, 정렬, 책 변경·삭제 |
-| `feature:stats` | `navigation/StatsNavigation.kt`, `StatsScreen.kt`, `StatsViewModel.kt`, `StatsChartSelection.kt`, `components/StatsCalendarCard.kt`, `components/ReadingChartCard.kt`, `components/ReadingChart.kt`, `components/ReadingDayBottomSheet.kt` | 기간별 요약·달력·날짜 기록·오늘 목록과 읽은 책·페이지 그래프의 상태 및 화면 |
+| `feature:stats` | `navigation/StatsNavigation.kt`, `StatsScreen.kt`, `StatsViewModel.kt`, `StatsChartSelection.kt`, `components/StatsCalendarCard.kt`, `components/ReadingChartCard.kt`, `components/ReadingChartUnitSelector.kt`, `components/ReadingChart.kt`, `components/ReadingDayBottomSheet.kt` | 기간별 요약·달력·날짜 기록·오늘 목록과 읽은 책·페이지 그래프의 상태 및 화면 |
 | `feature:settings` | `navigation/SettingsNavigation.kt`, `SettingsRoute.kt`, `SettingsViewModel.kt`, `components/ReminderSection.kt` | 테마·리마인더 설정 |
 
 서재 새 진입은 `LibraryRoute()`의 `READING`을 기본으로 하며, 홈 '고르기'는 `LibraryRoute(LibraryTab.WANT)`로 진입한다. `initialTab`은 새 백스택 항목의 초기값이다. 기존 화면을 복원할 때는 저장된 사용자 선택을 유지하므로, '고르기' 연결 시 기존 항목을 `restoreState`로 복원하지 않는다.
@@ -183,7 +186,7 @@ app/
 
 ### 4.5 `core:domain`
 
-`book/`, `search/`, `scanner/`, `library/`, `record/`, `stats/`, `settings/`에 기능별 UseCase를 둔다. 공용 상태 변경은 `library/ChangeReadingStatusUseCase.kt`, 스캔 후보 조회는 `scanner/GetBookByScanUseCase.kt`, 리마인더 계약은 `settings/ReminderScheduler.kt`가 소유한다.
+`book/`, `search/`, `scanner/`, `library/`, `record/`, `stats/`, `settings/`, `home/`에 기능별 UseCase를 둔다. 공용 상태 변경은 `library/ChangeReadingStatusUseCase.kt`, 스캔 후보 조회는 `scanner/GetBookByScanUseCase.kt`, 리마인더 계약은 `settings/ReminderScheduler.kt`가 소유한다.
 `stats/GetReadingChartUseCase.kt`는 날짜 범위의 독서 기록을 한 번 관찰해 일·주·월별 고유 ISBN 수와 읽은 페이지 합계를 빈 구간까지 집계한다. 기존 Stats Repository 계약은 변경하지 않는다.
 
 ### 4.6 `core:data`
@@ -210,7 +213,7 @@ app/
 
 ### 4.11 `core:notifications`
 
-`WorkManagerReminderScheduler.kt`는 도메인 `ReminderScheduler`를 구현한다. `ReminderWorker.kt`는 발송 시점에 `GetReminderContentUseCase`를 호출하고, `ReminderNotificationPublisher.kt`가 메시지를 게시한다. `TimeZoneChangedReceiver.kt`는 시간대 변경 시 재예약한다.
+`WorkManagerReminderScheduler.kt`는 도메인 `ReminderScheduler`를 구현한다. `ReminderWorker.kt`는 발송 시점에 `GetReminderContentUseCase`를 호출하고, `ReminderNotificationPublisher.kt`가 메시지를 게시한다. `TimeZoneChangedReceiver.kt`는 시간대 또는 기기 시각 변경 시 재예약한다.
 
 의존 방향은 `app → core:notifications → core:domain`이다. `core:notifications`는 `core:data` Repository를 직접 주입하지 않는다.
 

@@ -11,9 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeBorder
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
@@ -48,7 +51,7 @@ fun BookCover(
         }
 
     AsyncImage(
-        model = imageUrl,
+        model = ImageRequest.Builder(LocalContext.current).data(imageUrl).crossfade(true).build(),
         contentDescription = contentDescription,
         modifier = finalModifier,
         placeholder = actualPlaceholder,

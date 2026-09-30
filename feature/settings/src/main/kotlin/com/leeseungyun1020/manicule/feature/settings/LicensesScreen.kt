@@ -125,7 +125,7 @@ fun LicensesScreen(
                         contentPadding = MaterialTheme.spacing.screenContent,
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
                     ) {
-                        item {
+                        item(key = "licenses_description", contentType = "description") {
                             Text(
                                 text = stringResource(R.string.settings_licenses_description),
                                 style = MaterialTheme.typography.bodyMedium,
@@ -136,6 +136,7 @@ fun LicensesScreen(
                         items(
                             items = uiState.libraries,
                             key = { it.name },
+                            contentType = { "license" },
                         ) { library ->
                             LicenseItemCard(
                                 library = library,
