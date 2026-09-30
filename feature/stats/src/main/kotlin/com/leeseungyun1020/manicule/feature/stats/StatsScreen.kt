@@ -38,6 +38,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeErrorState
@@ -514,7 +515,7 @@ private fun StatsSummary(
         ),
     )
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
-        if (maxWidth < ManiculeSize.coverMediumWidth * 3) {
+        if (maxWidth < STAT_TILES_COLUMN_THRESHOLD) {
             Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm)) {
                 tiles.forEach { tile ->
                     ManiculeStatTile(
@@ -681,3 +682,5 @@ private fun StatsScreenCustomPeriodPreview() {
         )
     }
 }
+
+private val STAT_TILES_COLUMN_THRESHOLD = 300.dp

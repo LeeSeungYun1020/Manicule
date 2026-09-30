@@ -115,7 +115,7 @@ fun ReadingChart(
         maxOf(observedTickHeight, tickLabels.maxOf { textMeasurer.measure(it, labelStyle).size.height }).toDp()
     }
     val plotInset = maxOf(ManiculeSpacing.sm, labelHeight / 2)
-    val chartHeight = maxOf(ManiculeSize.chartHeight, labelHeight * 5 + ManiculeSpacing.sm * 4)
+    val chartHeight = maxOf(CHART_MIN_HEIGHT, labelHeight * 5 + ManiculeSpacing.sm * 4)
     val leftWidth = with(density) {
         maxOf(observedBookWidth, (0..4).maxOf { textMeasurer.measure(tickLabel(bookStep, it), labelStyle).size.width })
             .toDp() + ManiculeSpacing.sm
@@ -261,7 +261,7 @@ private fun DrawScope.drawBucket(
             colors.grid,
             Offset(0f, yy),
             Offset(size.width, yy),
-            ManiculeBorder.hairline.toPx(),
+            CHART_GRID_LINE_WIDTH.toPx(),
             pathEffect = PathEffect.dashPathEffect(
                 floatArrayOf(ManiculeBorder.dashOn.toPx(), ManiculeBorder.dashOff.toPx()),
             ),
@@ -272,8 +272,8 @@ private fun DrawScope.drawBucket(
     if (bucket.bookCount > 0) {
         drawRect(
             colors.bar,
-            topLeft = Offset(center - ManiculeSize.chartBarWidth.toPx() / 2, bookY),
-            size = Size(ManiculeSize.chartBarWidth.toPx(), size.height - inset - bookY),
+            topLeft = Offset(center - CHART_BAR_WIDTH.toPx() / 2, bookY),
+            size = Size(CHART_BAR_WIDTH.toPx(), size.height - inset - bookY),
         )
     }
     val pageTop = metrics.pageStep.toDouble() * 4.0
@@ -285,17 +285,17 @@ private fun DrawScope.drawBucket(
     ) {
         val neighborY = y(other.pagesRead.toDouble(), pageTop)
         val endY = (pointY + neighborY) / 2
-        drawLine(colors.halo, Offset(center, pointY), Offset(physicalX, endY), ManiculeSize.chartLineHaloWidth.toPx())
-        drawLine(colors.line, Offset(center, pointY), Offset(physicalX, endY), ManiculeSize.chartLineWidth.toPx())
+        drawLine(colors.halo, Offset(center, pointY), Offset(physicalX, endY), CHART_LINE_HALO_WIDTH.toPx())
+        drawLine(colors.line, Offset(center, pointY), Offset(physicalX, endY), CHART_LINE_WIDTH.toPx())
     }
     previous?.let { segment(it, if (metrics.direction == LayoutDirection.Ltr) 0f else size.width) }
     next?.let { segment(it, if (metrics.direction == LayoutDirection.Ltr) size.width else 0f) }
     drawCircle(
         colors.halo,
-        radius = ManiculeSize.chartLineHaloWidth.toPx() / 2 + ManiculeBorder.hairline.toPx(),
+        radius = CHART_LINE_HALO_WIDTH.toPx() / 2 + CHART_GRID_LINE_WIDTH.toPx(),
         center = Offset(center, pointY),
     )
-    drawCircle(colors.line, radius = ManiculeSize.chartLineWidth.toPx(), center = Offset(center, pointY))
+    drawCircle(colors.line, radius = CHART_LINE_WIDTH.toPx(), center = Offset(center, pointY))
 }
 
 @Composable

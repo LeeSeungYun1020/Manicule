@@ -13,13 +13,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.ui.R
 import kotlin.math.roundToInt
+
+private val PROGRESS_BAR_HEIGHT = 8.dp
 
 @Composable
 fun BookProgressBar(
@@ -40,7 +42,7 @@ fun BookProgressBar(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .height(ManiculeSize.progressBarThick),
+                    .height(PROGRESS_BAR_HEIGHT),
         )
         if (showDetails) {
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.xs))

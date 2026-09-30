@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeButton
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeEmptyState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeIconButton
@@ -207,7 +208,7 @@ private fun BarcodeScannerOverlay(
             // Prototype 210x130 UI guide only: never a crop region or barcode format constraint.
             val width = minOf(
                 maxWidth * VIEWFINDER_WIDTH_FRACTION,
-                MaterialTheme.size.scannerViewfinderMaxWidth,
+                VIEWFINDER_MAX_WIDTH,
                 maxHeight * VIEWFINDER_RATIO,
             )
             Box(
@@ -243,6 +244,7 @@ private const val VIEWFINDER_RATIO = 21f / 13f
 private const val VIEWFINDER_WIDTH_FRACTION = 0.58f
 private const val OVERLAY_ALPHA = 0.95f
 private const val CAMERA_SCRIM_ALPHA = 0.24f
+private val VIEWFINDER_MAX_WIDTH = 320.dp
 
 private class ScannerPreviewStates : PreviewParameterProvider<ScannerUiState> {
     override val values = sequenceOf(

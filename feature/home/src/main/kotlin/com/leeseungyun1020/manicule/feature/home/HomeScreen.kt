@@ -379,7 +379,7 @@ private fun ReadingBookCard(
     onBookSelected: (String) -> Unit,
 ) {
     Column(
-        modifier = Modifier.width(ManiculeSize.coverMediumWidth).clickable { onBookSelected(entry.book.isbn) },
+        modifier = Modifier.width(BookCoverSize.Medium.width).clickable { onBookSelected(entry.book.isbn) },
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
     ) {
         BookCover(entry.book.coverUrl, contentDescription = null, size = BookCoverSize.Medium, showBorder = true)

@@ -52,7 +52,7 @@ fun ReadingChartCard(
                 LegendMark(bar = false, label = stringResource(R.string.stats_chart_pages_legend))
             }
             when (state) {
-                is ChartState.Loading -> ManiculeLoading(Modifier.fillMaxWidth().height(ManiculeSize.chartHeight))
+                is ChartState.Loading -> ManiculeLoading(Modifier.fillMaxWidth().height(CHART_MIN_HEIGHT))
                 is ChartState.Error -> ManiculeErrorState(
                     title = stringResource(R.string.stats_chart_error),
                     icon = ManiculeIcons.NetworkError,
@@ -131,7 +131,7 @@ private fun LegendMark(
                     markColor,
                     Offset(0f, size.height / 2),
                     Offset(size.width, size.height / 2),
-                    ManiculeSize.chartLineWidth.toPx(),
+                    CHART_LINE_WIDTH.toPx(),
                 )
             }
         }

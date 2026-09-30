@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeBottomSheet
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeErrorState
 import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeLoading
@@ -27,7 +28,6 @@ import com.leeseungyun1020.manicule.core.designsystem.component.ManiculeSnackbar
 import com.leeseungyun1020.manicule.core.designsystem.icon.ManiculeIcons
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.feature.stats.DayState
 import com.leeseungyun1020.manicule.feature.stats.R
@@ -107,7 +107,7 @@ private fun ReadingDayContent(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 } else {
-                    LazyColumn(modifier = Modifier.heightIn(max = ManiculeSize.chartHeight * 2)) {
+                    LazyColumn(modifier = Modifier.heightIn(max = READING_DAY_LIST_MAX_HEIGHT)) {
                         items(state.rows, key = { it.isbn }, contentType = { "reading-day-book" }) { row ->
                             ReadingDayBookItem(
                                 book = row,
@@ -140,3 +140,5 @@ private fun ReadingDayContentPreview() {
         ReadingDayContent(DayState.Content(LocalDate(2026, 9, 24), emptyList()), {}, {}, {})
     }
 }
+
+private val READING_DAY_LIST_MAX_HEIGHT = 320.dp

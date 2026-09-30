@@ -15,6 +15,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.leeseungyun1020.manicule.core.designsystem.R
@@ -90,6 +91,8 @@ class FeedbackStateComponentsTest {
 
     @Test
     fun loading_usesCallerProvidedSize() {
+        val expectedWidth = 64.dp
+        val expectedHeight = ManiculeSize.touchTargetMin
         composeTestRule.setContent {
             ManiculeTheme {
                 ManiculeLoading(
@@ -97,8 +100,8 @@ class FeedbackStateComponentsTest {
                         Modifier
                             .testTag("loading")
                             .size(
-                                width = ManiculeSize.coverSmallWidth,
-                                height = ManiculeSize.touchTargetMin,
+                                width = expectedWidth,
+                                height = expectedHeight,
                             ),
                 )
             }
@@ -106,8 +109,8 @@ class FeedbackStateComponentsTest {
 
         composeTestRule
             .onNodeWithTag("loading")
-            .assertWidthIsEqualTo(ManiculeSize.coverSmallWidth)
-            .assertHeightIsEqualTo(ManiculeSize.touchTargetMin)
+            .assertWidthIsEqualTo(expectedWidth)
+            .assertHeightIsEqualTo(expectedHeight)
     }
 
     @Test
