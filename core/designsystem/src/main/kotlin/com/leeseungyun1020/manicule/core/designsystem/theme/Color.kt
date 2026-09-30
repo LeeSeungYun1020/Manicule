@@ -50,17 +50,11 @@ internal object ManiculePalette {
 
     // Blue — H274 C22
     val Blue20 = Color(0xFF173150)
-    val Blue24 = Color(0xFF223A5A)
     val Blue30 = Color(0xFF314869)
     val Blue40 = Color(0xFF495F82)
-    val Blue60 = Color(0xFF7C91B7)
     val Blue80 = Color(0xFFB2C7EF)
     val Blue90 = Color(0xFFD6E3FF)
     val Blue100 = Color(0xFFFFFFFF)
-
-    // Amber — H70 C52
-    val Amber46 = Color(0xFF9A6014)
-    val Amber74 = Color(0xFFEDA85C)
 
     // Red — H25 C50
     val Red20 = Color(0xFF670116)

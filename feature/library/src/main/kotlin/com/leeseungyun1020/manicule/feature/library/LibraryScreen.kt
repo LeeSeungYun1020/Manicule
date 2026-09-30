@@ -46,6 +46,7 @@ import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.model.BookEntry
 import com.leeseungyun1020.manicule.core.model.LibrarySort
 import com.leeseungyun1020.manicule.core.model.ReadingStatus
+import com.leeseungyun1020.manicule.core.ui.book.BookCoverSize
 import com.leeseungyun1020.manicule.feature.library.components.LibraryActionBottomSheet
 import com.leeseungyun1020.manicule.feature.library.components.LibraryBookCard
 import com.leeseungyun1020.manicule.feature.library.components.LibraryTopBar
@@ -231,7 +232,7 @@ private fun LibraryGrid(
     onBookLongPressed: (String) -> Unit,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(ManiculeSize.coverMediumWidth),
+        columns = GridCells.Adaptive(BookCoverSize.Medium.width),
         modifier = Modifier.fillMaxSize().padding(scaffoldPadding),
         contentPadding = ManiculeSpacing.screenContent,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),

@@ -30,7 +30,7 @@ fun BookInfoTabContent(
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         contentPadding = MaterialTheme.spacing.screenContent,
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sectionGap),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xl),
     ) {
         item(key = "header", contentType = "header") { BookHeader(book) }
         item(key = "publication", contentType = "section") { BookPublicationInfo(book) }

@@ -7,6 +7,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
@@ -21,11 +22,13 @@ fun ManiculeLoading(modifier: Modifier = Modifier) {
     }
 }
 
+private val LOADING_PREVIEW_CONTAINER_SIZE = 160.dp
+
 @ManiculePreview
 @Composable
 private fun ManiculeLoadingFullSizePreview() {
     ManiculePreviewTheme {
-        Box(modifier = Modifier.size(ManiculeSize.chartHeight)) {
+        Box(modifier = Modifier.size(LOADING_PREVIEW_CONTAINER_SIZE)) {
             ManiculeLoading(modifier = Modifier.fillMaxSize())
         }
     }

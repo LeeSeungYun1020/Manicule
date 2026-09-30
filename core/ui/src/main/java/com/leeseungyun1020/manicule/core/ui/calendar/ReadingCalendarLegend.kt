@@ -13,13 +13,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSpacing
 import com.leeseungyun1020.manicule.core.designsystem.theme.maniculeColors
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.ui.R
+
+private val LEGEND_SWATCH_SIZE = 12.dp
 
 @Composable
 fun ReadingCalendarLegend(
@@ -41,7 +43,7 @@ fun ReadingCalendarLegend(
         MaterialTheme.maniculeColors.calendarLevels.forEach { color ->
             Box(
                 modifier = Modifier
-                    .size(ManiculeSize.calendarLegendSwatch)
+                    .size(LEGEND_SWATCH_SIZE)
                     .clip(MaterialTheme.shapes.extraSmall)
                     .background(color),
             )

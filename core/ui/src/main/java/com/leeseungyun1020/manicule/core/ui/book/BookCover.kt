@@ -14,13 +14,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeBorder
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreview
 import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculePreviewTheme
-import com.leeseungyun1020.manicule.core.designsystem.theme.ManiculeSize
 import com.leeseungyun1020.manicule.core.designsystem.theme.spacing
 import com.leeseungyun1020.manicule.core.ui.R
 
@@ -28,9 +27,11 @@ enum class BookCoverSize(
     val width: Dp,
     val height: Dp,
 ) {
-    Small(ManiculeSize.coverSmallWidth, ManiculeSize.coverSmallHeight),
-    Medium(ManiculeSize.coverMediumWidth, ManiculeSize.coverMediumHeight),
+    Small(62.dp, 92.dp),
+    Medium(100.dp, 148.dp),
 }
+
+private val COVER_BORDER_WIDTH = 1.dp
 
 @Composable
 fun BookCover(
@@ -45,7 +46,7 @@ fun BookCover(
     val sizedModifier = modifier.size(size.width, size.height)
     val finalModifier =
         if (showBorder) {
-            sizedModifier.border(ManiculeBorder.cover, MaterialTheme.colorScheme.outlineVariant)
+            sizedModifier.border(COVER_BORDER_WIDTH, MaterialTheme.colorScheme.outlineVariant)
         } else {
             sizedModifier
         }
