@@ -32,7 +32,7 @@
 ## 레이아웃·테마·접근성
 
 - 클릭 영역은 최소 48×48dp, 인접 타겟 간격은 최소 8dp다. 부족한 영역은 `Modifier.minimumInteractiveComponentSize()`를 사용한다. 독서 달력 셀에는 기획의 밀집형 예외를 적용한다.
-- 간격은 8dp 그리드(4/8/16/24/32dp), 화면 좌우 패딩은 16dp다. 실제 UI 치수는 `MaterialTheme.spacing`·`size`·`border` 토큰을 사용하고 `16.dp` 같은 리터럴을 직접 넣지 않는다. 텍스트는 M3 계층과 프로젝트의 Noto Sans KR·한국어 line-height 설정을 따른다.
+- 간격은 8dp 그리드(4/8/16/24/32dp), 화면 좌우 패딩은 16dp다. 앱 전반의 공용 간격·크기·테두리는 `MaterialTheme.spacing`·`size`·`border` 토큰을 사용하고 화면 본문에 임의의 dp 리터럴을 흩뿌리지 않는다. 특정 컴포넌트나 기능 전용 치수는 소유 파일의 `private val` 또는 해당 feature의 `internal` 상수로 관리하고, 여러 화면에서 공유하는 컴포넌트 규격은 소유 컴포넌트의 공개 정의를 단일 출처로 참조한다. 텍스트는 M3 계층과 프로젝트의 Noto Sans KR·한국어 line-height 설정을 따른다.
 - 일반 텍스트 명암비는 4.5:1 이상, 24sp 이상 텍스트와 아이콘은 3:1 이상이다. 이미지 위 글씨에는 딤 또는 그라디언트 오버레이를 둔다. 상태·옵션 구분에 임의의 강조색을 추가하지 않고 아이콘·텍스트로 표현한다.
 - 앱 루트는 `ManiculeTheme`으로 감싼다. 컴포넌트는 `MaterialTheme.colorScheme`·`typography`·`shapes`·치수 토큰을 사용하며 ARGB 리터럴을 넣지 않는다. 달력 레벨은 `MaterialTheme.maniculeColors.calendarLevels`를 사용한다.
 - `ManiculeExtendedColors` 필드는 M3 색상 역할에 맞는 값이 없고, 라이트·다크 값이 다르며, 둘 이상의 컴포넌트가 공유할 때만 추가한다. 표지·카메라 딤은 `scrim`, 차트 막대는 `primary`, 격자선은 `outlineVariant`, 축 레이블은 `onSurfaceVariant`를 우선 사용한다.
