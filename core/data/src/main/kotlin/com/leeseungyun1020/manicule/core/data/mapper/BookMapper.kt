@@ -5,6 +5,10 @@ import com.leeseungyun1020.manicule.core.model.Book
 import com.leeseungyun1020.manicule.core.network.nlk.dto.NlkBookDto
 import kotlinx.datetime.LocalDate
 
+private const val HTTP_PREFIX = "http://"
+private const val HTTPS_PREFIX = "https://"
+private const val NLK_HOST = "nl.go.kr"
+
 fun BookEntity.asExternalModel() =
     Book(
         isbn = isbn,
@@ -12,7 +16,7 @@ fun BookEntity.asExternalModel() =
         author = author,
         publisher = publisher,
         publishedDate = publishedDate,
-        coverUrl = coverUrl,
+        coverUrl = normalizeCoverUrl(coverUrl),
         totalPages = totalPages,
         price = price,
         category = category,
@@ -30,7 +34,7 @@ fun NlkBookDto.asExternalModel(): Book =
         author = author,
         publisher = publisher,
         publishedDate = parseNlkDate(publishPredate),
-        coverUrl = titleUrl.ifBlank { null },
+        coverUrl = normalizeCoverUrl(titleUrl),
         totalPages = page.filter { it.isDigit() }.toIntOrNull(),
         price = prePrice.filter { it.isDigit() }.toIntOrNull(),
         category = subject.ifBlank { null },
@@ -44,6 +48,19 @@ fun NlkBookDto.asExternalModel(): Book =
 internal fun NlkBookDto.asExternalModelOrNull(): Book? =
     takeIf { it.isbn.isNotBlank() && it.title.isNotBlank() }
         ?.asExternalModel()
+
+internal fun normalizeCoverUrl(url: String?): String? {
+    if (url.isNullOrBlank()) return null
+    val trimmed = url.trim()
+    if (trimmed.startsWith(HTTP_PREFIX, ignoreCase = true)) {
+        val withoutScheme = trimmed.substring(HTTP_PREFIX.length)
+        val host = withoutScheme.substringBefore('/').substringBefore(':')
+        if (host.equals(NLK_HOST, ignoreCase = true) || host.endsWith(".$NLK_HOST", ignoreCase = true)) {
+            return HTTPS_PREFIX + withoutScheme
+        }
+    }
+    return trimmed
+}
 
 internal fun parseNlkDate(dateString: String): LocalDate? {
     // 국립중앙도서관 날짜 형식은 고정 길이 YYYYMMDD이다.
