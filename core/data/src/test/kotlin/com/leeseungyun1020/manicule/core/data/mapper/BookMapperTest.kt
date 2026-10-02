@@ -145,4 +145,79 @@ class BookMapperTest {
         assertThat(entity.isbn).isEqualTo("123")
         assertThat(entity.title).isEqualTo("Test")
     }
+
+    @Test
+    fun normalizeCoverUrl_httpNlkHost_normalizesToHttps() {
+        assertThat(
+            normalizeCoverUrl("http://www.nl.go.kr/seoji/fu/ecip/dbfiles/CIP_FILES_TBL/6521434_3.jpg"),
+        ).isEqualTo("https://www.nl.go.kr/seoji/fu/ecip/dbfiles/CIP_FILES_TBL/6521434_3.jpg")
+
+        assertThat(normalizeCoverUrl("http://nl.go.kr/image.jpg"))
+            .isEqualTo("https://nl.go.kr/image.jpg")
+
+        assertThat(normalizeCoverUrl("HTTP://SEOJI.NL.GO.KR/image.jpg"))
+            .isEqualTo("https://SEOJI.NL.GO.KR/image.jpg")
+    }
+
+    @Test
+    fun normalizeCoverUrl_httpsNlkHost_keepsOriginal() {
+        val httpsUrl = "https://www.nl.go.kr/seoji/fu/ecip/dbfiles/CIP_FILES_TBL/6521434_3.jpg"
+        assertThat(normalizeCoverUrl(httpsUrl)).isEqualTo(httpsUrl)
+    }
+
+    @Test
+    fun normalizeCoverUrl_externalHost_doesNotNormalize() {
+        val externalHttpUrl = "http://example.com/cover.jpg"
+        assertThat(normalizeCoverUrl(externalHttpUrl)).isEqualTo(externalHttpUrl)
+
+        val fakeNlkUrl = "http://fake-nl.go.kr/cover.jpg"
+        assertThat(normalizeCoverUrl(fakeNlkUrl)).isEqualTo(fakeNlkUrl)
+
+        val evilSubdomainUrl = "http://nl.go.kr.evil.com/cover.jpg"
+        assertThat(normalizeCoverUrl(evilSubdomainUrl)).isEqualTo(evilSubdomainUrl)
+    }
+
+    @Test
+    fun normalizeCoverUrl_blankOrNull_returnsNull() {
+        assertThat(normalizeCoverUrl(null)).isNull()
+        assertThat(normalizeCoverUrl("")).isNull()
+        assertThat(normalizeCoverUrl("   ")).isNull()
+    }
+
+    @Test
+    fun bookEntity_asExternalModel_normalizesHttpCoverUrl() {
+        val entity =
+            BookEntity(
+                isbn = "9791161751061",
+                title = "테스트 도서",
+                author = "저자",
+                publisher = "출판사",
+                publishedDate = null,
+                coverUrl = "http://www.nl.go.kr/seoji/cover.jpg",
+                totalPages = null,
+                price = null,
+                category = null,
+                tableOfContentsUrl = null,
+                introductionUrl = null,
+                summaryUrl = null,
+            )
+
+        val book = entity.asExternalModel()
+
+        assertThat(book.coverUrl).isEqualTo("https://www.nl.go.kr/seoji/cover.jpg")
+    }
+
+    @Test
+    fun nlkBookDto_asExternalModel_normalizesHttpTitleUrl() {
+        val dto =
+            NlkBookDto(
+                isbn = "9791161751061",
+                title = "테스트 도서",
+                titleUrl = "http://www.nl.go.kr/seoji/cover.jpg",
+            )
+
+        val book = dto.asExternalModel()
+
+        assertThat(book.coverUrl).isEqualTo("https://www.nl.go.kr/seoji/cover.jpg")
+    }
 }
